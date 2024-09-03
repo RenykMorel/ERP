@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CalculAI{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div id="app">
+        <nav id="sidebar">
+            <div id="user-info">
+                <img id="user-avatar" src="{{ url_for('static', filename='images/avatar.jpg') }}" alt="User Avatar">
+                <h2 id="user-name"></h2>
+                <p id="user-id"></p>
+            </div>
+            <div id="module-container"></div>
+        </nav>
+        <main id="content">
+            <header>
+                <h1></h1>
+            </header>
+            {% block content %}
+            <div id="dashboard">
+                <div class="chart-controls">
+                    <button id="toggle-line-chart">Mostrar/Ocultar Gráfico de Líneas</button>
+                    <button id="toggle-bar-chart">Mostrar/Ocultar Gráfico de Barras</button>
+                    <button id="toggle-pie-chart">Mostrar/Ocultar Gráfico Circular</button>
+                </div>
+                <div class="dashboard-layout">
+                    <div class="charts-container">
+                        <div class="chart-wrapper">
+                            <h3>Ventas Mensuales</h3>
+                            <canvas id="line-chart"></canvas>
+                            <div class="chart-controls">
+                                <button onclick="adjustChartSize('line-chart', -50)">-</button>
+                                <button onclick="adjustChartSize('line-chart', 50)">+</button>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h3>Ingresos vs Gastos</h3>
+                            <canvas id="bar-chart"></canvas>
+                            <div class="chart-controls">
+                                <button onclick="adjustChartSize('bar-chart', -50)">-</button>
+                                <button onclick="adjustChartSize('bar-chart', 50)">+</button>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h3>Distribución Financiera</h3>
+                            <canvas id="pie-chart"></canvas>
+                            <div class="chart-controls">
+                                <button onclick="adjustChartSize('pie-chart', -50)">-</button>
+                                <button onclick="adjustChartSize('pie-chart', 50)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="calendar"></div>
+                </div>
+                <div class="bottom-widgets">
+                    <div id="tasks">
+                        <h3>Tareas Pendientes</h3>
+                        <ul id="task-list"></ul>
+                    </div>
+                    <div id="notifications">
+                        <h3>Notificaciones y Alertas</h3>
+                        <ul id="notification-list"></ul>
+                    </div>
+                </div>
+            </div>
+            {% endblock %}
+        </main>
+        <aside id="assistant">
+            <h2>Asistente Virtual</h2>
+            <div id="chat-window"></div>
+            <input type="text" id="asistente-input" placeholder="Haz una pregunta...">
+            <div id="asistente-output"></div>
+        </aside>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Bancos - CalculAI{% endblock %}
+{% block content %}
+<div id="bancos-module">
+    <h1>Gestión de Bancos</h1>
+    
+    <div id="busqueda-form">
+        <input type="text" id="id-banco" placeholder="ID">
+        <input type="text" id="nombre-banco" placeholder="Nombre">
+        <input type="text" id="contacto-banco" placeholder="Contacto">
+        <select id="estatus-banco">
+            <option value="">Todos</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+        </select>
+        <button id="buscar-btn">Buscar</button>
+        <button id="crear-nuevo-btn">Crear Nuevo Banco</button>
+    </div>
+    
+    <table id="bancos-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Contacto</th>
+                <th>Teléfono Contacto</th>
+                <th>Estatus</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for banco in bancos %}
+            <tr>
+                <td>{{ banco.id }}</td>
+                <td>{{ banco.nombre }}</td>
+                <td>{{ banco.telefono }}</td>
+                <td>{{ banco.contacto }}</td>
+                <td>{{ banco.telefono_contacto }}</td>
+                <td>{{ banco.estatus }}</td>
+                <td><button class="editar-banco" data-id="{{ banco.id }}">Editar</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/bancos.js') }}"></script>
+{% endblock %}

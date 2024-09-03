@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CalculAI{% endblock %}
+
+{% block content %}
+<div id="dashboard">
+    <div class="chart-controls">
+        <button id="toggle-line-chart" class="chart-button">Mostrar/Ocultar Gráfico de Líneas</button>
+        <button id="toggle-bar-chart" class="chart-button">Mostrar/Ocultar Gráfico de Barras</button>
+        <button id="toggle-pie-chart" class="chart-button">Mostrar/Ocultar Gráfico Circular</button>
+    </div>
+    
+    <div class="charts-container">
+        <div class="chart-wrapper">
+            <h3>Ventas Mensuales</h3>
+            <div class="chart-container">
+                <canvas id="line-chart"></canvas>
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <h3>Ingresos vs Gastos</h3>
+            <div class="chart-container">
+                <canvas id="bar-chart"></canvas>
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <h3>Distribución Financiera</h3>
+            <div class="chart-container">
+                <canvas id="pie-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bottom-section">
+        <div id="calendar-container">
+            <h3>Calendario</h3>
+            <div id="calendar"></div>
+        </div>
+        
+        <div class="widgets-container">
+            <div id="tasks" class="widget">
+                <h3>Tareas Pendientes</h3>
+                <ul id="task-list"></ul>
+            </div>
+            <div id="notifications" class="widget">
+                <h3>Notificaciones y Alertas</h3>
+                <ul id="notification-list"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
+{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet">
+{% endblock %}

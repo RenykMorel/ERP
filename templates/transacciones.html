@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Transacciones - CalculAI{% endblock %}
+{% block content %}
+<div id="transacciones-module">
+    <h1>Transacciones</h1>
+    
+    <div id="busqueda-form">
+        <input type="text" id="tipo-transaccion" placeholder="Tipo">
+        <input type="text" id="descripcion-transaccion" placeholder="Descripción">
+        <input type="text" id="cuenta-id" placeholder="ID de Cuenta">
+        <button id="buscar-btn">Buscar</button>
+        <button id="crear-nuevo-btn">Crear Nueva Transacción</button>
+    </div>
+    
+    <h3>Resultado de Búsqueda</h3>
+    <table id="resultado-busqueda">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Monto</th>
+                <th>Descripción</th>
+                <th>ID de Cuenta</th>
+                <th>Fecha de Creación</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaccion in transacciones %}
+            <tr>
+                <td>{{ transaccion.id }}</td>
+                <td>{{ transaccion.tipo }}</td>
+                <td>{{ transaccion.monto }}</td>
+                <td>{{ transaccion.descripcion }}</td>
+                <td>{{ transaccion.cuenta_id }}</td>
+                <td>{{ transaccion.fecha_creacion }}</td>
+                <td><a href="#" class="editar-transaccion" data-id="{{ transaccion.id }}">Editar</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button id="exportar-excel">Exportar a Excel</button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/transacciones.js') }}"></script>
+{% endblock %}

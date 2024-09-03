@@ -1,0 +1,331 @@
+/* Estilos generales para el cuerpo y html */
+body, html {
+    margin: 0; /* Elimina márgenes */
+    padding: 0; /* Elimina relleno */
+    height: 100%; /* Altura al 100% */
+    font-family: Arial, sans-serif; /* Fuente del texto */
+    background-color: #f0f0f0; /* Color de fondo */
+    font-size: 16px; /* Tamaño base de la fuente */
+    line-height: 1.5; /* Espaciado entre líneas */
+}
+
+/* Estructura principal de la aplicación */
+#app {
+    display: grid; /* Usa un layout de cuadrícula */
+    grid-template-columns: 250px 1fr 300px; /* Define 3 columnas: sidebar, contenido principal, asistente */
+    height: 100vh; /* Altura total de la ventana */
+    overflow: hidden; /* Oculta el desbordamiento */
+}
+
+/* Estilos comunes para sidebar, contenido principal y asistente */
+#sidebar, #content, #assistant {
+    overflow-y: auto; /* Permite desplazamiento vertical */
+    padding: 20px; /* Relleno interno */
+}
+
+/* Estilos específicos para la barra lateral */
+#sidebar {
+    background-color: #007EA7; /* Color de fondo */
+    color: white; /* Color del texto */
+    padding: 10px 5px; /* Relleno interno */
+}
+
+/* Estilos para la información del usuario en la barra lateral */
+#user-info {
+    text-align: center; /* Centra el contenido */
+    padding: 20px 0; /* Relleno superior e inferior */
+    margin-bottom: 10px; /* Margen inferior */
+}
+
+/* Estilos para el avatar del usuario */
+#user-avatar {
+    width: 100px; /* Ancho */
+    height: 100px; /* Altura */
+    border-radius: 50%; /* Hace la imagen circular */
+    object-fit: cover; /* Ajusta la imagen al contenedor */
+    margin-bottom: 10px; /* Margen inferior */
+}
+
+/* Estilos para el nombre del usuario */
+#user-name {
+    font-size: 18px; /* Tamaño de la fuente */
+    font-weight: bold; /* Negrita */
+    margin: 5px 0; /* Margen superior e inferior */
+}
+
+/* Estilos para el ID del usuario */
+#user-id {
+    font-size: 14px; /* Tamaño de la fuente */
+    color: #ccc; /* Color del texto */
+}
+
+/* Estilos para el contenido principal */
+#content {
+    background-color: #f0f0f0; /* Color de fondo */
+}
+
+/* Estilos para el encabezado */
+#header {
+    background-color: #007EA7; /* Color de fondo */
+    padding: 0px; /* Relleno (ajustado a 0) */
+    color: white; /* Color del texto */
+    border-bottom: 2px solid #00597A; /* Borde inferior */
+}
+
+/* Estilos para el título del encabezado */
+#header h1 {
+    font-size: 0px; /* Tamaño de la fuente (ajustado a 0) */
+}
+
+/* Estilos para el dashboard */
+#dashboard {
+    padding: 0px; /* Relleno */
+}
+
+/* Estilos para los controles de los gráficos */
+.chart-controls {
+    display: flex; /* Usa flexbox */
+    justify-content: space-between; /* Distribuye el espacio entre los elementos */
+    margin-bottom: 20px; /* Margen inferior */
+}
+
+/* Estilos para los botones de control de los gráficos */
+.chart-controls button {
+    padding: -5px; /* Relleno */
+    background-color: #007EA7; /* Color de fondo */
+    color: white; /* Color del texto */
+    border: none; /* Sin borde */
+    cursor: pointer; /* Cursor tipo puntero */
+    border-radius: 40px; /* Bordes redondeados */
+}
+
+/* Estilos para el layout del dashboard */
+.dashboard-layout {
+    display: flex; /* Usa flexbox */
+    gap: 20px; /* Espacio entre elementos */
+}
+
+/* Estilos para el contenedor de gráficos */
+.charts-container {
+    display: flex;                /* Activa flexbox */
+    flex-direction: row;          /* Alinea elementos en una fila horizontal */
+    justify-content: space-between; /* Distribuye el espacio entre elementos */
+    gap: 100px;                    /* Reduce el espacio entre los gráficos */
+    transform: scale(0.9);        /* Escala todo al 80% de su tamaño original */
+    transform-origin: top left;   /* Define el origen de la escala */
+}
+
+
+/* Estilos para el contenedor de cada gráfico */
+.chart-wrapper {
+    background-color: white; /* Color de fondo */
+    padding: 15px; /* Relleno */
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra */
+}
+
+/* Estilos para los títulos de los gráficos */
+.chart-wrapper h3 {
+    margin-top: 0; /* Sin margen superior */
+    margin-bottom: 10px; /* Margen inferior */
+    text-align: center; /* Texto centrado */
+}
+
+/* Estilos para el calendario */
+#calendar {
+    flex: 0; /* Ocupa 1 parte del espacio disponible */
+    background-color: white; /* Color de fondo */
+    padding: 15px; /* Relleno */
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra */
+}
+
+/* Estilos para los widgets inferiores */
+.bottom-widgets {
+    display: flex; /* Usa flexbox */
+    gap: 20px; /* Espacio entre elementos */
+    margin-top: 20px; /* Margen superior */
+}
+
+/* Estilos comunes para tareas y notificaciones */
+#tasks, #notifications {
+    flex: 1; /* Ocupan partes iguales del espacio disponible */
+    background-color: white; /* Color de fondo */
+    border-radius: 4px; /* Bordes redondeados */
+    padding: 15px; /* Relleno */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Sombra */
+}
+
+/* Estilos para las listas de tareas y notificaciones */
+#task-list, #notification-list {
+    list-style-type: none; /* Sin viñetas */
+    padding: 0; /* Sin relleno */
+}
+
+/* Estilos para los elementos de las listas de tareas y notificaciones */
+#task-list li, #notification-list li {
+    margin-bottom: 10px; /* Margen inferior */
+    padding: 10px; /* Relleno */
+    background-color: #f0f0f0; /* Color de fondo */
+    border-radius: 5px; /* Bordes redondeados */
+}
+
+/* Estilos para notificaciones de tipo info */
+#notification-list li.info {
+    color: blue; /* Color del texto */
+    background-color: #e6f3ff; /* Color de fondo */
+}
+
+/* Estilos para notificaciones de tipo warning */
+#notification-list li.warning {
+    color: red; /* Color del texto */
+    background-color: #fff0f0; /* Color de fondo */
+}
+
+/* Estilos para el asistente virtual */
+#assistant {
+    background-color: #007EA7; /* Color de fondo */
+    color: white; /* Color del texto */
+    display: flex; /* Usa flexbox */
+    flex-direction: column; /* Dirección de columna */
+}
+
+/* Estilos para el título del asistente */
+#assistant h2 {
+    font-size: 18px; /* Tamaño de la fuente */
+    margin-bottom: 10px; /* Margen inferior */
+}
+
+/* Estilos para la ventana de chat */
+#chat-window {
+    flex-grow: 1; /* Crece para ocupar el espacio disponible */
+    background-color: white; /* Color de fondo */
+    border-radius: 10px; /* Bordes redondeados */
+    padding: 10px; /* Relleno */
+    margin-bottom: 10px; /* Margen inferior */
+    overflow-y: auto; /* Permite desplazamiento vertical */
+}
+
+/* Estilos para el input del asistente */
+#asistente-input {
+    width: 100%; /* Ancho completo */
+    padding: 10px; /* Relleno */
+    border: none; /* Sin borde */
+    border-radius: 20px; /* Bordes redondeados */
+    background-color: #00597A; /* Color de fondo */
+    color: white; /* Color del texto */
+}
+
+/* Estilos para el placeholder del input del asistente */
+#asistente-input::placeholder {
+    color: #B0E0E6; /* Color del texto del placeholder */
+}
+
+/* Estilos comunes para botones rectangulares y de submódulo */
+.rectangular-button, .submodule-button {
+    width: 95%; /* Ancho */
+    padding: 10px 15px; /* Relleno */
+    border: none; /* Sin borde */
+    border-radius: 25px; /* Bordes más redondeados */
+    color: #fff; /* Color del texto */
+    background-color: #28a745; /* Fondo verde */
+    font-weight: bold; /* Negrita */
+    cursor: pointer; /* Cursor tipo puntero */
+    transition: all 0.3s ease; /* Transición suave */
+    text-align: center; /* Texto centrado */
+    margin: 5px auto; /* Margen */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Sombra */
+}
+
+.rectangular-button:hover, .submodule-button:hover {
+    background-color: #12b2da; /* Fondo verde oscuro al pasar el ratón */
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3); /* Sombra más profunda */
+    transform: translateY(-8px); /* Desplazamiento hacia arriba */
+}
+
+
+/* Estilos específicos para botones rectangulares */
+.rectangular-button {
+    font-size: 14px; /* Tamaño de la fuente */
+}
+
+/* Estilos específicos para botones de submódulo */
+.submodule-button {
+    font-size: 12px; /* Tamaño de la fuente */
+    background-color: rgba(255, 255, 255, 0.2); /* Color de fondo */
+    width: 90%; /* Ancho */
+}
+
+/* Estilos para el hover de los botones */
+.rectangular-button:hover, .submodule-button:hover {
+    filter: brightness(110%); /* Aumenta el brillo */
+    transform: translateY(-1px); /* Mueve ligeramente hacia arriba */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15); /* Sombra más pronunciada */
+}
+
+/* Estilos para el contenedor de submódulos */
+.submodule-container {
+    display: none; /* Oculto por defecto */
+    margin-top: 1px; /* Margen superior */
+}
+
+/* Estilos responsivos para pantallas medianas */
+@media (max-width: 1200px) {
+    #app {
+        grid-template-columns: 250px 1fr; /* Cambia a dos columnas */
+    }
+
+    #assistant {
+        display: none; /* Oculta el asistente */
+    }
+
+    .dashboard-layout {
+        flex-direction: column; /* Cambia a dirección de columna */
+    }
+
+    #calendar {
+        order: -1; /* Mueve el calendario al principio */
+    }
+}
+
+/* Estilos responsivos para pantallas pequeñas */
+@media (max-width: 768px) {
+    #app {
+        grid-template-columns: 1fr; /* Una sola columna */
+    }
+
+    #sidebar {
+        display: none; /* Oculta la barra lateral */
+    }
+
+    .charts-container {
+        flex-direction: column; /* Dirección de columna para los gráficos */
+    }
+
+    .chart-wrapper {
+        width: 100%; /* Ancho completo */
+    }
+
+    #assistant {
+        display: flex; /* Muestra el asistente */
+        position: fixed; /* Posición fija */
+        bottom: 0; /* En la parte inferior */
+        left: 0;
+        right: 0;
+        height: 50vh; /* Altura del 50% de la ventana */
+        width: 100%; /* Ancho completo */
+    }
+
+    #chat-window {
+        height: calc(100% - 60px); /* Ajusta la altura */
+    }
+
+    .chart-controls {
+        flex-direction: column; /* Dirección de columna */
+        align-items: stretch; /* Estira los elementos */
+    }
+
+    .chart-controls button {
+        margin-bottom: 10px; /* Margen inferior para los botones */
+    }
+}
