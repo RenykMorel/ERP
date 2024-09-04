@@ -92,33 +92,57 @@
             const asistenteInput = document.getElementById('asistente-input');
             const asistenteEnviar = document.getElementById('asistente-enviar');
             const asistenteMensajes = document.getElementById('asistente-mensajes');
+            const chatWindow = document.getElementById('chat-window');
+
+            // Verificar si el asistente está activo (esto debería venir del backend)
+            const ASISTENTE_ACTIVO = false;
+
+            function mostrarMensajeAsistente(mensaje, esUsuario = false) {
+                const mensajeElement = document.createElement('p');
+                if (esUsuario) {
+                    mensajeElement.textContent = `Tú: ${mensaje}`;
+                } else {
+                    if (!ASISTENTE_ACTIVO) {
+                        mensajeElement.classList.add('asistente-inactivo');
+                        mensajeElement.innerHTML = `
+                            <span>El asistente no está activo.</span>
+                            <span>Por favor, contacte al <span class="highlight">equipo de CalculAI</span> para su activación.</span>
+                        `;
+                    } else {
+                        mensajeElement.textContent = `Asistente: ${mensaje}`;
+                    }
+                }
+                asistenteMensajes.appendChild(mensajeElement);
+                asistenteMensajes.scrollTop = asistenteMensajes.scrollHeight;
+            }
+
+            if (!ASISTENTE_ACTIVO) {
+                chatWindow.classList.add('asistente-inactivo');
+                mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
+            }
 
             asistenteEnviar.addEventListener('click', function() {
-                const pregunta = asistenteInput.value;
+                const pregunta = asistenteInput.value.trim();
                 if (pregunta) {
-                    // Enviar pregunta al asistente
-                    fetch('/api/asistente', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ pregunta: pregunta })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        // Mostrar respuesta del asistente
-                        const mensajeUsuario = document.createElement('p');
-                        mensajeUsuario.textContent = `Tú: ${pregunta}`;
-                        asistenteMensajes.appendChild(mensajeUsuario);
-
-                        const mensajeAsistente = document.createElement('p');
-                        mensajeAsistente.textContent = `Asistente: ${data.respuesta}`;
-                        asistenteMensajes.appendChild(mensajeAsistente);
-
-                        asistenteInput.value = '';
-                        asistenteMensajes.scrollTop = asistenteMensajes.scrollHeight;
-                    })
-                    .catch(error => console.error('Error:', error));
+                    mostrarMensajeAsistente(pregunta, true);
+                    if (!ASISTENTE_ACTIVO) {
+                        mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
+                    } else {
+                        // Enviar pregunta al asistente
+                        fetch('/api/asistente', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ pregunta: pregunta })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            mostrarMensajeAsistente(data.respuesta);
+                        })
+                        .catch(error => console.error('Error:', error));
+                    }
+                    asistenteInput.value = '';
                 }
             });
 
