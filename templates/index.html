@@ -16,17 +16,29 @@
             <div class="chart-container">
                 <canvas id="line-chart"></canvas>
             </div>
+            <div class="chart-controls">
+                <button onclick="adjustChartSize('line-chart', -50)">-</button>
+                <button onclick="adjustChartSize('line-chart', 50)">+</button>
+            </div>
         </div>
         <div class="chart-wrapper">
             <h3>Ingresos vs Gastos</h3>
             <div class="chart-container">
                 <canvas id="bar-chart"></canvas>
             </div>
+            <div class="chart-controls">
+                <button onclick="adjustChartSize('bar-chart', -50)">-</button>
+                <button onclick="adjustChartSize('bar-chart', 50)">+</button>
+            </div>
         </div>
         <div class="chart-wrapper">
             <h3>Distribución Financiera</h3>
             <div class="chart-container">
                 <canvas id="pie-chart"></canvas>
+            </div>
+            <div class="chart-controls">
+                <button onclick="adjustChartSize('pie-chart', -50)">-</button>
+                <button onclick="adjustChartSize('pie-chart', 50)">+</button>
             </div>
         </div>
     </div>
@@ -54,6 +66,55 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Notificar al asistente que el usuario ha accedido al dashboard
+    notificarAsistente("El usuario ha accedido al dashboard");
+
+    // Función para notificar al asistente
+    function notificarAsistente(mensaje) {
+        fetch('/api/asistente', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ pregunta: mensaje })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Respuesta del asistente:', data.respuesta);
+            mostrarMensajeAsistente(data.respuesta);
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Función para mostrar mensajes del asistente
+    function mostrarMensajeAsistente(mensaje) {
+        const mensajesDiv = document.getElementById('asistente-mensajes');
+        if (mensajesDiv) {
+            const nuevoMensaje = document.createElement('p');
+            nuevoMensaje.textContent = `Asistente: ${mensaje}`;
+            mensajesDiv.appendChild(nuevoMensaje);
+            mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
+        }
+    }
+
+    // Event listeners para notificar acciones al asistente
+    document.querySelectorAll('.chart-button').forEach(button => {
+        button.addEventListener('click', function() {
+            notificarAsistente(`El usuario ha ${this.textContent} en el dashboard`);
+        });
+    });
+
+    // Función para ajustar el tamaño de los gráficos
+    window.adjustChartSize = function(chartId, change) {
+        const chartWrapper = document.getElementById(chartId).closest('.chart-wrapper');
+        const currentHeight = chartWrapper.offsetHeight;
+        chartWrapper.style.height = `${currentHeight + change}px`;
+        notificarAsistente(`El usuario ha ajustado el tamaño del gráfico ${chartId}`);
+    };
+});
+</script>
 {% endblock %}
 
 {% block extra_css %}

@@ -75,12 +75,60 @@
         </main>
         <aside id="assistant">
             <h2>Asistente Virtual</h2>
-            <div id="chat-window"></div>
-            <input type="text" id="asistente-input" placeholder="Haz una pregunta...">
+            <div id="chat-window">
+                <div id="asistente-mensajes"></div>
+            </div>
+            <div id="asistente-input-container">
+                <input type="text" id="asistente-input" placeholder="Haz una pregunta...">
+                <button id="asistente-enviar">Enviar</button>
+            </div>
             <div id="asistente-output"></div>
         </aside>
     </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Inicialización del asistente virtual
+        document.addEventListener('DOMContentLoaded', function() {
+            const asistenteInput = document.getElementById('asistente-input');
+            const asistenteEnviar = document.getElementById('asistente-enviar');
+            const asistenteMensajes = document.getElementById('asistente-mensajes');
+
+            asistenteEnviar.addEventListener('click', function() {
+                const pregunta = asistenteInput.value;
+                if (pregunta) {
+                    // Enviar pregunta al asistente
+                    fetch('/api/asistente', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ pregunta: pregunta })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Mostrar respuesta del asistente
+                        const mensajeUsuario = document.createElement('p');
+                        mensajeUsuario.textContent = `Tú: ${pregunta}`;
+                        asistenteMensajes.appendChild(mensajeUsuario);
+
+                        const mensajeAsistente = document.createElement('p');
+                        mensajeAsistente.textContent = `Asistente: ${data.respuesta}`;
+                        asistenteMensajes.appendChild(mensajeAsistente);
+
+                        asistenteInput.value = '';
+                        asistenteMensajes.scrollTop = asistenteMensajes.scrollHeight;
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+            });
+
+            asistenteInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    asistenteEnviar.click();
+                }
+            });
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

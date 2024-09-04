@@ -1,17 +1,22 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Enum
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import mysql.connector
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, event
+from datetime import datetime
+from sqlalchemy import text
 
-Base = declarative_base()
+
+db = SQLAlchemy()
 
 # Configuración de la base de datos
 DATABASE_URL = "mysql+mysqlconnector://root:@localhost/calculai_db"
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-class Banco(Base):
+# Función para notificar al asistente (simulada)
+def notificar_asistente(mensaje):
+    print(f"Notificación al asistente: {mensaje}")
+    # Aquí se implementaría la lógica real para notificar al asistente
+
+
+class Banco(db.Model):
     __tablename__ = "bancos"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -20,26 +25,30 @@ class Banco(Base):
     contacto = Column(String(100))
     telefono_contacto = Column(String(20))
     estatus = Column(Enum("activo", "inactivo"), default="activo")
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    fecha_actualizacion = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
     @classmethod
     def obtener_todos(cls):
-        db = SessionLocal()
-        try:
-            return db.query(cls).all()
-        finally:
-            db.close()
+        bancos = cls.query.all()
+        notificar_asistente(
+            f"Se han recuperado {len(bancos)} bancos de la base de datos."
+        )
+        return bancos
 
     @classmethod
     def buscar(cls, **kwargs):
-        db = SessionLocal()
-        try:
-            query = db.query(cls)
-            for key, value in kwargs.items():
-                if value:
-                    query = query.filter(getattr(cls, key).like(f"%{value}%"))
-            return query.all()
-        finally:
-            db.close()
+        query = cls.query
+        for key, value in kwargs.items():
+            if value:
+                query = query.filter(getattr(cls, key).like(f"%{value}%"))
+        resultados = query.all()
+        notificar_asistente(
+            f"Búsqueda de bancos realizada con {len(resultados)} resultados. Criterios: {kwargs}"
+        )
+        return resultados
 
     def to_dict(self):
         return {
@@ -49,10 +58,18 @@ class Banco(Base):
             "contacto": self.contacto,
             "telefono_contacto": self.telefono_contacto,
             "estatus": self.estatus,
+            "fecha_creacion": (
+                self.fecha_creacion.isoformat() if self.fecha_creacion else None
+            ),
+            "fecha_actualizacion": (
+                self.fecha_actualizacion.isoformat()
+                if self.fecha_actualizacion
+                else None
+            ),
         }
 
 
-class Transaccion(Base):
+class Transaccion(db.Model):
     __tablename__ = "transacciones"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -60,27 +77,30 @@ class Transaccion(Base):
     monto = Column(Float, nullable=False)
     descripcion = Column(String(255))
     cuenta_id = Column(Integer)
-    fecha_creacion = Column(DateTime)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    fecha_actualizacion = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
     @classmethod
     def obtener_todos(cls):
-        db = SessionLocal()
-        try:
-            return db.query(cls).all()
-        finally:
-            db.close()
+        transacciones = cls.query.all()
+        notificar_asistente(
+            f"Se han recuperado {len(transacciones)} transacciones de la base de datos."
+        )
+        return transacciones
 
     @classmethod
     def buscar(cls, **kwargs):
-        db = SessionLocal()
-        try:
-            query = db.query(cls)
-            for key, value in kwargs.items():
-                if value:
-                    query = query.filter(getattr(cls, key).like(f"%{value}%"))
-            return query.all()
-        finally:
-            db.close()
+        query = cls.query
+        for key, value in kwargs.items():
+            if value:
+                query = query.filter(getattr(cls, key).like(f"%{value}%"))
+        resultados = query.all()
+        notificar_asistente(
+            f"Búsqueda de transacciones realizada con {len(resultados)} resultados. Criterios: {kwargs}"
+        )
+        return resultados
 
     def to_dict(self):
         return {
@@ -92,8 +112,38 @@ class Transaccion(Base):
             "fecha_creacion": (
                 self.fecha_creacion.isoformat() if self.fecha_creacion else None
             ),
+            "fecha_actualizacion": (
+                self.fecha_actualizacion.isoformat()
+                if self.fecha_actualizacion
+                else None
+            ),
         }
 
 
-# Crear las tablas en la base de datos
-Base.metadata.create_all(engine)
+# Eventos para notificar al asistente sobre operaciones en la base de datos
+@event.listens_for(Banco, "after_insert")
+def notify_banco_insert(mapper, connection, target):
+    notificar_asistente(f"Nuevo banco creado: {target.nombre}")
+
+
+@event.listens_for(Banco, "after_update")
+def notify_banco_update(mapper, connection, target):
+    notificar_asistente(f"Banco actualizado: {target.nombre}")
+
+
+@event.listens_for(Transaccion, "after_insert")
+def notify_transaccion_insert(mapper, connection, target):
+    notificar_asistente(f"Nueva transacción creada: {target.tipo} por {target.monto}")
+
+
+@event.listens_for(Transaccion, "after_update")
+def notify_transaccion_update(mapper, connection, target):
+    notificar_asistente(f"Transacción actualizada: {target.tipo} por {target.monto}")
+
+
+def init_db(app):
+    with app.app_context():
+        connection = db.engine.connect()
+        connection.execute(text("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"))
+        db.create_all()
+        connection.close()

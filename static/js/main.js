@@ -7,72 +7,82 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();   // Inicializa los gráficos
     initializeCalendar(); // Inicializa el calendario
     initializeAsistente();// Inicializa el asistente virtual
+    initializeSubmoduleHandlers(); // Inicializa los manejadores de submódulos
     window.addEventListener('resize', resizeCharts); // Ajusta los gráficos al redimensionar la ventana
 
-        // Agrega event listeners para mostrar/ocultar gráficos
-        ['line', 'bar', 'pie'].forEach(type => {
-            const toggleButton = document.getElementById(`toggle-${type}-chart`);
-            if (toggleButton) {
-                toggleButton.addEventListener('click', () => toggleChartVisibility(`${type}-chart`));
-            }
+    // Agrega event listeners para mostrar/ocultar gráficos
+    ['line', 'bar', 'pie'].forEach(type => {
+        const toggleButton = document.getElementById(`toggle-${type}-chart`);
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => toggleChartVisibility(`${type}-chart`));
+        }
+    });
+});
+
+// Función para notificar al asistente virtual
+function notificarAsistente(mensaje) {
+    fetch('/api/asistente', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pregunta: mensaje })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Respuesta del asistente:', data.respuesta);
+        mostrarMensajeAsistente(data.respuesta);
+    })
+    .catch(error => console.error('Error al notificar al asistente:', error));
+}
+
+// Función para mostrar mensajes del asistente
+function mostrarMensajeAsistente(mensaje) {
+    const mensajesDiv = document.getElementById('asistente-mensajes');
+    if (mensajesDiv) {
+        const nuevoMensaje = document.createElement('p');
+        nuevoMensaje.textContent = mensaje;
+        mensajesDiv.appendChild(nuevoMensaje);
+    } else {
+        console.log('Mensaje del asistente:', mensaje);
+    }
+}
+
+// Inicializa los manejadores de submódulos
+function initializeSubmoduleHandlers() {
+    document.querySelectorAll('.submodule-button').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const moduleName = this.closest('.module-wrapper').querySelector('.rectangular-button').textContent;
+            const submoduleName = this.textContent;
+            handleSubmoduleClick(moduleName, submoduleName);
         });
     });
-    
-    // Nueva función para inicializar los manejadores de submódulos
-    function initializeSubmoduleHandlers() {
-        document.querySelectorAll('.submodule-button').forEach(button => {
-            button.addEventListener('click', function(event) {
-                event.preventDefault();
-                const moduleName = this.closest('.module-wrapper').querySelector('.rectangular-button').textContent;
-                const submoduleName = this.textContent;
-                handleSubmoduleClick(moduleName, submoduleName);
-            });
-        });
+}
+
+// Maneja el clic en submódulos
+function handleSubmoduleClick(moduleName, submoduleName) {
+    console.log(`Clicked on ${submoduleName} of ${moduleName}`);
+    notificarAsistente(`El usuario ha accedido al submódulo ${submoduleName} del módulo ${moduleName}`);
+    if (moduleName === 'Banco' && submoduleName === 'Bancos') {
+        window.location.href = '/Bancos';
+    } else {
+        // Manejar otros submódulos aquí
+        console.log('Otro submódulo clickeado');
+        loadSubmoduleContent(moduleName, submoduleName);
     }
-    
-    // Nueva función para manejar el clic en submódulos
-    function handleSubmoduleClick(moduleName, submoduleName) {
-        console.log(`Clicked on ${submoduleName} of ${moduleName}`);
-        if (moduleName === 'Banco' && submoduleName === 'Bancos') {
-            window.location.href = '/Bancos';
-        } else {
-            // Manejar otros submódulos aquí
-            console.log('Otro submódulo clickeado');
-            loadSubmoduleContent(moduleName, submoduleName);
-        }
-    }
-    
-    // ... (resto de las funciones existentes sin cambios)
-    
-    // Modificar la función loadSubmodules para usar handleSubmoduleClick
-    function loadSubmodules(moduleName, submoduleContainer) {
-        if (submoduleContainer.children.length === 0) {
-            fetch(`/api/submodulos/${moduleName}`)
-                .then(response => response.json())
-                .then(submodulos => {
-                    submoduleContainer.innerHTML = '';
-                    submodulos.forEach(submodulo => {
-                        const button = createButton(submodulo, 'submodule-button');
-                        button.onclick = (event) => {
-                            event.preventDefault();
-                            handleSubmoduleClick(moduleName, submodulo);
-                        };
-                        submoduleContainer.appendChild(button);
-                    });
-                })
-                .catch(error => console.error('Error loading submodules:', error));
-        }
-    }
+}
 
 // Carga la información del usuario desde la API
 function loadUserInfo() {
     fetch('/api/usuario')
         .then(response => response.json())
         .then(usuario => {
-            document.getElementById('user-name').textContent = usuario.nombre;  // Muestra el nombre del usuario
-            document.getElementById('user-id').textContent = usuario.id;        // Muestra el ID del usuario
+            document.getElementById('user-name').textContent = usuario.nombre;
+            document.getElementById('user-id').textContent = usuario.id;
+            notificarAsistente(`Usuario ${usuario.nombre} ha iniciado sesión`);
         })
-        .catch(error => console.error('Error loading user info:', error)); // Maneja errores en la carga de la información del usuario
+        .catch(error => console.error('Error loading user info:', error));
 }
 
 // Carga los módulos del sistema desde la API
@@ -81,14 +91,15 @@ function loadModules() {
         .then(response => response.json())
         .then(modulos => {
             const moduleContainer = document.getElementById('module-container');
-            moduleContainer.innerHTML = ''; // Limpia el contenedor de módulos
+            moduleContainer.innerHTML = '';
             const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#FFC0CB", "#98D8C8", "#F06292", "#AED581", "#FFD54F", "#800000", "#4DB6AC", "#075e56"];
             modulos.forEach((modulo, index) => {
-                const moduleDiv = createModuleElement(modulo, colors[index % colors.length]); // Crea y agrega cada módulo
+                const moduleDiv = createModuleElement(modulo, colors[index % colors.length]);
                 moduleContainer.appendChild(moduleDiv);
             });
+            notificarAsistente("Módulos del sistema cargados correctamente");
         })
-        .catch(error => console.error('Error loading modules:', error)); // Maneja errores en la carga de los módulos
+        .catch(error => console.error('Error loading modules:', error));
 }
 
 // Crea un elemento HTML para un módulo
@@ -96,11 +107,11 @@ function createModuleElement(modulo, color) {
     const moduleDiv = document.createElement('div');
     moduleDiv.className = 'module-wrapper';
     
-    const button = createButton(modulo, 'rectangular-button', color); // Crea el botón para el módulo
-    button.onclick = () => toggleSubmodules(modulo, moduleDiv); // Añade el evento para alternar la visibilidad de submódulos
+    const button = createButton(modulo, 'rectangular-button', color);
+    button.onclick = () => toggleSubmodules(modulo, moduleDiv);
     
     const submoduleContainer = document.createElement('div');
-    submoduleContainer.className = 'submodule-container'; // Contenedor para los submódulos
+    submoduleContainer.className = 'submodule-container';
     
     moduleDiv.appendChild(button);
     moduleDiv.appendChild(submoduleContainer);
@@ -110,11 +121,11 @@ function createModuleElement(modulo, color) {
 // Crea un botón genérico
 function createButton(text, className, color) {
     const button = document.createElement('button');
-    button.textContent = text; // Texto del botón
-    button.className = className; // Clase CSS del botón
-    if (color) button.style.backgroundColor = color; // Color de fondo del botón, si se proporciona
+    button.textContent = text;
+    button.className = className;
+    if (color) button.style.backgroundColor = color;
     if (className === 'submodule-button') {
-        button.style.width = 'auto'; // Ajusta el ancho para botones de submódulos
+        button.style.width = 'auto';
     }
     return button;
 }
@@ -123,26 +134,26 @@ function createButton(text, className, color) {
 function toggleSubmodules(moduleName, moduleDiv) {
     const submoduleContainer = moduleDiv.querySelector('.submodule-container');
     const moduleButton = moduleDiv.querySelector('.rectangular-button');
-    const isOpen = submoduleContainer.style.display === 'block'; // Verifica si los submódulos están visibles
+    const isOpen = submoduleContainer.style.display === 'block';
 
     document.querySelectorAll('.submodule-container').forEach(container => {
         if (container !== submoduleContainer) {
-            container.style.display = 'none'; // Oculta todos los submódulos menos el seleccionado
+            container.style.display = 'none';
         }
     });
     document.querySelectorAll('.rectangular-button').forEach(btn => {
         if (btn !== moduleButton) {
-            btn.classList.remove('active'); // Desactiva todos los botones menos el seleccionado
+            btn.classList.remove('active');
         }
     });
 
     if (!isOpen) {
-        moduleButton.classList.add('active'); // Activa el botón seleccionado
-        submoduleContainer.style.display = 'block'; // Muestra los submódulos del módulo seleccionado
-        loadSubmodules(moduleName, submoduleContainer); // Carga los submódulos si es necesario
+        moduleButton.classList.add('active');
+        submoduleContainer.style.display = 'block';
+        loadSubmodules(moduleName, submoduleContainer);
     } else {
-        moduleButton.classList.remove('active'); // Desactiva el botón
-        submoduleContainer.style.display = 'none'; // Oculta los submódulos
+        moduleButton.classList.remove('active');
+        submoduleContainer.style.display = 'none';
     }
 }
 
@@ -152,20 +163,25 @@ function loadSubmodules(moduleName, submoduleContainer) {
         fetch(`/api/submodulos/${moduleName}`)
             .then(response => response.json())
             .then(submodulos => {
-                submoduleContainer.innerHTML = ''; // Limpia el contenedor de submódulos
+                submoduleContainer.innerHTML = '';
                 submodulos.forEach(submodulo => {
-                    const button = createButton(submodulo, 'submodule-button'); // Crea botones para cada submódulo
-                    button.onclick = () => loadSubmoduleContent(moduleName, submodulo); // Evento para cargar el contenido del submódulo
-                    submoduleContainer.appendChild(button); // Agrega el botón al contenedor
+                    const button = createButton(submodulo, 'submodule-button');
+                    button.onclick = (event) => {
+                        event.preventDefault();
+                        handleSubmoduleClick(moduleName, submodulo);
+                    };
+                    submoduleContainer.appendChild(button);
                 });
+                notificarAsistente(`Submódulos de ${moduleName} cargados`);
             })
-            .catch(error => console.error('Error loading submodules:', error)); // Maneja errores en la carga de submódulos
+            .catch(error => console.error('Error loading submodules:', error));
     }
 }
 
-// Carga el contenido de un submódulo específico (función a implementar)
+// Carga el contenido de un submódulo específico
 function loadSubmoduleContent(moduleName, submoduleName) {
     console.log(`Loading content for ${moduleName} - ${submoduleName}`);
+    notificarAsistente(`Cargando contenido para ${submoduleName} de ${moduleName}`);
     // Implementar lógica para cargar contenido del submódulo
 }
 
@@ -177,9 +193,10 @@ function loadTasks() {
             const taskList = document.getElementById('task-list');
             taskList.innerHTML = tareas.map(tarea => 
                 `<li>${tarea.descripcion} - Vence: ${new Date(tarea.vence).toLocaleDateString()}</li>`
-            ).join(''); // Muestra la lista de tareas pendientes
+            ).join('');
+            notificarAsistente("Tareas pendientes actualizadas");
         })
-        .catch(error => console.error('Error loading tasks:', error)); // Maneja errores en la carga de tareas
+        .catch(error => console.error('Error loading tasks:', error));
 }
 
 // Carga las notificaciones desde la API
@@ -190,9 +207,10 @@ function loadNotifications() {
             const notificationList = document.getElementById('notification-list');
             notificationList.innerHTML = notificaciones.map(notificacion => 
                 `<li class="${notificacion.tipo}">${notificacion.mensaje}</li>`
-            ).join(''); // Muestra la lista de notificaciones
+            ).join('');
+            notificarAsistente("Notificaciones actualizadas");
         })
-        .catch(error => console.error('Error loading notifications:', error)); // Maneja errores en la carga de notificaciones
+        .catch(error => console.error('Error loading notifications:', error));
 }
 
 // Opciones comunes para los gráficos
@@ -217,19 +235,12 @@ function initializeCharts() {
     fetch('/api/datos_graficos')
         .then(response => response.json())
         .then(datos => {
-            createLineChart(datos.ventas);            // Crea un gráfico de líneas para ventas
-            createBarChart(datos.ingresos_vs_gastos); // Crea un gráfico de barras para ingresos vs gastos
-            createPieChart(datos.distribucion);       // Crea un gráfico circular para distribución
+            createLineChart(datos.ventas);
+            createBarChart(datos.ingresos_vs_gastos);
+            createPieChart(datos.distribucion);
+            notificarAsistente("Gráficos inicializados");
         })
-        .catch(error => console.error('Error initializing charts:', error)); // Maneja errores en la inicialización de gráficos
-
-    // Agrega event listeners para mostrar/ocultar gráficos
-    ['line', 'bar', 'pie'].forEach(type => {
-        const toggleButton = document.getElementById(`toggle-${type}-chart`);
-        if (toggleButton) {
-            toggleButton.addEventListener('click', () => toggleChartVisibility(`${type}-chart`)); // Alterna la visibilidad del gráfico
-        }
-    });
+        .catch(error => console.error('Error initializing charts:', error));
 }
 
 // Crea el gráfico de líneas
@@ -238,10 +249,10 @@ function createLineChart(data) {
     lineChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: data.labels, // Etiquetas para el eje X
+            labels: data.labels,
             datasets: [{
                 label: 'Ventas',
-                data: data.values, // Datos para las ventas
+                data: data.values,
                 borderColor: '#FF6B6B',
                 backgroundColor: 'rgba(255, 107, 107, 0.2)'
             }]
@@ -253,42 +264,20 @@ function createLineChart(data) {
     });
 }
 
-function handleSubmoduleClick(moduleName, submoduleName) {
-    console.log(`Clicked on ${submoduleName} of ${moduleName}`);
-    if (moduleName === 'Banco' && submoduleName === 'Bancos') {
-        window.location.href = '/Bancos';
-    } else {
-        // Manejar otros submódulos aquí
-        console.log('Otro submódulo clickeado');
-    }
-}
-
-// Asegúrate de que esta función se llame cuando se hace clic en un submódulo
-document.addEventListener('DOMContentLoaded', function() {
-    const submodules = document.querySelectorAll('.submodule-button');
-    submodules.forEach(submodule => {
-        submodule.addEventListener('click', function() {
-            const moduleName = this.closest('.module-wrapper').querySelector('.rectangular-button').textContent;
-            const submoduleName = this.textContent;
-            handleSubmoduleClick(moduleName, submoduleName);
-        });
-    });
-});
-
 // Crea el gráfico de barras
 function createBarChart(data) {
     const ctx = document.getElementById('bar-chart').getContext('2d');
     barChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: data.labels, // Etiquetas para el eje X
+            labels: data.labels,
             datasets: [{
                 label: 'Ingresos',
-                data: data.ingresos, // Datos para los ingresos
+                data: data.ingresos,
                 backgroundColor: '#4ECDC4'
             }, {
                 label: 'Gastos',
-                data: data.gastos, // Datos para los gastos
+                data: data.gastos,
                 backgroundColor: '#FF6B6B'
             }]
         },
@@ -305,9 +294,9 @@ function createPieChart(data) {
     pieChart = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: data.labels, // Etiquetas para el gráfico
+            labels: data.labels,
             datasets: [{
-                data: data.values, // Valores para el gráfico circular
+                data: data.values,
                 backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFA07A', '#FFC0CB']
             }]
         },
@@ -320,23 +309,24 @@ function createPieChart(data) {
 
 // Ajusta los gráficos al redimensionar la ventana
 function resizeCharts() {
-    if (lineChart) lineChart.resize(); // Redimensiona el gráfico de líneas
-    if (barChart) barChart.resize();   // Redimensiona el gráfico de barras
-    if (pieChart) pieChart.resize();   // Redimensiona el gráfico circular
+    if (lineChart) lineChart.resize();
+    if (barChart) barChart.resize();
+    if (pieChart) pieChart.resize();
 }
 
 // Alterna la visibilidad de los gráficos
 function toggleChartVisibility(chartId) {
     const chartContainer = document.getElementById(chartId);
-    chartContainer.style.display = chartContainer.style.display === 'none' ? 'block' : 'none'; // Muestra u oculta el gráfico
+    chartContainer.style.display = chartContainer.style.display === 'none' ? 'block' : 'none';
+    notificarAsistente(`Gráfico ${chartId} ${chartContainer.style.display === 'none' ? 'ocultado' : 'mostrado'}`);
 }
 
-// Inicializa el calendario utilizando una librería (suponiendo que uses algo como FullCalendar)
+// Inicializa el calendario
 function initializeCalendar() {
     const calendarEl = document.getElementById('calendar');
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        events: '/api/eventos', // Carga los eventos desde la API
+        events: '/api/eventos',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -344,21 +334,35 @@ function initializeCalendar() {
         }
     });
 
-    // Modificar el tamaño y la forma del calendario con JavaScript
-    calendarEl.style.width = '60%'; /* Ajusta el ancho del calendario (más pequeño) */
-    calendarEl.style.maxWidth = '600px'; /* Limita el ancho máximo del calendario */
-    calendarEl.style.height = '400px'; /* Cambia la altura del calendario (más pequeño) */
-    calendarEl.style.borderRadius = '8px'; /* Ajusta los bordes redondeados */
-    calendarEl.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'; /* Cambia la sombra */
+    calendarEl.style.width = '60%';
+    calendarEl.style.maxWidth = '600px';
+    calendarEl.style.height = '400px';
+    calendarEl.style.borderRadius = '8px';
+    calendarEl.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
 
-    calendar.render(); // Renderiza el calendario
+    calendar.render();
+    notificarAsistente("Calendario inicializado");
 }
-
-
 
 // Inicializa el asistente virtual
 function initializeAsistente() {
-    document.getElementById('asistente-button').addEventListener('click', () => {
-        alert('Activando Asistente Virtual'); // Muestra una alerta (puedes personalizar esto)
-    });
+    const asistenteButton = document.getElementById('asistente-button');
+    if (asistenteButton) {
+        asistenteButton.addEventListener('click', () => {
+            notificarAsistente("El usuario ha activado el Asistente Virtual");
+            // Aquí puedes añadir más lógica para mostrar la interfaz del asistente
+        });
+    }
+
+    const asistenteInput = document.getElementById('asistente-input');
+    const asistenteEnviar = document.getElementById('asistente-enviar');
+    if (asistenteInput && asistenteEnviar) {
+        asistenteEnviar.addEventListener('click', () => {
+            const pregunta = asistenteInput.value;
+            if (pregunta) {
+                notificarAsistente(pregunta);
+                asistenteInput.value = '';
+            }
+        });
+    }
 }
