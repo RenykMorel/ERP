@@ -9,6 +9,7 @@ import os
 import sys
 from datetime import datetime
 from modelos import db, Banco, Transaccion, init_db
+from sqlalchemy.exc import IntegrityError
 
 
 def create_app():
@@ -25,7 +26,7 @@ def create_app():
     class AsistenteVirtual:
         def __init__(self, api_key, activo=False):
             self.api_key = api_key
-            self.context = "Eres un asistente virtual para CalculAI. Debes responder preguntas basándote únicamente en la información proporcionada por el sistema, no respondas ni digas nada hasta que te hagan la pregunta"
+            self.context = "Eres un asistente virtual para CalculAI. Debes responder preguntas basándote únicamente en la información proporcionada por el sistema. No respondas ni digas nada hasta que te hagan una pregunta específica."
             self.conn = sqlite3.connect("asistente_virtual.db", check_same_thread=False)
             self.crear_tablas()
             self.lock = threading.Lock()
@@ -66,7 +67,10 @@ def create_app():
 
         def responder(self, pregunta):
             if not self.activo:
-                return "El asistente virtual está desactivado en este momento."
+                return "El asistente virtual está desactivado en este momento. Por favor, contacte al equipo de CalculAI para su activación."
+
+            if not pregunta.strip():
+                return ""  # No responder si no hay pregunta
 
             headers = {
                 "Content-Type": "application/json",
@@ -129,7 +133,8 @@ def create_app():
                 "Notas de Crédito/Débito",
                 "Transferencias Bancarias",
                 "Conciliación Bancaria",
-                "Gestión de bancos",
+                "Gestión de Bancos",
+                "Divisas",
             ],
             "Contabilidad": [
                 "Cuentas",
@@ -233,34 +238,86 @@ def create_app():
                 500,
             )
 
+    @app.route("/api/obtener-banco/<int:id>")
+    def obtener_banco(id):
+        banco = Banco.query.get_or_404(id)
+        return jsonify(banco.to_dict())
+
+    @app.route("/api/actualizar-banco/<int:id>", methods=["PUT"])
+    def actualizar_banco(id):
+        banco = Banco.query.get_or_404(id)
+        datos = request.json
+        try:
+            for key, value in datos.items():
+                if key in [
+                    "nombre",
+                    "telefono",
+                    "contacto",
+                    "telefono_contacto",
+                    "estatus",
+                ]:
+                    setattr(banco, key, value)
+            db.session.commit()
+            return jsonify(banco.to_dict())
+        except IntegrityError:
+            db.session.rollback()
+            return (
+                jsonify({"error": "Ya existe un banco con ese nombre o teléfono"}),
+                400,
+            )
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/api/eliminar-banco/<int:id>", methods=["DELETE"])
+    def eliminar_banco(id):
+        banco = Banco.query.get_or_404(id)
+        db.session.delete(banco)
+        db.session.commit()
+        return jsonify({"message": "Banco eliminado correctamente"})
+
+    @app.route("/api/cambiar-estatus-banco/<int:id>", methods=["PUT"])
+    def cambiar_estatus_banco(id):
+        banco = Banco.query.get_or_404(id)
+        datos = request.json
+        banco.estatus = datos["estatus"]
+        db.session.commit()
+        return jsonify(banco.to_dict())
+
     @app.route("/api/buscar-bancos")
     def buscar_bancos():
-        id_banco = request.args.get("id")
-        nombre = request.args.get("nombre")
-        contacto = request.args.get("contacto")
-        estatus = request.args.get("estatus")
+        query = Banco.query
+        if request.args.get("id"):
+            query = query.filter(Banco.id == request.args.get("id"))
+        if request.args.get("nombre"):
+            query = query.filter(Banco.nombre.ilike(f"%{request.args.get('nombre')}%"))
+        if request.args.get("contacto"):
+            query = query.filter(
+                Banco.contacto.ilike(f"%{request.args.get('contacto')}%")
+            )
+        if request.args.get("estatus"):
+            query = query.filter(Banco.estatus == request.args.get("estatus"))
 
-        bancos = Banco.buscar(
-            id=id_banco, nombre=nombre, contacto=contacto, estatus=estatus
-        )
+        bancos = query.all()
         return jsonify([banco.to_dict() for banco in bancos])
 
     @app.route("/api/crear-banco", methods=["POST"])
     def crear_banco():
         datos = request.json
         try:
-            nuevo_banco = Banco(
-                nombre=datos["nombre"],
-                telefono=datos["telefono"],
-                contacto=datos["contacto"],
-                telefono_contacto=datos["telefono_contacto"],
-            )
+            nuevo_banco = Banco(**datos)
             db.session.add(nuevo_banco)
             db.session.commit()
             return jsonify(nuevo_banco.to_dict()), 201
+        except IntegrityError:
+            db.session.rollback()
+            return (
+                jsonify({"error": "Ya existe un banco con ese nombre o teléfono"}),
+                400,
+            )
         except Exception as e:
             db.session.rollback()
-            return jsonify({"error": f"Error al crear el banco: {str(e)}"}), 500
+            return jsonify({"error": str(e)}), 500
 
     @app.route("/transacciones")
     def transacciones():
@@ -315,19 +372,21 @@ def create_app():
 
     @app.route("/api/asistente", methods=["POST"])
     def consultar_asistente():
+        pregunta = request.json.get("pregunta", "").strip()
+
+        if not pregunta:
+            return jsonify({"respuesta": ""}), 200
+
         if not ASISTENTE_ACTIVO:
             return (
                 jsonify(
                     {
-                        "respuesta": "El asistente virtual está desactivado en este momento."
+                        "respuesta": "El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación."
                     }
                 ),
                 200,
             )
 
-        pregunta = request.json.get("pregunta")
-        if not pregunta:
-            return jsonify({"error": "No se proporcionó una pregunta"}), 400
         respuesta = asistente.responder(pregunta)
         return jsonify({"respuesta": respuesta})
 

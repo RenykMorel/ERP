@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Gestión de Bancos - CalculAI{% endblock %}
+{% block title %}Banco - CalculAI{% endblock %}
 {% block content %}
 <div id="bancos-module">
-    <h1>Gestión de Bancos</h1>
+    <h1>Banco</h1>
     
     <div id="busqueda-form">
         <input type="text" id="id-banco" placeholder="ID">
@@ -20,10 +20,15 @@
     <div id="crear-banco-form" style="display: none;">
         <h2>Crear Nuevo Banco</h2>
         <form id="nuevo-banco-form">
+            <input type="hidden" name="id">
             <input type="text" name="nombre" placeholder="Nombre" required>
             <input type="text" name="telefono" placeholder="Teléfono" required>
             <input type="text" name="contacto" placeholder="Contacto" required>
             <input type="text" name="telefono_contacto" placeholder="Teléfono de Contacto" required>
+            <select name="estatus">
+                <option value="activo">Activo</option>
+                <option value="inactivo">Inactivo</option>
+            </select>
             <button type="submit">Guardar</button>
             <button type="button" id="cancelar-crear">Cancelar</button>
         </form>
@@ -58,13 +63,6 @@
             {% endfor %}
         </tbody>
     </table>
-    
-    <div id="asistente-virtual">
-        <h2>Asistente Virtual</h2>
-        <div id="asistente-mensajes"></div>
-        <input type="text" id="asistente-input" placeholder="Haz una pregunta al asistente">
-        <button id="asistente-enviar">Enviar</button>
-    </div>
 </div>
 {% endblock %}
 

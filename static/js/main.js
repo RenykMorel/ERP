@@ -30,8 +30,13 @@ function notificarAsistente(mensaje) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Respuesta del asistente:', data.respuesta);
-        mostrarMensajeAsistente(data.respuesta);
+        if (data.respuesta) {
+            if (data.respuesta === "El asistente virtual está desactivado en este momento.") {
+                mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
+            } else {
+                mostrarMensajeAsistente(data.respuesta);
+            }
+        }
     })
     .catch(error => console.error('Error al notificar al asistente:', error));
 }
@@ -40,9 +45,19 @@ function notificarAsistente(mensaje) {
 function mostrarMensajeAsistente(mensaje) {
     const mensajesDiv = document.getElementById('asistente-mensajes');
     if (mensajesDiv) {
-        const nuevoMensaje = document.createElement('p');
-        nuevoMensaje.textContent = mensaje;
+        const nuevoMensaje = document.createElement('div');
+        if (mensaje === "El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.") {
+            nuevoMensaje.innerHTML = `
+                <p class="asistente-inactivo">
+                    <span style="color: #ff0000; font-weight: bold;">El asistente no está activo.</span><br>
+                    Por favor, contacte al <span style="color: #0000ff;">equipo de CalculAI</span> para su activación.
+                </p>
+            `;
+        } else {
+            nuevoMensaje.textContent = mensaje;
+        }
         mensajesDiv.appendChild(nuevoMensaje);
+        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;  // Scroll al final del chat
     } else {
         console.log('Mensaje del asistente:', mensaje);
     }
@@ -63,7 +78,6 @@ function initializeSubmoduleHandlers() {
 // Maneja el clic en submódulos
 function handleSubmoduleClick(moduleName, submoduleName) {
     console.log(`Clicked on ${submoduleName} of ${moduleName}`);
-    notificarAsistente(`El usuario ha accedido al submódulo ${submoduleName} del módulo ${moduleName}`);
     if (moduleName === 'Banco' && submoduleName === 'Bancos') {
         window.location.href = '/Bancos';
     } else {
@@ -80,7 +94,6 @@ function loadUserInfo() {
         .then(usuario => {
             document.getElementById('user-name').textContent = usuario.nombre;
             document.getElementById('user-id').textContent = usuario.id;
-            notificarAsistente(`Usuario ${usuario.nombre} ha iniciado sesión`);
         })
         .catch(error => console.error('Error loading user info:', error));
 }
@@ -97,7 +110,6 @@ function loadModules() {
                 const moduleDiv = createModuleElement(modulo, colors[index % colors.length]);
                 moduleContainer.appendChild(moduleDiv);
             });
-            notificarAsistente("Módulos del sistema cargados correctamente");
         })
         .catch(error => console.error('Error loading modules:', error));
 }
@@ -172,7 +184,6 @@ function loadSubmodules(moduleName, submoduleContainer) {
                     };
                     submoduleContainer.appendChild(button);
                 });
-                notificarAsistente(`Submódulos de ${moduleName} cargados`);
             })
             .catch(error => console.error('Error loading submodules:', error));
     }
@@ -181,7 +192,6 @@ function loadSubmodules(moduleName, submoduleContainer) {
 // Carga el contenido de un submódulo específico
 function loadSubmoduleContent(moduleName, submoduleName) {
     console.log(`Loading content for ${moduleName} - ${submoduleName}`);
-    notificarAsistente(`Cargando contenido para ${submoduleName} de ${moduleName}`);
     // Implementar lógica para cargar contenido del submódulo
 }
 
@@ -194,7 +204,6 @@ function loadTasks() {
             taskList.innerHTML = tareas.map(tarea => 
                 `<li>${tarea.descripcion} - Vence: ${new Date(tarea.vence).toLocaleDateString()}</li>`
             ).join('');
-            notificarAsistente("Tareas pendientes actualizadas");
         })
         .catch(error => console.error('Error loading tasks:', error));
 }
@@ -208,7 +217,6 @@ function loadNotifications() {
             notificationList.innerHTML = notificaciones.map(notificacion => 
                 `<li class="${notificacion.tipo}">${notificacion.mensaje}</li>`
             ).join('');
-            notificarAsistente("Notificaciones actualizadas");
         })
         .catch(error => console.error('Error loading notifications:', error));
 }
@@ -238,7 +246,6 @@ function initializeCharts() {
             createLineChart(datos.ventas);
             createBarChart(datos.ingresos_vs_gastos);
             createPieChart(datos.distribucion);
-            notificarAsistente("Gráficos inicializados");
         })
         .catch(error => console.error('Error initializing charts:', error));
 }
@@ -318,7 +325,6 @@ function resizeCharts() {
 function toggleChartVisibility(chartId) {
     const chartContainer = document.getElementById(chartId);
     chartContainer.style.display = chartContainer.style.display === 'none' ? 'block' : 'none';
-    notificarAsistente(`Gráfico ${chartId} ${chartContainer.style.display === 'none' ? 'ocultado' : 'mostrado'}`);
 }
 
 // Inicializa el calendario
@@ -341,28 +347,53 @@ function initializeCalendar() {
     calendarEl.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
 
     calendar.render();
-    notificarAsistente("Calendario inicializado");
 }
 
 // Inicializa el asistente virtual
 function initializeAsistente() {
-    const asistenteButton = document.getElementById('asistente-button');
-    if (asistenteButton) {
-        asistenteButton.addEventListener('click', () => {
-            notificarAsistente("El usuario ha activado el Asistente Virtual");
-            // Aquí puedes añadir más lógica para mostrar la interfaz del asistente
-        });
-    }
-
+    const chatWindow = document.getElementById('chat-window');
     const asistenteInput = document.getElementById('asistente-input');
     const asistenteEnviar = document.getElementById('asistente-enviar');
+
+    // Comprobar si el asistente está activo (esto dependerá de cómo manejes el estado del asistente)
+    const asistenteActivo = false; // Esto debería ser una variable o función que determine si el asistente está activo
+
+    if (!asistenteActivo) {
+        chatWindow.classList.add('asistente-inactivo');
+        mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
+    }
+
     if (asistenteInput && asistenteEnviar) {
         asistenteEnviar.addEventListener('click', () => {
-            const pregunta = asistenteInput.value;
+            const pregunta = asistenteInput.value.trim();
             if (pregunta) {
                 notificarAsistente(pregunta);
                 asistenteInput.value = '';
             }
         });
+
+        asistenteInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                asistenteEnviar.click();
+            }
+        });
+    }
+}
+
+function mostrarMensajeAsistente(mensaje) {
+    const mensajesDiv = document.getElementById('asistente-mensajes');
+    if (mensajesDiv) {
+        const nuevoMensaje = document.createElement('p');
+        if (mensaje === "El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.") {
+            nuevoMensaje.classList.add('asistente-inactivo');
+            nuevoMensaje.innerHTML = `
+                <span>El asistente no está activo.</span>
+                <span>Por favor, contacte al <span class="highlight">equipo de CalculAI</span> para su activación.</span>
+            `;
+        } else {
+            nuevoMensaje.textContent = mensaje;
+        }
+        mensajesDiv.appendChild(nuevoMensaje);
+        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
     }
 }

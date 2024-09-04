@@ -188,7 +188,7 @@ body, html {
 
 #assistant h2 {
     font-size: 18px;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
 #chat-window {
@@ -198,6 +198,12 @@ body, html {
     padding: 10px;
     margin-bottom: 10px;
     overflow-y: auto;
+}
+
+/* Nuevo estilo para el chat-window cuando el asistente está inactivo */
+#chat-window.asistente-inactivo {
+    background-color: rgba(255, 255, 255, 0.7);
+    color: #666;
 }
 
 #asistente-input {
@@ -234,6 +240,29 @@ body, html {
     background-color: #007EA7;
     color: white;
     align-self: flex-end;
+}
+
+/* Estilo para el mensaje de asistente inactivo */
+.asistente-inactivo {
+    background-color: rgba(255, 238, 238, 0.7) !important;
+    color: #ff0000 !important;
+    font-weight: bold;
+    border: 1px solid #ff0000;
+    padding: 15px !important;
+    border-radius: 8px !important;
+    text-align: center;
+    margin: 10px 0 !important;
+    box-shadow: 0 2px 4px rgba(255, 0, 0, 0.1);
+}
+
+.asistente-inactivo span {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.asistente-inactivo .highlight {
+    color: #0000ff;
+    font-weight: normal;
 }
 
 /* Estilos para botones */
