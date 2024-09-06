@@ -74,6 +74,44 @@ body, html {
     font-size: 24px;
 }
 
+/* Estilos para el título CalculAI */
+.login-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.ai-text {
+    color: #0066cc;
+    font-style: italic;
+    position: relative;
+    margin-left: 5px;
+}
+
+.ai-text::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    background: 
+        linear-gradient(45deg, #0066cc 25%, transparent 25%) -5px 0,
+        linear-gradient(-45deg, #0066cc 25%, transparent 25%) -5px 0,
+        linear-gradient(45deg, transparent 75%, #0066cc 75%),
+        linear-gradient(-45deg, transparent 75%, #0066cc 75%);
+    background-size: 10px 10px;
+    background-color: #ffffff;
+    opacity: 0.2;
+    border-radius: 5px;
+    z-index: -1;
+}
+
+
 /* Estilos para el dashboard */
 #dashboard {
     padding: 20px;
@@ -399,4 +437,85 @@ body, html {
         max-width: 100%;
         margin: 20px 10px;
     }
+
+    /* Estilo para el botón de cerrar sesión */
+    .logout-button {
+        background-color: #000000; /* Color de fondo rojo */
+        color: white; /* Color del texto blanco */
+        border: none; /* Sin borde */
+        padding: 10px 20px; /* Espaciado interno */
+        text-align: center; /* Centrar el texto */
+        text-decoration: none; /* Sin subrayado */
+        display: inline-block; /* Mostrar en línea */
+        font-size: 16px; /* Tamaño de fuente */
+        border-radius: 5px; /* Bordes redondeados */
+        cursor: pointer; /* Cambiar el cursor al pasar por encima */
+        transition: background-color 0.3s; /* Transición suave para el color de fondo */
+    }
+
+    .logout-button:hover {
+        background-color: #000000; /* Color de fondo cuando el cursor está encima */
+    }
+
+/* Estilos para los formularios de registro y login */
+.form-registro, .form-login {
+    max-width: 300px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.form-registro input, .form-login input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.form-registro button, .form-login button {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.form-registro button:hover, .form-login button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos para mensajes de error */
+#auth-error {
+    background-color: #ffebee;
+    color: #d32f2f;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* ... (estilos responsivos existentes) ... */
+
+@media (max-width: 768px) {
+    /* ... (estilos existentes) ... */
+
+    .form-registro, .form-login {
+        max-width: 90%;
+        margin: 20px auto;
+    }
+
+    .login-title {
+        font-size: 1.5rem;
+    }
+}
 }

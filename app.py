@@ -302,11 +302,11 @@ def create_app():
             200,
         )
 
-    @app.route("/logout")
+    @app.route("/logout", methods=["POST"])
     @login_required
     def logout():
         logout_user()
-        return redirect(url_for("index"))
+        return redirect(url_for("login"))
 
     @app.route("/registro", methods=["GET", "POST"])
     def registro():

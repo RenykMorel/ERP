@@ -1,24 +1,228 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalculAI Iniciar Sesión</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            width: 300px;
+            position: relative;
+        }
+        .login-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+        .ai-text {
+            color: #2b0ae6;
+            font-style: italic;
+            position: relative;
+            margin-left: 5px;
+        }
+        .ai-text::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: 
+                linear-gradient(45deg, #0066cc 25%, transparent 25%) -5px 0,
+                linear-gradient(-45deg, #0066cc 25%, transparent 25%) -5px 0,
+                linear-gradient(45deg, transparent 75%, #0066cc 75%),
+                linear-gradient(-45deg, transparent 75%, #0066cc 75%);
+            background-size: 10px 10px;
+            background-color: #ffffff;
+            opacity: 0.2;
+            border-radius: 5px;
+            z-index: -1;
+        }
+        .login-button {
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2), -2px -2px 5px rgba(255,255,255,0.7);
+        }
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        input {
+            width: 100%;
+            padding: 0.7rem;
+            border: none;
+            border-radius: 10px;
+            background-color: #e0e0e0;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2), inset -2px -2px 5px rgba(255,255,255,0.7);
+        }
+        .password-group {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #777;
+            cursor: pointer;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 0.7rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2), -2px -2px 5px rgba(255,255,255,0.7);
+        }
+        .forgot-password {
+            text-align: right;
+            margin-top: 0.5rem;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .numpad-btn {
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2), -2px -2px 5px rgba(255,255,255,0.7);
+            cursor: pointer;
+        }
+        .decorative-element {
+            position: absolute;
+            background-color: #ccc;
+            border-radius: 50%;
+        }
+        .top-left {
+            top: -20px;
+            left: -20px;
+            width: 40px;
+            height: 40px;
+        }
+        .bottom-right {
+            bottom: -30px;
+            right: -30px;
+            width: 60px;
+            height: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-title">Calcul<span class="ai-text">AI</span></div>
+        </div>
+        <form id="form-login" action="{{ url_for('login') }}" method="POST">
+            <div class="input-group">
+                <input type="text" name="username" placeholder="Usuario" required>
+            </div>
+            <div class="input-group password-group">
+                <input type="password" name="password" placeholder="Contraseña" required>
+                <button type="button" class="password-toggle">👁️</button>
+            </div>
+            <button type="submit" class="login-btn">INICIAR SESIÓN</button>
+        </form>
+        <div class="forgot-password">
+            <a href="{{ url_for('registro') }}">¿No tienes cuenta? Regístrate</a>
+        </div>
+        <div class="numpad">
+            <button class="numpad-btn">1</button>
+            <button class="numpad-btn">2</button>
+            <button class="numpad-btn">3</button>
+            <button class="numpad-btn">4</button>
+            <button class="numpad-btn">5</button>
+            <button class="numpad-btn">6</button>
+            <button class="numpad-btn">7</button>
+            <button class="numpad-btn">8</button>
+            <button class="numpad-btn">9</button>
+            <button class="numpad-btn">*</button>
+            <button class="numpad-btn">0</button>
+            <button class="numpad-btn">#</button>
+        </div>
+        <div class="decorative-element top-left"></div>
+        <div class="decorative-element bottom-right"></div>
+    </div>
 
-{% block title %}Iniciar Sesión - CalculAI{% endblock %}
+    <script>
+        document.querySelectorAll('.password-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const passwordInput = this.previousElementSibling;
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    this.textContent = '🔒';
+                } else {
+                    passwordInput.type = 'password';
+                    this.textContent = '👁️';
+                }
+            });
+        });
 
-{% block content %}
-<div class="auth-container">
-    <h2>Iniciar Sesión</h2>
-    <form id="form-login" class="form-login">
-        <input type="text" name="username" placeholder="Nombre de usuario" required>
-        <input type="password" name="password" placeholder="Contraseña" required>
-        <button type="submit">Iniciar Sesión</button>
-    </form>
-    <p>¿No tienes una cuenta? <a href="{{ url_for('registro') }}">Regístrate aquí</a></p>
-</div>
-{% endblock %}
+        document.getElementById('form-login').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
 
-{% block extra_js %}
-<script>
-    document.getElementById('form-login').addEventListener('submit', function(e) {
-        e.preventDefault();
-        loginUsuario(e);
-    });
-</script>
-{% endblock %}
+            fetch('{{ url_for("login") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{{ url_for("index") }}';
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error durante el inicio de sesión. Por favor, inténtalo de nuevo.');
+            });
+        });
+    </script>
+</body>
+</html>

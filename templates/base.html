@@ -5,12 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CalculAI{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% if current_user.is_authenticated %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet">
+    {% endif %}
     {% block extra_css %}{% endblock %}
+    <style>
+        /* Estilo para el botón de cerrar sesión */
+        .logout-button {
+            background-color: #000000; /* Color de fondo rojo */
+            color: white; /* Color del texto blanco */
+            border: none; /* Sin borde */
+            padding: 10px 20px; /* Espaciado interno */
+            text-align: center; /* Centrar el texto */
+            text-decoration: none; /* Sin subrayado */
+            display: inline-block; /* Mostrar en línea */
+            font-size: 16px; /* Tamaño de fuente */
+            border-radius: 5px; /* Bordes redondeados */
+            cursor: pointer; /* Cambiar el cursor al pasar por encima */
+            transition: background-color 0.3s; /* Transición suave para el color de fondo */
+        }
+
+        .logout-button:hover {
+            background-color: #f10606; /* Color de fondo cuando el cursor está encima */
+        }
+    </style>
 </head>
 <body>
+    {% if current_user.is_authenticated %}
     <div id="app">
         <nav id="sidebar">
             <div id="user-info">
@@ -20,12 +43,11 @@
             </div>
             <div id="module-container"></div>
             <ul class="auth-links">
-                {% if current_user.is_authenticated %}
-                    <li><a href="{{ url_for('logout') }}">Cerrar sesión</a></li>
-                {% else %}
-                    <li><a href="{{ url_for('login') }}">Iniciar sesión</a></li>
-                    <li><a href="{{ url_for('registro') }}">Registrarse</a></li>
-                {% endif %}
+                <li>
+                    <form action="{{ url_for('logout') }}" method="post">
+                        <button type="submit" class="logout-button">Cerrar sesión</button>
+                    </form>
+                </li>
             </ul>
         </nav>
         <main id="content">
@@ -93,7 +115,14 @@
             <div id="asistente-output"></div>
         </aside>
     </div>
+    {% else %}
+    <div class="auth-page">
+        {% block auth_content %}{% endblock %}
+    </div>
+    {% endif %}
+    
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% if current_user.is_authenticated %}
     <script>
         // Inicialización del asistente virtual
         document.addEventListener('DOMContentLoaded', function() {
@@ -161,6 +190,7 @@
             });
         });
     </script>
+    {% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>
