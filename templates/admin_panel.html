@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Administración - CalculAI{% endblock %}
+
+{% block content %}
+<h1>Panel de Administración</h1>
+
+<div id="users-section">
+    <h2>Usuarios</h2>
+    <div id="users-list"></div>
+    <button onclick="showUserForm()">Agregar Usuario</button>
+</div>
+
+<div id="companies-section">
+    <h2>Empresas</h2>
+    <div id="companies-list"></div>
+    <button onclick="showCompanyForm()">Agregar Empresa</button>
+</div>
+
+<script>
+function loadUsers() {
+    fetch('/admin/users')
+        .then(response => response.json())
+        .then(users => {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = users.map(user => 
+                `<div>${user.username} (${user.email}) - ${user.status}</div>`
+            ).join('');
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function loadCompanies() {
+    fetch('/admin/companies')
+        .then(response => response.json())
+        .then(companies => {
+            const companiesList = document.getElementById('companies-list');
+            companiesList.innerHTML = companies.map(company => 
+                `<div>${company.name} - ${company.status}</div>`
+            ).join('');
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function showUserForm() {
+    // Implementar lógica para mostrar formulario de usuario
+}
+
+function showCompanyForm() {
+    // Implementar lógica para mostrar formulario de empresa
+}
+
+loadUsers();
+loadCompanies();
+</script>
+{% endblock %}

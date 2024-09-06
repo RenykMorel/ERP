@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Usuarios - CalculAI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-form, .assign-form {
+        margin-bottom: 20px;
+    }
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .user-table th, .user-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .user-table th {
+        background-color: #f2f2f2;
+    }
+    .btn {
+        padding: 5px 10px;
+        margin: 2px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    .btn-create {
+        background-color: #4CAF50;
+        color: white;
+    }
+    .btn-edit {
+        background-color: #2196F3;
+        color: white;
+    }
+    .btn-delete {
+        background-color: #f44336;
+        color: white;
+    }
+    .btn-assign {
+        background-color: #ff9800;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Administrar Usuarios</h1>
+
+<form id="create-user-form" class="user-form">
+    <input type="text" name="username" placeholder="Nombre de usuario" required>
+    <input type="email" name="email" placeholder="Correo electrónico" required>
+    <input type="password" name="password" placeholder="Contraseña" required>
+    <select name="role">
+        <option value="user">Usuario</option>
+        <option value="admin">Administrador</option>
+    </select>
+    <button type="submit" class="btn btn-create">Crear Usuario</button>
+</form>
+
+<table class="user-table">
+    <thead>
+        <tr>
+            <th>Nombre de Usuario</th>
+            <th>Correo Electrónico</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody id="users-list">
+        {% for user in users %}
+        <tr data-user-id="{{ user.id }}">
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td>{{ user.status }}</td>
+            <td>
+                <button class="btn btn-edit" onclick="editUser({{ user.id }})">Editar</button>
+                <button class="btn btn-delete" onclick="deleteUser({{ user.id }})">Eliminar</button>
+                <button class="btn {% if user.status == 'active' %}btn-delete{% else %}btn-edit{% endif %}" onclick="toggleUserStatus({{ user.id }})">
+                    {% if user.status == 'active' %}Desactivar{% else %}Activar{% endif %}
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Asignar Usuario a Empresa</h2>
+<form id="assign-user-form" class="assign-form">
+    <select name="user_id" required>
+        <option value="">Seleccionar Usuario</option>
+        {% for user in users %}
+        <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+    </select>
+    <select name="company_id" required>
+        <option value="">Seleccionar Empresa</option>
+        {% for company in companies %}
+        <option value="{{ company.id }}">{{ company.name }}</option>
+        {% endfor %}
+    </select>
+    <select name="role_in_company">
+        <option value="employee">Empleado</option>
+        <option value="manager">Gerente</option>
+    </select>
+    <button type="submit" class="btn btn-assign">Asignar</button>
+</form>
+
+<a href="{{ url_for('admin.manage_companies') }}" class="btn">Gestionar Empresas</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function createUser(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    fetch("{{ url_for('admin.create_user') }}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.user) {
+            const usersList = document.getElementById('users-list');
+            const newRow = `
+                <tr data-user-id="${data.user.id}">
+                    <td>${data.user.username}</td>
+                    <td>${data.user.email}</td>
+                    <td>${data.user.role}</td>
+                    <td>${data.user.status}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editUser(${data.user.id})">Editar</button>
+                        <button class="btn btn-delete" onclick="deleteUser(${data.user.id})">Eliminar</button>
+                        <button class="btn btn-delete" onclick="toggleUserStatus(${data.user.id})">Desactivar</button>
+                    </td>
+                </tr>
+            `;
+            usersList.insertAdjacentHTML('beforeend', newRow);
+            form.reset();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function editUser(userId) {
+    // Implementar lógica para editar usuario
+    console.log('Editar usuario', userId);
+}
+
+function deleteUser(userId) {
+    if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+        fetch(`{{ url_for('admin.delete_user', user_id=0) }}`.replace('0', userId), {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+            row.remove();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
+
+function toggleUserStatus(userId) {
+    fetch(`{{ url_for('admin.toggle_user_status', user_id=0) }}`.replace('0', userId), {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+        const statusCell = row.cells[3];
+        const toggleButton = row.querySelector('.btn-delete, .btn-edit');
+        statusCell.textContent = data.status;
+        if (data.status === 'active') {
+            toggleButton.textContent = 'Desactivar';
+            toggleButton.classList.remove('btn-edit');
+            toggleButton.classList.add('btn-delete');
+        } else {
+            toggleButton.textContent = 'Activar';
+            toggleButton.classList.remove('btn-delete');
+            toggleButton.classList.add('btn-edit');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function assignUserToCompany(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    fetch("{{ url_for('admin.assign_user_to_company') }}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        form.reset();
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+document.getElementById('create-user-form').addEventListener('submit', createUser);
+document.getElementById('assign-user-form').addEventListener('submit', assignUserToCompany);
+</script>
+{% endblock %}

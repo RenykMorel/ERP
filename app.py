@@ -20,6 +20,18 @@ import os
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
+from admin_routes import admin
+from models import (
+    db,
+    Usuario,
+)  # Asegúrate de que estás importando Usuario de tu módulo de modelos
+from app import app  # Importa la instancia de app si no está en el mismo archivo
+
+# Configura logging
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -178,6 +190,8 @@ def create_app():
     login_manager.login_view = "login"
     limiter.init_app(app)
 
+    app.register_blueprint(admin, url_prefix="/admin")
+
     app.config["RATELIMIT_STORAGE_URI"] = "memory://"
 
     with app.app_context():
@@ -319,7 +333,12 @@ def create_app():
             password = request.form.get("password")
             confirm_password = request.form.get("confirm_password")
 
+            app.logger.info(
+                f"Intento de registro para el usuario: {username}, email: {email}"
+            )
+
             if not all([username, email, password, confirm_password]):
+                app.logger.warning("Intento de registro con campos faltantes")
                 return (
                     jsonify(
                         {"success": False, "error": "Todos los campos son obligatorios"}
@@ -328,6 +347,9 @@ def create_app():
                 )
 
             if password != confirm_password:
+                app.logger.warning(
+                    "Las contraseñas no coinciden en el intento de registro"
+                )
                 return (
                     jsonify(
                         {"success": False, "error": "Las contraseñas no coinciden"}
@@ -335,7 +357,10 @@ def create_app():
                     400,
                 )
 
-            if Usuario.query.filter_by(username=username).first():
+            if User.query.filter_by(username=username).first():
+                app.logger.warning(
+                    f"Intento de registro con nombre de usuario existente: {username}"
+                )
                 return (
                     jsonify(
                         {
@@ -346,7 +371,8 @@ def create_app():
                     400,
                 )
 
-            if Usuario.query.filter_by(email=email).first():
+            if User.query.filter_by(email=email).first():
+                app.logger.warning(f"Intento de registro con email existente: {email}")
                 return (
                     jsonify(
                         {
@@ -358,14 +384,29 @@ def create_app():
                 )
 
             try:
-                new_user = Usuario(username=username, email=email)
+                new_user = User(username=username, email=email)
                 new_user.set_password(password)
                 db.session.add(new_user)
                 db.session.commit()
+                app.logger.info(
+                    f"Usuario registrado exitosamente: {username}, ID: {new_user.id}"
+                )
                 login_user(new_user)
-                return jsonify({"success": True, "message": "Registro exitoso"}), 200
+                return (
+                    jsonify(
+                        {
+                            "success": True,
+                            "message": "Registro exitoso",
+                            "user_id": new_user.id,
+                        }
+                    ),
+                    200,
+                )
             except Exception as e:
                 db.session.rollback()
+                app.logger.error(
+                    f"Error en el registro de usuario: {str(e)}", exc_info=True
+                )
                 return (
                     jsonify(
                         {"success": False, "error": f"Error en el registro: {str(e)}"}
@@ -374,6 +415,22 @@ def create_app():
                 )
 
         return render_template("registro.html")
+
+    @app.route("/test_registro", methods=["GET"])
+    def test_registro():
+        try:
+            test_user = User(username="TestUser", email="test@example.com", role="user")
+            test_user.set_password("password123")
+            db.session.add(test_user)
+            db.session.commit()
+            app.logger.info(f"Usuario de prueba creado con ID: {test_user.id}")
+            return f"Usuario de prueba creado con ID: {test_user.id}"
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(
+                f"Error al crear usuario de prueba: {str(e)}", exc_info=True
+            )
+            return f"Error al crear usuario de prueba: {str(e)}"
 
     @app.route("/api/modulos")
     @login_required
@@ -721,6 +778,14 @@ def create_app():
             200,
             {"Content-Type": "text/plain"},
         )
+
+    @app.route("/admin_panel")
+    @login_required
+    def admin_panel():
+        if current_user.role != "admin":
+            flash("Acceso no autorizado", "error")
+            return redirect(url_for("index"))
+        return render_template("admin_panel.html")
 
     return app
 

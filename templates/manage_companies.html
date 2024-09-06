@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Empresas - CalculAI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .company-form {
+        margin-bottom: 20px;
+    }
+    .company-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .company-table th, .company-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .company-table th {
+        background-color: #f2f2f2;
+    }
+    .btn {
+        padding: 5px 10px;
+        margin: 2px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    .btn-create {
+        background-color: #4CAF50;
+        color: white;
+    }
+    .btn-block {
+        background-color: #f44336;
+        color: white;
+    }
+    .btn-activate {
+        background-color: #2196F3;
+        color: white;
+    }
+    .btn-delete {
+        background-color: #ff9800;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Administrar Empresas</h1>
+
+<form id="create-company-form" class="company-form">
+    <input type="text" name="name" placeholder="Nombre de la empresa" required>
+    <button type="submit" class="btn btn-create">Crear Empresa</button>
+</form>
+
+<table class="company-table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody id="companies-list">
+        {% for company in companies %}
+        <tr data-company-id="{{ company.id }}">
+            <td>{{ company.name }}</td>
+            <td>{{ company.status }}</td>
+            <td>
+                <button class="btn {% if company.status == 'active' %}btn-block{% else %}btn-activate{% endif %}" onclick="toggleCompanyStatus({{ company.id }})">
+                    {% if company.status == 'active' %}Bloquear{% else %}Activar{% endif %}
+                </button>
+                <button class="btn btn-delete" onclick="deleteCompany({{ company.id }})">Eliminar</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('admin.manage_users') }}" class="btn">Gestionar Usuarios</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function createCompany(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    fetch("{{ url_for('admin.create_company') }}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.company) {
+            const companiesList = document.getElementById('companies-list');
+            const newRow = `
+                <tr data-company-id="${data.company.id}">
+                    <td>${data.company.name}</td>
+                    <td>${data.company.status}</td>
+                    <td>
+                        <button class="btn btn-block" onclick="toggleCompanyStatus(${data.company.id})">Bloquear</button>
+                        <button class="btn btn-delete" onclick="deleteCompany(${data.company.id})">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+            companiesList.insertAdjacentHTML('beforeend', newRow);
+            form.reset();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function toggleCompanyStatus(companyId) {
+    fetch(`{{ url_for('admin.toggle_company_status', company_id=0) }}`.replace('0', companyId), {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        const row = document.querySelector(`tr[data-company-id="${companyId}"]`);
+        const statusCell = row.cells[1];
+        const toggleButton = row.querySelector('.btn-block, .btn-activate');
+        statusCell.textContent = data.status;
+        if (data.status === 'active') {
+            toggleButton.textContent = 'Bloquear';
+            toggleButton.classList.remove('btn-activate');
+            toggleButton.classList.add('btn-block');
+        } else {
+            toggleButton.textContent = 'Activar';
+            toggleButton.classList.remove('btn-block');
+            toggleButton.classList.add('btn-activate');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function deleteCompany(companyId) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta empresa?')) {
+        fetch(`{{ url_for('admin.delete_company', company_id=0) }}`.replace('0', companyId), {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            const row = document.querySelector(`tr[data-company-id="${companyId}"]`);
+            row.remove();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
+
+document.getElementById('create-company-form').addEventListener('submit', createCompany);
+</script>
+{% endblock %}
