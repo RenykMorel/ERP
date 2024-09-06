@@ -1,4 +1,15 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import (
+    LoginManager,
+    current_user,
+    login_user,
+    logout_user,
+    login_required,
+    UserMixin,
+)
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from config import Config
 import sqlite3
 import threading
@@ -6,107 +17,366 @@ import queue
 import requests
 import json
 import os
-import sys
 from datetime import datetime
-from modelos import db, Banco, Transaccion, init_db
 from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash, check_password_hash
+
+db = SQLAlchemy()
+login_manager = LoginManager()
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["2000 per day", "500 per hour"],
+    storage_uri="memory://",
+)
+
+
+class Usuario(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False)
+    email = db.Column(db.String(120), index=True, unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+
+class Banco(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    telefono = db.Column(db.String(20))
+    contacto = db.Column(db.String(100))
+    telefono_contacto = db.Column(db.String(20))
+    estatus = db.Column(db.Enum("activo", "inactivo"), default="activo")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "telefono": self.telefono,
+            "contacto": self.contacto,
+            "telefono_contacto": self.telefono_contacto,
+            "estatus": self.estatus,
+        }
+
+
+class Transaccion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    tipo = db.Column(db.String(50), nullable=False)
+    monto = db.Column(db.Float, nullable=False)
+    descripcion = db.Column(db.String(255))
+    cuenta_id = db.Column(db.Integer)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "tipo": self.tipo,
+            "monto": self.monto,
+            "descripcion": self.descripcion,
+            "cuenta_id": self.cuenta_id,
+        }
+
+
+def get_assistant_context():
+    with db.app.app_context():
+        banco_count = Banco.query.count()
+        return {
+            "banco_count": banco_count,
+        }
+
+
+class AsistenteVirtual:
+    def __init__(self, api_key, activo=True):
+        self.api_key = api_key
+        self.context = "Eres un asistente virtual para CalculAI. Debes responder preguntas basándote en la información proporcionada en el contexto y la pregunta del usuario."
+        self.conn = sqlite3.connect("asistente_virtual.db", check_same_thread=False)
+        self.crear_tablas()
+        self.lock = threading.Lock()
+        self.cola_actualizaciones = queue.Queue()
+        self.activo = activo
+        threading.Thread(target=self.procesar_actualizaciones, daemon=True).start()
+
+    def crear_tablas(self):
+        with self.conn:
+            self.conn.execute(
+                """CREATE TABLE IF NOT EXISTS historial (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    accion TEXT NOT NULL,
+                    fecha TEXT NOT NULL
+                )"""
+            )
+
+    def procesar_actualizaciones(self):
+        while True:
+            try:
+                accion = self.cola_actualizaciones.get(timeout=1)
+                with self.lock:
+                    self.registrar_accion(accion)
+            except queue.Empty:
+                pass
+
+    def registrar_accion(self, accion):
+        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO historial (accion, fecha) VALUES (?, ?)",
+                (accion, fecha),
+            )
+
+    def log_accion(self, accion):
+        if self.activo:
+            self.cola_actualizaciones.put(accion)
+
+    def responder(self, pregunta_con_contexto):
+        if not self.activo:
+            return "El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación."
+
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": self.api_key,
+            "anthropic-version": "2023-06-01",
+        }
+        data = {
+            "model": "claude-2.1",
+            "prompt": f"{self.context}\n\nHuman: {pregunta_con_contexto}\n\nAssistant:",
+            "max_tokens": 300,
+            "temperature": 0.7,
+            "stop_sequences": ["\n\nHuman:"],
+        }
+
+        try:
+            response = requests.post(
+                "https://api.anthropic.com/v1/complete",
+                headers=headers,
+                json=data,
+                timeout=10,
+            )
+            response.raise_for_status()
+            respuesta = response.json()["completion"].strip()
+        except requests.exceptions.RequestException as e:
+            if e.response is not None:
+                error_detail = e.response.json().get("error", {}).get("message", str(e))
+                respuesta = f"Error al obtener respuesta: {error_detail}"
+            else:
+                respuesta = f"Error de conexión: {str(e)}"
+        except Exception as e:
+            respuesta = f"Error inesperado: {str(e)}"
+
+        return respuesta
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///calculai_db.sqlite"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
     db.init_app(app)
+    login_manager.init_app(app)
+    login_manager.login_view = "login"
+    limiter.init_app(app)
+
+    app.config["RATELIMIT_STORAGE_URI"] = "memory://"
 
     with app.app_context():
-        init_db(app)
+        db.create_all()
 
-    # Configuración para el asistente
-    ASISTENTE_ACTIVO = False  # Cambie a True para activar el asistente
-
-    class AsistenteVirtual:
-        def __init__(self, api_key, activo=False):
-            self.api_key = api_key
-            self.context = "Eres un asistente virtual para CalculAI. Debes responder preguntas basándote únicamente en la información proporcionada por el sistema. No respondas ni digas nada hasta que te hagan una pregunta específica."
-            self.conn = sqlite3.connect("asistente_virtual.db", check_same_thread=False)
-            self.crear_tablas()
-            self.lock = threading.Lock()
-            self.cola_actualizaciones = queue.Queue()
-            self.activo = activo
-            threading.Thread(target=self.procesar_actualizaciones, daemon=True).start()
-
-        def crear_tablas(self):
-            with self.conn:
-                self.conn.execute(
-                    """CREATE TABLE IF NOT EXISTS historial (
-                                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                        accion TEXT NOT NULL,
-                                        fecha TEXT NOT NULL
-                                    )"""
-                )
-
-        def procesar_actualizaciones(self):
-            while True:
-                try:
-                    accion = self.cola_actualizaciones.get(timeout=1)
-                    with self.lock:
-                        self.registrar_accion(accion)
-                except queue.Empty:
-                    pass
-
-        def registrar_accion(self, accion):
-            fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            with self.conn:
-                self.conn.execute(
-                    "INSERT INTO historial (accion, fecha) VALUES (?, ?)",
-                    (accion, fecha),
-                )
-
-        def log_accion(self, accion):
-            if self.activo:
-                self.cola_actualizaciones.put(accion)
-
-        def responder(self, pregunta):
-            if not self.activo:
-                return "El asistente virtual está desactivado en este momento. Por favor, contacte al equipo de CalculAI para su activación."
-
-            if not pregunta.strip():
-                return ""  # No responder si no hay pregunta
-
-            headers = {
-                "Content-Type": "application/json",
-                "x-api-key": self.api_key,
-                "anthropic-version": "2023-06-01",
-            }
-            data = {
-                "model": "claude-2.1",
-                "prompt": f"{self.context}\n\nHuman: {pregunta}\n\nAssistant:",
-                "max_tokens_to_sample": 300,
-                "temperature": 0.7,
-                "stop_sequences": ["\n\nHuman:"],
-            }
-
-            try:
-                response = requests.post(
-                    "https://api.anthropic.com/v1/complete",
-                    headers=headers,
-                    json=data,
-                    timeout=10,
-                )
-                response.raise_for_status()
-                respuesta = response.json()["completion"].strip()
-            except Exception as e:
-                respuesta = f"Error al obtener respuesta: {str(e)}"
-
-            return respuesta
-
-    # Crear una instancia del AsistenteVirtual
+    ASISTENTE_ACTIVO = True
     asistente = AsistenteVirtual(Config.CLAUDE_API_KEY, activo=ASISTENTE_ACTIVO)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return Usuario.query.get(int(user_id))
 
     @app.route("/")
     def index():
         return render_template("index.html")
 
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        if current_user.is_authenticated:
+            return redirect(url_for("index"))
+
+        if request.method == "POST":
+            username = request.form.get("username")
+            password = request.form.get("password")
+            user = Usuario.query.filter_by(username=username).first()
+
+            if user:
+                if check_password_hash(user.password_hash, password):
+                    login_user(user)
+                    return (
+                        jsonify(
+                            {"success": True, "message": "Inicio de sesión exitoso"}
+                        ),
+                        200,
+                    )
+                else:
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "Contraseña incorrecta",
+                                "allow_password_reset": True,
+                                "username": username,
+                            }
+                        ),
+                        401,
+                    )
+            else:
+                return (
+                    jsonify({"success": False, "error": "Usuario no encontrado"}),
+                    404,
+                )
+
+        return render_template("login.html")
+
+    @app.route("/reset_password", methods=["POST"])
+    def reset_password():
+        username = request.form.get("username")
+        new_password = request.form.get("new_password")
+        user = Usuario.query.filter_by(username=username).first()
+
+        if not user:
+            return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
+
+        if not new_password or len(new_password) < 8:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "La nueva contraseña debe tener al menos 8 caracteres",
+                    }
+                ),
+                400,
+            )
+
+        try:
+            user.password_hash = generate_password_hash(new_password)
+            db.session.commit()
+            return (
+                jsonify(
+                    {"success": True, "message": "Contraseña actualizada correctamente"}
+                ),
+                200,
+            )
+        except Exception as e:
+            db.session.rollback()
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"Error al actualizar la contraseña: {str(e)}",
+                    }
+                ),
+                500,
+            )
+
+    @app.route("/request_password_reset", methods=["POST"])
+    def request_password_reset():
+        email = request.form.get("email")
+        user = Usuario.query.filter_by(email=email).first()
+
+        if not user:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "No se encontró un usuario con ese correo electrónico",
+                    }
+                ),
+                404,
+            )
+
+        # Aquí normalmente enviarías un correo electrónico con un enlace para restablecer la contraseña
+        # Por ahora, simplemente devolveremos un mensaje de éxito
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "message": "Se ha enviado un correo electrónico con instrucciones para restablecer tu contraseña",
+                }
+            ),
+            200,
+        )
+
+    @app.route("/logout")
+    @login_required
+    def logout():
+        logout_user()
+        return redirect(url_for("index"))
+
+    @app.route("/registro", methods=["GET", "POST"])
+    def registro():
+        if current_user.is_authenticated:
+            return redirect(url_for("index"))
+
+        if request.method == "POST":
+            username = request.form.get("username")
+            email = request.form.get("email")
+            password = request.form.get("password")
+            confirm_password = request.form.get("confirm_password")
+
+            if not all([username, email, password, confirm_password]):
+                return (
+                    jsonify(
+                        {"success": False, "error": "Todos los campos son obligatorios"}
+                    ),
+                    400,
+                )
+
+            if password != confirm_password:
+                return (
+                    jsonify(
+                        {"success": False, "error": "Las contraseñas no coinciden"}
+                    ),
+                    400,
+                )
+
+            if Usuario.query.filter_by(username=username).first():
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "El nombre de usuario ya está en uso",
+                        }
+                    ),
+                    400,
+                )
+
+            if Usuario.query.filter_by(email=email).first():
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "El correo electrónico ya está registrado",
+                        }
+                    ),
+                    400,
+                )
+
+            try:
+                new_user = Usuario(username=username, email=email)
+                new_user.set_password(password)
+                db.session.add(new_user)
+                db.session.commit()
+                login_user(new_user)
+                return jsonify({"success": True, "message": "Registro exitoso"}), 200
+            except Exception as e:
+                db.session.rollback()
+                return (
+                    jsonify(
+                        {"success": False, "error": f"Error en el registro: {str(e)}"}
+                    ),
+                    500,
+                )
+
+        return render_template("registro.html")
+
     @app.route("/api/modulos")
+    @login_required
     def get_modulos():
         modulos = [
             "Banco",
@@ -125,6 +395,7 @@ def create_app():
         return jsonify(modulos)
 
     @app.route("/api/submodulos/<modulo>")
+    @login_required
     def get_submodulos(modulo):
         submodulos = {
             "Banco": [
@@ -225,9 +496,10 @@ def create_app():
         return jsonify(submodulos.get(modulo, []))
 
     @app.route("/Bancos")
+    @login_required
     def sub_bancos():
         try:
-            bancos = Banco.obtener_todos()
+            bancos = Banco.query.all()
             return render_template("sub_bancos.html", bancos=bancos)
         except Exception as e:
             error_message = str(e)
@@ -239,11 +511,13 @@ def create_app():
             )
 
     @app.route("/api/obtener-banco/<int:id>")
+    @login_required
     def obtener_banco(id):
         banco = Banco.query.get_or_404(id)
         return jsonify(banco.to_dict())
 
     @app.route("/api/actualizar-banco/<int:id>", methods=["PUT"])
+    @login_required
     def actualizar_banco(id):
         banco = Banco.query.get_or_404(id)
         datos = request.json
@@ -270,6 +544,7 @@ def create_app():
             return jsonify({"error": str(e)}), 500
 
     @app.route("/api/eliminar-banco/<int:id>", methods=["DELETE"])
+    @login_required
     def eliminar_banco(id):
         banco = Banco.query.get_or_404(id)
         db.session.delete(banco)
@@ -277,6 +552,7 @@ def create_app():
         return jsonify({"message": "Banco eliminado correctamente"})
 
     @app.route("/api/cambiar-estatus-banco/<int:id>", methods=["PUT"])
+    @login_required
     def cambiar_estatus_banco(id):
         banco = Banco.query.get_or_404(id)
         datos = request.json
@@ -285,6 +561,7 @@ def create_app():
         return jsonify(banco.to_dict())
 
     @app.route("/api/buscar-bancos")
+    @login_required
     def buscar_bancos():
         query = Banco.query
         if request.args.get("id"):
@@ -302,6 +579,7 @@ def create_app():
         return jsonify([banco.to_dict() for banco in bancos])
 
     @app.route("/api/crear-banco", methods=["POST"])
+    @login_required
     def crear_banco():
         datos = request.json
         try:
@@ -320,11 +598,13 @@ def create_app():
             return jsonify({"error": str(e)}), 500
 
     @app.route("/transacciones")
+    @login_required
     def transacciones():
         transacciones = Transaccion.obtener_todos()
         return render_template("transacciones.html", transacciones=transacciones)
 
     @app.route("/api/buscar-transaccion")
+    @login_required
     def buscar_transaccion():
         tipo = request.args.get("tipo")
         descripcion = request.args.get("descripcion")
@@ -336,10 +616,11 @@ def create_app():
         return jsonify([transaccion.to_dict() for transaccion in transacciones])
 
     @app.route("/api/crear-transaccion", methods=["POST"])
+    @login_required
     def crear_transaccion():
         datos = request.json
         try:
-            nueva_transaccion = Transaccion(
+            nueva_transaccion = Transaccion = Transaccion(
                 tipo=datos["tipo"],
                 monto=datos["monto"],
                 descripcion=datos["descripcion"],
@@ -353,6 +634,7 @@ def create_app():
             return jsonify({"error": f"Error al crear la transacción: {str(e)}"}), 500
 
     @app.route("/api/tareas")
+    @login_required
     def get_tareas():
         tareas = [
             {"descripcion": "Revisar facturas pendientes", "vence": "2023-08-15"},
@@ -362,6 +644,7 @@ def create_app():
         return jsonify(tareas)
 
     @app.route("/api/notificaciones")
+    @login_required
     def get_notificaciones():
         notificaciones = [
             {"mensaje": "Nuevo cliente registrado", "tipo": "info"},
@@ -371,6 +654,7 @@ def create_app():
         return jsonify(notificaciones)
 
     @app.route("/api/asistente", methods=["POST"])
+    @login_required
     def consultar_asistente():
         pregunta = request.json.get("pregunta", "").strip()
 
@@ -387,10 +671,21 @@ def create_app():
                 200,
             )
 
-        respuesta = asistente.responder(pregunta)
+        # Obtener el contexto actualizado
+        context = get_assistant_context()
+
+        # Añadir el contexto a la pregunta
+        pregunta_con_contexto = (
+            f"Contexto: {json.dumps(context)}\n\nPregunta: {pregunta}"
+        )
+
+        # Procesar la pregunta con el asistente
+        respuesta = asistente.responder(pregunta_con_contexto)
+
         return jsonify({"respuesta": respuesta})
 
     @app.route("/api/datos_graficos")
+    @login_required
     def get_datos_graficos():
         datos = {
             "ventas": {
@@ -410,6 +705,7 @@ def create_app():
         return jsonify(datos)
 
     @app.route("/api/usuario")
+    @login_required
     def get_usuario():
         usuario = {
             "nombre": "Renyk Morel",
@@ -427,6 +723,12 @@ def create_app():
         )
 
     return app
+
+
+def init_db(app):
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
 
 
 if __name__ == "__main__":

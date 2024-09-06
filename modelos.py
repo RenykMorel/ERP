@@ -1,8 +1,20 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, event
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Float,
+    DateTime,
+    Enum,
+    event,
+    Table,
+    ForeignKey,
+    text,
+)
+from sqlalchemy.orm import relationship
 from datetime import datetime
-from sqlalchemy import text
-
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 
 db = SQLAlchemy()
 
@@ -14,6 +26,111 @@ DATABASE_URL = "mysql+mysqlconnector://root:@localhost/calculai_db"
 def notificar_asistente(mensaje):
     print(f"Notificación al asistente: {mensaje}")
     # Aquí se implementaría la lógica real para notificar al asistente
+
+
+# Tablas de asociación
+usuario_roles = Table(
+    "usuario_roles",
+    db.Model.metadata,
+    Column("usuario_id", Integer, ForeignKey("usuarios.id")),
+    Column("rol_id", Integer, ForeignKey("roles.id")),
+)
+
+usuario_modulos = Table(
+    "usuario_modulos",
+    db.Model.metadata,
+    Column("usuario_id", Integer, ForeignKey("usuarios.id")),
+    Column("modulo_id", Integer, ForeignKey("modulos.id")),
+)
+
+rol_permisos = Table(
+    "rol_permisos",
+    db.Model.metadata,
+    Column("rol_id", Integer, ForeignKey("roles.id")),
+    Column("permiso_id", Integer, ForeignKey("permisos.id")),
+)
+
+
+class Usuario(UserMixin, db.Model):
+    __tablename__ = "usuarios"
+    id = Column(Integer, primary_key=True)
+    username = Column(String(64), index=True, unique=True, nullable=False)
+    email = Column(String(120), index=True, unique=True, nullable=False)
+    password_hash = Column(String(128), nullable=False)
+    es_admin = Column(db.Boolean, default=False)
+    es_super_admin = Column(db.Boolean, default=False)
+    fecha_registro = Column(DateTime, default=datetime.utcnow)
+
+    roles = relationship("Rol", secondary=usuario_roles, back_populates="usuarios")
+    modulos = relationship(
+        "Modulo", secondary=usuario_modulos, back_populates="usuarios"
+    )
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "es_admin": self.es_admin,
+            "es_super_admin": self.es_super_admin,
+            "fecha_registro": (
+                self.fecha_registro.isoformat() if self.fecha_registro else None
+            ),
+        }
+
+
+class Rol(db.Model):
+    __tablename__ = "roles"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(50), unique=True, nullable=False)
+
+    usuarios = relationship("Usuario", secondary=usuario_roles, back_populates="roles")
+    permisos = relationship("Permiso", secondary=rol_permisos, back_populates="roles")
+
+
+class Permiso(db.Model):
+    __tablename__ = "permisos"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(50), unique=True, nullable=False)
+
+    roles = relationship("Rol", secondary=rol_permisos, back_populates="permisos")
+
+
+class Modulo(db.Model):
+    __tablename__ = "modulos"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(50), unique=True, nullable=False)
+
+    usuarios = relationship(
+        "Usuario", secondary=usuario_modulos, back_populates="modulos"
+    )
+    submodulos = relationship("Submodulo", back_populates="modulo")
+
+
+class Submodulo(db.Model):
+    __tablename__ = "submodulos"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(50), nullable=False)
+    modulo_id = Column(Integer, ForeignKey("modulos.id"))
+
+    modulo = relationship("Modulo", back_populates="submodulos")
+
+
+class Notificacion(db.Model):
+    __tablename__ = "notificaciones"
+    id = Column(Integer, primary_key=True)
+    mensaje = Column(String(255), nullable=False)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    leida = Column(db.Boolean, default=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+
+    usuario = relationship("Usuario", backref="notificaciones")
 
 
 class Banco(db.Model):
@@ -142,6 +259,7 @@ def notify_transaccion_update(mapper, connection, target):
 
 
 def init_db(app):
+    # No llamamos a db.init_app(app) aquí
     with app.app_context():
         connection = db.engine.connect()
         connection.execute(text("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"))

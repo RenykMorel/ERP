@@ -302,6 +302,39 @@ body, html {
     margin-top: 1px;
 }
 
+/* Nuevos estilos para los formularios de registro y login */
+.form-registro, .form-login {
+    max-width: 300px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.form-registro input, .form-login input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-registro button, .form-login button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.form-registro button:hover, .form-login button:hover {
+    background-color: #0056b3;
+}
+
 /* Estilos responsivos */
 @media (max-width: 1200px) {
     #app {
@@ -360,5 +393,10 @@ body, html {
 
     .chart-controls button {
         margin-bottom: 10px;
+    }
+
+    .form-registro, .form-login {
+        max-width: 100%;
+        margin: 20px 10px;
     }
 }

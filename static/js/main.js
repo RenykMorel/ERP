@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeCalendar(); // Inicializa el calendario
     initializeAsistente();// Inicializa el asistente virtual
     initializeSubmoduleHandlers(); // Inicializa los manejadores de submódulos
+    initializeAuthForms(); // Inicializa los formularios de autenticación
     window.addEventListener('resize', resizeCharts); // Ajusta los gráficos al redimensionar la ventana
 
     // Agrega event listeners para mostrar/ocultar gráficos
@@ -21,24 +22,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Función para notificar al asistente virtual
 function notificarAsistente(mensaje) {
+    const paginaActual = window.location.pathname;
+    
     fetch('/api/asistente', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ pregunta: mensaje })
+        body: JSON.stringify({ 
+            pregunta: mensaje,
+            pagina_actual: paginaActual
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.respuesta) {
-            if (data.respuesta === "El asistente virtual está desactivado en este momento.") {
-                mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
-            } else {
-                mostrarMensajeAsistente(data.respuesta);
-            }
+            mostrarMensajeAsistente(data.respuesta);
         }
     })
-    .catch(error => console.error('Error al notificar al asistente:', error));
+    .catch(error => console.error('Error:', error));
 }
 
 // Función para mostrar mensajes del asistente
@@ -62,6 +64,181 @@ function mostrarMensajeAsistente(mensaje) {
         console.log('Mensaje del asistente:', mensaje);
     }
 }
+
+// Función genérica para manejar formularios de autenticación
+function handleAuthForm(event, endpoint) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/';  // Redirige al home en caso de éxito
+        } else {
+            if (data.allow_password_reset) {
+                showPasswordResetOption(data.username);
+            } else {
+                showError(data.error);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Ocurrió un error en el proceso de autenticación');
+    });
+}
+
+function showPasswordResetOption(username) {
+    const authContainer = document.querySelector('.auth-container');
+    authContainer.innerHTML = `
+        <h2>Cambiar Contraseña</h2>
+        <form id="form-reset-password">
+            <input type="hidden" name="username" value="${username}">
+            <input type="password" name="new_password" placeholder="Nueva contraseña" required>
+            <input type="password" name="confirm_password" placeholder="Confirmar nueva contraseña" required>
+            <button type="submit">Cambiar Contraseña</button>
+        </form>
+        <p>¿Olvidaste tu contraseña? <a href="#" id="forgot-password">Haz clic aquí</a></p>
+    `;
+    document.getElementById('form-reset-password').addEventListener('submit', handlePasswordReset);
+    document.getElementById('forgot-password').addEventListener('click', showForgotPasswordForm);
+}
+
+function handlePasswordReset(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    if (formData.get('new_password') !== formData.get('confirm_password')) {
+        showError('Las contraseñas no coinciden');
+        return;
+    }
+    fetch('/reset_password', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Contraseña cambiada exitosamente. Por favor, inicia sesión con tu nueva contraseña.');
+            window.location.href = '/login';
+        } else {
+            showError(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Ocurrió un error al cambiar la contraseña');
+    });
+}
+
+function showForgotPasswordForm() {
+    const authContainer = document.querySelector('.auth-container');
+    authContainer.innerHTML = `
+        <h2>Restablecer Contraseña</h2>
+        <form id="form-forgot-password">
+            <input type="email" name="email" placeholder="Correo electrónico" required>
+            <button type="submit">Enviar Instrucciones</button>
+        </form>
+    `;
+    document.getElementById('form-forgot-password').addEventListener('submit', handleForgotPassword);
+}
+
+function handleForgotPassword(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    fetch('/request_password_reset', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.href = '/login';
+        } else {
+            showError(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Ocurrió un error al solicitar el restablecimiento de contraseña');
+    });
+}
+
+function showError(message) {
+    const errorDiv = document.getElementById('auth-error');
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    } else {
+        alert(message);
+    }
+}
+
+function initializeAuthForms() {
+    const formLogin = document.getElementById('form-login');
+    const formRegistro = document.getElementById('form-registro');
+
+    if (formLogin) {
+        formLogin.addEventListener('submit', (e) => handleAuthForm(e, '/login'));
+    }
+
+    if (formRegistro) {
+        formRegistro.addEventListener('submit', (e) => handleAuthForm(e, '/registro'));
+    }
+}
+
+// Asegúrate de llamar a initializeAuthForms() cuando se carga el DOM
+document.addEventListener('DOMContentLoaded', function() {
+    // ... otros inicializadores ...
+    initializeAuthForms();
+});
+// Inicialización unificada
+document.addEventListener('DOMContentLoaded', function() {
+    loadUserInfo();
+    loadModules();
+    loadTasks();
+    loadNotifications();
+    initializeCharts();
+    initializeCalendar();
+    initializeAsistente();
+    initializeSubmoduleHandlers();
+    initializeAuthForms();
+    window.addEventListener('resize', resizeCharts);
+
+    ['line', 'bar', 'pie'].forEach(type => {
+        const toggleButton = document.getElementById(`toggle-${type}-chart`);
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => toggleChartVisibility(`${type}-chart`));
+        }
+    });
+});
+
+// Función para inicializar los formularios de autenticación
+function initializeAuthForms() {
+    const formLogin = document.getElementById('form-login');
+    const formRegistro = document.getElementById('form-registro');
+
+    if (formLogin) {
+        formLogin.addEventListener('submit', (e) => handleAuthForm(e, '/login'));
+    }
+
+    if (formRegistro) {
+        formRegistro.addEventListener('submit', (e) => handleAuthForm(e, '/registro'));
+    }
+}
+
 
 // Inicializa los manejadores de submódulos
 function initializeSubmoduleHandlers() {
@@ -379,6 +556,135 @@ function initializeAsistente() {
         });
     }
 }
+
+// Espera a que el DOM esté completamente cargado antes de ejecutar las funciones
+document.addEventListener('DOMContentLoaded', function() {
+    loadUserInfo();       // Carga la información del usuario
+    loadModules();        // Carga los módulos del sistema
+    loadTasks();          // Carga las tareas pendientes
+    loadNotifications();  // Carga las notificaciones
+    initializeCharts();   // Inicializa los gráficos
+    initializeCalendar(); // Inicializa el calendario
+    initializeAsistente();// Inicializa el asistente virtual
+    initializeSubmoduleHandlers(); // Inicializa los manejadores de submódulos
+    initializeAuthForms(); // Inicializa los formularios de autenticación
+    window.addEventListener('resize', resizeCharts); // Ajusta los gráficos al redimensionar la ventana
+
+    // Agrega event listeners para mostrar/ocultar gráficos
+    ['line', 'bar', 'pie'].forEach(type => {
+        const toggleButton = document.getElementById(`toggle-${type}-chart`);
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => toggleChartVisibility(`${type}-chart`));
+        }
+    });
+});
+
+// Función para notificar al asistente virtual
+function notificarAsistente(mensaje) {
+    const paginaActual = window.location.pathname;
+    
+    fetch('/api/asistente', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            pregunta: mensaje,
+            pagina_actual: paginaActual
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.respuesta) {
+            mostrarMensajeAsistente(data.respuesta);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Función para mostrar mensajes del asistente
+function mostrarMensajeAsistente(mensaje) {
+    const mensajesDiv = document.getElementById('asistente-mensajes');
+    if (mensajesDiv) {
+        const nuevoMensaje = document.createElement('div');
+        if (mensaje === "El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.") {
+            nuevoMensaje.innerHTML = `
+                <p class="asistente-inactivo">
+                    <span style="color: #ff0000; font-weight: bold;">El asistente no está activo.</span><br>
+                    Por favor, contacte al <span style="color: #0000ff;">equipo de CalculAI</span> para su activación.
+                </p>
+            `;
+        } else {
+            nuevoMensaje.textContent = mensaje;
+        }
+        mensajesDiv.appendChild(nuevoMensaje);
+        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;  // Scroll al final del chat
+    } else {
+        console.log('Mensaje del asistente:', mensaje);
+    }
+}
+
+// ... (rest of the existing functions)
+
+// Nueva función para inicializar los formularios de autenticación
+function initializeAuthForms() {
+    const formLogin = document.getElementById('form-login');
+    const formRegistro = document.getElementById('form-registro');
+
+    if (formLogin) {
+        formLogin.addEventListener('submit', loginUsuario);
+    }
+
+    if (formRegistro) {
+        formRegistro.addEventListener('submit', registrarUsuario);
+    }
+}
+
+// Nueva función para manejar el login de usuario
+function loginUsuario(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    fetch('/login', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/';
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error en el inicio de sesión');
+    });
+}
+
+// Nueva función para manejar el registro de usuario
+function registrarUsuario(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    fetch('/registro', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Registro exitoso');
+            window.location.href = '/';
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error en el registro');
+    });
+}
+
 
 function mostrarMensajeAsistente(mensaje) {
     const mensajesDiv = document.getElementById('asistente-mensajes');

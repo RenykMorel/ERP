@@ -1,0 +1,23 @@
+CalculAI/
+├── app/
+│   ├── __init__.py
+│   ├── models.py
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── auth.py
+│   │   ├── main.py
+│   │   └── admin.py
+│   ├── static/
+│   │   ├── css/
+│   │   │   └── main.css
+│   │   └── js/
+│   │       ├── main.js
+│   │       └── bancos.js
+│   └── templates/
+│       ├── base.html
+│       ├── index.html
+│       └── sub_bancos.html
+├── config.py
+├── app.py
+├── .env
+└── requirements.txt
