@@ -11,10 +11,40 @@
     <button onclick="showUserForm()">Agregar Usuario</button>
 </div>
 
+<div id="user-form" style="display: none;">
+    <h3>Agregar/Editar Usuario</h3>
+    <form id="user-form-element">
+        <input type="hidden" id="user-id">
+        <input type="text" id="username" placeholder="Nombre de usuario" required>
+        <input type="email" id="email" placeholder="Correo electrónico" required>
+        <input type="password" id="password" placeholder="Contraseña">
+        <select id="role">
+            <option value="user">Usuario</option>
+            <option value="admin">Administrador</option>
+        </select>
+        <button type="submit">Guardar</button>
+        <button type="button" onclick="hideUserForm()">Cancelar</button>
+    </form>
+</div>
+
 <div id="companies-section">
     <h2>Empresas</h2>
     <div id="companies-list"></div>
     <button onclick="showCompanyForm()">Agregar Empresa</button>
+</div>
+
+<div id="company-form" style="display: none;">
+    <h3>Agregar/Editar Empresa</h3>
+    <form id="company-form-element">
+        <input type="hidden" id="company-id">
+        <input type="text" id="company-name" placeholder="Nombre de la empresa" required>
+        <select id="company-status">
+            <option value="active">Activa</option>
+            <option value="inactive">Inactiva</option>
+        </select>
+        <button type="submit">Guardar</button>
+        <button type="button" onclick="hideCompanyForm()">Cancelar</button>
+    </form>
 </div>
 
 <script>
@@ -24,7 +54,14 @@ function loadUsers() {
         .then(users => {
             const usersList = document.getElementById('users-list');
             usersList.innerHTML = users.map(user => 
-                `<div>${user.username} (${user.email}) - ${user.status}</div>`
+                `<div>
+                    ${user.nombre_usuario} (${user.email}) - ${user.estado}
+                    <button onclick="editUser(${user.id})">Editar</button>
+                    <button onclick="deleteUser(${user.id})">Eliminar</button>
+                    <button onclick="toggleUserStatus(${user.id})">
+                        ${user.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                    </button>
+                </div>`
             ).join('');
         })
         .catch(error => console.error('Error:', error));
@@ -36,19 +73,139 @@ function loadCompanies() {
         .then(companies => {
             const companiesList = document.getElementById('companies-list');
             companiesList.innerHTML = companies.map(company => 
-                `<div>${company.name} - ${company.status}</div>`
+                `<div>
+                    ${company.nombre} - ${company.estado}
+                    <button onclick="editCompany(${company.id})">Editar</button>
+                    <button onclick="deleteCompany(${company.id})">Eliminar</button>
+                    <button onclick="toggleCompanyStatus(${company.id})">
+                        ${company.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                    </button>
+                </div>`
             ).join('');
         })
         .catch(error => console.error('Error:', error));
 }
 
 function showUserForm() {
-    // Implementar lógica para mostrar formulario de usuario
+    document.getElementById('user-form').style.display = 'block';
+}
+
+function hideUserForm() {
+    document.getElementById('user-form').style.display = 'none';
+    document.getElementById('user-form-element').reset();
 }
 
 function showCompanyForm() {
-    // Implementar lógica para mostrar formulario de empresa
+    document.getElementById('company-form').style.display = 'block';
 }
+
+function hideCompanyForm() {
+    document.getElementById('company-form').style.display = 'none';
+    document.getElementById('company-form-element').reset();
+}
+
+function editUser(id) {
+    fetch(`/admin/users/${id}`)
+        .then(response => response.json())
+        .then(user => {
+            document.getElementById('user-id').value = user.id;
+            document.getElementById('username').value = user.nombre_usuario;
+            document.getElementById('email').value = user.email;
+            document.getElementById('role').value = user.rol;
+            showUserForm();
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function editCompany(id) {
+    fetch(`/admin/companies/${id}`)
+        .then(response => response.json())
+        .then(company => {
+            document.getElementById('company-id').value = company.id;
+            document.getElementById('company-name').value = company.nombre;
+            document.getElementById('company-status').value = company.estado;
+            showCompanyForm();
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function deleteUser(id) {
+    if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+        fetch(`/admin/users/${id}`, { method: 'DELETE' })
+            .then(() => loadUsers())
+            .catch(error => console.error('Error:', error));
+    }
+}
+
+function deleteCompany(id) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta empresa?')) {
+        fetch(`/admin/companies/${id}`, { method: 'DELETE' })
+            .then(() => loadCompanies())
+            .catch(error => console.error('Error:', error));
+    }
+}
+
+function toggleUserStatus(id) {
+    fetch(`/admin/toggle_user_status/${id}`, { method: 'POST' })
+        .then(() => loadUsers())
+        .catch(error => console.error('Error:', error));
+}
+
+function toggleCompanyStatus(id) {
+    fetch(`/admin/toggle_company_status/${id}`, { method: 'POST' })
+        .then(() => loadCompanies())
+        .catch(error => console.error('Error:', error));
+}
+
+document.getElementById('user-form-element').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const userData = {
+        nombre_usuario: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        rol: document.getElementById('role').value
+    };
+    const userId = document.getElementById('user-id').value;
+    const method = userId ? 'PUT' : 'POST';
+    const url = userId ? `/admin/users/${userId}` : '/admin/users';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+    })
+    .then(() => {
+        loadUsers();
+        hideUserForm();
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+document.getElementById('company-form-element').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const companyData = {
+        nombre: document.getElementById('company-name').value,
+        estado: document.getElementById('company-status').value
+    };
+    const companyId = document.getElementById('company-id').value;
+    const method = companyId ? 'PUT' : 'POST';
+    const url = companyId ? `/admin/companies/${companyId}` : '/admin/companies';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(companyData),
+    })
+    .then(() => {
+        loadCompanies();
+        hideCompanyForm();
+    })
+    .catch(error => console.error('Error:', error));
+});
 
 loadUsers();
 loadCompanies();

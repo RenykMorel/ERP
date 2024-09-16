@@ -4,27 +4,35 @@
 
 {% block extra_css %}
 <style>
+    .company-container {
+        padding: 20px;
+    }
     .company-form {
         margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
     }
     .company-table {
         width: 100%;
         border-collapse: collapse;
+        margin-bottom: 20px;
     }
     .company-table th, .company-table td {
         border: 1px solid #ddd;
-        padding: 8px;
+        padding: 12px;
         text-align: left;
     }
     .company-table th {
         background-color: #f2f2f2;
+        font-weight: bold;
     }
     .btn {
-        padding: 5px 10px;
+        padding: 8px 12px;
         margin: 2px;
         border: none;
-        border-radius: 3px;
+        border-radius: 4px;
         cursor: pointer;
+        transition: background-color 0.3s;
     }
     .btn-create {
         background-color: #4CAF50;
@@ -42,46 +50,80 @@
         background-color: #ff9800;
         color: white;
     }
+    .btn:hover {
+        opacity: 0.8;
+    }
+    #error-message {
+        color: red;
+        margin-bottom: 10px;
+    }
+    #success-message {
+        color: green;
+        margin-bottom: 10px;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<h1>Administrar Empresas</h1>
+<div class="company-container">
+    <h1>Administrar Empresas</h1>
 
-<form id="create-company-form" class="company-form">
-    <input type="text" name="name" placeholder="Nombre de la empresa" required>
-    <button type="submit" class="btn btn-create">Crear Empresa</button>
-</form>
+    <div id="error-message"></div>
+    <div id="success-message"></div>
 
-<table class="company-table">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody id="companies-list">
-        {% for company in companies %}
-        <tr data-company-id="{{ company.id }}">
-            <td>{{ company.name }}</td>
-            <td>{{ company.status }}</td>
-            <td>
-                <button class="btn {% if company.status == 'active' %}btn-block{% else %}btn-activate{% endif %}" onclick="toggleCompanyStatus({{ company.id }})">
-                    {% if company.status == 'active' %}Bloquear{% else %}Activar{% endif %}
-                </button>
-                <button class="btn btn-delete" onclick="deleteCompany({{ company.id }})">Eliminar</button>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <form id="create-company-form" class="company-form">
+        <input type="text" name="nombre" placeholder="Nombre de la empresa" required>
+        <button type="submit" class="btn btn-create">Crear Empresa</button>
+    </form>
 
-<a href="{{ url_for('admin.manage_users') }}" class="btn">Gestionar Usuarios</a>
+    <table class="company-table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="companies-list">
+            {% for company in companies %}
+            <tr data-company-id="{{ company.id }}">
+                <td>{{ company.nombre }}</td>
+                <td>{{ company.estado }}</td>
+                <td>
+                    <button class="btn {% if company.estado == 'activo' %}btn-block{% else %}btn-activate{% endif %}" onclick="toggleCompanyStatus({{ company.id }})">
+                        {% if company.estado == 'activo' %}Bloquear{% else %}Activar{% endif %}
+                    </button>
+                    <button class="btn btn-delete" onclick="deleteCompany({{ company.id }})">Eliminar</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('admin.manage_users') }}" class="btn">Gestionar Usuarios</a>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+function showError(message) {
+    const errorDiv = document.getElementById('error-message');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+    setTimeout(() => {
+        errorDiv.style.display = 'none';
+    }, 5000);
+}
+
+function showSuccess(message) {
+    const successDiv = document.getElementById('success-message');
+    successDiv.textContent = message;
+    successDiv.style.display = 'block';
+    setTimeout(() => {
+        successDiv.style.display = 'none';
+    }, 5000);
+}
+
 function createCompany(event) {
     event.preventDefault();
     const form = event.target;
@@ -97,8 +139,8 @@ function createCompany(event) {
             const companiesList = document.getElementById('companies-list');
             const newRow = `
                 <tr data-company-id="${data.company.id}">
-                    <td>${data.company.name}</td>
-                    <td>${data.company.status}</td>
+                    <td>${data.company.nombre}</td>
+                    <td>${data.company.estado}</td>
                     <td>
                         <button class="btn btn-block" onclick="toggleCompanyStatus(${data.company.id})">Bloquear</button>
                         <button class="btn btn-delete" onclick="deleteCompany(${data.company.id})">Eliminar</button>
@@ -107,9 +149,15 @@ function createCompany(event) {
             `;
             companiesList.insertAdjacentHTML('beforeend', newRow);
             form.reset();
+            showSuccess('Empresa creada exitosamente');
+        } else {
+            showError(data.error || 'Error al crear la empresa');
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Error al crear la empresa');
+    });
 }
 
 function toggleCompanyStatus(companyId) {
@@ -118,21 +166,29 @@ function toggleCompanyStatus(companyId) {
     })
     .then(response => response.json())
     .then(data => {
-        const row = document.querySelector(`tr[data-company-id="${companyId}"]`);
-        const statusCell = row.cells[1];
-        const toggleButton = row.querySelector('.btn-block, .btn-activate');
-        statusCell.textContent = data.status;
-        if (data.status === 'active') {
-            toggleButton.textContent = 'Bloquear';
-            toggleButton.classList.remove('btn-activate');
-            toggleButton.classList.add('btn-block');
+        if (data.success) {
+            const row = document.querySelector(`tr[data-company-id="${companyId}"]`);
+            const statusCell = row.cells[1];
+            const toggleButton = row.querySelector('.btn-block, .btn-activate');
+            statusCell.textContent = data.estado;
+            if (data.estado === 'activo') {
+                toggleButton.textContent = 'Bloquear';
+                toggleButton.classList.remove('btn-activate');
+                toggleButton.classList.add('btn-block');
+            } else {
+                toggleButton.textContent = 'Activar';
+                toggleButton.classList.remove('btn-block');
+                toggleButton.classList.add('btn-activate');
+            }
+            showSuccess('Estado de la empresa actualizado exitosamente');
         } else {
-            toggleButton.textContent = 'Activar';
-            toggleButton.classList.remove('btn-block');
-            toggleButton.classList.add('btn-activate');
+            showError(data.error || 'Error al actualizar el estado de la empresa');
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Error al actualizar el estado de la empresa');
+    });
 }
 
 function deleteCompany(companyId) {
@@ -142,10 +198,18 @@ function deleteCompany(companyId) {
         })
         .then(response => response.json())
         .then(data => {
-            const row = document.querySelector(`tr[data-company-id="${companyId}"]`);
-            row.remove();
+            if (data.success) {
+                const row = document.querySelector(`tr[data-company-id="${companyId}"]`);
+                row.remove();
+                showSuccess('Empresa eliminada exitosamente');
+            } else {
+                showError(data.error || 'Error al eliminar la empresa');
+            }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Error al eliminar la empresa');
+        });
     }
 }
 

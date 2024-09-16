@@ -12,7 +12,6 @@
     {% endif %}
     {% block extra_css %}{% endblock %}
     <style>
-        /* Estilos existentes */
         .logout-button {
             background-color: #000000;
             color: white;
@@ -47,7 +46,6 @@
             background-color: #45a049;
         }
 
-        /* Nuevos estilos para el panel de administración */
         .admin-panel {
             background-color: #f4f4f4;
             padding: 20px;
@@ -92,7 +90,7 @@
             </div>
             <div id="module-container"></div>
             <ul class="auth-links">
-                {% if current_user.role == 'admin' %}
+                {% if current_user.rol == 'admin' %}
                 <li>
                     <a href="{{ url_for('admin.manage_companies') }}" class="admin-link">Panel de Administración</a>
                 </li>
@@ -108,7 +106,7 @@
             <header>
                 <h1></h1>
             </header>
-            {% if current_user.role == 'admin' %}
+            {% if current_user.rol == 'admin' %}
             <div class="admin-panel">
                 <h2>Panel de Administración</h2>
                 <ul>
@@ -195,7 +193,7 @@
             const chatWindow = document.getElementById('chat-window');
 
             // Verificar si el asistente está activo (esto debería venir del backend)
-            const ASISTENTE_ACTIVO = false;
+            const ASISTENTE_ACTIVO = {{ 'true' if config.ASISTENTE_ACTIVO else 'false' }};
 
             function mostrarMensajeAsistente(mensaje, esUsuario = false) {
                 const mensajeElement = document.createElement('p');
@@ -225,9 +223,7 @@
                 const pregunta = asistenteInput.value.trim();
                 if (pregunta) {
                     mostrarMensajeAsistente(pregunta, true);
-                    if (!ASISTENTE_ACTIVO) {
-                        mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
-                    } else {
+                    if (ASISTENTE_ACTIVO) {
                         // Enviar pregunta al asistente
                         fetch('/api/asistente', {
                             method: 'POST',
@@ -241,6 +237,8 @@
                             mostrarMensajeAsistente(data.respuesta);
                         })
                         .catch(error => console.error('Error:', error));
+                    } else {
+                        mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
                     }
                     asistenteInput.value = '';
                 }

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Banco - CalculAI{% endblock %}
+{% block title %}Gestión de Bancos - CalculAI{% endblock %}
 {% block content %}
 <div id="bancos-module">
-    <h1>Banco</h1>
+    <h1>Gestión de Bancos</h1>
     
     <div id="busqueda-form">
         <input type="text" id="id-banco" placeholder="ID">
@@ -18,8 +18,8 @@
     </div>
     
     <div id="crear-banco-form" style="display: none;">
-        <h2>Crear Nuevo Banco</h2>
-        <form id="nuevo-banco-form">
+        <h2 id="form-title">Crear Nuevo Banco</h2>
+        <form id="banco-form">
             <input type="hidden" name="id">
             <input type="text" name="nombre" placeholder="Nombre" required>
             <input type="text" name="telefono" placeholder="Teléfono" required>
@@ -30,7 +30,7 @@
                 <option value="inactivo">Inactivo</option>
             </select>
             <button type="submit">Guardar</button>
-            <button type="button" id="cancelar-crear">Cancelar</button>
+            <button type="button" id="cancelar-form">Cancelar</button>
         </form>
     </div>
     
@@ -58,6 +58,9 @@
                 <td>
                     <button class="editar-banco" data-id="{{ banco.id }}">Editar</button>
                     <button class="eliminar-banco" data-id="{{ banco.id }}">Eliminar</button>
+                    <button class="cambiar-estatus-banco" data-id="{{ banco.id }}" data-estatus="{{ banco.estatus }}">
+                        {% if banco.estatus == 'activo' %}Desactivar{% else %}Activar{% endif %}
+                    </button>
                 </td>
             </tr>
             {% endfor %}
@@ -69,11 +72,163 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/bancos.js') }}"></script>
 <script>
-    // Asegurarse de que el asistente virtual se inicialice correctamente en esta página
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof initializeAsistente === 'function') {
             initializeAsistente();
         }
+        
+        // Inicializar la funcionalidad de bancos
+        initializeBancos();
     });
+
+    function initializeBancos() {
+        const buscarBtn = document.getElementById('buscar-btn');
+        const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
+        const cancelarFormBtn = document.getElementById('cancelar-form');
+        const bancoForm = document.getElementById('banco-form');
+
+        buscarBtn.addEventListener('click', buscarBancos);
+        crearNuevoBtn.addEventListener('click', mostrarFormularioCrear);
+        cancelarFormBtn.addEventListener('click', ocultarFormulario);
+        bancoForm.addEventListener('submit', guardarBanco);
+
+        // Agregar event listeners para editar y eliminar bancos
+        document.querySelectorAll('.editar-banco').forEach(btn => {
+            btn.addEventListener('click', () => editarBanco(btn.dataset.id));
+        });
+        document.querySelectorAll('.eliminar-banco').forEach(btn => {
+            btn.addEventListener('click', () => eliminarBanco(btn.dataset.id));
+        });
+        document.querySelectorAll('.cambiar-estatus-banco').forEach(btn => {
+            btn.addEventListener('click', () => cambiarEstatusBanco(btn.dataset.id, btn.dataset.estatus));
+        });
+    }
+
+    function buscarBancos() {
+        const id = document.getElementById('id-banco').value;
+        const nombre = document.getElementById('nombre-banco').value;
+        const contacto = document.getElementById('contacto-banco').value;
+        const estatus = document.getElementById('estatus-banco').value;
+
+        fetch(`/api/buscar-bancos?id=${id}&nombre=${nombre}&contacto=${contacto}&estatus=${estatus}`)
+            .then(response => response.json())
+            .then(data => actualizarTablaBancos(data))
+            .catch(error => console.error('Error:', error));
+    }
+
+    function actualizarTablaBancos(bancos) {
+        const tbody = document.getElementById('bancos-tbody');
+        tbody.innerHTML = '';
+        bancos.forEach(banco => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${banco.id}</td>
+                <td>${banco.nombre}</td>
+                <td>${banco.telefono}</td>
+                <td>${banco.contacto}</td>
+                <td>${banco.telefono_contacto}</td>
+                <td>${banco.estatus}</td>
+                <td>
+                    <button class="editar-banco" data-id="${banco.id}">Editar</button>
+                    <button class="eliminar-banco" data-id="${banco.id}">Eliminar</button>
+                    <button class="cambiar-estatus-banco" data-id="${banco.id}" data-estatus="${banco.estatus}">
+                        ${banco.estatus === 'activo' ? 'Desactivar' : 'Activar'}
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        // Reinicializar los event listeners para los nuevos botones
+        initializeBancos();
+    }
+
+    function mostrarFormularioCrear() {
+        document.getElementById('form-title').textContent = 'Crear Nuevo Banco';
+        document.getElementById('crear-banco-form').style.display = 'block';
+        document.getElementById('banco-form').reset();
+    }
+
+    function ocultarFormulario() {
+        document.getElementById('crear-banco-form').style.display = 'none';
+    }
+
+    function guardarBanco(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const bancoId = formData.get('id');
+        const url = bancoId ? `/api/actualizar-banco/${bancoId}` : '/api/crear-banco';
+        const method = bancoId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            body: JSON.stringify(Object.fromEntries(formData)),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                ocultarFormulario();
+                buscarBancos();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function editarBanco(id) {
+        fetch(`/api/obtener-banco/${id}`)
+            .then(response => response.json())
+            .then(banco => {
+                document.getElementById('form-title').textContent = 'Editar Banco';
+                const form = document.getElementById('banco-form');
+                form.id.value = banco.id;
+                form.nombre.value = banco.nombre;
+                form.telefono.value = banco.telefono;
+                form.contacto.value = banco.contacto;
+                form.telefono_contacto.value = banco.telefono_contacto;
+                form.estatus.value = banco.estatus;
+                document.getElementById('crear-banco-form').style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function eliminarBanco(id) {
+        if (confirm('¿Está seguro de que desea eliminar este banco?')) {
+            fetch(`/api/eliminar-banco/${id}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        buscarBancos();
+                    } else {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    }
+
+    function cambiarEstatusBanco(id, estatusActual) {
+        const nuevoEstatus = estatusActual === 'activo' ? 'inactivo' : 'activo';
+        fetch(`/api/cambiar-estatus-banco/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ estatus: nuevoEstatus }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                buscarBancos();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
 </script>
 {% endblock %}

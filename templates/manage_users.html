@@ -6,25 +6,31 @@
 <style>
     .user-form, .assign-form {
         margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
     }
     .user-table {
         width: 100%;
         border-collapse: collapse;
+        margin-bottom: 20px;
     }
     .user-table th, .user-table td {
         border: 1px solid #ddd;
-        padding: 8px;
+        padding: 12px;
         text-align: left;
     }
     .user-table th {
         background-color: #f2f2f2;
+        font-weight: bold;
     }
     .btn {
-        padding: 5px 10px;
+        padding: 8px 12px;
         margin: 2px;
         border: none;
-        border-radius: 3px;
+        border-radius: 4px;
         cursor: pointer;
+        transition: background-color 0.3s;
     }
     .btn-create {
         background-color: #4CAF50;
@@ -42,6 +48,40 @@
         background-color: #ff9800;
         color: white;
     }
+    .btn:hover {
+        opacity: 0.8;
+    }
+    #editUserModal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
 </style>
 {% endblock %}
 
@@ -49,11 +89,11 @@
 <h1>Administrar Usuarios</h1>
 
 <form id="create-user-form" class="user-form">
-    <input type="text" name="username" placeholder="Nombre de usuario" required>
+    <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
     <input type="email" name="email" placeholder="Correo electrónico" required>
     <input type="password" name="password" placeholder="Contraseña" required>
-    <select name="role">
-        <option value="user">Usuario</option>
+    <select name="rol">
+        <option value="usuario">Usuario</option>
         <option value="admin">Administrador</option>
     </select>
     <button type="submit" class="btn btn-create">Crear Usuario</button>
@@ -72,15 +112,15 @@
     <tbody id="users-list">
         {% for user in users %}
         <tr data-user-id="{{ user.id }}">
-            <td>{{ user.username }}</td>
+            <td>{{ user.nombre_usuario }}</td>
             <td>{{ user.email }}</td>
-            <td>{{ user.role }}</td>
-            <td>{{ user.status }}</td>
+            <td>{{ user.rol }}</td>
+            <td>{{ user.estado }}</td>
             <td>
                 <button class="btn btn-edit" onclick="editUser({{ user.id }})">Editar</button>
                 <button class="btn btn-delete" onclick="deleteUser({{ user.id }})">Eliminar</button>
-                <button class="btn {% if user.status == 'active' %}btn-delete{% else %}btn-edit{% endif %}" onclick="toggleUserStatus({{ user.id }})">
-                    {% if user.status == 'active' %}Desactivar{% else %}Activar{% endif %}
+                <button class="btn {% if user.estado == 'activo' %}btn-delete{% else %}btn-edit{% endif %}" onclick="toggleUserStatus({{ user.id }})">
+                    {% if user.estado == 'activo' %}Desactivar{% else %}Activar{% endif %}
                 </button>
             </td>
         </tr>
@@ -90,26 +130,44 @@
 
 <h2>Asignar Usuario a Empresa</h2>
 <form id="assign-user-form" class="assign-form">
-    <select name="user_id" required>
+    <select name="usuario_id" required>
         <option value="">Seleccionar Usuario</option>
         {% for user in users %}
-        <option value="{{ user.id }}">{{ user.username }}</option>
+        <option value="{{ user.id }}">{{ user.nombre_usuario }}</option>
         {% endfor %}
     </select>
-    <select name="company_id" required>
+    <select name="empresa_id" required>
         <option value="">Seleccionar Empresa</option>
         {% for company in companies %}
-        <option value="{{ company.id }}">{{ company.name }}</option>
+        <option value="{{ company.id }}">{{ company.nombre }}</option>
         {% endfor %}
     </select>
-    <select name="role_in_company">
-        <option value="employee">Empleado</option>
-        <option value="manager">Gerente</option>
+    <select name="rol_en_empresa">
+        <option value="empleado">Empleado</option>
+        <option value="gerente">Gerente</option>
     </select>
     <button type="submit" class="btn btn-assign">Asignar</button>
 </form>
 
 <a href="{{ url_for('admin.manage_companies') }}" class="btn">Gestionar Empresas</a>
+
+<div id="editUserModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Editar Usuario</h2>
+        <form id="edit-user-form">
+            <input type="hidden" name="id">
+            <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
+            <input type="email" name="email" placeholder="Correo electrónico" required>
+            <input type="password" name="password" placeholder="Nueva contraseña (dejar en blanco para no cambiar)">
+            <select name="rol">
+                <option value="usuario">Usuario</option>
+                <option value="admin">Administrador</option>
+            </select>
+            <button type="submit" class="btn btn-edit">Guardar Cambios</button>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -129,10 +187,10 @@ function createUser(event) {
             const usersList = document.getElementById('users-list');
             const newRow = `
                 <tr data-user-id="${data.user.id}">
-                    <td>${data.user.username}</td>
+                    <td>${data.user.nombre_usuario}</td>
                     <td>${data.user.email}</td>
-                    <td>${data.user.role}</td>
-                    <td>${data.user.status}</td>
+                    <td>${data.user.rol}</td>
+                    <td>${data.user.estado}</td>
                     <td>
                         <button class="btn btn-edit" onclick="editUser(${data.user.id})">Editar</button>
                         <button class="btn btn-delete" onclick="deleteUser(${data.user.id})">Eliminar</button>
@@ -148,8 +206,17 @@ function createUser(event) {
 }
 
 function editUser(userId) {
-    // Implementar lógica para editar usuario
-    console.log('Editar usuario', userId);
+    fetch(`{{ url_for('admin.get_user', user_id=0) }}`.replace('0', userId))
+    .then(response => response.json())
+    .then(user => {
+        const form = document.getElementById('edit-user-form');
+        form.id.value = user.id;
+        form.nombre_usuario.value = user.nombre_usuario;
+        form.email.value = user.email;
+        form.rol.value = user.rol;
+        document.getElementById('editUserModal').style.display = 'block';
+    })
+    .catch(error => console.error('Error:', error));
 }
 
 function deleteUser(userId) {
@@ -159,8 +226,12 @@ function deleteUser(userId) {
         })
         .then(response => response.json())
         .then(data => {
-            const row = document.querySelector(`tr[data-user-id="${userId}"]`);
-            row.remove();
+            if (data.success) {
+                const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+                row.remove();
+            } else {
+                alert(data.error);
+            }
         })
         .catch(error => console.error('Error:', error));
     }
@@ -172,18 +243,22 @@ function toggleUserStatus(userId) {
     })
     .then(response => response.json())
     .then(data => {
-        const row = document.querySelector(`tr[data-user-id="${userId}"]`);
-        const statusCell = row.cells[3];
-        const toggleButton = row.querySelector('.btn-delete, .btn-edit');
-        statusCell.textContent = data.status;
-        if (data.status === 'active') {
-            toggleButton.textContent = 'Desactivar';
-            toggleButton.classList.remove('btn-edit');
-            toggleButton.classList.add('btn-delete');
+        if (data.success) {
+            const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+            const statusCell = row.cells[3];
+            const toggleButton = row.querySelector('.btn-delete, .btn-edit');
+            statusCell.textContent = data.estado;
+            if (data.estado === 'activo') {
+                toggleButton.textContent = 'Desactivar';
+                toggleButton.classList.remove('btn-edit');
+                toggleButton.classList.add('btn-delete');
+            } else {
+                toggleButton.textContent = 'Activar';
+                toggleButton.classList.remove('btn-delete');
+                toggleButton.classList.add('btn-edit');
+            }
         } else {
-            toggleButton.textContent = 'Activar';
-            toggleButton.classList.remove('btn-delete');
-            toggleButton.classList.add('btn-edit');
+            alert(data.error);
         }
     })
     .catch(error => console.error('Error:', error));
@@ -200,13 +275,53 @@ function assignUserToCompany(event) {
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.message);
-        form.reset();
+        if (data.success) {
+            alert(data.message);
+            form.reset();
+        } else {
+            alert(data.error);
+        }
     })
     .catch(error => console.error('Error:', error));
 }
 
 document.getElementById('create-user-form').addEventListener('submit', createUser);
 document.getElementById('assign-user-form').addEventListener('submit', assignUserToCompany);
+document.getElementById('edit-user-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const userId = form.id.value;
+
+    fetch(`{{ url_for('admin.update_user', user_id=0) }}`.replace('0', userId), {
+        method: 'PUT',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+            row.cells[0].textContent = data.user.nombre_usuario;
+            row.cells[1].textContent = data.user.email;
+            row.cells[2].textContent = data.user.rol;
+            document.getElementById('editUserModal').style.display = 'none';
+        } else {
+            alert(data.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+// Modal close functionality
+const modal = document.getElementById('editUserModal');
+const span = document.getElementsByClassName("close")[0];
+span.onclick = function() {
+    modal.style.display = "none";
+}
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
 </script>
 {% endblock %}

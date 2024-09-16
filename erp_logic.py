@@ -40,6 +40,7 @@ class ERP:
 
     def inicializar_modulos(self):
         self.modulos['banco'] = ModuloBanco(self)
+        self.modulos['usuario'] = ModuloUsuario(self)
         # Inicializa otros módulos aquí...
 
     def obtener_datos_para_analisis(self, tipo_analisis):
@@ -64,9 +65,18 @@ class ERP:
 
     def get_submodulos(self, modulo):
         submodulos = {
-            "Banco": ["Depósitos", "Notas de Crédito/Débito", "Transferencias Bancarias", "Conciliación Bancaria", "Gestión de bancos"],
+            "Banco": ["Bancos", "Depósitos", "Notas de Crédito/Débito", "Transferencias Bancarias", "Conciliación Bancaria", "Gestión de Bancos", "Divisas"],
             "Contabilidad": ["Cuentas", "Diario", "Mayor General", "Balanza de Comprobación", "Estado de Resultados", "Balance General", "Configuraciones", "Flujo de caja"],
-            # Añade los submodulos para los demás módulos aquí...
+            "Activos Fijos": ["Activo Fijo", "Depreciación", "Retiro", "Revalorización", "Tipo de Activo Fijo"],
+            "Cuentas Por Cobrar": ["Cliente", "Descuento y devoluciones", "Nota de credito", "Nota de debito", "Recibo", "Anticipo CxC", "Condicion de pago", "Reporte CxC", "Tipo de cliente"],
+            "Cuentas Por Pagar": ["Factura Suplidor", "Nota de Crédito", "Nota de Débito", "Orden de Compras", "Suplidor", "Anticipo CxP", "Pago de Contado", "Reporte CxP", "Requisición Cotización", "Solicitud Compras", "Tipo de Suplidor"],
+            "Facturacion": ["Facturas", "Pre-facturas", "Notas de Crédito/Débito", "Reporte de Ventas", "Gestión de clientes"],
+            "Impuestos": ["Formulario 606", "Formulario 607", "Reporte IT1", "Impuesto sobre la Renta (IR17)", "Serie Fiscal", "Configuraciones"],
+            "Inventario": ["Items", "Entrada de Almacén", "Salida de Almacén", "Inventario", "Reporte de Inventario"],
+            "Compras": ["Solicitudes de Compra", "Órdenes de Compra", "Recepción de Materiales", "Gastos", "Reporte de Compras/Gastos"],
+            "Importacion": ["Expediente de Importacion", "Importador", "Reportes Importacion"],
+            "Proyectos": ["Gestión de Proyectos", "Presupuestos", "Facturación por Proyecto"],
+            "Recursos Humanos": ["Gestión de Empleados", "Nómina", "Evaluación de Desempeño"],
         }
         return submodulos.get(modulo, [])
 
@@ -109,12 +119,14 @@ class ModuloBanco:
             "1": {"nombre": "Cuenta Corriente", "saldo": 1000},
             "2": {"nombre": "Cuenta de Ahorros", "saldo": 5000}
         }
+        self.bancos = []
 
     def obtener_datos(self):
         return {
             "transacciones": self.transacciones,
             "cuentas": self.cuentas,
-            "saldo_total": sum(cuenta["saldo"] for cuenta in self.cuentas.values())
+            "saldo_total": sum(cuenta["saldo"] for cuenta in self.cuentas.values()),
+            "bancos": self.bancos
         }
 
     def realizar_transaccion(self, tipo, monto, descripcion, cuenta_id):
@@ -139,3 +151,53 @@ class ModuloBanco:
             self.cuentas[cuenta_id]["saldo"] -= monto
 
         return transaccion
+
+    def agregar_banco(self, nombre, contacto, telefono):
+        nuevo_banco = {
+            "id": len(self.bancos) + 1,
+            "nombre": nombre,
+            "contacto": contacto,
+            "telefono": telefono,
+            "estatus": "activo"
+        }
+        self.bancos.append(nuevo_banco)
+        return nuevo_banco
+
+    def obtener_bancos(self):
+        return self.bancos
+
+class ModuloUsuario:
+    def __init__(self, erp_main):
+        self.erp_main = erp_main
+        self.usuarios = []
+
+    def crear_usuario(self, nombre_usuario, email, password, rol="usuario"):
+        nuevo_usuario = {
+            "id": len(self.usuarios) + 1,
+            "nombre_usuario": nombre_usuario,
+            "email": email,
+            "password": password,  # En una aplicación real, esto debería estar hasheado
+            "rol": rol,
+            "estado": "activo"
+        }
+        self.usuarios.append(nuevo_usuario)
+        return nuevo_usuario
+
+    def obtener_usuario(self, id):
+        return next((usuario for usuario in self.usuarios if usuario["id"] == id), None)
+
+    def actualizar_usuario(self, id, datos):
+        usuario = self.obtener_usuario(id)
+        if usuario:
+            usuario.update(datos)
+            return usuario
+        return None
+
+    def eliminar_usuario(self, id):
+        usuario = self.obtener_usuario(id)
+        if usuario:
+            self.usuarios.remove(usuario)
+            return True
+        return False
+
+# Aquí puedes agregar más módulos según sea necesario

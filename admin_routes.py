@@ -1,204 +1,167 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from flask_login import login_required, current_user
-from models import db, User, Company, user_company
+from models import db, Usuario, Empresa, usuario_empresa
 from werkzeug.security import generate_password_hash
 
 admin = Blueprint("admin", __name__)
 
-
 @admin.route("/manage_companies")
 @login_required
 def manage_companies():
-    if current_user.role != "admin":
+    if not current_user.es_admin:
         return redirect(url_for("index"))
-    companies = Company.query.all()
-    return render_template("manage_companies.html", companies=companies)
-
+    empresas = Empresa.query.all()
+    return render_template("manage_companies.html", empresas=empresas)
 
 @admin.route("/companies", methods=["GET"])
 @login_required
 def get_companies():
-    if current_user.role != "admin":
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
-    companies = Company.query.all()
-    return jsonify([company.to_dict() for company in companies])
-
+    empresas = Empresa.query.all()
+    return jsonify([empresa.to_dict() for empresa in empresas])
 
 @admin.route("/companies", methods=["POST"])
 @login_required
 def create_company():
-    if current_user.role != "admin":
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
     data = request.json or request.form
-    new_company = Company(name=data["name"], status=data.get("status", "active"))
-    db.session.add(new_company)
+    nueva_empresa = Empresa(nombre=data["nombre"], estado=data.get("estado", "activo"))
+    db.session.add(nueva_empresa)
     db.session.commit()
-    return (
-        jsonify(
-            {"message": "Empresa creada exitosamente", "company": new_company.to_dict()}
-        ),
-        201,
-    )
+    return jsonify({"message": "Empresa creada exitosamente", "empresa": nueva_empresa.to_dict()}), 201
 
-
-@admin.route("/delete_company/<int:company_id>", methods=["POST"])
+@admin.route("/delete_company/<int:empresa_id>", methods=["POST"])
 @login_required
-def delete_company(company_id):
-    if current_user.role != "admin":
+def delete_company(empresa_id):
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
-    company = Company.query.get_or_404(company_id)
-    db.session.delete(company)
+    empresa = Empresa.query.get_or_404(empresa_id)
+    db.session.delete(empresa)
     db.session.commit()
     return jsonify({"message": "Empresa eliminada exitosamente"}), 200
 
-
-@admin.route("/toggle_company_status/<int:company_id>", methods=["POST"])
+@admin.route("/toggle_company_status/<int:empresa_id>", methods=["POST"])
 @login_required
-def toggle_company_status(company_id):
-    if current_user.role != "admin":
+def toggle_company_status(empresa_id):
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
-    company = Company.query.get_or_404(company_id)
-    company.status = "inactive" if company.status == "active" else "active"
+    empresa = Empresa.query.get_or_404(empresa_id)
+    empresa.estado = "inactivo" if empresa.estado == "activo" else "activo"
     db.session.commit()
-    return (
-        jsonify(
-            {"message": "Estado de la empresa actualizado", "status": company.status}
-        ),
-        200,
-    )
-
+    return jsonify({"message": "Estado de la empresa actualizado", "estado": empresa.estado}), 200
 
 @admin.route("/manage_users")
 @login_required
 def manage_users():
-    if current_user.role != "admin":
+    if not current_user.es_admin:
         return redirect(url_for("index"))
-    users = User.query.all()
-    companies = Company.query.all()
-    return render_template("manage_users.html", users=users, companies=companies)
-
+    usuarios = Usuario.query.all()
+    empresas = Empresa.query.all()
+    return render_template("manage_users.html", usuarios=usuarios, empresas=empresas)
 
 @admin.route("/users", methods=["GET"])
 @login_required
 def get_users():
-    if current_user.role != "admin":
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
-    users = User.query.all()
-    return jsonify([user.to_dict() for user in users])
-
+    usuarios = Usuario.query.all()
+    return jsonify([usuario.to_dict() for usuario in usuarios])
 
 @admin.route("/users", methods=["POST"])
 @login_required
 def create_user():
-    if current_user.role != "admin":
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
     data = request.json or request.form
-    new_user = User(
-        username=data["username"],
+    nuevo_usuario = Usuario(
+        nombre_usuario=data["nombre_usuario"],
         email=data["email"],
-        role=data.get("role", "user"),
-        status=data.get("status", "active"),
+        rol=data.get("rol", "usuario"),
+        estado=data.get("estado", "activo"),
     )
-    new_user.set_password(data["password"])
-    db.session.add(new_user)
+    nuevo_usuario.set_password(data["password"])
+    db.session.add(nuevo_usuario)
     db.session.commit()
-    return (
-        jsonify({"message": "Usuario creado exitosamente", "user": new_user.to_dict()}),
-        201,
-    )
+    return jsonify({"message": "Usuario creado exitosamente", "usuario": nuevo_usuario.to_dict()}), 201
 
-
-@admin.route("/users/<int:user_id>", methods=["PUT"])
+@admin.route("/users/<int:usuario_id>", methods=["PUT"])
 @login_required
-def update_user(user_id):
-    if current_user.role != "admin":
+def update_user(usuario_id):
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
-    user = User.query.get_or_404(user_id)
+    usuario = Usuario.query.get_or_404(usuario_id)
     data = request.json
-    user.username = data.get("username", user.username)
-    user.email = data.get("email", user.email)
-    user.status = data.get("status", user.status)
-    user.role = data.get("role", user.role)
+    usuario.nombre_usuario = data.get("nombre_usuario", usuario.nombre_usuario)
+    usuario.email = data.get("email", usuario.email)
+    usuario.estado = data.get("estado", usuario.estado)
+    usuario.rol = data.get("rol", usuario.rol)
     if "password" in data:
-        user.set_password(data["password"])
+        usuario.set_password(data["password"])
     db.session.commit()
-    return jsonify(
-        {"message": "Usuario actualizado exitosamente", "user": user.to_dict()}
-    )
+    return jsonify({"message": "Usuario actualizado exitosamente", "usuario": usuario.to_dict()})
 
-
-@admin.route("/users/<int:user_id>", methods=["DELETE"])
+@admin.route("/users/<int:usuario_id>", methods=["DELETE"])
 @login_required
-def delete_user(user_id):
-    if current_user.role != "admin":
+def delete_user(usuario_id):
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
-    user = User.query.get_or_404(user_id)
-    db.session.delete(user)
+    usuario = Usuario.query.get_or_404(usuario_id)
+    db.session.delete(usuario)
     db.session.commit()
     return jsonify({"message": "Usuario eliminado exitosamente"}), 200
 
-
-@admin.route("/toggle_user_status/<int:user_id>", methods=["POST"])
+@admin.route("/toggle_user_status/<int:usuario_id>", methods=["POST"])
 @login_required
-def toggle_user_status(user_id):
-    if current_user.role != "admin":
+def toggle_user_status(usuario_id):
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
-    user = User.query.get_or_404(user_id)
-    user.status = "inactive" if user.status == "active" else "active"
+    usuario = Usuario.query.get_or_404(usuario_id)
+    usuario.estado = "inactivo" if usuario.estado == "activo" else "activo"
     db.session.commit()
-    return (
-        jsonify({"message": "Estado del usuario actualizado", "status": user.status}),
-        200,
-    )
-
+    return jsonify({"message": "Estado del usuario actualizado", "estado": usuario.estado}), 200
 
 @admin.route("/assign_user_to_company", methods=["POST"])
 @login_required
 def assign_user_to_company():
-    if current_user.role != "admin":
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
     data = request.json or request.form
-    user_id = data.get("user_id")
-    company_id = data.get("company_id")
-    role_in_company = data.get("role_in_company", "employee")
+    usuario_id = data.get("usuario_id")
+    empresa_id = data.get("empresa_id")
+    rol_en_empresa = data.get("rol_en_empresa", "empleado")
 
-    user = User.query.get_or_404(user_id)
-    company = Company.query.get_or_404(company_id)
+    usuario = Usuario.query.get_or_404(usuario_id)
+    empresa = Empresa.query.get_or_404(empresa_id)
 
     # Verificar si la asignación ya existe
-    existing_assignment = (
-        db.session.query(user_company)
-        .filter_by(user_id=user_id, company_id=company_id)
-        .first()
-    )
+    existing_assignment = db.session.query(usuario_empresa).filter_by(usuario_id=usuario_id, empresa_id=empresa_id).first()
 
     if existing_assignment:
         # Actualizar el rol si ya existe la asignación
-        existing_assignment.role_in_company = role_in_company
+        existing_assignment.rol_en_empresa = rol_en_empresa
     else:
         # Crear nueva asignación
-        new_assignment = user_company.insert().values(
-            user_id=user_id, company_id=company_id, role_in_company=role_in_company
+        new_assignment = usuario_empresa.insert().values(
+            usuario_id=usuario_id, empresa_id=empresa_id, rol_en_empresa=rol_en_empresa
         )
         db.session.execute(new_assignment)
 
     db.session.commit()
     return jsonify({"message": "Usuario asignado a la empresa exitosamente"}), 200
 
-
 @admin.route("/remove_user_from_company", methods=["POST"])
 @login_required
 def remove_user_from_company():
-    if current_user.role != "admin":
+    if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
     data = request.json or request.form
-    user_id = data.get("user_id")
-    company_id = data.get("company_id")
+    usuario_id = data.get("usuario_id")
+    empresa_id = data.get("empresa_id")
 
     # Eliminar la asignación
-    db.session.query(user_company).filter_by(
-        user_id=user_id, company_id=company_id
-    ).delete()
+    db.session.query(usuario_empresa).filter_by(usuario_id=usuario_id, empresa_id=empresa_id).delete()
 
     db.session.commit()
     return jsonify({"message": "Usuario removido de la empresa exitosamente"}), 200

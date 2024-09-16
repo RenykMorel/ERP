@@ -1,19 +1,8 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import (
-    LoginManager,
-    current_user,
-    login_user,
-    logout_user,
-    login_required,
-    UserMixin,
-)
+from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from config import Config
-import sqlite3
-import threading
-import queue
 import requests
 import json
 import os
@@ -21,75 +10,20 @@ from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from admin_routes import admin
-from models import (
-    db,
-    Usuario,
-)  # Asegúrate de que estás importando Usuario de tu módulo de modelos
-from app import app  # Importa la instancia de app si no está en el mismo archivo
+import psycopg2
+from psycopg2 import pool
+import threading
+import queue
+from flask_migrate import Migrate
+from models import db, Usuario, Banco, Transaccion, Notificacion
 
 # Configura logging
 import logging
-
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-db = SQLAlchemy()
 login_manager = LoginManager()
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["2000 per day", "500 per hour"],
-    storage_uri="memory://",
-)
-
-
-class Usuario(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True, unique=True, nullable=False)
-    email = db.Column(db.String(120), index=True, unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-
-class Banco(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    telefono = db.Column(db.String(20))
-    contacto = db.Column(db.String(100))
-    telefono_contacto = db.Column(db.String(20))
-    estatus = db.Column(db.Enum("activo", "inactivo"), default="activo")
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "nombre": self.nombre,
-            "telefono": self.telefono,
-            "contacto": self.contacto,
-            "telefono_contacto": self.telefono_contacto,
-            "estatus": self.estatus,
-        }
-
-
-class Transaccion(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    tipo = db.Column(db.String(50), nullable=False)
-    monto = db.Column(db.Float, nullable=False)
-    descripcion = db.Column(db.String(255))
-    cuenta_id = db.Column(db.Integer)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "tipo": self.tipo,
-            "monto": self.monto,
-            "descripcion": self.descripcion,
-            "cuenta_id": self.cuenta_id,
-        }
-
+limiter = Limiter(key_func=get_remote_address, default_limits=["2000 per day", "500 per hour"])
 
 def get_assistant_context():
     with db.app.app_context():
@@ -98,12 +32,11 @@ def get_assistant_context():
             "banco_count": banco_count,
         }
 
-
 class AsistenteVirtual:
-    def __init__(self, api_key, activo=True):
+    def __init__(self, api_key, db_config, activo=True):
         self.api_key = api_key
         self.context = "Eres un asistente virtual para CalculAI. Debes responder preguntas basándote en la información proporcionada en el contexto y la pregunta del usuario."
-        self.conn = sqlite3.connect("asistente_virtual.db", check_same_thread=False)
+        self.db_pool = psycopg2.pool.SimpleConnectionPool(1, 10, **db_config)
         self.crear_tablas()
         self.lock = threading.Lock()
         self.cola_actualizaciones = queue.Queue()
@@ -111,14 +44,17 @@ class AsistenteVirtual:
         threading.Thread(target=self.procesar_actualizaciones, daemon=True).start()
 
     def crear_tablas(self):
-        with self.conn:
-            self.conn.execute(
-                """CREATE TABLE IF NOT EXISTS historial (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    accion TEXT NOT NULL,
-                    fecha TEXT NOT NULL
-                )"""
-            )
+        with self.db_pool.getconn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS historial (
+                        id SERIAL PRIMARY KEY,
+                        accion TEXT NOT NULL,
+                        fecha TIMESTAMP NOT NULL
+                    )
+                """)
+            conn.commit()
+        self.db_pool.putconn(conn)
 
     def procesar_actualizaciones(self):
         while True:
@@ -130,12 +66,15 @@ class AsistenteVirtual:
                 pass
 
     def registrar_accion(self, accion):
-        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        with self.conn:
-            self.conn.execute(
-                "INSERT INTO historial (accion, fecha) VALUES (?, ?)",
-                (accion, fecha),
-            )
+        fecha = datetime.now()
+        with self.db_pool.getconn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "INSERT INTO historial (accion, fecha) VALUES (%s, %s)",
+                    (accion, fecha)
+                )
+            conn.commit()
+        self.db_pool.putconn(conn)
 
     def log_accion(self, accion):
         if self.activo:
@@ -178,80 +117,74 @@ class AsistenteVirtual:
 
         return respuesta
 
-
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///calculai_db.sqlite"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    
+    # Configuración de la base de datos PostgreSQL
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0001@localhost:5432/calculai_db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
+    migrate = Migrate(app, db)
     login_manager.init_app(app)
-    login_manager.login_view = "login"
+    login_manager.login_view = 'login'
     limiter.init_app(app)
 
-    app.register_blueprint(admin, url_prefix="/admin")
-
-    app.config["RATELIMIT_STORAGE_URI"] = "memory://"
+    app.register_blueprint(admin, url_prefix='/admin')
 
     with app.app_context():
         db.create_all()
 
     ASISTENTE_ACTIVO = True
-    asistente = AsistenteVirtual(Config.CLAUDE_API_KEY, activo=ASISTENTE_ACTIVO)
+    
+    db_config = {
+        'dbname': 'calculai_db',
+        'user': 'postgres',
+        'password': '0001',
+        'host': 'localhost',
+        'port': '5432'
+    }
+    asistente = AsistenteVirtual(Config.CLAUDE_API_KEY, db_config, activo=ASISTENTE_ACTIVO)
 
     @login_manager.user_loader
     def load_user(user_id):
         return Usuario.query.get(int(user_id))
 
-    @app.route("/")
+    @app.route('/')
     def index():
-        return render_template("index.html")
+        return render_template('index.html')
 
-    @app.route("/login", methods=["GET", "POST"])
+    @app.route('/login', methods=['GET', 'POST'])
     def login():
         if current_user.is_authenticated:
-            return redirect(url_for("index"))
+            return redirect(url_for('index'))
 
-        if request.method == "POST":
-            username = request.form.get("username")
-            password = request.form.get("password")
-            user = Usuario.query.filter_by(username=username).first()
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            user = Usuario.query.filter_by(nombre_usuario=username).first()
 
-            if user:
-                if check_password_hash(user.password_hash, password):
-                    login_user(user)
-                    return (
-                        jsonify(
-                            {"success": True, "message": "Inicio de sesión exitoso"}
-                        ),
-                        200,
-                    )
-                else:
-                    return (
-                        jsonify(
-                            {
-                                "success": False,
-                                "error": "Contraseña incorrecta",
-                                "allow_password_reset": True,
-                                "username": username,
-                            }
-                        ),
-                        401,
-                    )
+            if user and user.check_password(password):
+                login_user(user)
+                return jsonify({"success": True, "message": "Inicio de sesión exitoso"}), 200
+            elif user:
+                return jsonify({
+                    "success": False,
+                    "error": "Contraseña incorrecta",
+                    "allow_password_reset": True,
+                    "username": username,
+                }), 401
             else:
-                return (
-                    jsonify({"success": False, "error": "Usuario no encontrado"}),
-                    404,
-                )
+                return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
 
-        return render_template("login.html")
+        return render_template('login.html')
 
     @app.route("/reset_password", methods=["POST"])
     def reset_password():
         username = request.form.get("username")
         new_password = request.form.get("new_password")
-        user = Usuario.query.filter_by(username=username).first()
+        user = Usuario.query.filter_by(nombre_usuario=username).first()
 
         if not user:
             return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
@@ -268,7 +201,7 @@ def create_app():
             )
 
         try:
-            user.password_hash = generate_password_hash(new_password)
+            user.set_password(new_password)
             db.session.commit()
             return (
                 jsonify(
@@ -316,121 +249,54 @@ def create_app():
             200,
         )
 
-    @app.route("/logout", methods=["POST"])
+    @app.route('/logout', methods=['POST'])
     @login_required
     def logout():
         logout_user()
-        return redirect(url_for("login"))
+        return redirect(url_for('login'))
 
-    @app.route("/registro", methods=["GET", "POST"])
+    @app.route('/registro', methods=['GET', 'POST'])
     def registro():
         if current_user.is_authenticated:
-            return redirect(url_for("index"))
+            return redirect(url_for('index'))
 
-        if request.method == "POST":
-            username = request.form.get("username")
-            email = request.form.get("email")
-            password = request.form.get("password")
-            confirm_password = request.form.get("confirm_password")
+        if request.method == 'POST':
+            data = request.form
+            username = data.get('nombre_usuario')
+            email = data.get('email')
+            password = data.get('password')
+            confirm_password = data.get('confirm_password')
 
-            app.logger.info(
-                f"Intento de registro para el usuario: {username}, email: {email}"
-            )
-
+            # Validación del lado del servidor
             if not all([username, email, password, confirm_password]):
-                app.logger.warning("Intento de registro con campos faltantes")
-                return (
-                    jsonify(
-                        {"success": False, "error": "Todos los campos son obligatorios"}
-                    ),
-                    400,
-                )
+                return jsonify({"success": False, "error": "Todos los campos son obligatorios"}), 400
 
             if password != confirm_password:
-                app.logger.warning(
-                    "Las contraseñas no coinciden en el intento de registro"
-                )
-                return (
-                    jsonify(
-                        {"success": False, "error": "Las contraseñas no coinciden"}
-                    ),
-                    400,
-                )
+                return jsonify({"success": False, "error": "Las contraseñas no coinciden"}), 400
 
-            if User.query.filter_by(username=username).first():
-                app.logger.warning(
-                    f"Intento de registro con nombre de usuario existente: {username}"
-                )
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": "El nombre de usuario ya está en uso",
-                        }
-                    ),
-                    400,
-                )
+            if Usuario.query.filter_by(nombre_usuario=username).first():
+                return jsonify({"success": False, "error": "El nombre de usuario ya está en uso"}), 400
 
-            if User.query.filter_by(email=email).first():
-                app.logger.warning(f"Intento de registro con email existente: {email}")
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": "El correo electrónico ya está registrado",
-                        }
-                    ),
-                    400,
-                )
+            if Usuario.query.filter_by(email=email).first():
+                return jsonify({"success": False, "error": "El correo electrónico ya está registrado"}), 400
 
             try:
-                new_user = User(username=username, email=email)
+                new_user = Usuario(nombre_usuario=username, email=email)
                 new_user.set_password(password)
                 db.session.add(new_user)
                 db.session.commit()
-                app.logger.info(
-                    f"Usuario registrado exitosamente: {username}, ID: {new_user.id}"
-                )
                 login_user(new_user)
-                return (
-                    jsonify(
-                        {
-                            "success": True,
-                            "message": "Registro exitoso",
-                            "user_id": new_user.id,
-                        }
-                    ),
-                    200,
-                )
+                return jsonify({
+                    "success": True,
+                    "message": "Registro exitoso",
+                    "user_id": new_user.id,
+                }), 200
             except Exception as e:
                 db.session.rollback()
-                app.logger.error(
-                    f"Error en el registro de usuario: {str(e)}", exc_info=True
-                )
-                return (
-                    jsonify(
-                        {"success": False, "error": f"Error en el registro: {str(e)}"}
-                    ),
-                    500,
-                )
+                app.logger.error(f"Error en el registro: {str(e)}")
+                return jsonify({"success": False, "error": f"Error en el registro: {str(e)}"}), 500
 
-        return render_template("registro.html")
-
-    @app.route("/test_registro", methods=["GET"])
-    def test_registro():
-        try:
-            test_user = User(username="TestUser", email="test@example.com", role="user")
-            test_user.set_password("password123")
-            db.session.add(test_user)
-            db.session.commit()
-            app.logger.info(f"Usuario de prueba creado con ID: {test_user.id}")
-            return f"Usuario de prueba creado con ID: {test_user.id}"
-        except Exception as e:
-            db.session.rollback()
-            app.logger.error(
-                f"Error al crear usuario de prueba: {str(e)}", exc_info=True
-            )
-            return f"Error al crear usuario de prueba: {str(e)}"
+        return render_template('registro.html')
 
     @app.route("/api/modulos")
     @login_required
@@ -677,7 +543,7 @@ def create_app():
     def crear_transaccion():
         datos = request.json
         try:
-            nueva_transaccion = Transaccion = Transaccion(
+            nueva_transaccion = Transaccion(
                 tipo=datos["tipo"],
                 monto=datos["monto"],
                 descripcion=datos["descripcion"],
@@ -710,33 +576,21 @@ def create_app():
         ]
         return jsonify(notificaciones)
 
-    @app.route("/api/asistente", methods=["POST"])
+    @app.route('/api/asistente', methods=['POST'])
     @login_required
     def consultar_asistente():
-        pregunta = request.json.get("pregunta", "").strip()
+        pregunta = request.json.get('pregunta', '').strip()
 
         if not pregunta:
             return jsonify({"respuesta": ""}), 200
 
         if not ASISTENTE_ACTIVO:
-            return (
-                jsonify(
-                    {
-                        "respuesta": "El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación."
-                    }
-                ),
-                200,
-            )
+            return jsonify({
+                "respuesta": "El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación."
+            }), 200
 
-        # Obtener el contexto actualizado
         context = get_assistant_context()
-
-        # Añadir el contexto a la pregunta
-        pregunta_con_contexto = (
-            f"Contexto: {json.dumps(context)}\n\nPregunta: {pregunta}"
-        )
-
-        # Procesar la pregunta con el asistente
+        pregunta_con_contexto = f"Contexto: {json.dumps(context)}\n\nPregunta: {pregunta}"
         respuesta = asistente.responder(pregunta_con_contexto)
 
         return jsonify({"respuesta": respuesta})
@@ -782,28 +636,13 @@ def create_app():
     @app.route("/admin_panel")
     @login_required
     def admin_panel():
-        if current_user.role != "admin":
+        if current_user.rol != "admin":
             flash("Acceso no autorizado", "error")
             return redirect(url_for("index"))
         return render_template("admin_panel.html")
 
     return app
 
-
-def init_db(app):
-    db.init_app(app)
-    with app.app_context():
-        db.create_all()
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = create_app()
-    extra_dirs = ["templates/", "static/"]
-    extra_files = extra_dirs[:]
-    for extra_dir in extra_dirs:
-        for dirname, dirs, files in os.walk(extra_dir):
-            for filename in files:
-                filename = os.path.join(dirname, filename)
-                if os.path.isfile(filename):
-                    extra_files.append(filename)
-    app.run(debug=True, extra_files=extra_files)
+    app.run(debug=True)

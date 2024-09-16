@@ -2,6 +2,77 @@
 
 {% block title %}Dashboard - CalculAI{% endblock %}
 
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet">
+<style>
+    #dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
+    }
+    .chart-controls {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .chart-button {
+        padding: 10px 15px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .chart-button:hover {
+        background-color: #45a049;
+    }
+    .charts-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        gap: 20px;
+    }
+    .chart-wrapper {
+        flex: 1;
+        min-width: 300px;
+        max-width: 500px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .chart-container {
+        height: 300px;
+    }
+    .bottom-section {
+        display: flex;
+        gap: 20px;
+    }
+    #calendar-container {
+        flex: 2;
+        min-width: 300px;
+    }
+    .widgets-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    .widget {
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #calendar {
+        height: 400px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div id="dashboard">
     <div class="chart-controls">
@@ -55,15 +126,139 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
 <script>
-    // Asegurarse de que el asistente virtual se inicialice correctamente en esta página
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof initializeAsistente === 'function') {
-            initializeAsistente();
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    initializeCalendar();
+    loadTasks();
+    loadNotifications();
+    if (typeof initializeAsistente === 'function') {
+        initializeAsistente();
+    }
+
+    document.querySelectorAll('.chart-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const chartId = this.id.replace('toggle-', '');
+            toggleChartVisibility(chartId);
+        });
+    });
+});
+
+function initializeCharts() {
+    fetch('/api/datos_graficos')
+        .then(response => response.json())
+        .then(data => {
+            createLineChart(data.ventas);
+            createBarChart(data.ingresos_vs_gastos);
+            createPieChart(data.distribucion);
+        })
+        .catch(error => console.error('Error loading chart data:', error));
+}
+
+function createLineChart(data) {
+    const ctx = document.getElementById('line-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Ventas',
+                data: data.values,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
         }
     });
-</script>
-{% endblock %}
+}
 
-{% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet">
+function createBarChart(data) {
+    const ctx = document.getElementById('bar-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [
+                {
+                    label: 'Ingresos',
+                    data: data.ingresos,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                },
+                {
+                    label: 'Gastos',
+                    data: data.gastos,
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function createPieChart(data) {
+    const ctx = document.getElementById('pie-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                data: data.values,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function toggleChartVisibility(chartId) {
+    const chartWrapper = document.getElementById(chartId).closest('.chart-wrapper');
+    chartWrapper.style.display = chartWrapper.style.display === 'none' ? 'block' : 'none';
+}
+
+function initializeCalendar() {
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: '/api/eventos'
+    });
+    calendar.render();
+}
+
+function loadTasks() {
+    fetch('/api/tareas')
+        .then(response => response.json())
+        .then(tasks => {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = tasks.map(task => `<li>${task.descripcion} - Vence: ${task.vence}</li>`).join('');
+        })
+        .catch(error => console.error('Error loading tasks:', error));
+}
+
+function loadNotifications() {
+    fetch('/api/notificaciones')
+        .then(response => response.json())
+        .then(notifications => {
+            const notificationList = document.getElementById('notification-list');
+            notificationList.innerHTML = notifications.map(notification => `<li class="${notification.tipo}">${notification.mensaje}</li>`).join('');
+        })
+        .catch(error => console.error('Error loading notifications:', error));
+}
+</script>
 {% endblock %}

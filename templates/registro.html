@@ -147,6 +147,12 @@
             width: 60px;
             height: 60px;
         }
+        #auth-error {
+            color: #ff0000;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -157,23 +163,24 @@
         </div>
         <form id="form-registro">
             <div class="input-group">
-                <input type="text" name="username" placeholder="Usuario" required>
+                <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
             </div>
             <div class="input-group">
-                <input type="email" name="email" placeholder="Email" required>
+                <input type="email" name="email" placeholder="Correo electrónico" required>
             </div>
             <div class="input-group password-group">
-                <input type="password" name="password" placeholder="Password" required>
+                <input type="password" name="password" placeholder="Contraseña" required>
                 <button type="button" class="password-toggle">👁️</button>
             </div>
             <div class="input-group password-group">
-                <input type="password" name="confirm_password" placeholder="Confirma Password" required>
+                <input type="password" name="confirm_password" placeholder="Confirmar contraseña" required>
                 <button type="button" class="password-toggle">👁️</button>
             </div>
             <button type="submit" class="login-btn">REGISTRARSE</button>
         </form>
+        <div id="auth-error"></div>
         <div class="forgot-password">
-            <a href="{{ url_for('login') }}">Tienes una cuenta? Log in</a>
+            <a href="{{ url_for('login') }}">¿Ya tienes una cuenta? Inicia sesión</a>
         </div>
         <div class="numpad">
             <button class="numpad-btn">1</button>
@@ -194,22 +201,38 @@
     </div>
 
     <script>
-        document.querySelectorAll('.password-toggle').forEach(toggle => {
-            toggle.addEventListener('click', function() {
-                const passwordInput = this.previousElementSibling;
-                if (passwordInput.type === 'password') {
-                    passwordInput.type = 'text';
-                    this.textContent = '🔒';
-                } else {
-                    passwordInput.type = 'password';
-                    this.textContent = '👁️';
-                }
+        function togglePasswordVisibility(passwordInput, toggleButton) {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.textContent = '🔒';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.textContent = '👁️';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function initializePasswordToggles() {
+            document.querySelectorAll('.password-toggle').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    togglePasswordVisibility(this.previousElementSibling, this);
+                });
             });
-        });
+        }
 
         document.getElementById('form-registro').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
+
+            if (formData.get('password') !== formData.get('confirm_password')) {
+                showError('Las contraseñas no coinciden');
+                return;
+            }
 
             fetch('{{ url_for("registro") }}', {
                 method: 'POST',
@@ -223,14 +246,16 @@
                 if (data.success) {
                     window.location.href = '{{ url_for("index") }}';
                 } else {
-                    alert(data.error);
+                    showError(data.error);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Ocurrió un error durante el registro. Por favor, inténtalo de nuevo.');
+                showError('Ocurrió un error durante el registro. Por favor, inténtalo de nuevo.');
             });
         });
+
+        initializePasswordToggles();
     </script>
 </body>
 </html>

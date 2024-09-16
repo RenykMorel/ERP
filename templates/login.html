@@ -59,17 +59,6 @@
             border-radius: 5px;
             z-index: -1;
         }
-        .login-button {
-            background-color: #f0f0f0;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2), -2px -2px 5px rgba(255,255,255,0.7);
-        }
         .input-group {
             margin-bottom: 1rem;
         }
@@ -147,6 +136,12 @@
             width: 60px;
             height: 60px;
         }
+        #auth-error {
+            color: #ff0000;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -156,7 +151,7 @@
         </div>
         <form id="form-login" action="{{ url_for('login') }}" method="POST">
             <div class="input-group">
-                <input type="text" name="username" placeholder="Usuario" required>
+                <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
             </div>
             <div class="input-group password-group">
                 <input type="password" name="password" placeholder="Contraseña" required>
@@ -164,6 +159,10 @@
             </div>
             <button type="submit" class="login-btn">INICIAR SESIÓN</button>
         </form>
+        <div id="auth-error"></div>
+        <div class="forgot-password">
+            <a href="#" id="forgot-password-link">¿Olvidaste tu contraseña?</a>
+        </div>
         <div class="forgot-password">
             <a href="{{ url_for('registro') }}">¿No tienes cuenta? Regístrate</a>
         </div>
@@ -186,18 +185,80 @@
     </div>
 
     <script>
-        document.querySelectorAll('.password-toggle').forEach(toggle => {
-            toggle.addEventListener('click', function() {
-                const passwordInput = this.previousElementSibling;
-                if (passwordInput.type === 'password') {
-                    passwordInput.type = 'text';
-                    this.textContent = '🔒';
-                } else {
-                    passwordInput.type = 'password';
-                    this.textContent = '👁️';
+        function togglePasswordVisibility(passwordInput, toggleButton) {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.textContent = '🔒';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.textContent = '👁️';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('auth-error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showPasswordResetOption(nombre_usuario) {
+            const loginContainer = document.querySelector('.login-container');
+            loginContainer.innerHTML = `
+                <h2>Cambiar Contraseña</h2>
+                <form id="form-reset-password">
+                    <input type="hidden" name="nombre_usuario" value="${nombre_usuario}">
+                    <div class="input-group password-group">
+                        <input type="password" name="new_password" placeholder="Nueva contraseña" required>
+                        <button type="button" class="password-toggle">👁️</button>
+                    </div>
+                    <div class="input-group password-group">
+                        <input type="password" name="confirm_password" placeholder="Confirmar nueva contraseña" required>
+                        <button type="button" class="password-toggle">👁️</button>
+                    </div>
+                    <button type="submit" class="login-btn">Cambiar Contraseña</button>
+                </form>
+                <div id="auth-error"></div>
+            `;
+            document.getElementById('form-reset-password').addEventListener('submit', handlePasswordReset);
+            initializePasswordToggles();
+        }
+
+        function handlePasswordReset(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            if (formData.get('new_password') !== formData.get('confirm_password')) {
+                showError('Las contraseñas no coinciden');
+                return;
+            }
+            fetch('{{ url_for("reset_password") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Contraseña cambiada exitosamente. Por favor, inicia sesión con tu nueva contraseña.');
+                    window.location.href = '{{ url_for("login") }}';
+                } else {
+                    showError(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Ocurrió un error al cambiar la contraseña');
             });
-        });
+        }
+
+        function initializePasswordToggles() {
+            document.querySelectorAll('.password-toggle').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    togglePasswordVisibility(this.previousElementSibling, this);
+                });
+            });
+        }
 
         document.getElementById('form-login').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -214,15 +275,60 @@
             .then(data => {
                 if (data.success) {
                     window.location.href = '{{ url_for("index") }}';
+                } else if (data.allow_password_reset) {
+                    showPasswordResetOption(data.nombre_usuario);
                 } else {
-                    alert(data.error);
+                    showError(data.error);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Ocurrió un error durante el inicio de sesión. Por favor, inténtalo de nuevo.');
+                showError('Ocurrió un error durante el inicio de sesión. Por favor, inténtalo de nuevo.');
             });
         });
+
+        document.getElementById('forgot-password-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            const loginContainer = document.querySelector('.login-container');
+            loginContainer.innerHTML = `
+                <h2>Restablecer Contraseña</h2>
+                <form id="form-forgot-password">
+                    <div class="input-group">
+                        <input type="email" name="email" placeholder="Correo electrónico" required>
+                    </div>
+                    <button type="submit" class="login-btn">Enviar Instrucciones</button>
+                </form>
+                <div id="auth-error"></div>
+            `;
+            document.getElementById('form-forgot-password').addEventListener('submit', handleForgotPassword);
+        });
+
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            fetch('{{ url_for("request_password_reset") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.href = '{{ url_for("login") }}';
+                } else {
+                    showError(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Ocurrió un error al solicitar el restablecimiento de contraseña');
+            });
+        }
+
+        initializePasswordToggles();
     </script>
 </body>
 </html>

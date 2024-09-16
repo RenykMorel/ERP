@@ -1,5 +1,86 @@
 {% extends "base.html" %}
 {% block title %}Transacciones - CalculAI{% endblock %}
+
+{% block extra_css %}
+<style>
+    #transacciones-module {
+        padding: 20px;
+    }
+    #busqueda-form {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    #busqueda-form input, #busqueda-form button {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+    #busqueda-form button {
+        cursor: pointer;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+    }
+    #resultado-busqueda {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    #resultado-busqueda th, #resultado-busqueda td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    #resultado-busqueda th {
+        background-color: #f2f2f2;
+    }
+    .editar-transaccion, .eliminar-transaccion {
+        cursor: pointer;
+        color: #2196F3;
+        margin-right: 10px;
+    }
+    .eliminar-transaccion {
+        color: #f44336;
+    }
+    #exportar-excel {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    #modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div id="transacciones-module">
     <h1>Transacciones</h1>
@@ -25,7 +106,7 @@
                 <th>Acciones</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="transacciones-body">
             {% for transaccion in transacciones %}
             <tr>
                 <td>{{ transaccion.id }}</td>
@@ -34,15 +115,178 @@
                 <td>{{ transaccion.descripcion }}</td>
                 <td>{{ transaccion.cuenta_id }}</td>
                 <td>{{ transaccion.fecha_creacion }}</td>
-                <td><a href="#" class="editar-transaccion" data-id="{{ transaccion.id }}">Editar</a></td>
+                <td>
+                    <a href="#" class="editar-transaccion" data-id="{{ transaccion.id }}">Editar</a>
+                    <a href="#" class="eliminar-transaccion" data-id="{{ transaccion.id }}">Eliminar</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     <button id="exportar-excel">Exportar a Excel</button>
 </div>
+
+<div id="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modal-title">Crear/Editar Transacción</h2>
+        <form id="transaccion-form">
+            <input type="hidden" id="transaccion-id">
+            <input type="text" id="modal-tipo" placeholder="Tipo" required>
+            <input type="number" id="modal-monto" placeholder="Monto" required>
+            <input type="text" id="modal-descripcion" placeholder="Descripción">
+            <input type="text" id="modal-cuenta-id" placeholder="ID de Cuenta" required>
+            <button type="submit">Guardar</button>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/transacciones.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
+    const exportarExcelBtn = document.getElementById('exportar-excel');
+    const modal = document.getElementById('modal');
+    const closeModal = document.getElementsByClassName('close')[0];
+    const transaccionForm = document.getElementById('transaccion-form');
+
+    buscarBtn.addEventListener('click', buscarTransacciones);
+    crearNuevoBtn.addEventListener('click', () => mostrarModal());
+    exportarExcelBtn.addEventListener('click', exportarExcel);
+    closeModal.addEventListener('click', () => modal.style.display = 'none');
+    transaccionForm.addEventListener('submit', guardarTransaccion);
+
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('editar-transaccion')) {
+            const id = e.target.getAttribute('data-id');
+            editarTransaccion(id);
+        }
+        if (e.target && e.target.classList.contains('eliminar-transaccion')) {
+            const id = e.target.getAttribute('data-id');
+            eliminarTransaccion(id);
+        }
+    });
+
+    function buscarTransacciones() {
+        const tipo = document.getElementById('tipo-transaccion').value;
+        const descripcion = document.getElementById('descripcion-transaccion').value;
+        const cuentaId = document.getElementById('cuenta-id').value;
+
+        fetch(`/api/buscar-transaccion?tipo=${tipo}&descripcion=${descripcion}&cuenta_id=${cuentaId}`)
+            .then(response => response.json())
+            .then(data => actualizarTablaTransacciones(data))
+            .catch(error => console.error('Error:', error));
+    }
+
+    function actualizarTablaTransacciones(transacciones) {
+        const tbody = document.getElementById('transacciones-body');
+        tbody.innerHTML = '';
+        transacciones.forEach(t => {
+            const row = `
+                <tr>
+                    <td>${t.id}</td>
+                    <td>${t.tipo}</td>
+                    <td>${t.monto}</td>
+                    <td>${t.descripcion}</td>
+                    <td>${t.cuenta_id}</td>
+                    <td>${t.fecha_creacion}</td>
+                    <td>
+                        <a href="#" class="editar-transaccion" data-id="${t.id}">Editar</a>
+                        <a href="#" class="eliminar-transaccion" data-id="${t.id}">Eliminar</a>
+                    </td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+
+    function mostrarModal(transaccion = null) {
+        const modalTitle = document.getElementById('modal-title');
+        const transaccionId = document.getElementById('transaccion-id');
+        const modalTipo = document.getElementById('modal-tipo');
+        const modalMonto = document.getElementById('modal-monto');
+        const modalDescripcion = document.getElementById('modal-descripcion');
+        const modalCuentaId = document.getElementById('modal-cuenta-id');
+
+        if (transaccion) {
+            modalTitle.textContent = 'Editar Transacción';
+            transaccionId.value = transaccion.id;
+            modalTipo.value = transaccion.tipo;
+            modalMonto.value = transaccion.monto;
+            modalDescripcion.value = transaccion.descripcion;
+            modalCuentaId.value = transaccion.cuenta_id;
+        } else {
+            modalTitle.textContent = 'Crear Nueva Transacción';
+            transaccionForm.reset();
+            transaccionId.value = '';
+        }
+
+        modal.style.display = 'block';
+    }
+
+    function guardarTransaccion(e) {
+        e.preventDefault();
+        const transaccionId = document.getElementById('transaccion-id').value;
+        const data = {
+            tipo: document.getElementById('modal-tipo').value,
+            monto: document.getElementById('modal-monto').value,
+            descripcion: document.getElementById('modal-descripcion').value,
+            cuenta_id: document.getElementById('modal-cuenta-id').value
+        };
+
+        const url = transaccionId ? `/api/actualizar-transaccion/${transaccionId}` : '/api/crear-transaccion';
+        const method = transaccionId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            modal.style.display = 'none';
+            buscarTransacciones();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function editarTransaccion(id) {
+        fetch(`/api/obtener-transaccion/${id}`)
+            .then(response => response.json())
+            .then(data => mostrarModal(data))
+            .catch(error => console.error('Error:', error));
+    }
+
+    function eliminarTransaccion(id) {
+        if (confirm('¿Está seguro de que desea eliminar esta transacción?')) {
+            fetch(`/api/eliminar-transaccion/${id}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    buscarTransacciones();
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    }
+
+    function exportarExcel() {
+        fetch('/api/exportar-transacciones-excel')
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'transacciones.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+});
+</script>
 {% endblock %}
