@@ -47,7 +47,7 @@ class Usuario(UserMixin, db.Model):
     id = Column(Integer, primary_key=True)
     nombre_usuario = Column(String(64), index=True, unique=True, nullable=False)
     email = Column(String(120), index=True, unique=True, nullable=False)
-    password_hash = db.Column(db.String(500), nullable=False)
+    password_hash = Column(String(500), nullable=False)
     es_admin = Column(Boolean, default=False)
     es_super_admin = Column(Boolean, default=False)
     rol = Column(String(20), default="usuario")
@@ -99,11 +99,24 @@ class Rol(db.Model):
     permisos = relationship("Permiso", secondary=rol_permisos, back_populates="roles")
     permisos_json = Column(JSON)
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "permisos_json": self.permisos_json
+        }
+
 class Permiso(db.Model):
     __tablename__ = "permisos"
     id = Column(Integer, primary_key=True)
     nombre = Column(String(50), unique=True, nullable=False)
     roles = relationship("Rol", secondary=rol_permisos, back_populates="permisos")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre
+        }
 
 class Modulo(db.Model):
     __tablename__ = "modulos"
@@ -113,6 +126,13 @@ class Modulo(db.Model):
     usuarios = relationship("Usuario", secondary=usuario_modulos, back_populates="modulos")
     submodulos = relationship("Modulo", backref=db.backref('padre', remote_side=[id]))
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "modulo_padre_id": self.modulo_padre_id
+        }
+
 class UsuarioModulo(db.Model):
     __tablename__ = "usuario_modulo"
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), primary_key=True)
@@ -120,6 +140,13 @@ class UsuarioModulo(db.Model):
     permisos = Column(JSON)
     usuario = relationship("Usuario", backref=db.backref("usuario_modulos", cascade="all, delete-orphan"))
     modulo = relationship("Modulo", backref=db.backref("usuario_modulos", cascade="all, delete-orphan"))
+
+    def to_dict(self):
+        return {
+            "usuario_id": self.usuario_id,
+            "modulo_id": self.modulo_id,
+            "permisos": self.permisos
+        }
 
 class Notificacion(db.Model):
     __tablename__ = "notificaciones"
@@ -129,6 +156,15 @@ class Notificacion(db.Model):
     leida = Column(Boolean, default=False)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"))
     usuario = relationship("Usuario", back_populates="notificaciones")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "mensaje": self.mensaje,
+            "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None,
+            "leida": self.leida,
+            "usuario_id": self.usuario_id
+        }
 
 class Banco(db.Model):
     __tablename__ = "bancos"
@@ -175,9 +211,11 @@ class Transaccion(db.Model):
     tipo = Column(String(50), nullable=False)
     monto = Column(Float, nullable=False)
     descripcion = Column(String(255))
-    cuenta_id = Column(Integer)
+    cuenta_id = Column(Integer, ForeignKey("cuentas.id"))
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
     fecha_actualizacion = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    cuenta = relationship("Cuenta", back_populates="transacciones")
 
     @classmethod
     def obtener_todos(cls):
@@ -206,6 +244,33 @@ class Transaccion(db.Model):
             "fecha_actualizacion": self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None,
         }
 
+class Cuenta(db.Model):
+    __tablename__ = "cuentas"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    numero = Column(String(50), unique=True, nullable=False)
+    tipo = Column(String(50), nullable=False)
+    saldo = Column(Float, default=0.0)
+    banco_id = Column(Integer, ForeignKey("bancos.id"))
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    fecha_actualizacion = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    banco = relationship("Banco", backref="cuentas")
+    usuario = relationship("Usuario", backref="cuentas")
+    transacciones = relationship("Transaccion", back_populates="cuenta")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "numero": self.numero,
+            "tipo": self.tipo,
+            "saldo": self.saldo,
+            "banco_id": self.banco_id,
+            "usuario_id": self.usuario_id,
+            "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None,
+            "fecha_actualizacion": self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None,
+        }
+
 # Eventos para notificar al asistente sobre operaciones en la base de datos
 @event.listens_for(Banco, "after_insert")
 def notify_banco_insert(mapper, connection, target):
@@ -222,3 +287,11 @@ def notify_transaccion_insert(mapper, connection, target):
 @event.listens_for(Transaccion, "after_update")
 def notify_transaccion_update(mapper, connection, target):
     notificar_asistente(f"Transacción actualizada: {target.tipo} por {target.monto}")
+
+@event.listens_for(Cuenta, "after_insert")
+def notify_cuenta_insert(mapper, connection, target):
+    notificar_asistente(f"Nueva cuenta creada: {target.numero}")
+
+@event.listens_for(Cuenta, "after_update")
+def notify_cuenta_update(mapper, connection, target):
+    notificar_asistente(f"Cuenta actualizada: {target.numero}")

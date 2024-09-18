@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from config import Config
@@ -15,21 +15,39 @@ from psycopg2 import pool
 import threading
 import queue
 from flask_migrate import Migrate
-from models import db, Usuario, Banco, Transaccion, Notificacion
+from models import db, Usuario, Banco, Transaccion, Notificacion, Empresa, Rol, Permiso, Modulo, UsuarioModulo, Cuenta
 
 # Configura logging
 import logging
+from logging.handlers import RotatingFileHandler
+
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 login_manager = LoginManager()
 limiter = Limiter(key_func=get_remote_address, default_limits=["2000 per day", "500 per hour"])
 
+def setup_logging(app):
+    if not app.debug:
+        file_handler = RotatingFileHandler('calculai.log', maxBytes=10240, backupCount=10)
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        ))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('CalculAI startup')
+
 def get_assistant_context():
     with db.app.app_context():
         banco_count = Banco.query.count()
+        empresa_count = Empresa.query.count()
+        usuario_count = Usuario.query.count()
         return {
             "banco_count": banco_count,
+            "empresa_count": empresa_count,
+            "usuario_count": usuario_count,
         }
 
 class AsistenteVirtual:
@@ -121,7 +139,6 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # Configuración de la base de datos PostgreSQL
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0001@localhost:5432/calculai_db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -147,6 +164,8 @@ def create_app():
     }
     asistente = AsistenteVirtual(Config.CLAUDE_API_KEY, db_config, activo=ASISTENTE_ACTIVO)
 
+    setup_logging(app)
+
     @login_manager.user_loader
     def load_user(user_id):
         return Usuario.query.get(int(user_id))
@@ -156,6 +175,7 @@ def create_app():
         return render_template('index.html')
 
     @app.route('/login', methods=['GET', 'POST'])
+    @limiter.limit("5 per minute")
     def login():
         if current_user.is_authenticated:
             return redirect(url_for('index'))
@@ -163,20 +183,32 @@ def create_app():
         if request.method == 'POST':
             username = request.form.get('username')
             password = request.form.get('password')
+
+            # Log received data for debugging
+            logger.debug(f"Received login attempt - Username: {username}, Password: {'*' * len(password) if password else None}")
+
+            if not username or not password:
+                logger.warning("Intento de inicio de sesión con credenciales incompletas")
+                return jsonify({
+                    "success": False,
+                    "error": "Por favor, proporcione un nombre de usuario y contraseña"
+                }), 400
+
             user = Usuario.query.filter_by(nombre_usuario=username).first()
 
             if user and user.check_password(password):
                 login_user(user)
-                return jsonify({"success": True, "message": "Inicio de sesión exitoso"}), 200
-            elif user:
+                logger.info(f"Usuario {username} ha iniciado sesión exitosamente")
+                return jsonify({
+                    "success": True,
+                    "message": "Inicio de sesión exitoso"
+                }), 200
+            else:
+                logger.warning(f"Intento de inicio de sesión fallido para el usuario {username}")
                 return jsonify({
                     "success": False,
-                    "error": "Contraseña incorrecta",
-                    "allow_password_reset": True,
-                    "username": username,
+                    "error": "Nombre de usuario o contraseña incorrectos"
                 }), 401
-            else:
-                return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
 
         return render_template('login.html')
 
@@ -187,39 +219,21 @@ def create_app():
         user = Usuario.query.filter_by(nombre_usuario=username).first()
 
         if not user:
+            logger.warning(f"Intento de restablecimiento de contraseña para usuario no existente: {username}")
             return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
 
         if not new_password or len(new_password) < 8:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": "La nueva contraseña debe tener al menos 8 caracteres",
-                    }
-                ),
-                400,
-            )
+            return jsonify({"success": False, "error": "La nueva contraseña debe tener al menos 8 caracteres"}), 400
 
         try:
             user.set_password(new_password)
             db.session.commit()
-            return (
-                jsonify(
-                    {"success": True, "message": "Contraseña actualizada correctamente"}
-                ),
-                200,
-            )
+            logger.info(f"Contraseña actualizada para el usuario {username}")
+            return jsonify({"success": True, "message": "Contraseña actualizada correctamente"}), 200
         except Exception as e:
             db.session.rollback()
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": f"Error al actualizar la contraseña: {str(e)}",
-                    }
-                ),
-                500,
-            )
+            logger.error(f"Error al actualizar la contraseña para {username}: {str(e)}")
+            return jsonify({"success": False, "error": "Error al actualizar la contraseña"}), 500
 
     @app.route("/request_password_reset", methods=["POST"])
     def request_password_reset():
@@ -227,35 +241,23 @@ def create_app():
         user = Usuario.query.filter_by(email=email).first()
 
         if not user:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": "No se encontró un usuario con ese correo electrónico",
-                    }
-                ),
-                404,
-            )
+            logger.warning(f"Intento de restablecimiento de contraseña para email no registrado: {email}")
+            return jsonify({"success": False, "error": "No se encontró un usuario con ese correo electrónico"}), 404
 
         # Aquí normalmente enviarías un correo electrónico con un enlace para restablecer la contraseña
         # Por ahora, simplemente devolveremos un mensaje de éxito
-        return (
-            jsonify(
-                {
-                    "success": True,
-                    "message": "Se ha enviado un correo electrónico con instrucciones para restablecer tu contraseña",
-                }
-            ),
-            200,
-        )
+        logger.info(f"Solicitud de restablecimiento de contraseña para el usuario: {user.nombre_usuario}")
+        return jsonify({"success": True, "message": "Se ha enviado un correo electrónico con instrucciones para restablecer tu contraseña"}), 200
 
     @app.route('/logout', methods=['POST'])
     @login_required
     def logout():
+        logger.info(f"Usuario {current_user.nombre_usuario} ha cerrado sesión")
         logout_user()
         return redirect(url_for('login'))
 
     @app.route('/registro', methods=['GET', 'POST'])
+    @limiter.limit("3 per minute")
     def registro():
         if current_user.is_authenticated:
             return redirect(url_for('index'))
@@ -267,7 +269,6 @@ def create_app():
             password = data.get('password')
             confirm_password = data.get('confirm_password')
 
-            # Validación del lado del servidor
             if not all([username, email, password, confirm_password]):
                 return jsonify({"success": False, "error": "Todos los campos son obligatorios"}), 400
 
@@ -286,15 +287,12 @@ def create_app():
                 db.session.add(new_user)
                 db.session.commit()
                 login_user(new_user)
-                return jsonify({
-                    "success": True,
-                    "message": "Registro exitoso",
-                    "user_id": new_user.id,
-                }), 200
+                logger.info(f"Nuevo usuario registrado: {username}")
+                return jsonify({"success": True, "message": "Registro exitoso", "user_id": new_user.id}), 200
             except Exception as e:
                 db.session.rollback()
-                app.logger.error(f"Error en el registro: {str(e)}")
-                return jsonify({"success": False, "error": f"Error en el registro: {str(e)}"}), 500
+                logger.error(f"Error en el registro: {str(e)}")
+                return jsonify({"success": False, "error": "Error en el registro"}), 500
 
         return render_template('registro.html')
 

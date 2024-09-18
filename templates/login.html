@@ -149,9 +149,9 @@
         <div class="login-header">
             <div class="login-title">Calcul<span class="ai-text">AI</span></div>
         </div>
-        <form id="form-login" action="{{ url_for('login') }}" method="POST">
+        <form id="form-login">
             <div class="input-group">
-                <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
+                <input type="text" name="username" placeholder="Nombre de usuario" required>
             </div>
             <div class="input-group password-group">
                 <input type="password" name="password" placeholder="Contraseña" required>
@@ -201,12 +201,12 @@
             errorDiv.style.display = 'block';
         }
 
-        function showPasswordResetOption(nombre_usuario) {
+        function showPasswordResetOption(username) {
             const loginContainer = document.querySelector('.login-container');
             loginContainer.innerHTML = `
                 <h2>Cambiar Contraseña</h2>
                 <form id="form-reset-password">
-                    <input type="hidden" name="nombre_usuario" value="${nombre_usuario}">
+                    <input type="hidden" name="username" value="${username}">
                     <div class="input-group password-group">
                         <input type="password" name="new_password" placeholder="Nueva contraseña" required>
                         <button type="button" class="password-toggle">👁️</button>
@@ -276,7 +276,7 @@
                 if (data.success) {
                     window.location.href = '{{ url_for("index") }}';
                 } else if (data.allow_password_reset) {
-                    showPasswordResetOption(data.nombre_usuario);
+                    showPasswordResetOption(data.username);
                 } else {
                     showError(data.error);
                 }
@@ -329,6 +329,21 @@
         }
 
         initializePasswordToggles();
+
+        // Add numpad functionality
+        document.querySelectorAll('.numpad-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const activeInput = document.activeElement;
+                if (activeInput.tagName === 'INPUT' && activeInput.type !== 'submit') {
+                    const value = this.textContent;
+                    const start = activeInput.selectionStart;
+                    const end = activeInput.selectionEnd;
+                    activeInput.value = activeInput.value.substring(0, start) + value + activeInput.value.substring(end);
+                    activeInput.setSelectionRange(start + 1, start + 1);
+                    activeInput.focus();
+                }
+            });
+        });
     </script>
 </body>
 </html>

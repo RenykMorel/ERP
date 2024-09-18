@@ -80,7 +80,7 @@ function handleAuthForm(event, endpoint) {
             window.location.href = '/';  // Redirige al home en caso de éxito
         } else {
             if (data.allow_password_reset) {
-                showPasswordResetOption(data.nombre_usuario);
+                showPasswordResetOption(data.username);
             } else {
                 showError(data.error);
             }
@@ -92,12 +92,12 @@ function handleAuthForm(event, endpoint) {
     });
 }
 
-function showPasswordResetOption(nombre_usuario) {
+function showPasswordResetOption(username) {
     const authContainer = document.querySelector('.auth-container');
     authContainer.innerHTML = `
         <h2>Cambiar Contraseña</h2>
         <form id="form-reset-password">
-            <input type="hidden" name="nombre_usuario" value="${nombre_usuario}">
+            <input type="hidden" name="username" value="${username}">
             <input type="password" name="new_password" placeholder="Nueva contraseña" required>
             <input type="password" name="confirm_password" placeholder="Confirmar nueva contraseña" required>
             <button type="submit">Cambiar Contraseña</button>
@@ -194,130 +194,6 @@ function initializeAuthForms() {
 
     if (formRegistro) {
         formRegistro.addEventListener('submit', (e) => handleAuthForm(e, '/registro'));
-    }
-}
-
-// ... (El resto del código permanece igual)
-
-
-// Función genérica para manejar formularios de autenticación
-function handleAuthForm(event, endpoint) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    fetch(endpoint, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = '/';  // Redirige al home en caso de éxito
-        } else {
-            if (data.allow_password_reset) {
-                showPasswordResetOption(data.nombre_usuario);
-            } else {
-                showError(data.error);
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showError('Ocurrió un error en el proceso de autenticación');
-    });
-}
-
-function showPasswordResetOption(nombre_usuario) {
-    const authContainer = document.querySelector('.auth-container');
-    authContainer.innerHTML = `
-        <h2>Cambiar Contraseña</h2>
-        <form id="form-reset-password">
-            <input type="hidden" name="nombre_usuario" value="${nombre_usuario}">
-            <input type="password" name="new_password" placeholder="Nueva contraseña" required>
-            <input type="password" name="confirm_password" placeholder="Confirmar nueva contraseña" required>
-            <button type="submit">Cambiar Contraseña</button>
-        </form>
-        <p>¿Olvidaste tu contraseña? <a href="#" id="forgot-password">Haz clic aquí</a></p>
-    `;
-    document.getElementById('form-reset-password').addEventListener('submit', handlePasswordReset);
-    document.getElementById('forgot-password').addEventListener('click', showForgotPasswordForm);
-}
-
-function handlePasswordReset(event) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    if (formData.get('new_password') !== formData.get('confirm_password')) {
-        showError('Las contraseñas no coinciden');
-        return;
-    }
-    fetch('/reset_password', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Contraseña cambiada exitosamente. Por favor, inicia sesión con tu nueva contraseña.');
-            window.location.href = '/login';
-        } else {
-            showError(data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showError('Ocurrió un error al cambiar la contraseña');
-    });
-}
-
-function showForgotPasswordForm() {
-    const authContainer = document.querySelector('.auth-container');
-    authContainer.innerHTML = `
-        <h2>Restablecer Contraseña</h2>
-        <form id="form-forgot-password">
-            <input type="email" name="email" placeholder="Correo electrónico" required>
-            <button type="submit">Enviar Instrucciones</button>
-        </form>
-    `;
-    document.getElementById('form-forgot-password').addEventListener('submit', handleForgotPassword);
-}
-
-function handleForgotPassword(event) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    fetch('/request_password_reset', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            window.location.href = '/login';
-        } else {
-            showError(data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showError('Ocurrió un error al solicitar el restablecimiento de contraseña');
-    });
-}
-
-function showError(message) {
-    const errorDiv = document.getElementById('auth-error');
-    if (errorDiv) {
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
-    } else {
-        alert(message);
     }
 }
 
@@ -451,6 +327,17 @@ function loadSubmodules(moduleName, submoduleContainer) {
 function loadSubmoduleContent(moduleName, submoduleName) {
     console.log(`Loading content for ${moduleName} - ${submoduleName}`);
     // Implementar lógica para cargar contenido del submódulo
+    // Por ejemplo:
+    fetch(`/api/submodule-content/${moduleName}/${submoduleName}`)
+        .then(response => response.json())
+        .then(data => {
+            // Actualizar el contenido en la interfaz de usuario
+            const contentContainer = document.getElementById('submodule-content');
+            if (contentContainer) {
+                contentContainer.innerHTML = data.content;
+            }
+        })
+        .catch(error => console.error('Error loading submodule content:', error));
 }
 
 // Carga las tareas pendientes desde la API
@@ -524,7 +411,10 @@ function createLineChart(data) {
         },
         options: {
             ...chartOptions,
-            title: { display: true, text: 'Ventas' }
+            plugins: {
+                ...chartOptions.plugins,
+                title: { display: true, text: 'Ventas' }
+            }
         }
     });
 }
@@ -548,7 +438,10 @@ function createBarChart(data) {
         },
         options: {
             ...chartOptions,
-            title: { display: true, text: 'Ingresos vs Gastos' }
+            plugins: {
+                ...chartOptions.plugins,
+                title: { display: true, text: 'Ingresos vs Gastos' }
+            }
         }
     });
 }
@@ -567,7 +460,10 @@ function createPieChart(data) {
         },
         options: {
             ...chartOptions,
-            title: { display: true, text: 'Distribución' }
+            plugins: {
+                ...chartOptions.plugins,
+                title: { display: true, text: 'Distribución' }
+            }
         }
     });
 }
@@ -614,12 +510,20 @@ function initializeAsistente() {
     const asistenteEnviar = document.getElementById('asistente-enviar');
 
     // Comprobar si el asistente está activo (esto dependerá de cómo manejes el estado del asistente)
-    const asistenteActivo = false; // Esto debería ser una variable o función que determine si el asistente está activo
-
-    if (!asistenteActivo) {
-        chatWindow.classList.add('asistente-inactivo');
-        mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
-    }
+    fetch('/api/asistente-status')
+        .then(response => response.json())
+        .then(data => {
+            const asistenteActivo = data.activo;
+            if (!asistenteActivo) {
+                chatWindow.classList.add('asistente-inactivo');
+                mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
+            }
+        })
+        .catch(error => {
+            console.error('Error al verificar el estado del asistente:', error);
+            chatWindow.classList.add('asistente-inactivo');
+            mostrarMensajeAsistente("Error al verificar el estado del asistente. Por favor, intente más tarde.");
+        });
 
     if (asistenteInput && asistenteEnviar) {
         asistenteEnviar.addEventListener('click', () => {
