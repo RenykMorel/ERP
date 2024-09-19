@@ -45,38 +45,6 @@
         .admin-link:hover {
             background-color: #45a049;
         }
-
-        .admin-panel {
-            background-color: #f4f4f4;
-            padding: 20px;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-
-        .admin-panel h2 {
-            color: #333;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-
-        .admin-panel ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        .admin-panel ul li {
-            margin-bottom: 10px;
-        }
-
-        .admin-panel a {
-            color: #4CAF50;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .admin-panel a:hover {
-            color: #45a049;
-        }
     </style>
 </head>
 <body>
@@ -106,15 +74,6 @@
             <header>
                 <h1></h1>
             </header>
-            {% if current_user.rol == 'admin' %}
-            <div class="admin-panel">
-                <h2>Panel de Administración</h2>
-                <ul>
-                    <li><a href="{{ url_for('admin.manage_companies') }}">Gestionar Empresas</a></li>
-                    <li><a href="{{ url_for('admin.manage_users') }}">Gestionar Usuarios</a></li>
-                </ul>
-            </div>
-            {% endif %}
             {% block content %}
             <div id="dashboard">
                 <div class="chart-controls">

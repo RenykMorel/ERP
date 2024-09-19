@@ -1,213 +1,1004 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - CalculAI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            padding: 20px;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            color: #fff;
+            padding: 1rem;
+        }
+        .admin-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .admin-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            font-size: 18px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+        .admin-button:hover {
+            background-color: #45a049;
+        }
+        .admin-section {
+            display: none;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .feedback-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .feedback-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .feedback-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            margin: 0 5px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+        }
+        .modal-content form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="admin-header">
+            <h1>Panel de Administración</h1>
+            <a href="/" class="btn">Volver al Inicio</a>
+        </div>
+        
+        <div id="feedback-message" class="feedback-message" style="display: none;"></div>
 
-{% block title %}Panel de Administración - CalculAI{% endblock %}
+        <div class="admin-buttons">
+            <div class="admin-button" onclick="showSection('users-section')">Usuarios</div>
+            <div class="admin-button" onclick="showSection('empresas-section')">Empresas</div>
+            <div class="admin-button" onclick="showSection('roles-section')">Roles</div>
+            <div class="admin-button" onclick="showSection('permissions-section')">Permisos</div>
+            <div class="admin-button" onclick="showSection('subscription-plans-section')">Planes de Suscripción</div>
+            <div class="admin-button" onclick="showSection('billing-section')">Facturación</div>
+            <div class="admin-button" onclick="showSection('security-section')">Seguridad</div>
+            <div class="admin-button" onclick="showSection('reports-section')">Reportes</div>
+        </div>
 
-{% block content %}
-<h1>Panel de Administración</h1>
+        <div id="users-section" class="admin-section">
+            <h2>Gestionar Usuarios</h2>
+            <div id="users-list"></div>
+            <button onclick="showUserForm()" class="btn">Agregar Usuario</button>
+            <button onclick="backToButtons()" class="btn">Volver</button>
+        </div>
 
-<div id="users-section">
-    <h2>Usuarios</h2>
-    <div id="users-list"></div>
-    <button onclick="showUserForm()">Agregar Usuario</button>
-</div>
+        <div id="empresas-section" class="admin-section">
+            <h2>Gestionar Empresas</h2>
+            <div id="empresas-list"></div>
+            <button onclick="showEmpresaForm()" class="btn">Agregar Empresa</button>
+            <button onclick="backToButtons()" class="btn">Volver</button>
+        </div>
 
-<div id="user-form" style="display: none;">
-    <h3>Agregar/Editar Usuario</h3>
-    <form id="user-form-element">
-        <input type="hidden" id="user-id">
-        <input type="text" id="username" placeholder="Nombre de usuario" required>
-        <input type="email" id="email" placeholder="Correo electrónico" required>
-        <input type="password" id="password" placeholder="Contraseña">
-        <select id="role">
-            <option value="user">Usuario</option>
-            <option value="admin">Administrador</option>
-        </select>
-        <button type="submit">Guardar</button>
-        <button type="button" onclick="hideUserForm()">Cancelar</button>
-    </form>
-</div>
+        <div id="roles-section" class="admin-section">
+            <h2>Gestionar Roles</h2>
+            <div id="roles-list"></div>
+            <button onclick="showRoleForm()" class="btn">Agregar Rol</button>
+            <button onclick="backToButtons()" class="btn">Volver</button>
+        </div>
 
-<div id="companies-section">
-    <h2>Empresas</h2>
-    <div id="companies-list"></div>
-    <button onclick="showCompanyForm()">Agregar Empresa</button>
-</div>
+        <div id="permissions-section" class="admin-section">
+            <h2>Gestionar Permisos</h2>
+            <div id="permissions-list"></div>
+            <button onclick="showPermissionForm()" class="btn">Agregar Permiso</button>
+            <button onclick="backToButtons()" class="btn">Volver</button>
+        </div>
 
-<div id="company-form" style="display: none;">
-    <h3>Agregar/Editar Empresa</h3>
-    <form id="company-form-element">
-        <input type="hidden" id="company-id">
-        <input type="text" id="company-name" placeholder="Nombre de la empresa" required>
-        <select id="company-status">
-            <option value="active">Activa</option>
-            <option value="inactive">Inactiva</option>
-        </select>
-        <button type="submit">Guardar</button>
-        <button type="button" onclick="hideCompanyForm()">Cancelar</button>
-    </form>
-</div>
+        <div id="subscription-plans-section" class="admin-section">
+            <h2>Planes de Suscripción</h2>
+            <div id="subscription-plans-list"></div>
+            <button onclick="showSubscriptionPlanForm()" class="btn">Agregar Plan de Suscripción</button>
+            <button onclick="backToButtons()" class="btn">Volver</button>
+        </div>
 
-<script>
-function loadUsers() {
-    fetch('/admin/users')
-        .then(response => response.json())
-        .then(users => {
-            const usersList = document.getElementById('users-list');
-            usersList.innerHTML = users.map(user => 
-                `<div>
-                    ${user.nombre_usuario} (${user.email}) - ${user.estado}
-                    <button onclick="editUser(${user.id})">Editar</button>
-                    <button onclick="deleteUser(${user.id})">Eliminar</button>
-                    <button onclick="toggleUserStatus(${user.id})">
-                        ${user.estado === 'activo' ? 'Desactivar' : 'Activar'}
-                    </button>
-                </div>`
-            ).join('');
-        })
-        .catch(error => console.error('Error:', error));
-}
+        <div id="billing-section" class="admin-section">
+            <h2>Facturación</h2>
+            <div id="invoices-list"></div>
+            <button onclick="showInvoiceForm()" class="btn">Generar Factura</button>
+            <button onclick="backToButtons()" class="btn">Volver</button>
+        </div>
 
-function loadCompanies() {
-    fetch('/admin/companies')
-        .then(response => response.json())
-        .then(companies => {
-            const companiesList = document.getElementById('companies-list');
-            companiesList.innerHTML = companies.map(company => 
-                `<div>
-                    ${company.nombre} - ${company.estado}
-                    <button onclick="editCompany(${company.id})">Editar</button>
-                    <button onclick="deleteCompany(${company.id})">Eliminar</button>
-                    <button onclick="toggleCompanyStatus(${company.id})">
-                        ${company.estado === 'activo' ? 'Desactivar' : 'Activar'}
-                    </button>
-                </div>`
-            ).join('');
-        })
-        .catch(error => console.error('Error:', error));
-}
+        <div id="security-section" class="admin-section">
+            <h2>Configuración de Seguridad</h2>
+            <form id="security-form">
+                <label for="min-password-length">Longitud mínima de contraseña:</label>
+                <input type="number" id="min-password-length" min="8" required>
+                <label for="require-special-chars">Requerir caracteres especiales:</label>
+                <input type="checkbox" id="require-special-chars">
+                <button type="submit" class="btn">Actualizar Configuración</button>
+            </form>
+            <button onclick="backToButtons()" class="btn">Volver</button>
+        </div>
 
-function showUserForm() {
-    document.getElementById('user-form').style.display = 'block';
-}
+        <div id="reports-section" class="admin-section">
+            <h2>Reportes</h2>
+            <div id="reports-list"></div>
+            <button onclick="showReportForm()" class="btn">Generar Reporte</button>
+            <button onclick="backToButtons()" class="btn">Volver</button>
+        </div>
+    </div>
 
-function hideUserForm() {
-    document.getElementById('user-form').style.display = 'none';
-    document.getElementById('user-form-element').reset();
-}
+    <!-- Modals -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Agregar/Editar Usuario</h3>
+            <form id="user-form">
+                <input type="hidden" id="user-id">
+                <input type="text" id="username" placeholder="Nombre de usuario" required>
+                <input type="email" id="email" placeholder="Correo electrónico" required>
+                <input type="password" id="password" placeholder="Contraseña">
+                <select id="role">
+                    <option value="user">Usuario</option>
+                    <option value="admin">Administrador</option>
+                </select>
+                <button type="submit" class="btn">Guardar</button>
+            </form>
+        </div>
+    </div>
 
-function showCompanyForm() {
-    document.getElementById('company-form').style.display = 'block';
-}
+    <div id="empresa-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Agregar/Editar Empresa</h3>
+            <form id="empresa-form">
+                <input type="hidden" id="empresa-id">
+                <input type="text" id="empresa-nombre" placeholder="Nombre de la empresa" required>
+                <select id="empresa-estado">
+                    <option value="activo">Activa</option>
+                    <option value="inactivo">Inactiva</option>
+                </select>
+                <button type="submit" class="btn">Guardar</button>
+            </form>
+        </div>
+    </div>
 
-function hideCompanyForm() {
-    document.getElementById('company-form').style.display = 'none';
-    document.getElementById('company-form-element').reset();
-}
+    <div id="role-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Agregar/Editar Rol</h3>
+            <form id="role-form">
+                <input type="hidden" id="role-id">
+                <input type="text" id="role-name" placeholder="Nombre del rol" required>
+                <div id="permissions-checklist"></div>
+                <button type="submit" class="btn">Guardar</button>
+            </form>
+        </div>
+    </div>
 
-function editUser(id) {
-    fetch(`/admin/users/${id}`)
-        .then(response => response.json())
-        .then(user => {
-            document.getElementById('user-id').value = user.id;
-            document.getElementById('username').value = user.nombre_usuario;
-            document.getElementById('email').value = user.email;
-            document.getElementById('role').value = user.rol;
-            showUserForm();
-        })
-        .catch(error => console.error('Error:', error));
-}
+    <div id="permission-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Agregar Permiso</h3>
+            <form id="permission-form">
+                <input type="text" id="permission-name" placeholder="Nombre del permiso" required>
+                <button type="submit" class="btn">Guardar</button>
+            </form>
+        </div>
+    </div>
 
-function editCompany(id) {
-    fetch(`/admin/companies/${id}`)
-        .then(response => response.json())
-        .then(company => {
-            document.getElementById('company-id').value = company.id;
-            document.getElementById('company-name').value = company.nombre;
-            document.getElementById('company-status').value = company.estado;
-            showCompanyForm();
-        })
-        .catch(error => console.error('Error:', error));
-}
+    <div id="subscription-plan-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Agregar/Editar Plan de Suscripción</h3>
+            <form id="subscription-plan-form">
+                <input type="hidden" id="subscription-plan-id">
+                <input type="text" id="subscription-plan-name" placeholder="Nombre del plan" required>
+                <textarea id="subscription-plan-description" placeholder="Descripción del plan" required></textarea>
+                <input type="number" id="subscription-plan-price" placeholder="Precio" required>
+                <input type="number" id="subscription-plan-duration" placeholder="Duración (en días)" required>
+                <button type="submit" class="btn">Guardar</button>
+            </form>
+        </div>
+    </div>
 
-function deleteUser(id) {
-    if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-        fetch(`/admin/users/${id}`, { method: 'DELETE' })
-            .then(() => loadUsers())
-            .catch(error => console.error('Error:', error));
-    }
-}
+    <div id="invoice-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Generar Factura</h3>
+            <form id="invoice-form">
+                <select id="invoice-user" required></select>
+                <input type="number" id="invoice-amount" placeholder="Monto" required>
+                <input type="date" id="invoice-date" required>
+                <button type="submit" class="btn">Generar</button>
+            </form>
+        </div>
+    </div>
 
-function deleteCompany(id) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta empresa?')) {
-        fetch(`/admin/companies/${id}`, { method: 'DELETE' })
-            .then(() => loadCompanies())
-            .catch(error => console.error('Error:', error));
-    }
-}
+    <div id="report-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Generar Reporte</h3>
+            <form id="report-form">
+                <select id="report-type" required>
+                    <option value="users">Usuarios</option>
+                    <option value="empresas">Empresas</option>
+                    <option value="subscriptions">Suscripciones</option>
+                </select>
+                <input type="date" id="report-start-date" required>
+                <input type="date" id="report-end-date" required>
+                <button type="submit" class="btn">Generar</button>
+            </form>
+        </div>
+    </div>
 
-function toggleUserStatus(id) {
-    fetch(`/admin/toggle_user_status/${id}`, { method: 'POST' })
-        .then(() => loadUsers())
-        .catch(error => console.error('Error:', error));
-}
+    <script>
+        // Utility functions
+        function showFeedback(message, isError = false) {
+            const feedbackElement = document.getElementById('feedback-message');
+            feedbackElement.textContent = message;
+            feedbackElement.style.display = 'block';
+            feedbackElement.className = isError ? 'feedback-message error' : 'feedback-message success';
+            setTimeout(() => {
+                feedbackElement.style.display = 'none';
+            }, 5000);
+        }
 
-function toggleCompanyStatus(id) {
-    fetch(`/admin/toggle_company_status/${id}`, { method: 'POST' })
-        .then(() => loadCompanies())
-        .catch(error => console.error('Error:', error));
-}
+        function showSection(sectionId) {
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.querySelector('.admin-buttons').style.display = 'none';
+            document.getElementById(sectionId).style.display = 'block';
+        }
 
-document.getElementById('user-form-element').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const userData = {
-        nombre_usuario: document.getElementById('username').value,
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value,
-        rol: document.getElementById('role').value
-    };
-    const userId = document.getElementById('user-id').value;
-    const method = userId ? 'PUT' : 'POST';
-    const url = userId ? `/admin/users/${userId}` : '/admin/users';
+        function backToButtons() {
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.querySelector('.admin-buttons').style.display = 'grid';
+        }
 
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-    })
-    .then(() => {
-        loadUsers();
-        hideUserForm();
-    })
-    .catch(error => console.error('Error:', error));
-});
+        // Modal functions
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
 
-document.getElementById('company-form-element').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const companyData = {
-        nombre: document.getElementById('company-name').value,
-        estado: document.getElementById('company-status').value
-    };
-    const companyId = document.getElementById('company-id').value;
-    const method = companyId ? 'PUT' : 'POST';
-    const url = companyId ? `/admin/companies/${companyId}` : '/admin/companies';
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
 
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(companyData),
-    })
-    .then(() => {
-        loadCompanies();
-        hideCompanyForm();
-    })
-    .catch(error => console.error('Error:', error));
-});
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
 
-loadUsers();
-loadCompanies();
-</script>
-{% endblock %}
+        // Close buttons
+        document.querySelectorAll('.close').forEach(closeBtn => {
+            closeBtn.onclick = function() {
+                this.closest('.modal').style.display = 'none';
+            }
+        });
+
+        // Users
+        function loadUsers(page = 1)  {
+            fetch(`/admin/users?page=${page}`)
+                .then(response => response.json())
+                .then(data => {
+                    const usersList = document.getElementById('users-list');
+                    usersList.innerHTML = data.users.map(user => 
+                        `<div>
+                            ${user.nombre_usuario} (${user.email}) - ${user.estado}
+                            <button onclick="editUser(${user.id})" class="btn">Editar</button>
+                            <button onclick="deleteUser(${user.id})" class="btn">Eliminar</button>
+                            <button onclick="toggleUserStatus(${user.id})" class="btn">
+                                ${user.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                            </button>
+                        </div>`
+                    ).join('');
+                    
+                    const paginationControls = `
+                        <div class="pagination">
+                            ${page > 1 ? `<button onclick="loadUsers(${page - 1})">Anterior</button>` : ''}
+                            <span>Página ${page} de ${data.total_pages}</span>
+                            ${page < data.total_pages ? `<button onclick="loadUsers(${page + 1})">Siguiente</button>` : ''}
+                        </div>
+                    `;
+                    usersList.insertAdjacentHTML('afterend', paginationControls);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar usuarios', true);
+                });
+        }
+
+        function showUserForm() {
+            showModal('user-modal');
+        }
+
+        function editUser(id) {
+            fetch(`/admin/users/${id}`)
+                .then(response => response.json())
+                .then(user => {
+                    document.getElementById('user-id').value = user.id;
+                    document.getElementById('username').value = user.nombre_usuario;
+                    document.getElementById('email').value = user.email;
+                    document.getElementById('role').value = user.rol;
+                    showUserForm();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar el usuario', true);
+                });
+        }
+
+        function deleteUser(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+                fetch(`/admin/users/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(() => {
+                        loadUsers();
+                        showFeedback('Usuario eliminado exitosamente');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showFeedback('Error al eliminar el usuario', true);
+                    });
+            }
+        }
+
+        function toggleUserStatus(id) {
+            fetch(`/admin/toggle_user_status/${id}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(() => {
+                    loadUsers();
+                    showFeedback('Estado del usuario actualizado exitosamente');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cambiar el estado del usuario', true);
+                });
+        }
+
+        document.getElementById('user-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const userData = {
+                nombre_usuario: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                rol: document.getElementById('role').value
+            };
+            const userId = document.getElementById('user-id').value;
+            const method = userId ? 'PUT' : 'POST';
+            const url = userId ? `/admin/users/${userId}` : '/admin/users';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData),
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadUsers();
+                closeModal('user-modal');
+                showFeedback('Usuario guardado exitosamente');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFeedback('Error al guardar el usuario', true);
+            });
+        });
+
+        // Empresas
+        function loadEmpresas(page = 1) {
+            fetch(`/admin/companies?page=${page}`)
+                .then(response => response.json())
+                .then(data => {
+                    const empresasList = document.getElementById('empresas-list');
+                    empresasList.innerHTML = data.companies.map(empresa => 
+                        `<div>
+                            ${empresa.nombre} - ${empresa.estado}
+                            <button onclick="editEmpresa(${empresa.id})" class="btn">Editar</button>
+                            <button onclick="deleteEmpresa(${empresa.id})" class="btn">Eliminar</button>
+                            <button onclick="toggleEmpresaStatus(${empresa.id})" class="btn">
+                                ${empresa.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                            </button>
+                        </div>`
+                    ).join('');
+                    
+                    const paginationControls = `
+                        <div class="pagination">
+                            ${page > 1 ? `<button onclick="loadEmpresas(${page - 1})">Anterior</button>` : ''}
+                            <span>Página ${page} de ${data.total_pages}</span>
+                            ${page < data.total_pages ? `<button onclick="loadEmpresas(${page + 1})">Siguiente</button>` : ''}
+                        </div>
+                    `;
+                    empresasList.insertAdjacentHTML('afterend', paginationControls);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar empresas', true);
+                });
+        }
+
+        function showEmpresaForm() {
+            showModal('empresa-modal');
+        }
+
+        function editEmpresa(id) {
+            fetch(`/admin/companies/${id}`)
+                .then(response => response.json())
+                .then(empresa => {
+                    document.getElementById('empresa-id').value = empresa.id;
+                    document.getElementById('empresa-nombre').value = empresa.nombre;
+                    document.getElementById('empresa-estado').value = empresa.estado;
+                    showEmpresaForm();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar la empresa', true);
+                });
+        }
+
+        function deleteEmpresa(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta empresa?')) {
+                fetch(`/admin/companies/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(() => {
+                        loadEmpresas();
+                        showFeedback('Empresa eliminada exitosamente');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showFeedback('Error al eliminar la empresa', true);
+                    });
+            }
+        }
+
+        function toggleEmpresaStatus(empresaId) {
+            fetch(`/admin/toggle_company_status/${empresaId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(() => {
+                    loadEmpresas();
+                    showFeedback('Estado de la empresa actualizado exitosamente');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cambiar el estado de la empresa', true);
+                });
+        }
+
+        document.getElementById('empresa-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const empresaData = {
+                nombre: document.getElementById('empresa-nombre').value,
+                estado: document.getElementById('empresa-estado').value
+            };
+            const empresaId = document.getElementById('empresa-id').value;
+            const method = empresaId ? 'PUT' : 'POST';
+            const url = empresaId ? `/admin/companies/${empresaId}` : '/admin/companies';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(empresaData),
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadEmpresas();
+                closeModal('empresa-modal');
+                showFeedback('Empresa guardada exitosamente');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFeedback('Error al guardar la empresa', true);
+            });
+        });
+
+        // Roles
+        function loadRoles() {
+            fetch('/admin/roles')
+                .then(response => response.json())
+                .then(data => {
+                    const rolesList = document.getElementById('roles-list');
+                    rolesList.innerHTML = data.map(role => 
+                        `<div>
+                            ${role.nombre}
+                            <button onclick="editRole(${role.id})" class="btn">Editar</button>
+                            <button onclick="deleteRole(${role.id})" class="btn">Eliminar</button>
+                        </div>`
+                    ).join('');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar roles', true);
+                });
+        }
+
+        function showRoleForm() {
+            showModal('role-modal');
+            loadPermissionsForRoleForm();
+        }
+
+        function editRole(id) {
+            fetch(`/admin/roles/${id}`)
+                .then(response => response.json())
+                .then(role => {
+                    document.getElementById('role-id').value = role.id;
+                    document.getElementById('role-name').value = role.nombre;
+                    showRoleForm();
+                    loadPermissionsForRoleForm(role.permisos);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar el rol', true);
+                });
+        }
+
+        function deleteRole(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar este rol?')) {
+                fetch(`/admin/roles/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(() => {
+                        loadRoles();
+                        showFeedback('Rol eliminado exitosamente');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showFeedback('Error al eliminar el rol', true);
+                    });
+            }
+        }
+
+        function loadPermissionsForRoleForm(selectedPermissions = []) {
+            fetch('/admin/permissions')
+                .then(response => response.json())
+                .then(permissions => {
+                    const permissionsChecklist = document.getElementById('permissions-checklist');
+                    permissionsChecklist.innerHTML = permissions.map(permission => 
+                        `<div>
+                            <input type="checkbox" id="permission-${permission.id}" name="permissions" value="${permission.id}" ${selectedPermissions.includes(permission.id) ? 'checked' : ''}>
+                            <label for="permission-${permission.id}">${permission.nombre}</label>
+                        </div>`
+                    ).join('');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar los permisos', true);
+                });
+        }
+
+        document.getElementById('role-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const roleData = {
+                nombre: document.getElementById('role-name').value,
+                permisos: Array.from(document.querySelectorAll('#permissions-checklist input:checked')).map(el => el.value)
+            };
+            const roleId = document.getElementById('role-id').value;
+            const method = roleId ? 'PUT' : 'POST';
+            const url = roleId ? `/admin/roles/${roleId}` : '/admin/roles';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(roleData),
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadRoles();
+                closeModal('role-modal');
+                showFeedback('Rol guardado exitosamente');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFeedback('Error al guardar el rol', true);
+            });
+        });
+
+        // Permissions
+        function loadPermissions() {
+            fetch('/admin/permissions')
+                .then(response => response.json())
+                .then(data => {
+                    const permissionsList = document.getElementById('permissions-list');
+                    permissionsList.innerHTML = data.map(permission => 
+                        `<div>
+                            ${permission.nombre}
+                            <button onclick="deletePermission(${permission.id})" class="btn">Eliminar</button>
+                        </div>`
+                    ).join('');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar permisos', true);
+                });
+        }
+
+        function showPermissionForm() {
+            showModal('permission-modal');
+        }
+
+        function deletePermission(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar este permiso?')) {
+                fetch(`/admin/permissions/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(() => {
+                        loadPermissions();
+                        showFeedback('Permiso eliminado exitosamente');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showFeedback('Error al eliminar el permiso', true);
+                    });
+            }
+        }
+
+        document.getElementById('permission-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const permissionData = {
+                nombre: document.getElementById('permission-name').value
+            };
+
+            fetch('/admin/permissions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(permissionData),
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadPermissions();
+                closeModal('permission-modal');
+                showFeedback('Permiso guardado exitosamente');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFeedback('Error al guardar el permiso', true);
+            });
+        });
+
+        // Subscription Plans
+        function loadSubscriptionPlans() {
+            fetch('/admin/subscription_plans')
+                .then(response => response.json())
+                .then(data => {
+                    const plansList = document.getElementById('subscription-plans-list');
+                    plansList.innerHTML = data.map(plan => 
+                        `<div>
+                            ${plan.nombre} - ${plan.precio}
+                            <button onclick="editSubscriptionPlan(${plan.id})" class="btn">Editar</button>
+                            <button onclick="deleteSubscriptionPlan(${plan.id})" class="btn">Eliminar</button>
+                        </div>`
+                    ).join('');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar planes de suscripción', true);
+                });
+        }
+
+        function showSubscriptionPlanForm() {
+            showModal('subscription-plan-modal');
+        }
+
+        function editSubscriptionPlan(id) {
+            fetch(`/admin/subscription_plans/${id}`)
+                .then(response => response.json())
+                .then(plan => {
+                    document.getElementById('subscription-plan-id').value = plan.id;
+                    document.getElementById('subscription-plan-name').value = plan.nombre;
+                    document.getElementById('subscription-plan-description').value = plan.descripcion;
+                    document.getElementById('subscription-plan-price').value = plan.precio;
+                    document.getElementById('subscription-plan-duration').value = plan.duracion;
+                    showSubscriptionPlanForm();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar el plan de suscripción', true);
+                });
+        }
+
+        function deleteSubscriptionPlan(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar este plan de suscripción?')) {
+                fetch(`/admin/subscription_plans/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(() => {
+                        loadSubscriptionPlans();
+                        showFeedback('Plan de suscripción eliminado exitosamente');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showFeedback('Error al eliminar el plan de suscripción', true);
+                    });
+            }
+        }
+
+        document.getElementById('subscription-plan-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const planData = {
+                nombre: document.getElementById('subscription-plan-name').value,
+                descripcion: document.getElementById('subscription-plan-description').value,
+                precio: document.getElementById('subscription-plan-price').value,
+                duracion: document.getElementById('subscription-plan-duration').value
+            };
+            const planId = document.getElementById('subscription-plan-id').value;
+            const method = planId ? 'PUT' : 'POST';
+            const url = planId ? `/admin/subscription_plans/${planId}` : '/admin/subscription_plans';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(planData),
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadSubscriptionPlans();
+                closeModal('subscription-plan-modal');
+                showFeedback('Plan de suscripción guardado exitosamente');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFeedback('Error al guardar el plan de suscripción', true);
+            });
+        });
+
+        // Billing
+        function loadInvoices() {
+            fetch('/admin/invoices')
+                .then(response => response.json())
+                .then(data => {
+                    const invoicesList = document.getElementById('invoices-list');
+                    invoicesList.innerHTML = data.map(invoice => 
+                        `<div>
+                            Factura #${invoice.id} - ${invoice.usuario} - ${invoice.monto}
+                            <button onclick="viewInvoice(${invoice.id})" class="btn">Ver</button>
+                        </div>`
+                    ).join('');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar facturas', true);
+                });
+        }
+
+        function showInvoiceForm() {
+            showModal('invoice-modal');
+            loadUsersForInvoiceForm();
+        }
+
+        function loadUsersForInvoiceForm() {
+            fetch('/admin/users')
+                .then(response => response.json())
+                .then(users => {
+                    const userSelect = document.getElementById('invoice-user');
+                    userSelect.innerHTML = users.map(user => 
+                        `<option value="${user.id}">${user.nombre_usuario}</option>`
+                    ).join('');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar usuarios para la factura', true);
+                });
+        }
+
+        function viewInvoice(id) {
+            // Implementar la lógica para ver una factura específica
+            console.log(`Ver factura ${id}`);
+        }
+
+        document.getElementById('invoice-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const invoiceData = {
+                usuario_id: document.getElementById('invoice-user').value,
+                monto: document.getElementById('invoice-amount').value,
+                fecha: document.getElementById('invoice-date').value
+            };
+
+            fetch('/admin/invoices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(invoiceData),
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadInvoices();
+                closeModal('invoice-modal');
+                showFeedback('Factura generada exitosamente');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFeedback('Error al generar la factura', true);
+            });
+        });
+
+        // Security
+        document.getElementById('security-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const securitySettings = {
+                min_password_length: document.getElementById('min-password-length').value,
+                require_special_chars: document.getElementById('require-special-chars').checked
+            };
+
+            fetch('/admin/security_settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(securitySettings),
+            })
+            .then(response => response.json())
+            .then(() => {
+                showFeedback('Configuración de seguridad actualizada exitosamente');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFeedback('Error al actualizar la configuración de seguridad', true);
+            });
+        });
+
+        // Reports
+        function loadReports() {
+            fetch('/admin/reports')
+                .then(response => response.json())
+                .then(data => {
+                    const reportsList = document.getElementById('reports-list');
+                    reportsList.innerHTML = data.map(report => 
+                        `<div>
+                            Reporte: ${report.tipo} - ${report.fecha}
+                            <button onclick="viewReport(${report.id})" class="btn">Ver</button>
+                        </div>`
+                    ).join('');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFeedback('Error al cargar reportes', true);
+                });
+        }
+
+        function showReportForm() {
+            showModal('report-modal');
+        }
+
+        function viewReport(id) {
+            // Implementar la lógica para ver un reporte específico
+            console.log(`Ver reporte ${id}`);
+        }
+
+        document.getElementById('report-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const reportData = {
+                tipo: document.getElementById('report-type').value,
+                fecha_inicio: document.getElementById('report-start-date').value,
+                fecha_fin: document.getElementById('report-end-date').value
+            };
+
+            fetch('/admin/reports', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(reportData),
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadReports();
+                closeModal('report-modal');
+                showFeedback('Reporte generado exitosamente');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFeedback('Error al generar el reporte', true);
+            });
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsers();
+            loadEmpresas();
+            loadRoles();
+            loadPermissions();
+            loadSubscriptionPlans();
+            loadInvoices();
+            loadReports();
+        });
+    </script>
+</body>
+</html>

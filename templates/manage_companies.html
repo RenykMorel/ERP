@@ -1,11 +1,32 @@
 {% extends "base.html" %}
 
-{% block title %}Administrar Empresas - CalculAI{% endblock %}
+{% block title %}Panel de Administración - CalculAI{% endblock %}
 
 {% block extra_css %}
 <style>
-    .company-container {
+    .admin-container {
         padding: 20px;
+    }
+    .admin-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .admin-button {
+        padding: 10px 15px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .admin-button:hover {
+        background-color: #45a049;
+    }
+    .admin-section {
+        display: none;
     }
     .company-form {
         margin-bottom: 20px;
@@ -65,42 +86,89 @@
 {% endblock %}
 
 {% block content %}
-<div class="company-container">
-    <h1>Administrar Empresas</h1>
+<div class="admin-container">
+    <h1>Panel de Administración</h1>
 
     <div id="error-message"></div>
     <div id="success-message"></div>
 
-    <form id="create-company-form" class="company-form">
-        <input type="text" name="nombre" placeholder="Nombre de la empresa" required>
-        <button type="submit" class="btn btn-create">Crear Empresa</button>
-    </form>
+    <div class="admin-buttons">
+        <button class="admin-button" onclick="showSection('users-section')">Usuarios</button>
+        <button class="admin-button" onclick="showSection('empresas-section')">Empresas</button>
+        <button class="admin-button" onclick="showSection('roles-section')">Roles</button>
+        <button class="admin-button" onclick="showSection('permissions-section')">Permisos</button>
+        <button class="admin-button" onclick="showSection('subscription-plans-section')">Planes de Suscripción</button>
+        <button class="admin-button" onclick="showSection('billing-section')">Facturación</button>
+        <button class="admin-button" onclick="showSection('security-section')">Seguridad</button>
+        <button class="admin-button" onclick="showSection('reports-section')">Reportes</button>
+    </div>
 
-    <table class="company-table">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="companies-list">
-            {% for company in companies %}
-            <tr data-company-id="{{ company.id }}">
-                <td>{{ company.nombre }}</td>
-                <td>{{ company.estado }}</td>
-                <td>
-                    <button class="btn {% if company.estado == 'activo' %}btn-block{% else %}btn-activate{% endif %}" onclick="toggleCompanyStatus({{ company.id }})">
-                        {% if company.estado == 'activo' %}Bloquear{% else %}Activar{% endif %}
-                    </button>
-                    <button class="btn btn-delete" onclick="deleteCompany({{ company.id }})">Eliminar</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div id="users-section" class="admin-section">
+        <h2>Gestionar Usuarios</h2>
+        <!-- Aquí irá el contenido de la gestión de usuarios -->
+    </div>
 
-    <a href="{{ url_for('admin.manage_users') }}" class="btn">Gestionar Usuarios</a>
+    <div id="empresas-section" class="admin-section">
+        <h2>Gestionar Empresas</h2>
+        <form id="create-company-form" class="company-form">
+            <input type="text" name="nombre" placeholder="Nombre de la empresa" required>
+            <button type="submit" class="btn btn-create">Crear Empresa</button>
+        </form>
+
+        <table class="company-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="companies-list">
+                {% for empresa in empresas %}
+                <tr data-empresa-id="{{ empresa.id }}">
+                    <td>{{ empresa.nombre }}</td>
+                    <td>{{ empresa.estado }}</td>
+                    <td>
+                        <button class="btn {% if empresa.estado == 'activo' %}btn-block{% else %}btn-activate{% endif %}" onclick="toggleEmpresaStatus({{ empresa.id }})">
+                            {% if empresa.estado == 'activo' %}Bloquear{% else %}Activar{% endif %}
+                        </button>
+                        <button class="btn btn-delete" onclick="deleteEmpresa({{ empresa.id }})">Eliminar</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="roles-section" class="admin-section">
+        <h2>Gestionar Roles</h2>
+        <!-- Aquí irá el contenido de la gestión de roles -->
+    </div>
+
+    <div id="permissions-section" class="admin-section">
+        <h2>Gestionar Permisos</h2>
+        <!-- Aquí irá el contenido de la gestión de permisos -->
+    </div>
+
+    <div id="subscription-plans-section" class="admin-section">
+        <h2>Planes de Suscripción</h2>
+        <!-- Aquí irá el contenido de los planes de suscripción -->
+    </div>
+
+    <div id="billing-section" class="admin-section">
+        <h2>Facturación</h2>
+        <!-- Aquí irá el contenido de la facturación -->
+    </div>
+
+    <div id="security-section" class="admin-section">
+        <h2>Configuración de Seguridad</h2>
+        <!-- Aquí irá el contenido de la configuración de seguridad -->
+    </div>
+
+    <div id="reports-section" class="admin-section">
+        <h2>Reportes</h2>
+        <!-- Aquí irá el contenido de los reportes -->
+    </div>
 </div>
 {% endblock %}
 
@@ -124,7 +192,14 @@ function showSuccess(message) {
     }, 5000);
 }
 
-function createCompany(event) {
+function showSection(sectionId) {
+    document.querySelectorAll('.admin-section').forEach(section => {
+        section.style.display = 'none';
+    });
+    document.getElementById(sectionId).style.display = 'block';
+}
+
+function createEmpresa(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
@@ -135,19 +210,19 @@ function createCompany(event) {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.company) {
-            const companiesList = document.getElementById('companies-list');
+        if (data.empresa) {
+            const empresasList = document.getElementById('companies-list');
             const newRow = `
-                <tr data-company-id="${data.company.id}">
-                    <td>${data.company.nombre}</td>
-                    <td>${data.company.estado}</td>
+                <tr data-empresa-id="${data.empresa.id}">
+                    <td>${data.empresa.nombre}</td>
+                    <td>${data.empresa.estado}</td>
                     <td>
-                        <button class="btn btn-block" onclick="toggleCompanyStatus(${data.company.id})">Bloquear</button>
-                        <button class="btn btn-delete" onclick="deleteCompany(${data.company.id})">Eliminar</button>
+                        <button class="btn btn-block" onclick="toggleEmpresaStatus(${data.empresa.id})">Bloquear</button>
+                        <button class="btn btn-delete" onclick="deleteEmpresa(${data.empresa.id})">Eliminar</button>
                     </td>
                 </tr>
             `;
-            companiesList.insertAdjacentHTML('beforeend', newRow);
+            empresasList.insertAdjacentHTML('beforeend', newRow);
             form.reset();
             showSuccess('Empresa creada exitosamente');
         } else {
@@ -160,14 +235,14 @@ function createCompany(event) {
     });
 }
 
-function toggleCompanyStatus(companyId) {
-    fetch(`{{ url_for('admin.toggle_company_status', company_id=0) }}`.replace('0', companyId), {
+function toggleEmpresaStatus(empresaId) {
+    fetch("{{ url_for('admin.toggle_company_status', empresa_id=0) }}".replace('0', empresaId), {
         method: 'POST'
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            const row = document.querySelector(`tr[data-company-id="${companyId}"]`);
+        if (data.message) {
+            const row = document.querySelector(`tr[data-empresa-id="${empresaId}"]`);
             const statusCell = row.cells[1];
             const toggleButton = row.querySelector('.btn-block, .btn-activate');
             statusCell.textContent = data.estado;
@@ -191,15 +266,15 @@ function toggleCompanyStatus(companyId) {
     });
 }
 
-function deleteCompany(companyId) {
+function deleteEmpresa(empresaId) {
     if (confirm('¿Estás seguro de que quieres eliminar esta empresa?')) {
-        fetch(`{{ url_for('admin.delete_company', company_id=0) }}`.replace('0', companyId), {
-            method: 'POST'
+        fetch("{{ url_for('admin.delete_company', empresa_id=0) }}".replace('0', empresaId), {
+            method: 'DELETE'
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                const row = document.querySelector(`tr[data-company-id="${companyId}"]`);
+            if (data.message) {
+                const row = document.querySelector(`tr[data-empresa-id="${empresaId}"]`);
                 row.remove();
                 showSuccess('Empresa eliminada exitosamente');
             } else {
@@ -213,6 +288,11 @@ function deleteCompany(companyId) {
     }
 }
 
-document.getElementById('create-company-form').addEventListener('submit', createCompany);
+document.getElementById('create-company-form').addEventListener('submit', createEmpresa);
+
+// Mostrar la sección de empresas por defecto
+document.addEventListener('DOMContentLoaded', function() {
+    showSection('empresas-section');
+});
 </script>
 {% endblock %}
