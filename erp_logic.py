@@ -29,7 +29,7 @@ class AsistenteVirtual:
             )
             response.raise_for_status()
             return response.json()["completion"].strip()
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             return f"Error al obtener respuesta: {str(e)}"
 
 class ERP:
@@ -41,6 +41,7 @@ class ERP:
     def inicializar_modulos(self):
         self.modulos['banco'] = ModuloBanco(self)
         self.modulos['usuario'] = ModuloUsuario(self)
+        self.modulos['contabilidad'] = ModuloContabilidad(self)
         # Inicializa otros módulos aquí...
 
     def obtener_datos_para_analisis(self, tipo_analisis):
@@ -166,6 +167,20 @@ class ModuloBanco:
     def obtener_bancos(self):
         return self.bancos
 
+    def actualizar_banco(self, id, datos):
+        banco = next((b for b in self.bancos if b["id"] == id), None)
+        if banco:
+            banco.update(datos)
+            return banco
+        return None
+
+    def eliminar_banco(self, id):
+        banco = next((b for b in self.bancos if b["id"] == id), None)
+        if banco:
+            self.bancos.remove(banco)
+            return True
+        return False
+
 class ModuloUsuario:
     def __init__(self, erp_main):
         self.erp_main = erp_main
@@ -199,5 +214,65 @@ class ModuloUsuario:
             self.usuarios.remove(usuario)
             return True
         return False
+
+    def obtener_todos_usuarios(self):
+        return self.usuarios
+
+class ModuloContabilidad:
+    def __init__(self, erp_main):
+        self.erp_main = erp_main
+        self.cuentas = []
+        self.asientos = []
+
+    def crear_cuenta(self, codigo, nombre, tipo):
+        nueva_cuenta = {
+            "id": len(self.cuentas) + 1,
+            "codigo": codigo,
+            "nombre": nombre,
+            "tipo": tipo,
+            "saldo": 0
+        }
+        self.cuentas.append(nueva_cuenta)
+        return nueva_cuenta
+
+    def registrar_asiento(self, fecha, descripcion, movimientos):
+        nuevo_asiento = {
+            "id": len(self.asientos) + 1,
+            "fecha": fecha,
+            "descripcion": descripcion,
+            "movimientos": movimientos
+        }
+        self.asientos.append(nuevo_asiento)
+        self._actualizar_saldos(movimientos)
+        return nuevo_asiento
+
+    def _actualizar_saldos(self, movimientos):
+        for movimiento in movimientos:
+            cuenta = next((c for c in self.cuentas if c["id"] == movimiento["cuenta_id"]), None)
+            if cuenta:
+                if movimiento["tipo"] == "debe":
+                    cuenta["saldo"] += movimiento["monto"]
+                elif movimiento["tipo"] == "haber":
+                    cuenta["saldo"] -= movimiento["monto"]
+
+    def obtener_balance_general(self):
+        activos = sum(c["saldo"] for c in self.cuentas if c["tipo"] == "activo")
+        pasivos = sum(c["saldo"] for c in self.cuentas if c["tipo"] == "pasivo")
+        patrimonio = activos - pasivos
+        return {
+            "activos": activos,
+            "pasivos": pasivos,
+            "patrimonio": patrimonio
+        }
+
+    def obtener_estado_resultados(self, fecha_inicio, fecha_fin):
+        ingresos = sum(a["monto"] for a in self.asientos if a["fecha"] >= fecha_inicio and a["fecha"] <= fecha_fin and a["tipo"] == "ingreso")
+        gastos = sum(a["monto"] for a in self.asientos if a["fecha"] >= fecha_inicio and a["fecha"] <= fecha_fin and a["tipo"] == "gasto")
+        utilidad = ingresos - gastos
+        return {
+            "ingresos": ingresos,
+            "gastos": gastos,
+            "utilidad": utilidad
+        }
 
 # Aquí puedes agregar más módulos según sea necesario

@@ -1,98 +1,192 @@
 {% extends "base.html" %}
 {% block title %}Gestión de Bancos - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div id="bancos-module">
-    <h1>Gestión de Bancos</h1>
+<div id="bancos-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Bancos</h1>
     
-    <div id="busqueda-form">
-        <input type="text" id="id-banco" placeholder="ID">
-        <input type="text" id="nombre-banco" placeholder="Nombre">
-        <input type="text" id="contacto-banco" placeholder="Contacto">
-        <select id="estatus-banco">
-            <option value="">Todos</option>
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-        </select>
-        <button id="buscar-btn">Buscar</button>
-        <button id="crear-nuevo-btn">Crear Nuevo Banco</button>
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="id-banco" placeholder="ID">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="nombre-banco" placeholder="Nombre">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="contacto-banco" placeholder="Contacto">
+            </div>
+            <div>
+                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" id="estatus-banco">
+                    <option value="">Todos</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-nuevo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Banco
+            </button>
+        </div>
     </div>
     
-    <div id="crear-banco-form" style="display: none;">
-        <h2 id="form-title">Crear Nuevo Banco</h2>
-        <form id="banco-form">
-            <input type="hidden" name="id">
-            <input type="text" name="nombre" placeholder="Nombre" required>
-            <input type="text" name="telefono" placeholder="Teléfono" required>
-            <input type="text" name="contacto" placeholder="Contacto" required>
-            <input type="text" name="telefono_contacto" placeholder="Teléfono de Contacto" required>
-            <select name="estatus">
-                <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
-            </select>
-            <button type="submit">Guardar</button>
-            <button type="button" id="cancelar-form">Cancelar</button>
-        </form>
+    <div id="bancos-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="bancos-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">ID</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Nombre</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Teléfono</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Contacto</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Teléfono Contacto</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estatus</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="bancos-tbody" class="bg-white divide-y divide-gray-200">
+                {% for banco in bancos %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ banco.id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ banco.nombre }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ banco.telefono }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ banco.contacto }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ banco.telefono_contacto }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ 'bg-green-100 text-green-800' if banco.estatus == 'activo' else 'bg-red-100 text-red-800' }}">
+                            {{ banco.estatus }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="editar-banco text-blue-600 hover:text-blue-900 mr-2" data-id="{{ banco.id }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="eliminar-banco text-red-600 hover:text-red-900 mr-2" data-id="{{ banco.id }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="cambiar-estatus-banco {{ 'text-yellow-600 hover:text-yellow-900' if banco.estatus == 'activo' else 'text-green-600 hover:text-green-900' }}" data-id="{{ banco.id }}" data-estatus="{{ banco.estatus }}">
+                            <i class="fas {{ 'fa-toggle-off' if banco.estatus == 'activo' else 'fa-toggle-on' }}"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+</div>
+
+<!-- Modal -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
     
-    <table id="bancos-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Teléfono</th>
-                <th>Contacto</th>
-                <th>Teléfono Contacto</th>
-                <th>Estatus</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="bancos-tbody">
-            {% for banco in bancos %}
-            <tr>
-                <td>{{ banco.id }}</td>
-                <td>{{ banco.nombre }}</td>
-                <td>{{ banco.telefono }}</td>
-                <td>{{ banco.contacto }}</td>
-                <td>{{ banco.telefono_contacto }}</td>
-                <td>{{ banco.estatus }}</td>
-                <td>
-                    <button class="editar-banco" data-id="{{ banco.id }}">Editar</button>
-                    <button class="eliminar-banco" data-id="{{ banco.id }}">Eliminar</button>
-                    <button class="cambiar-estatus-banco" data-id="{{ banco.id }}" data-estatus="{{ banco.estatus }}">
-                        {% if banco.estatus == 'activo' %}Desactivar{% else %}Activar{% endif %}
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-xl font-bold" id="modal-title">Crear Nuevo Banco</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <form id="banco-form" class="mt-4">
+                <input type="hidden" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
+                        Nombre
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="nombre" type="text" placeholder="Nombre del banco" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono">
+                        Teléfono
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono" type="text" placeholder="Teléfono del banco" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="contacto">
+                        Contacto
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="contacto" type="text" placeholder="Nombre del contacto" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono_contacto">
+                        Teléfono de Contacto
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono_contacto" type="text" placeholder="Teléfono del contacto" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
+                        Estatus
+                    </label>
+                    <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Guardar
                     </button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/bancos.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof initializeAsistente === 'function') {
             initializeAsistente();
         }
         
-        // Inicializar la funcionalidad de bancos
         initializeBancos();
     });
 
     function initializeBancos() {
         const buscarBtn = document.getElementById('buscar-btn');
         const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
-        const cancelarFormBtn = document.getElementById('cancelar-form');
         const bancoForm = document.getElementById('banco-form');
+        const modal = document.querySelector('.modal');
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const modalCloseButtons = document.querySelectorAll('.modal-close');
 
         buscarBtn.addEventListener('click', buscarBancos);
-        crearNuevoBtn.addEventListener('click', mostrarFormularioCrear);
-        cancelarFormBtn.addEventListener('click', ocultarFormulario);
+        crearNuevoBtn.addEventListener('click', () => {
+            document.getElementById('modal-title').textContent = 'Crear Nuevo Banco';
+            bancoForm.reset();
+            toggleModal();
+        });
         bancoForm.addEventListener('submit', guardarBanco);
 
-        // Agregar event listeners para editar y eliminar bancos
+        modalOverlay.addEventListener('click', toggleModal);
+        modalCloseButtons.forEach(btn => {
+            btn.addEventListener('click', toggleModal);
+        });
+
         document.querySelectorAll('.editar-banco').forEach(btn => {
             btn.addEventListener('click', () => editarBanco(btn.dataset.id));
         });
@@ -102,6 +196,13 @@
         document.querySelectorAll('.cambiar-estatus-banco').forEach(btn => {
             btn.addEventListener('click', () => cambiarEstatusBanco(btn.dataset.id, btn.dataset.estatus));
         });
+    }
+
+    function toggleModal() {
+        const modal = document.querySelector('.modal');
+        modal.classList.toggle('opacity-0');
+        modal.classList.toggle('pointer-events-none');
+        document.body.classList.toggle('modal-active');
     }
 
     function buscarBancos() {
@@ -122,34 +223,31 @@
         bancos.forEach(banco => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${banco.id}</td>
-                <td>${banco.nombre}</td>
-                <td>${banco.telefono}</td>
-                <td>${banco.contacto}</td>
-                <td>${banco.telefono_contacto}</td>
-                <td>${banco.estatus}</td>
-                <td>
-                    <button class="editar-banco" data-id="${banco.id}">Editar</button>
-                    <button class="eliminar-banco" data-id="${banco.id}">Eliminar</button>
-                    <button class="cambiar-estatus-banco" data-id="${banco.id}" data-estatus="${banco.estatus}">
-                        ${banco.estatus === 'activo' ? 'Desactivar' : 'Activar'}
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${banco.id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${banco.nombre}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${banco.telefono}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${banco.contacto}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${banco.telefono_contacto}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${banco.estatus === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${banco.estatus}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button class="editar-banco text-blue-600 hover:text-blue-900 mr-2" data-id="${banco.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="eliminar-banco text-red-600 hover:text-red-900 mr-2" data-id="${banco.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="cambiar-estatus-banco ${banco.estatus === 'activo' ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'}" data-id="${banco.id}" data-estatus="${banco.estatus}">
+                        <i class="fas ${banco.estatus === 'activo' ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
                     </button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
-        // Reinicializar los event listeners para los nuevos botones
         initializeBancos();
-    }
-
-    function mostrarFormularioCrear() {
-        document.getElementById('form-title').textContent = 'Crear Nuevo Banco';
-        document.getElementById('crear-banco-form').style.display = 'block';
-        document.getElementById('banco-form').reset();
-    }
-
-    function ocultarFormulario() {
-        document.getElementById('crear-banco-form').style.display = 'none';
     }
 
     function guardarBanco(event) {
@@ -169,20 +267,24 @@
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                alert(data.error);
+                Swal.fire('Error', data.error, 'error');
             } else {
-                ocultarFormulario();
+                Swal.fire('Éxito', 'Banco guardado correctamente', 'success');
+                toggleModal();
                 buscarBancos();
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Ocurrió un error al guardar el banco', 'error');
+        });
     }
 
     function editarBanco(id) {
         fetch(`/api/obtener-banco/${id}`)
             .then(response => response.json())
             .then(banco => {
-                document.getElementById('form-title').textContent = 'Editar Banco';
+                document.getElementById('modal-title').textContent = 'Editar Banco';
                 const form = document.getElementById('banco-form');
                 form.id.value = banco.id;
                 form.nombre.value = banco.nombre;
@@ -190,25 +292,42 @@
                 form.contacto.value = banco.contacto;
                 form.telefono_contacto.value = banco.telefono_contacto;
                 form.estatus.value = banco.estatus;
-                document.getElementById('crear-banco-form').style.display = 'block';
+                toggleModal();
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudo cargar la información del banco', 'error');
+            });
     }
 
     function eliminarBanco(id) {
-        if (confirm('¿Está seguro de que desea eliminar este banco?')) {
-            fetch(`/api/eliminar-banco/${id}`, { method: 'DELETE' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        alert(data.message);
-                        buscarBancos();
-                    } else {
-                        alert(data.error);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
+        Swal.fire({
+            title: '¿Está seguro?',
+            text: "Esta acción no se puede deshacer",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/api/eliminar-banco/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            Swal.fire('Eliminado', data.message, 'success');
+                            buscarBancos();
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error', 'Ocurrió un error al eliminar el banco', 'error');
+                    });
+            }
+        });
     }
 
     function cambiarEstatusBanco(id, estatusActual) {
@@ -223,12 +342,16 @@
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                alert(data.error);
+                Swal.fire('Error', data.error, 'error');
             } else {
+                Swal.fire('Éxito', `Estatus cambiado a ${nuevoEstatus}`, 'success');
                 buscarBancos();
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Ocurrió un error al cambiar el estatus del banco', 'error');
+        });
     }
 </script>
 {% endblock %}

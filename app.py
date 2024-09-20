@@ -184,7 +184,6 @@ def create_app():
             username = request.form.get('username')
             password = request.form.get('password')
 
-            # Log received data for debugging
             logger.debug(f"Received login attempt - Username: {username}, Password: {'*' * len(password) if password else None}")
 
             if not username or not password:
@@ -244,8 +243,6 @@ def create_app():
             logger.warning(f"Intento de restablecimiento de contraseña para email no registrado: {email}")
             return jsonify({"success": False, "error": "No se encontró un usuario con ese correo electrónico"}), 404
 
-        # Aquí normalmente enviarías un correo electrónico con un enlace para restablecer la contraseña
-        # Por ahora, simplemente devolveremos un mensaje de éxito
         logger.info(f"Solicitud de restablecimiento de contraseña para el usuario: {user.nombre_usuario}")
         return jsonify({"success": True, "message": "Se ha enviado un correo electrónico con instrucciones para restablecer tu contraseña"}), 200
 
@@ -416,6 +413,7 @@ def create_app():
         }
         return jsonify(submodulos.get(modulo, []))
 
+    @app.route("/bancos")
     @app.route("/Bancos")
     @login_required
     def sub_bancos():
@@ -424,12 +422,12 @@ def create_app():
             return render_template("sub_bancos.html", bancos=bancos)
         except Exception as e:
             error_message = str(e)
-            return (
-                jsonify(
-                    {"error": f"Error al cargar la página de bancos: {error_message}"}
-                ),
-                500,
-            )
+            logger.error(f"Error al cargar la página de bancos: {error_message}")
+            return jsonify({"error": f"Error al cargar la página de bancos: {error_message}"}), 500
+
+    @app.route("/Bancos")
+    def redirect_to_bancos():
+        return redirect(url_for('sub_bancos'))
 
     @app.route("/api/obtener-banco/<int:id>")
     @login_required
@@ -444,42 +442,48 @@ def create_app():
         datos = request.json
         try:
             for key, value in datos.items():
-                if key in [
-                    "nombre",
-                    "telefono",
-                    "contacto",
-                    "telefono_contacto",
-                    "estatus",
-                ]:
+                if key in ["nombre", "telefono", "contacto", "telefono_contacto", "estatus"]:
                     setattr(banco, key, value)
             db.session.commit()
+            logger.info(f"Banco actualizado: {banco.nombre}")
             return jsonify(banco.to_dict())
         except IntegrityError:
             db.session.rollback()
-            return (
-                jsonify({"error": "Ya existe un banco con ese nombre o teléfono"}),
-                400,
-            )
+            logger.warning(f"Intento de actualizar banco con nombre o teléfono duplicado: {datos}")
+            return jsonify({"error": "Ya existe un banco con ese nombre o teléfono"}), 400
         except Exception as e:
             db.session.rollback()
+            logger.error(f"Error al actualizar banco: {str(e)}")
             return jsonify({"error": str(e)}), 500
 
     @app.route("/api/eliminar-banco/<int:id>", methods=["DELETE"])
     @login_required
     def eliminar_banco(id):
         banco = Banco.query.get_or_404(id)
-        db.session.delete(banco)
-        db.session.commit()
-        return jsonify({"message": "Banco eliminado correctamente"})
+        try:
+            db.session.delete(banco)
+            db.session.commit()
+            logger.info(f"Banco eliminado: {banco.nombre}")
+            return jsonify({"message": "Banco eliminado correctamente"})
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error al eliminar banco: {str(e)}")
+            return jsonify({"error": str(e)}), 500
 
     @app.route("/api/cambiar-estatus-banco/<int:id>", methods=["PUT"])
     @login_required
     def cambiar_estatus_banco(id):
         banco = Banco.query.get_or_404(id)
         datos = request.json
-        banco.estatus = datos["estatus"]
-        db.session.commit()
-        return jsonify(banco.to_dict())
+        try:
+            banco.estatus = datos["estatus"]
+            db.session.commit()
+            logger.info(f"Estatus del banco {banco.nombre} cambiado a {banco.estatus}")
+            return jsonify(banco.to_dict())
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error al cambiar estatus del banco: {str(e)}")
+            return jsonify({"error": str(e)}), 500
 
     @app.route("/api/buscar-bancos")
     @login_required
@@ -490,13 +494,12 @@ def create_app():
         if request.args.get("nombre"):
             query = query.filter(Banco.nombre.ilike(f"%{request.args.get('nombre')}%"))
         if request.args.get("contacto"):
-            query = query.filter(
-                Banco.contacto.ilike(f"%{request.args.get('contacto')}%")
-            )
+            query = query.filter(Banco.contacto.ilike(f"%{request.args.get('contacto')}%"))
         if request.args.get("estatus"):
             query = query.filter(Banco.estatus == request.args.get("estatus"))
 
         bancos = query.all()
+        logger.info(f"Búsqueda de bancos realizada. Resultados: {len(bancos)}")
         return jsonify([banco.to_dict() for banco in bancos])
 
     @app.route("/api/crear-banco", methods=["POST"])
@@ -507,15 +510,15 @@ def create_app():
             nuevo_banco = Banco(**datos)
             db.session.add(nuevo_banco)
             db.session.commit()
+            logger.info(f"Nuevo banco creado: {nuevo_banco.nombre}")
             return jsonify(nuevo_banco.to_dict()), 201
         except IntegrityError:
             db.session.rollback()
-            return (
-                jsonify({"error": "Ya existe un banco con ese nombre o teléfono"}),
-                400,
-            )
+            logger.warning(f"Intento de crear banco con nombre o teléfono duplicado: {datos}")
+            return jsonify({"error": "Ya existe un banco con ese nombre o teléfono"}), 400
         except Exception as e:
             db.session.rollback()
+            logger.error(f"Error al crear banco: {str(e)}")
             return jsonify({"error": str(e)}), 500
 
     @app.route("/transacciones")
@@ -531,9 +534,8 @@ def create_app():
         descripcion = request.args.get("descripcion")
         cuenta_id = request.args.get("cuenta_id")
 
-        transacciones = Transaccion.buscar(
-            tipo=tipo, descripcion=descripcion, cuenta_id=cuenta_id
-        )
+        transacciones = Transaccion.buscar(tipo=tipo, descripcion=descripcion, cuenta_id=cuenta_id)
+        logger.info(f"Búsqueda de transacciones realizada. Resultados: {len(transacciones)}")
         return jsonify([transaccion.to_dict() for transaccion in transacciones])
 
     @app.route("/api/crear-transaccion", methods=["POST"])
@@ -549,9 +551,11 @@ def create_app():
             )
             db.session.add(nueva_transaccion)
             db.session.commit()
+            logger.info(f"Nueva transacción creada: {nueva_transaccion.id}")
             return jsonify(nueva_transaccion.to_dict()), 201
         except Exception as e:
             db.session.rollback()
+            logger.error(f"Error al crear transacción: {str(e)}")
             return jsonify({"error": f"Error al crear la transacción: {str(e)}"}), 500
 
     @app.route("/api/tareas")
@@ -591,6 +595,7 @@ def create_app():
         pregunta_con_contexto = f"Contexto: {json.dumps(context)}\n\nPregunta: {pregunta}"
         respuesta = asistente.responder(pregunta_con_contexto)
 
+        logger.info(f"Consulta al asistente: {pregunta}")
         return jsonify({"respuesta": respuesta})
 
     @app.route("/api/datos_graficos")

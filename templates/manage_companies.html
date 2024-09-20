@@ -1,298 +1,830 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - CalculAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .admin-section {
+            display: none;
+        }
+        #empresas-section {
+            display: block;
+        }
+        .action-button {
+            transition: all 0.3s ease;
+        }
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .action-button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-md">
+            <div class="p-4 text-xl font-bold text-gray-800">Panel de Administración</div>
+            <nav class="mt-4" id="sidebar-nav">
+                <!-- Sidebar buttons will be inserted here by JavaScript -->
+            </nav>
+        </aside>
 
-{% block title %}Panel de Administración - CalculAI{% endblock %}
-
-{% block extra_css %}
-<style>
-    .admin-container {
-        padding: 20px;
-    }
-    .admin-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    .admin-button {
-        padding: 10px 15px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    .admin-button:hover {
-        background-color: #45a049;
-    }
-    .admin-section {
-        display: none;
-    }
-    .company-form {
-        margin-bottom: 20px;
-        display: flex;
-        gap: 10px;
-    }
-    .company-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-    }
-    .company-table th, .company-table td {
-        border: 1px solid #ddd;
-        padding: 12px;
-        text-align: left;
-    }
-    .company-table th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-    }
-    .btn {
-        padding: 8px 12px;
-        margin: 2px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    .btn-create {
-        background-color: #4CAF50;
-        color: white;
-    }
-    .btn-block {
-        background-color: #f44336;
-        color: white;
-    }
-    .btn-activate {
-        background-color: #2196F3;
-        color: white;
-    }
-    .btn-delete {
-        background-color: #ff9800;
-        color: white;
-    }
-    .btn:hover {
-        opacity: 0.8;
-    }
-    #error-message {
-        color: red;
-        margin-bottom: 10px;
-    }
-    #success-message {
-        color: green;
-        margin-bottom: 10px;
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="admin-container">
-    <h1>Panel de Administración</h1>
-
-    <div id="error-message"></div>
-    <div id="success-message"></div>
-
-    <div class="admin-buttons">
-        <button class="admin-button" onclick="showSection('users-section')">Usuarios</button>
-        <button class="admin-button" onclick="showSection('empresas-section')">Empresas</button>
-        <button class="admin-button" onclick="showSection('roles-section')">Roles</button>
-        <button class="admin-button" onclick="showSection('permissions-section')">Permisos</button>
-        <button class="admin-button" onclick="showSection('subscription-plans-section')">Planes de Suscripción</button>
-        <button class="admin-button" onclick="showSection('billing-section')">Facturación</button>
-        <button class="admin-button" onclick="showSection('security-section')">Seguridad</button>
-        <button class="admin-button" onclick="showSection('reports-section')">Reportes</button>
-    </div>
-
-    <div id="users-section" class="admin-section">
-        <h2>Gestionar Usuarios</h2>
-        <!-- Aquí irá el contenido de la gestión de usuarios -->
-    </div>
-
-    <div id="empresas-section" class="admin-section">
-        <h2>Gestionar Empresas</h2>
-        <form id="create-company-form" class="company-form">
-            <input type="text" name="nombre" placeholder="Nombre de la empresa" required>
-            <button type="submit" class="btn btn-create">Crear Empresa</button>
-        </form>
-
-        <table class="company-table">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="companies-list">
-                {% for empresa in empresas %}
-                <tr data-empresa-id="{{ empresa.id }}">
-                    <td>{{ empresa.nombre }}</td>
-                    <td>{{ empresa.estado }}</td>
-                    <td>
-                        <button class="btn {% if empresa.estado == 'activo' %}btn-block{% else %}btn-activate{% endif %}" onclick="toggleEmpresaStatus({{ empresa.id }})">
-                            {% if empresa.estado == 'activo' %}Bloquear{% else %}Activar{% endif %}
+        <!-- Main content -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-4 py-3">
+                    <button class="text-gray-500 focus:outline-none focus:text-gray-700">
+                        <i class="fas fa-bars w-6 h-6"></i>
+                    </button>
+                    <div class="flex items-center">
+                        <button class="flex text-gray-600 focus:outline-none">
+                            <i class="fas fa-bell w-6 h-6"></i>
                         </button>
-                        <button class="btn btn-delete" onclick="deleteEmpresa({{ empresa.id }})">Eliminar</button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        <button class="flex items-center text-gray-600 focus:outline-none ml-4">
+                            <img class="h-8 w-8 rounded-full object-cover" src="https://via.placeholder.com/32" alt="Avatar">
+                            <span class="ml-2">Admin</span>
+                            <i class="fas fa-chevron-down w-4 h-4 ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="p-6">
+                <h2 id="section-title" class="text-2xl font-semibold text-gray-800 mb-4">Empresas</h2>
+                
+                <!-- Empresas Section -->
+                <div id="empresas-section" class="admin-section">
+                    <div class="mb-4 flex flex-wrap items-center gap-4">
+                        <button id="create-company-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">Crear Empresa</button>
+                        <input type="text" id="company-name-search" placeholder="Buscar por nombre..." class="px-4 py-2 border rounded">
+                        <input type="text" id="company-rnc-search" placeholder="Buscar por RNC..." class="px-4 py-2 border rounded">
+                        <select id="company-status-filter" class="px-4 py-2 border rounded">
+                            <option value="">Todos los estados</option>
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">RNC</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companies-list">
+                            <!-- Company rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Users Section -->
+                <div id="users-section" class="admin-section">
+                    <div class="mb-4 flex flex-wrap items-center gap-4">
+                        <button id="create-user-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">Crear Usuario</button>
+                        <input type="text" id="user-search" placeholder="Buscar usuario..." class="px-4 py-2 border rounded">
+                        <select id="user-role-filter" class="px-4 py-2 border rounded">
+                            <option value="">Todos los roles</option>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Usuario">Usuario</option>
+                        </select>
+                    </div>
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rol</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list">
+                            <!-- User rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Roles Section -->
+                <div id="roles-section" class="admin-section">
+                    <div class="mb-4 flex flex-wrap items-center gap-4">
+                        <button id="create-role-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">Crear Rol</button>
+                    </div>
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre del Rol</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roles-list">
+                            <!-- Role rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Permissions Section -->
+                <div id="permissions-section" class="admin-section">
+                    <div class="mb-4 flex flex-wrap items-center gap-4">
+                        <button id="create-permission-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">Crear Permiso</button>
+                    </div>
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Permiso</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Descripción</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Roles Asignados</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="permissions-list">
+                            <!-- Permission rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Subscription Plans Section -->
+                <div id="subscription-plans-section" class="admin-section">
+                    <div class="mb-4 flex flex-wrap items-center gap-4">
+                        <button id="create-plan-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">Crear Plan</button>
+                    </div>
+                    <div id="subscription-plans" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Subscription plan cards will be inserted here by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Billing Section -->
+                <div id="billing-section" class="admin-section">
+                    <div class="mb-4 flex flex-wrap items-center gap-4">
+                        <button id="create-invoice-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">Crear Factura</button>
+                        <input type="text" id="invoice-search" placeholder="Buscar factura..." class="px-4 py-2 border rounded">
+                        <select id="invoice-status-filter" class="px-4 py-2 border rounded">
+                            <option value="">Todos los estados</option>
+                            <option value="pagada">Pagada</option>
+                            <option value="pendiente">Pendiente</option>
+                        </select>
+                    </div>
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Factura #</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Empresa</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Monto</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoices-list">
+                            <!-- Invoice rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Security Section -->
+                <div id="security-section" class="admin-section">
+                    <h3 class="text-lg font-semibold mb-4">Configuración de Seguridad</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="two-factor-auth" class="rounded">
+                            <label for="two-factor-auth" class="text-sm font-medium">Habilitar autenticación de dos factores para todos los usuarios</label>
+                        </div>
+                        <div>
+                            <label for="password-policy" class="block text-sm font-medium mb-1">Política de contraseñas</label>
+                            <select id="password-policy" class="w-full px-3 py-2 border rounded">
+                                <option value="standard">Estándar (8 caracteres mínimo)</option>
+                                <option value="strong">Fuerte (12 caracteres, símbolos y números)</option>
+                                <option value="very-strong">Muy fuerte (16 caracteres, símbolos, números y mayúsculas)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="session-timeout" class="block text-sm font-medium mb-1">Tiempo de expiración de sesión</label>
+                            <select id="session-timeout" class="w-full px-3 py-2 border rounded">
+                                <option value="30">30 minutos</option>
+                                <option value="60">1 hora</option>
+                                <option value="120">2 horas</option>
+                                <option value="240">4 horas</option>
+                            </select>
+                        </div>
+                        <button id="save-security-settings" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">Guardar Configuración</button>
+                    </div>
+                </div>
+
+                <!-- Reports Section -->
+                <div id="reports-section" class="admin-section">
+                    <div class="mb-4 flex flex-wrap items-center gap-4">
+                        <select id="report-type" class="px-4 py-2 border rounded">
+                            <option value="users">Usuarios Activos</option>
+                            <option value="revenue">Ingresos Totales</option>
+                            <option value="companies">Nuevas Empresas</option>
+                            <option value="tickets">Tickets de Soporte</option>
+                        </select>
+                        <button id="generate-report" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg">Generar Reporte</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h4 class="font-semibold mb-2">Usuarios Activos</h4>
+                            <p class="text-3xl font-bold text-blue-600">1,234</p>
+                            <p class="text-sm text-gray-500">Último mes</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h4 class="font-semibold mb-2">Ingresos Totales</h4>
+                            <p class="text-3xl font-bold text-green-600">$45,678</p>
+                            <p class="text-sm text-gray-500">Último trimestre</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h4 class="font-semibold mb-2">Nuevas Empresas</h4>
+                            <p class="text-3xl font-bold text-purple-600">57</p>
+                            <p class="text-sm text-gray-500">Último mes</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h4 class="font-semibold mb-2">Tickets de Soporte</h4>
+                            <p class="text-3xl font-bold text-yellow-600">89</p>
+                            <p class="text-sm text-gray-500">Abiertos actualmente</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <div id="roles-section" class="admin-section">
-        <h2>Gestionar Roles</h2>
-        <!-- Aquí irá el contenido de la gestión de roles -->
+    <!-- Modal for creating/editing a company -->
+    <div id="company-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Crear/Editar Empresa</h3>
+                    <div class="mt-2 space-y-4">
+                        <input type="text" id="company-name" class="w-full px-3 py-2 border rounded" placeholder="Nombre de la empresa">
+                        <input type="text" id="company-rnc" class="w-full px-3 py-2 border rounded" placeholder="RNC">
+                        <input type="text" id="company-address" class="w-full px-3 py-2 border rounded" placeholder="Dirección">
+                        <input type="text" id="company-type" class="w-full px-3 py-2 border rounded" placeholder="Tipo de empresa">
+                        <input type="text" id="company-representative" class="w-full px-3 py-2 border rounded" placeholder="Representante legal">
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="save-company" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">Guardar</button>
+                    <button type="button" id="cancel-company" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancelar</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="permissions-section" class="admin-section">
-        <h2>Gestionar Permisos</h2>
-        <!-- Aquí irá el contenido de la gestión de permisos -->
+    <!-- Modal for company details -->
+    <div id="company-details-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="details-modal-title">Detalles de la Empresa</h3>
+                    <div id="company-details" class="mt-2 space-y-4">
+                        <!-- Company details will be inserted here by JavaScript -->
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="close-details" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">Cerrar</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="subscription-plans-section" class="admin-section">
-        <h2>Planes de Suscripción</h2>
-        <!-- Aquí irá el contenido de los planes de suscripción -->
-    </div>
+    <script>
+        // Sample data for companies
+        let companies = [
+            { id: 1, nombre: 'Empresa A', rnc: '123456789', direccion: 'Calle 1, Ciudad', tipo: 'SA', representante: 'Juan Pérez', estado: 'activo' },
+            { id: 2, nombre: 'Empresa B', rnc: '987654321', direccion: 'Calle 2, Ciudad', tipo: 'SRL', representante: 'María Gómez', estado: 'inactivo' },
+        ];
 
-    <div id="billing-section" class="admin-section">
-        <h2>Facturación</h2>
-        <!-- Aquí irá el contenido de la facturación -->
-    </div>
+        // Sample data for users
+        let users = [
+            { id: 1, nombre: 'Juan Pérez', email: 'juan@example.com', rol: 'Administrador' },
+            { id: 2, nombre: 'María González', email: 'maria@example.com', rol: 'Usuario' },
+        ];
 
-    <div id="security-section" class="admin-section">
-        <h2>Configuración de Seguridad</h2>
-        <!-- Aquí irá el contenido de la configuración de seguridad -->
-    </div>
+        // Sample data for roles
+        let roles = ['Administrador', 'Gerente', 'Contador', 'Usuario Estándar', 'Invitado'];
 
-    <div id="reports-section" class="admin-section">
-        <h2>Reportes</h2>
-        <!-- Aquí irá el contenido de los reportes -->
-    </div>
-</div>
-{% endblock %}
+        // Sample data for permissions
+        let permissions = [
+            { id: 1, nombre: 'Crear Usuarios', descripcion: 'Permite crear nuevos usuarios en el sistema', roles: ['Administrador', 'Gerente'] },
+            { id: 2, nombre: 'Editar Empresas', descripcion: 'Permite modificar la información de las empresas', roles: ['Administrador', 'Contador'] },
+            { id: 3, nombre: 'Ver Reportes', descripcion: 'Permite acceder a los reportes del sistema', roles: ['Administrador', 'Gerente', 'Contador'] },
+        ];
 
-{% block extra_js %}
-<script>
-function showError(message) {
-    const errorDiv = document.getElementById('error-message');
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-    setTimeout(() => {
-        errorDiv.style.display = 'none';
-    }, 5000);
-}
+        // Sample data for subscription plans
+        let subscriptionPlans = [
+            { name: 'Plan Básico', price: '$29.99/mes', features: ['Hasta 5 usuarios', 'Soporte por email', 'Actualizaciones mensuales'] },
+            { name: 'Plan Pro', price: '$79.99/mes', features: ['Hasta 20 usuarios', 'Soporte prioritario', 'Actualizaciones semanales'] },
+            { name: 'Plan Enterprise', price: '$199.99/mes', features: ['Usuarios ilimitados', 'Soporte 24/7', 'Actualizaciones en tiempo real'] },
+        ];
 
-function showSuccess(message) {
-    const successDiv = document.getElementById('success-message');
-    successDiv.textContent = message;
-    successDiv.style.display = 'block';
-    setTimeout(() => {
-        successDiv.style.display = 'none';
-    }, 5000);
-}
+        // Sample data for invoices
+        let invoices = [
+            { id: 'INV-001', empresa: 'Empresa A', fecha: '2023-05-01', monto: 299.99, estado: 'pagada' },
+            { id: 'INV-002', empresa: 'Empresa B', fecha: '2023-05-15', monto: 79.99, estado: 'pendiente' },
+        ];
 
-function showSection(sectionId) {
-    document.querySelectorAll('.admin-section').forEach(section => {
-        section.style.display = 'none';
-    });
-    document.getElementById(sectionId).style.display = 'block';
-}
+        const sections = [
+            { id: 'users-section', name: 'Usuarios', icon: 'fas fa-users' },
+            { id: 'empresas-section', name: 'Empresas', icon: 'fas fa-building' },
+            { id: 'roles-section', name: 'Roles', icon: 'fas fa-user-tag' },
+            { id: 'permissions-section', name: 'Permisos', icon: 'fas fa-key' },
+            { id: 'subscription-plans-section', name: 'Planes de Suscripción', icon: 'fas fa-credit-card' },
+            { id: 'billing-section', name: 'Facturación', icon: 'fas fa-file-invoice-dollar' },
+            { id: 'security-section', name: 'Seguridad', icon: 'fas fa-lock' },
+            { id: 'reports-section', name: 'Reportes', icon: 'fas fa-chart-bar' },
+        ];
 
-function createEmpresa(event) {
-    event.preventDefault();
-    const form = event.target;
-    const formData = new FormData(form);
-
-    fetch("{{ url_for('admin.create_company') }}", {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.empresa) {
-            const empresasList = document.getElementById('companies-list');
-            const newRow = `
-                <tr data-empresa-id="${data.empresa.id}">
-                    <td>${data.empresa.nombre}</td>
-                    <td>${data.empresa.estado}</td>
-                    <td>
-                        <button class="btn btn-block" onclick="toggleEmpresaStatus(${data.empresa.id})">Bloquear</button>
-                        <button class="btn btn-delete" onclick="deleteEmpresa(${data.empresa.id})">Eliminar</button>
-                    </td>
-                </tr>
-            `;
-            empresasList.insertAdjacentHTML('beforeend', newRow);
-            form.reset();
-            showSuccess('Empresa creada exitosamente');
-        } else {
-            showError(data.error || 'Error al crear la empresa');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showError('Error al crear la empresa');
-    });
-}
-
-function toggleEmpresaStatus(empresaId) {
-    fetch("{{ url_for('admin.toggle_company_status', empresa_id=0) }}".replace('0', empresaId), {
-        method: 'POST'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            const row = document.querySelector(`tr[data-empresa-id="${empresaId}"]`);
-            const statusCell = row.cells[1];
-            const toggleButton = row.querySelector('.btn-block, .btn-activate');
-            statusCell.textContent = data.estado;
-            if (data.estado === 'activo') {
-                toggleButton.textContent = 'Bloquear';
-                toggleButton.classList.remove('btn-activate');
-                toggleButton.classList.add('btn-block');
-            } else {
-                toggleButton.textContent = 'Activar';
-                toggleButton.classList.remove('btn-block');
-                toggleButton.classList.add('btn-activate');
-            }
-            showSuccess('Estado de la empresa actualizado exitosamente');
-        } else {
-            showError(data.error || 'Error al actualizar el estado de la empresa');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showError('Error al actualizar el estado de la empresa');
-    });
-}
-
-function deleteEmpresa(empresaId) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta empresa?')) {
-        fetch("{{ url_for('admin.delete_company', empresa_id=0) }}".replace('0', empresaId), {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                const row = document.querySelector(`tr[data-empresa-id="${empresaId}"]`);
-                row.remove();
-                showSuccess('Empresa eliminada exitosamente');
-            } else {
-                showError(data.error || 'Error al eliminar la empresa');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showError('Error al eliminar la empresa');
+        // Populate sidebar
+        const sidebarNav = document.getElementById('sidebar-nav');
+        sections.forEach(section => {
+            const button = document.createElement('button');
+            button.className = `flex items-center w-full px-4 py-2 text-left text-gray-600 hover:bg-gray-100`;
+            button.innerHTML = `<i class="${section.icon} w-5 h-5 mr-2"></i>${section.name}`;
+            button.onclick = () => showSection(section.id);
+            sidebarNav.appendChild(button);
         });
-    }
-}
 
-document.getElementById('create-company-form').addEventListener('submit', createEmpresa);
+        // Add "Inicio" button
+        const inicioButton = document.createElement('a');
+        inicioButton.href = '/';
+        inicioButton.className = 'flex items-center w-full px-4 py-2 text-left text-gray-600 hover:bg-gray-100';
+        inicioButton.innerHTML = '<i class="fas fa-home w-5 h-5 mr-2"></i>Inicio';
+        sidebarNav.appendChild(inicioButton);
 
-// Mostrar la sección de empresas por defecto
-document.addEventListener('DOMContentLoaded', function() {
-    showSection('empresas-section');
-});
-</script>
-{% endblock %}
+        function showSection(sectionId) {
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
+            document.getElementById('section-title').textContent = sections.find(s => s.id === sectionId).name;
+        }
+
+        function renderCompanies(filteredCompanies = companies) {
+            const companiesList = document.getElementById('companies-list');
+            companiesList.innerHTML = '';
+            filteredCompanies.forEach(company => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${company.nombre}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${company.rnc}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${company.estado}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="showCompanyDetails(${company.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Ver</button>
+                        <button onclick="editCompany(${company.id})" class="action-button px-2 py-1 text-sm text-green-600 hover:text-green-900 bg-green-100 rounded mr-1">Editar</button>
+                        <button onclick="toggleCompanyStatus(${company.id})" class="action-button px-2 py-1 text-sm ${company.estado === 'activo' ? 'text-red-600 hover:text-red-900 bg-red-100' : 'text-green-600 hover:text-green-900 bg-green-100'} rounded mr-1">${company.estado === 'activo' ? 'Desactivar' : 'Activar'}</button>
+                        <button onclick="deleteCompany(${company.id})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
+                    </td>
+                `;
+                companiesList.appendChild(row);
+            });
+        }
+
+        function renderUsers() {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '';
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${user.nombre}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${user.rol}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="editUser(${user.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
+                        <button onclick="deleteUser(${user.id})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
+                    </td>
+                `;
+                usersList.appendChild(row);
+            });
+        }
+
+        function renderRoles() {
+            const rolesList = document.getElementById('roles-list');
+            rolesList.innerHTML = '';
+            roles.forEach((role, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${role}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="editRole(${index})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
+                        <button onclick="deleteRole(${index})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
+                    </td>
+                `;
+                rolesList.appendChild(row);
+            });
+        }
+
+        function renderPermissions() {
+            const permissionsList = document.getElementById('permissions-list');
+            permissionsList.innerHTML = '';
+            permissions.forEach(permission => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${permission.nombre}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${permission.descripcion}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${permission.roles.join(', ')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="editPermission(${permission.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
+                        <button onclick="deletePermission(${permission.id})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
+                    </td>
+                `;
+                permissionsList.appendChild(row);
+            });
+        }
+
+        function renderSubscriptionPlans() {
+            const plansContainer = document.getElementById('subscription-plans');
+            plansContainer.innerHTML = '';
+            subscriptionPlans.forEach((plan, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-6 rounded-lg shadow-md';
+                card.innerHTML = `
+                    <h4 class="text-xl font-semibold mb-2">${plan.name}</h4>
+                    <p class="text-2xl font-bold mb-4">${plan.price}</p>
+                    <ul class="space-y-2">
+                        ${plan.features.map(feature => `<li>${feature}</li>`).join('')}
+                    </ul>
+                    <div class="mt-4">
+                        <button onclick="editPlan(${index})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
+                        <button onclick="deletePlan(${index})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
+                    </div>
+                `;
+                plansContainer.appendChild(card);
+            });
+        }
+
+        function renderInvoices() {
+            const invoicesList = document.getElementById('invoices-list');
+            invoicesList.innerHTML = '';
+            invoices.forEach(invoice => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${invoice.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${invoice.empresa}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${invoice.fecha}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">$${invoice.monto.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            invoice.estado === 'pagada' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }">${invoice.estado}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="viewInvoice('${invoice.id}')" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Ver</button>
+                        <button onclick="deleteInvoice('${invoice.id}')" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
+                    </td>
+                `;
+                invoicesList.appendChild(row);
+            });
+        }
+
+        function toggleCompanyStatus(id) {
+            const company = companies.find(c => c.id === id);
+            if (company) {
+                company.estado = company.estado === 'activo' ? 'inactivo' : 'activo';
+                renderCompanies();
+                showToast(`Estado de la empresa actualizado a ${company.estado}`);
+            }
+        }
+
+        function deleteCompany(id) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "No podrás revertir esta acción",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    companies = companies.filter(c => c.id !== id);
+                    renderCompanies();
+                    Swal.fire(
+                        'Eliminada',
+                        'La empresa ha sido eliminada.',
+                        'success'
+                    )
+                }
+            })
+        }
+
+        function showToast(message) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                icon: 'success',
+                title: message
+            });
+        }
+
+        // Modal functionality
+        const modal = document.getElementById('company-modal');
+        const createCompanyBtn = document.getElementById('create-company-btn');
+        const saveCompanyBtn = document.getElementById('save-company');
+        const cancelCompanyBtn = document.getElementById('cancel-company');
+        const companyNameInput = document.getElementById('company-name');
+        const companyRncInput = document.getElementById('company-rnc');
+        const companyAddressInput = document.getElementById('company-address');
+        const companyTypeInput = document.getElementById('company-type');
+        const companyRepresentativeInput = document.getElementById('company-representative');
+
+        let editingCompanyId = null;
+
+        createCompanyBtn.onclick = () => {
+            editingCompanyId = null;
+            companyNameInput.value = '';
+            companyRncInput.value = '';
+            companyAddressInput.value = '';
+            companyTypeInput.value = '';
+            companyRepresentativeInput.value = '';
+            document.getElementById('modal-title').textContent = 'Crear Nueva Empresa';
+            modal.classList.remove('hidden');
+        };
+
+        function editCompany(id) {
+            const company = companies.find(c => c.id === id);
+            if (company) {
+                editingCompanyId = id;
+                companyNameInput.value = company.nombre;
+                companyRncInput.value = company.rnc;
+                companyAddressInput.value = company.direccion;
+                companyTypeInput.value = company.tipo;
+                companyRepresentativeInput.value = company.representante;
+                document.getElementById('modal-title').textContent = 'Editar Empresa';
+                modal.classList.remove('hidden');
+            }
+        }
+
+        cancelCompanyBtn.onclick = () => {
+            modal.classList.add('hidden');
+        };
+
+        saveCompanyBtn.onclick = () => {
+            const companyData = {
+                nombre: companyNameInput.value,
+                rnc: companyRncInput.value,
+                direccion: companyAddressInput.value,
+                tipo: companyTypeInput.value,
+                representante: companyRepresentativeInput.value,
+                estado: 'activo'
+            };
+
+            if (editingCompanyId) {
+                // Update existing company
+                const index = companies.findIndex(c => c.id === editingCompanyId);
+                if (index !== -1) {
+                    companies[index] = { ...companies[index], ...companyData };
+                    showToast('Empresa actualizada exitosamente');
+                }
+            } else {
+                // Create new company
+                const newCompany = {
+                    id: companies.length + 1,
+                    ...companyData
+                };
+                companies.push(newCompany);
+                showToast('Empresa creada exitosamente');
+            }
+
+            renderCompanies();
+            modal.classList.add('hidden');
+        };
+
+        function showCompanyDetails(id) {
+            const company = companies.find(c => c.id === id);
+            if (company) {
+                const detailsContainer = document.getElementById('company-details');
+                detailsContainer.innerHTML = `
+                    <p><strong>Nombre:</strong> ${company.nombre}</p>
+                    <p><strong>RNC:</strong> ${company.rnc}</p>
+                    <p><strong>Dirección:</strong> ${company.direccion}</p>
+                    <p><strong>Tipo:</strong> ${company.tipo}</p>
+                    <p><strong>Representante Legal:</strong> ${company.representante}</p>
+                    <p><strong>Estado:</strong> ${company.estado}</p>
+                `;
+                document.getElementById('company-details-modal').classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('close-details').onclick = () => {
+            document.getElementById('company-details-modal').classList.add('hidden');
+        };
+
+        // Search and filter functionality
+        function filterCompanies() {
+            const nameFilter = document.getElementById('company-name-search').value.toLowerCase();
+            const rncFilter = document.getElementById('company-rnc-search').value.toLowerCase();
+            const statusFilter = document.getElementById('company-status-filter').value.toLowerCase();
+
+            const filteredCompanies = companies.filter(company => 
+                company.nombre.toLowerCase().includes(nameFilter) &&
+                company.rnc.toLowerCase().includes(rncFilter) &&
+                (statusFilter === '' || company.estado.toLowerCase() === statusFilter)
+            );
+
+            renderCompanies(filteredCompanies);
+        }
+
+        document.getElementById('company-name-search').addEventListener('input', filterCompanies);
+        document.getElementById('company-rnc-search').addEventListener('input', filterCompanies);
+        document.getElementById('company-status-filter').addEventListener('change', filterCompanies);
+
+        // User management functions
+        function editUser(id) {
+            showToast('Función de editar usuario no implementada');
+        }
+
+        function deleteUser(id) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "No podrás revertir esta acción",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    users = users.filter(u => u.id !== id);
+                    renderUsers();
+                    Swal.fire(
+                        'Eliminado',
+                        'El usuario ha sido eliminado.',
+                        'success'
+                    )
+                }
+            })
+        }
+
+        // Role management functions
+        function editRole(index) {
+            showToast('Función de editar rol no implementada');
+        }
+
+        function deleteRole(index) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "No podrás revertir esta acción",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    roles.splice(index, 1);
+                    renderRoles();
+                    Swal.fire(
+                        'Eliminado',
+                        'El rol ha sido eliminado.',
+                        'success'
+                    )
+                }
+            })
+        }
+
+        // Permission management functions
+        function editPermission(id) {
+            showToast('Función de editar permiso no implementada');
+        }
+
+        function deletePermission(id) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "No podrás revertir esta acción",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    permissions = permissions.filter(p => p.id !== id);
+                    renderPermissions();
+                    Swal.fire(
+                        'Eliminado',
+                        'El permiso ha sido eliminado.',
+                        'success'
+                    )
+                }
+            })
+        }
+
+        // Subscription plan management functions
+        function editPlan(index) {
+            showToast('Función de editar plan no implementada');
+        }
+
+        function deletePlan(index) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "No podrás revertir esta acción",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    subscriptionPlans.splice(index, 1);
+                    renderSubscriptionPlans();
+                    Swal.fire(
+                        'Eliminado',
+                        'El plan ha sido eliminado.',
+                        'success'
+                    )
+                }
+            })
+        }
+
+        // Invoice management functions
+        function viewInvoice(id) {
+            showToast('Función de ver factura no implementada');
+        }
+
+        function deleteInvoice(id) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "No podrás revertir esta acción",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    invoices = invoices.filter(i => i.id !== id);
+                    renderInvoices();
+                    Swal.fire(
+                        'Eliminada',
+                        'La factura ha sido eliminada.',
+                        'success'
+                    )
+                }
+            })
+        }
+
+        // Security settings
+        document.getElementById('save-security-settings').addEventListener('click', function() {
+            showToast('Configuración de seguridad guardada');
+        });
+
+        // Reports
+        document.getElementById('generate-report').addEventListener('click', function() {
+            const reportType = document.getElementById('report-type').value;
+            showToast(`Generando reporte de ${reportType}`);
+        });
+
+        // Initial render
+        renderCompanies();
+        renderUsers();
+        renderRoles();
+        renderPermissions();
+        renderSubscriptionPlans();
+        renderInvoices();
+
+        // Event listeners for create buttons
+        document.getElementById('create-user-btn').addEventListener('click', function() {
+            showToast('Función de crear usuario no implementada');
+        });
+
+        document.getElementById('create-role-btn').addEventListener('click', function() {
+            showToast('Función de crear rol no implementada');
+        });
+
+        document.getElementById('create-permission-btn').addEventListener('click', function() {
+            showToast('Función de crear permiso no implementada');
+        });
+
+        document.getElementById('create-plan-btn').addEventListener('click', function() {
+            showToast('Función de crear plan no implementada');
+        });
+
+        document.getElementById('create-invoice-btn').addEventListener('click', function() {
+            showToast('Función de crear factura no implementada');
+        });
+    </script>
+</body>
+</html>

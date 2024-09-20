@@ -7,7 +7,6 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
-# Función para notificar al asistente (simulada)
 def notificar_asistente(mensaje):
     print(f"Notificación al asistente: {mensaje}")
     # Aquí se implementaría la lógica real para notificar al asistente
