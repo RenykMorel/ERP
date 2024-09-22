@@ -338,11 +338,6 @@
     </div>
 
     <script>
-        // Sample data for companies
-        let companies = [
-            { id: 1, nombre: 'Empresa A', rnc: '123456789', direccion: 'Calle 1, Ciudad', tipo: 'SA', representante: 'Juan Pérez', estado: 'activo' },
-            { id: 2, nombre: 'Empresa B', rnc: '987654321', direccion: 'Calle 2, Ciudad', tipo: 'SRL', representante: 'María Gómez', estado: 'inactivo' },
-        ];
 
         // Sample data for users
         let users = [
@@ -409,24 +404,35 @@
             document.getElementById('section-title').textContent = sections.find(s => s.id === sectionId).name;
         }
 
-        function renderCompanies(filteredCompanies = companies) {
+        function renderCompanies(filteredCompanies = null) {
             const companiesList = document.getElementById('companies-list');
-            companiesList.innerHTML = '';
-            filteredCompanies.forEach(company => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">${company.nombre}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${company.rnc}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${company.estado}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <button onclick="showCompanyDetails(${company.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Ver</button>
-                        <button onclick="editCompany(${company.id})" class="action-button px-2 py-1 text-sm text-green-600 hover:text-green-900 bg-green-100 rounded mr-1">Editar</button>
-                        <button onclick="toggleCompanyStatus(${company.id})" class="action-button px-2 py-1 text-sm ${company.estado === 'activo' ? 'text-red-600 hover:text-red-900 bg-red-100' : 'text-green-600 hover:text-green-900 bg-green-100'} rounded mr-1">${company.estado === 'activo' ? 'Desactivar' : 'Activar'}</button>
-                        <button onclick="deleteCompany(${company.id})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
-                    </td>
-                `;
-                companiesList.appendChild(row);
-            });
+            companiesList.innerHTML = '<tr><td colspan="4" class="text-center py-4">Cargando...</td></tr>';
+        
+            fetch('/admin/companies')
+                .then(response => response.json())
+                .then(data => {
+                    companiesList.innerHTML = '';
+                    const companiesToRender = filteredCompanies || data.companies;
+                    companiesToRender.forEach(company => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">${company.nombre}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${company.rnc}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${company.estado}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button onclick="showCompanyDetails(${company.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Ver</button>
+                                <button onclick="editCompany(${company.id})" class="action-button px-2 py-1 text-sm text-green-600 hover:text-green-900 bg-green-100 rounded mr-1">Editar</button>
+                                <button onclick="toggleCompanyStatus(${company.id})" class="action-button px-2 py-1 text-sm ${company.estado === 'activo' ? 'text-red-600 hover:text-red-900 bg-red-100' : 'text-green-600 hover:text-green-900 bg-green-100'} rounded mr-1">${company.estado === 'activo' ? 'Desactivar' : 'Activar'}</button>
+                                <button onclick="deleteCompany(${company.id})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
+                            </td>
+                        `;
+                        companiesList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    companiesList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-600">Error al cargar las empresas</td></tr>';
+                });
         }
 
         function renderUsers() {
@@ -527,12 +533,20 @@
         }
 
         function toggleCompanyStatus(id) {
-            const company = companies.find(c => c.id === id);
-            if (company) {
-                company.estado = company.estado === 'activo' ? 'inactivo' : 'activo';
-                renderCompanies();
-                showToast(`Estado de la empresa actualizado a ${company.estado}`);
-            }
+            fetch(`/admin/toggle_company_status/${id}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showToast(data.error, 'error');
+                    } else {
+                        showToast(`Estado de la empresa actualizado a ${data.estado}`);
+                        renderCompanies();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error al cambiar el estado de la empresa', 'error');
+                });
         }
 
         function deleteCompany(id) {
@@ -547,13 +561,20 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    companies = companies.filter(c => c.id !== id);
-                    renderCompanies();
-                    Swal.fire(
-                        'Eliminada',
-                        'La empresa ha sido eliminada.',
-                        'success'
-                    )
+                    fetch(`/admin/companies/${id}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                showToast(data.error, 'error');
+                            } else {
+                                showToast('Empresa eliminada exitosamente');
+                                renderCompanies();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showToast('Error al eliminar la empresa', 'error');
+                        });
                 }
             })
         }
@@ -582,7 +603,7 @@
         const companyRepresentativeInput = document.getElementById('company-representative');
 
         let editingCompanyId = null;
-
+        
         createCompanyBtn.onclick = () => {
             editingCompanyId = null;
             companyNameInput.value = '';
@@ -593,26 +614,7 @@
             document.getElementById('modal-title').textContent = 'Crear Nueva Empresa';
             companyModal.classList.remove('hidden');
         };
-
-        function editCompany(id) {
-            const company = companies.find(c => c.id === id);
-            if (company) {
-                editingCompanyId = id;
-                companyNameInput.value = company.nombre;
-                companyRncInput.value = company.rnc;
-                companyAddressInput.value = company.direccion;
-                companyTypeInput.value = company.tipo;
-                companyRepresentativeInput.value = company.representante;
-                document.getElementById('modal-title').textContent = 'Editar Empresa';
-                companyModal.classList.remove('hidden');
-            }
-        }
-
-        cancelCompanyBtn.onclick = () => {
-            companyModal.classList.add('hidden');
-        };
-
-        saveCompanyBtn.onclick = () => {
+        function createCompany() {
             const companyData = {
                 nombre: companyNameInput.value,
                 rnc: companyRncInput.value,
@@ -621,26 +623,89 @@
                 representante: companyRepresentativeInput.value,
                 estado: 'activo'
             };
+        
+            fetch('/admin/companies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(companyData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showToast(data.error, 'error');
+                } else {
+                    showToast('Empresa creada exitosamente');
+                    companyModal.classList.add('hidden');
+                    renderCompanies();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error al crear la empresa', 'error');
+            });
+        }
 
+        function editCompany(id) {
+            fetch(`/admin/companies/${id}`)
+                .then(response => response.json())
+                .then(company => {
+                    editingCompanyId = id;
+                    companyNameInput.value = company.nombre;
+                    companyRncInput.value = company.rnc;
+                    companyAddressInput.value = company.direccion;
+                    companyTypeInput.value = company.tipo;
+                    companyRepresentativeInput.value = company.representante;
+                    document.getElementById('modal-title').textContent = 'Editar Empresa';
+                    companyModal.classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error al cargar los datos de la empresa', 'error');
+                });
+        }
+
+        cancelCompanyBtn.onclick = () => {
+            companyModal.classList.add('hidden');
+        };
+
+        saveCompanyBtn.onclick = () => {
             if (editingCompanyId) {
                 // Update existing company
-                const index = companies.findIndex(c => c.id === editingCompanyId);
-                if (index !== -1) {
-                    companies[index] = { ...companies[index], ...companyData };
-                    showToast('Empresa actualizada exitosamente');
-                }
+                const companyData = {
+                    nombre: companyNameInput.value,
+                    rnc: companyRncInput.value,
+                    direccion: companyAddressInput.value,
+                    tipo: companyTypeInput.value,
+                    representante: companyRepresentativeInput.value,
+                };
+        
+                fetch(`/admin/companies/${editingCompanyId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(companyData),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showToast(data.error, 'error');
+                    } else {
+                        showToast('Empresa actualizada exitosamente');
+                        companyModal.classList.add('hidden');
+                        renderCompanies();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error al actualizar la empresa', 'error');
+                });
             } else {
                 // Create new company
-                const newCompany = {
-                    id: companies.length + 1,
-                    ...companyData
-                };
-                companies.push(newCompany);
-                showToast('Empresa creada exitosamente');
+                createCompany();
             }
-
-            renderCompanies();
-            companyModal.classList.add('hidden');
         };
 
         function showCompanyDetails(id) {

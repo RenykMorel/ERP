@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from models import db, Usuario, Empresa, usuario_empresa, Rol, Permiso
 from werkzeug.security import generate_password_hash
@@ -32,26 +32,42 @@ def get_companies():
 @login_required
 def create_company():
     if not current_user.es_admin:
+        current_app.logger.warning(f"Usuario no autorizado intentó crear una empresa: {current_user.nombre_usuario}")
         return jsonify({"error": "Acceso no autorizado"}), 403
+    
     data = request.json or request.form
+    current_app.logger.info(f"Datos recibidos para crear empresa: {data}")
+
     try:
-        nueva_empresa = Empresa(
+        nueva_empresa = Empresa.crear_empresa(
             nombre=data["nombre"],
             rnc=data["rnc"],
-            direccion=data["direccion"],
-            tipo=data["tipo"],
-            representante=data["representante"],
-            estado=data.get("estado", "activo")
+            direccion=data["direccion"]
         )
-        db.session.add(nueva_empresa)
+        
+        # Actualizar campos adicionales
+        nueva_empresa.tipo = data["tipo"]
+        nueva_empresa.representante = data["representante"]
+        nueva_empresa.estado = data.get("estado", "activo")
+        
         db.session.commit()
+        
+        current_app.logger.info(f"Nueva empresa creada exitosamente: {nueva_empresa.to_dict()}")
         return jsonify({"message": "Empresa creada exitosamente", "empresa": nueva_empresa.to_dict()}), 201
-    except IntegrityError:
+    
+    except ValueError as e:
+        current_app.logger.error(f"Error de validación al crear empresa: {str(e)}")
+        return jsonify({"error": str(e)}), 400
+    
+    except IntegrityError as e:
         db.session.rollback()
+        current_app.logger.error(f"Error de integridad al crear empresa: {str(e)}")
         return jsonify({"error": "Ya existe una empresa con ese nombre o RNC"}), 400
+    
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        current_app.logger.error(f"Error inesperado al crear empresa: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
 
 @admin.route("/companies/<int:empresa_id>", methods=["DELETE"])
 @login_required
@@ -62,9 +78,11 @@ def delete_company(empresa_id):
     try:
         db.session.delete(empresa)
         db.session.commit()
+        current_app.logger.info(f"Empresa eliminada: {empresa.nombre}")
         return jsonify({"message": "Empresa eliminada exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al eliminar empresa: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/toggle_company_status/<int:empresa_id>", methods=["POST"])
@@ -76,9 +94,11 @@ def toggle_company_status(empresa_id):
     try:
         empresa.estado = "inactivo" if empresa.estado == "activo" else "activo"
         db.session.commit()
+        current_app.logger.info(f"Estado de la empresa {empresa.nombre} cambiado a {empresa.estado}")
         return jsonify({"message": "Estado de la empresa actualizado", "estado": empresa.estado}), 200
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al cambiar estado de la empresa: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/manage_users")
@@ -120,14 +140,18 @@ def create_user():
         nuevo_usuario.set_password(data.get("password", "defaultpassword"))
         db.session.add(nuevo_usuario)
         db.session.commit()
+        current_app.logger.info(f"Nuevo usuario creado: {nuevo_usuario.to_dict()}")
         return jsonify({"message": "Usuario creado exitosamente", "usuario": nuevo_usuario.to_dict()}), 201
-    except IntegrityError:
+    except IntegrityError as e:
         db.session.rollback()
+        current_app.logger.error(f"Error de integridad al crear usuario: {str(e)}")
         return jsonify({"error": "Ya existe un usuario con ese nombre o email"}), 400
     except KeyError as e:
+        current_app.logger.error(f"Falta campo requerido al crear usuario: {str(e)}")
         return jsonify({"error": f"Falta el campo requerido: {str(e)}"}), 400
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error inesperado al crear usuario: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/users/<int:usuario_id>", methods=["PUT"])
@@ -145,12 +169,15 @@ def update_user(usuario_id):
         if "password" in data:
             usuario.set_password(data["password"])
         db.session.commit()
+        current_app.logger.info(f"Usuario actualizado: {usuario.to_dict()}")
         return jsonify({"message": "Usuario actualizado exitosamente", "usuario": usuario.to_dict()})
     except IntegrityError:
         db.session.rollback()
+        current_app.logger.error(f"Error de integridad al actualizar usuario: {usuario.nombre_usuario}")
         return jsonify({"error": "Ya existe un usuario con ese nombre o email"}), 400
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al actualizar usuario: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/users/<int:usuario_id>", methods=["DELETE"])
@@ -162,9 +189,11 @@ def delete_user(usuario_id):
     try:
         db.session.delete(usuario)
         db.session.commit()
+        current_app.logger.info(f"Usuario eliminado: {usuario.nombre_usuario}")
         return jsonify({"message": "Usuario eliminado exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al eliminar usuario: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/toggle_user_status/<int:usuario_id>", methods=["POST"])
@@ -176,9 +205,11 @@ def toggle_user_status(usuario_id):
     try:
         usuario.estado = "inactivo" if usuario.estado == "activo" else "activo"
         db.session.commit()
+        current_app.logger.info(f"Estado del usuario {usuario.nombre_usuario} cambiado a {usuario.estado}")
         return jsonify({"message": "Estado del usuario actualizado", "estado": usuario.estado}), 200
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al cambiar estado del usuario: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/assign_user_to_company", methods=["POST"])
@@ -206,9 +237,11 @@ def assign_user_to_company():
             db.session.execute(new_assignment)
 
         db.session.commit()
+        current_app.logger.info(f"Usuario {usuario.nombre_usuario} asignado a la empresa {empresa.nombre}")
         return jsonify({"message": "Usuario asignado a la empresa exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al asignar usuario a empresa: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/remove_user_from_company", methods=["POST"])
@@ -225,9 +258,11 @@ def remove_user_from_company():
         if result == 0:
             return jsonify({"error": "No se encontró la asignación del usuario a la empresa"}), 404
         db.session.commit()
+        current_app.logger.info(f"Usuario {usuario_id} removido de la empresa {empresa_id}")
         return jsonify({"message": "Usuario removido de la empresa exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al remover usuario de empresa: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/companies/<int:empresa_id>", methods=["GET"])
@@ -253,12 +288,15 @@ def update_company(empresa_id):
         empresa.representante = data.get("representante", empresa.representante)
         empresa.estado = data.get("estado", empresa.estado)
         db.session.commit()
+        current_app.logger.info(f"Empresa actualizada: {empresa.to_dict()}")
         return jsonify({"message": "Empresa actualizada exitosamente", "empresa": empresa.to_dict()})
     except IntegrityError:
         db.session.rollback()
+        current_app.logger.error(f"Error de integridad al actualizar empresa: {empresa.nombre}")
         return jsonify({"error": "Ya existe una empresa con ese nombre o RNC"}), 400
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al actualizar empresa: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/users/<int:usuario_id>", methods=["GET"])
@@ -280,6 +318,7 @@ def get_user_companies(usuario_id):
                 .join(usuario_empresa)
                 .filter(usuario_empresa.c.usuario_id == usuario_id)
                 .all()]
+    current_app.logger.info(f"Obtenidas empresas para el usuario {usuario.nombre_usuario}")
     return jsonify(empresas)
 
 @admin.route("/roles", methods=["GET"])
@@ -288,6 +327,7 @@ def get_roles():
     if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
     roles = Rol.query.all()
+    current_app.logger.info("Obtenida lista de roles")
     return jsonify([rol.to_dict() for rol in roles])
 
 @admin.route("/roles", methods=["POST"])
@@ -300,12 +340,15 @@ def create_role():
         nuevo_rol = Rol(nombre=data["nombre"], descripcion=data.get("descripcion", ""))
         db.session.add(nuevo_rol)
         db.session.commit()
+        current_app.logger.info(f"Nuevo rol creado: {nuevo_rol.nombre}")
         return jsonify({"message": "Rol creado exitosamente", "rol": nuevo_rol.to_dict()}), 201
     except IntegrityError:
         db.session.rollback()
+        current_app.logger.error(f"Error de integridad al crear rol: {data['nombre']}")
         return jsonify({"error": "Ya existe un rol con ese nombre"}), 400
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al crear rol: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/roles/<int:rol_id>", methods=["PUT"])
@@ -319,12 +362,15 @@ def update_role(rol_id):
         rol.nombre = data.get("nombre", rol.nombre)
         rol.descripcion = data.get("descripcion", rol.descripcion)
         db.session.commit()
+        current_app.logger.info(f"Rol actualizado: {rol.nombre}")
         return jsonify({"message": "Rol actualizado exitosamente", "rol": rol.to_dict()})
     except IntegrityError:
         db.session.rollback()
+        current_app.logger.error(f"Error de integridad al actualizar rol: {rol.nombre}")
         return jsonify({"error": "Ya existe un rol con ese nombre"}), 400
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al actualizar rol: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/roles/<int:rol_id>", methods=["DELETE"])
@@ -336,9 +382,11 @@ def delete_role(rol_id):
     try:
         db.session.delete(rol)
         db.session.commit()
+        current_app.logger.info(f"Rol eliminado: {rol.nombre}")
         return jsonify({"message": "Rol eliminado exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al eliminar rol: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/permisos", methods=["GET"])
@@ -347,6 +395,7 @@ def get_permisos():
     if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
     permisos = Permiso.query.all()
+    current_app.logger.info("Obtenida lista de permisos")
     return jsonify([permiso.to_dict() for permiso in permisos])
 
 @admin.route("/permisos", methods=["POST"])
@@ -359,12 +408,15 @@ def create_permiso():
         nuevo_permiso = Permiso(nombre=data["nombre"], descripcion=data.get("descripcion", ""))
         db.session.add(nuevo_permiso)
         db.session.commit()
+        current_app.logger.info(f"Nuevo permiso creado: {nuevo_permiso.nombre}")
         return jsonify({"message": "Permiso creado exitosamente", "permiso": nuevo_permiso.to_dict()}), 201
     except IntegrityError:
         db.session.rollback()
+        current_app.logger.error(f"Error de integridad al crear permiso: {data['nombre']}")
         return jsonify({"error": "Ya existe un permiso con ese nombre"}), 400
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al crear permiso: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/permisos/<int:permiso_id>", methods=["PUT"])
@@ -378,12 +430,15 @@ def update_permiso(permiso_id):
         permiso.nombre = data.get("nombre", permiso.nombre)
         permiso.descripcion = data.get("descripcion", permiso.descripcion)
         db.session.commit()
+        current_app.logger.info(f"Permiso actualizado: {permiso.nombre}")
         return jsonify({"message": "Permiso actualizado exitosamente", "permiso": permiso.to_dict()})
     except IntegrityError:
         db.session.rollback()
+        current_app.logger.error(f"Error de integridad al actualizar permiso: {permiso.nombre}")
         return jsonify({"error": "Ya existe un permiso con ese nombre"}), 400
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al actualizar permiso: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/permisos/<int:permiso_id>", methods=["DELETE"])
@@ -395,9 +450,11 @@ def delete_permiso(permiso_id):
     try:
         db.session.delete(permiso)
         db.session.commit()
+        current_app.logger.info(f"Permiso eliminado: {permiso.nombre}")
         return jsonify({"message": "Permiso eliminado exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al eliminar permiso: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/assign_permiso_to_rol", methods=["POST"])
@@ -416,11 +473,13 @@ def assign_permiso_to_rol():
         if permiso not in rol.permisos:
             rol.permisos.append(permiso)
             db.session.commit()
+            current_app.logger.info(f"Permiso {permiso.nombre} asignado al rol {rol.nombre}")
             return jsonify({"message": "Permiso asignado al rol exitosamente"}), 200
         else:
             return jsonify({"message": "El permiso ya está asignado a este rol"}), 200
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al asignar permiso a rol: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @admin.route("/remove_permiso_from_rol", methods=["POST"])
@@ -439,9 +498,11 @@ def remove_permiso_from_rol():
         if permiso in rol.permisos:
             rol.permisos.remove(permiso)
             db.session.commit()
+            current_app.logger.info(f"Permiso {permiso.nombre} removido del rol {rol.nombre}")
             return jsonify({"message": "Permiso removido del rol exitosamente"}), 200
         else:
             return jsonify({"message": "El permiso no estaba asignado a este rol"}), 200
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al remover permiso de rol: {str(e)}")
         return jsonify({"error": str(e)}), 500

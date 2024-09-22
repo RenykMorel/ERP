@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, Table, ForeignKey, Boolean, JSON, event
+from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, Table, ForeignKey, Boolean, JSON, event, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
@@ -12,7 +12,7 @@ def notificar_asistente(mensaje):
     print(f"Notificación al asistente: {mensaje}")
     # Aquí se implementaría la lógica real para notificar al asistente
 
-# Tablas de asociación
+# Tablas de asociación existentes
 usuario_roles = Table(
     "usuario_roles",
     db.metadata,
@@ -42,6 +42,7 @@ usuario_empresa = Table(
     Column("rol_en_empresa", String(50)),
 )
 
+# Modelos existentes
 class Usuario(UserMixin, db.Model):
     __tablename__ = "usuarios"
     id = Column(Integer, primary_key=True)
@@ -109,6 +110,8 @@ class Empresa(db.Model):
     nombre = Column(String(100), nullable=False)
     rnc = Column(String(20), unique=True)
     direccion = Column(String(200))
+    tipo = Column(String(50))
+    representante = Column(String(100))
     estado = Column(String(20), default="activo")
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
     usuarios = relationship("Usuario", secondary=usuario_empresa, back_populates="empresas")
@@ -118,15 +121,14 @@ class Empresa(db.Model):
         nueva_empresa = cls(nombre=nombre, rnc=rnc, direccion=direccion)
         try:
             db.session.add(nueva_empresa)
-            db.session.commit()
-            notificar_asistente(f"Nueva empresa creada: {nombre}")
+            db.session.flush()  # Esto asigna un ID a nueva_empresa sin hacer commit
             return nueva_empresa
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            raise ValueError("Ya existe una empresa con ese RNC")
+            raise ValueError(f"Ya existe una empresa con ese RNC o nombre: {str(e)}")
         except Exception as e:
             db.session.rollback()
-            raise e
+            raise ValueError(f"Error al crear la empresa: {str(e)}")
 
     def to_dict(self):
         return {
@@ -134,6 +136,8 @@ class Empresa(db.Model):
             "nombre": self.nombre,
             "rnc": self.rnc,
             "direccion": self.direccion,
+            "tipo": self.tipo,
+            "representante": self.representante,
             "estado": self.estado,
             "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None
         }
@@ -318,6 +322,89 @@ class Cuenta(db.Model):
             "fecha_actualizacion": self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None,
         }
 
+# Nuevos modelos para el panel de administración
+class AdminPlanSuscripcion(db.Model):
+    __tablename__ = "admin_planes_suscripcion"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(100), nullable=False)
+    descripcion = Column(Text)
+    precio = Column(Float, nullable=False)
+    duracion_dias = Column(Integer, nullable=False)
+    caracteristicas = Column(JSON)
+    estado = Column(String(20), default="activo")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "descripcion": self.descripcion,
+            "precio": self.precio,
+            "duracion_dias": self.duracion_dias,
+            "caracteristicas": self.caracteristicas,
+            "estado": self.estado,
+        }
+
+class AdminFactura(db.Model):
+    __tablename__ = "admin_facturas"
+    id = Column(Integer, primary_key=True)
+    numero_factura = Column(String(50), unique=True, nullable=False)
+    empresa_id = Column(Integer, ForeignKey("empresas.id"))
+    monto = Column(Float, nullable=False)
+    fecha_emision = Column(DateTime, default=datetime.utcnow)
+    fecha_vencimiento = Column(DateTime)
+    estado = Column(String(20), default="pendiente")
+
+    empresa = relationship("Empresa", backref="facturas")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "numero_factura": self.numero_factura,
+            "empresa_id": self.empresa_id,
+            "monto": self.monto,
+            "fecha_emision": self.fecha_emision.isoformat() if self.fecha_emision else None,
+            "fecha_vencimiento": self.fecha_vencimiento.isoformat() if self.fecha_vencimiento else None,
+            "estado": self.estado,
+        }
+
+class AdminConfiguracionSeguridad(db.Model):
+    __tablename__ = "admin_configuracion_seguridad"
+    id = Column(Integer, primary_key=True)
+    clave = Column(String(50), unique=True, nullable=False)
+    valor = Column(Text)
+    descripcion = Column(Text)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "clave": self.clave,
+            "valor": self.valor,
+            "descripcion": self.descripcion,
+        }
+
+class AdminReporte(db.Model):
+    __tablename__ = "admin_reportes"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(100), nullable=False)
+    descripcion = Column(Text)
+    tipo = Column(String(50), nullable=False)
+    parametros = Column(JSON)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
+
+    usuario = relationship("Usuario", backref="reportes")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "descripcion": self.descripcion,
+            "tipo": self.tipo,
+            "parametros": self.parametros,
+            "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None,
+            "usuario_id": self.usuario_id,
+        }
+
 # Eventos para notificar al asistente sobre operaciones en la base de datos
 @event.listens_for(Banco, "after_insert")
 def notify_banco_insert(mapper, connection, target):
@@ -358,3 +445,32 @@ def notify_empresa_insert(mapper, connection, target):
 @event.listens_for(Empresa, "after_update")
 def notify_empresa_update(mapper, connection, target):
     notificar_asistente(f"Empresa actualizada: {target.nombre}")
+
+# Nuevos eventos para los modelos de administración
+@event.listens_for(AdminPlanSuscripcion, "after_insert")
+def notify_plan_suscripcion_insert(mapper, connection, target):
+    notificar_asistente(f"Nuevo plan de suscripción creado: {target.nombre}")
+
+@event.listens_for(AdminPlanSuscripcion, "after_update")
+def notify_plan_suscripcion_update(mapper, connection, target):
+    notificar_asistente(f"Plan de suscripción actualizado: {target.nombre}")
+
+@event.listens_for(AdminFactura, "after_insert")
+def notify_factura_insert(mapper, connection, target):
+    notificar_asistente(f"Nueva factura creada: {target.numero_factura}")
+
+@event.listens_for(AdminFactura, "after_update")
+def notify_factura_update(mapper, connection, target):
+    notificar_asistente(f"Factura actualizada: {target.numero_factura}")
+
+@event.listens_for(AdminConfiguracionSeguridad, "after_update")
+def notify_configuracion_seguridad_update(mapper, connection, target):
+    notificar_asistente(f"Configuración de seguridad actualizada: {target.clave}")
+
+@event.listens_for(AdminReporte, "after_insert")
+def notify_reporte_insert(mapper, connection, target):
+    notificar_asistente(f"Nuevo reporte creado: {target.nombre}")
+
+@event.listens_for(AdminReporte, "after_update")
+def notify_reporte_update(mapper, connection, target):
+    notificar_asistente(f"Reporte actualizado: {target.nombre}")

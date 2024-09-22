@@ -1,0 +1,183 @@
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, Table, ForeignKey, Boolean, JSON, Text
+from sqlalchemy.orm import relationship
+from datetime import datetime
+
+db = SQLAlchemy()
+
+# Tablas de asociación
+usuario_roles = Table(
+    "admin_usuario_roles",
+    db.metadata,
+    Column("usuario_id", Integer, ForeignKey("admin_usuarios.id")),
+    Column("rol_id", Integer, ForeignKey("admin_roles.id")),
+)
+
+rol_permisos = Table(
+    "admin_rol_permisos",
+    db.metadata,
+    Column("rol_id", Integer, ForeignKey("admin_roles.id")),
+    Column("permiso_id", Integer, ForeignKey("admin_permisos.id")),
+)
+
+class AdminUsuario(UserMixin, db.Model):
+    __tablename__ = "admin_usuarios"
+    id = Column(Integer, primary_key=True)
+    nombre_usuario = Column(String(64), index=True, unique=True, nullable=False)
+    email = Column(String(120), index=True, unique=True, nullable=False)
+    password_hash = Column(String(500), nullable=False)
+    es_superadmin = Column(Boolean, default=False)
+    estado = Column(String(20), default="activo")
+    fecha_registro = Column(DateTime, default=datetime.utcnow)
+
+    roles = relationship("AdminRol", secondary=usuario_roles, back_populates="usuarios")
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre_usuario": self.nombre_usuario,
+            "email": self.email,
+            "es_superadmin": self.es_superadmin,
+            "estado": self.estado,
+            "fecha_registro": self.fecha_registro.isoformat() if self.fecha_registro else None,
+        }
+
+class AdminEmpresa(db.Model):
+    __tablename__ = "admin_empresas"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(100), nullable=False)
+    rnc = Column(String(20), unique=True)
+    direccion = Column(String(200))
+    estado = Column(String(20), default="activo")
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "rnc": self.rnc,
+            "direccion": self.direccion,
+            "estado": self.estado,
+            "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None
+        }
+
+class AdminRol(db.Model):
+    __tablename__ = "admin_roles"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(50), unique=True, nullable=False)
+    descripcion = Column(Text)
+    usuarios = relationship("AdminUsuario", secondary=usuario_roles, back_populates="roles")
+    permisos = relationship("AdminPermiso", secondary=rol_permisos, back_populates="roles")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "descripcion": self.descripcion,
+        }
+
+class AdminPermiso(db.Model):
+    __tablename__ = "admin_permisos"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(50), unique=True, nullable=False)
+    descripcion = Column(Text)
+    roles = relationship("AdminRol", secondary=rol_permisos, back_populates="permisos")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "descripcion": self.descripcion,
+        }
+
+class AdminPlanSuscripcion(db.Model):
+    __tablename__ = "admin_planes_suscripcion"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(100), nullable=False)
+    descripcion = Column(Text)
+    precio = Column(Float, nullable=False)
+    duracion_dias = Column(Integer, nullable=False)
+    caracteristicas = Column(JSON)
+    estado = Column(String(20), default="activo")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "descripcion": self.descripcion,
+            "precio": self.precio,
+            "duracion_dias": self.duracion_dias,
+            "caracteristicas": self.caracteristicas,
+            "estado": self.estado,
+        }
+
+class AdminFactura(db.Model):
+    __tablename__ = "admin_facturas"
+    id = Column(Integer, primary_key=True)
+    numero_factura = Column(String(50), unique=True, nullable=False)
+    empresa_id = Column(Integer, ForeignKey("admin_empresas.id"))
+    monto = Column(Float, nullable=False)
+    fecha_emision = Column(DateTime, default=datetime.utcnow)
+    fecha_vencimiento = Column(DateTime)
+    estado = Column(String(20), default="pendiente")
+
+    empresa = relationship("AdminEmpresa", backref="facturas")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "numero_factura": self.numero_factura,
+            "empresa_id": self.empresa_id,
+            "monto": self.monto,
+            "fecha_emision": self.fecha_emision.isoformat() if self.fecha_emision else None,
+            "fecha_vencimiento": self.fecha_vencimiento.isoformat() if self.fecha_vencimiento else None,
+            "estado": self.estado,
+        }
+
+class AdminConfiguracionSeguridad(db.Model):
+    __tablename__ = "admin_configuracion_seguridad"
+    id = Column(Integer, primary_key=True)
+    clave = Column(String(50), unique=True, nullable=False)
+    valor = Column(Text)
+    descripcion = Column(Text)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "clave": self.clave,
+            "valor": self.valor,
+            "descripcion": self.descripcion,
+        }
+
+class AdminReporte(db.Model):
+    __tablename__ = "admin_reportes"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(100), nullable=False)
+    descripcion = Column(Text)
+    tipo = Column(String(50), nullable=False)
+    parametros = Column(JSON)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    usuario_id = Column(Integer, ForeignKey("admin_usuarios.id"))
+
+    usuario = relationship("AdminUsuario", backref="reportes")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "descripcion": self.descripcion,
+            "tipo": self.tipo,
+            "parametros": self.parametros,
+            "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None,
+            "usuario_id": self.usuario_id,
+        }
+
+# Puedes agregar más modelos específicos para el panel de administración según sea necesario
