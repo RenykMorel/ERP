@@ -5,6 +5,7 @@ from flask_limiter.util import get_remote_address
 from config import Config
 import requests
 import json
+from admin_routes import admin
 import os
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
@@ -507,7 +508,13 @@ def create_app():
     def crear_banco():
         datos = request.json
         try:
-            nuevo_banco = Banco(**datos)
+            nuevo_banco = Banco(
+                nombre=datos['nombre'],
+                telefono=datos['telefono'],
+                contacto=datos['contacto'],
+                telefono_contacto=datos['telefono_contacto'],
+                estatus=datos.get('estatus', 'activo')
+            )
             db.session.add(nuevo_banco)
             db.session.commit()
             logger.info(f"Nuevo banco creado: {nuevo_banco.nombre}")

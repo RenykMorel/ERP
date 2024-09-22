@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, Table, ForeignKey, Boolean, JSON, event
 from sqlalchemy.orm import relationship
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
 
 db = SQLAlchemy()
 
@@ -68,6 +69,28 @@ class Usuario(UserMixin, db.Model):
     def get_by_email(email):
         return Usuario.query.filter_by(email=email).first()
 
+    @classmethod
+    def crear_usuario(cls, nombre_usuario, email, password, es_admin=False, es_super_admin=False, rol="usuario"):
+        nuevo_usuario = cls(
+            nombre_usuario=nombre_usuario,
+            email=email,
+            es_admin=es_admin,
+            es_super_admin=es_super_admin,
+            rol=rol
+        )
+        nuevo_usuario.set_password(password)
+        try:
+            db.session.add(nuevo_usuario)
+            db.session.commit()
+            notificar_asistente(f"Nuevo usuario creado: {nombre_usuario}")
+            return nuevo_usuario
+        except IntegrityError:
+            db.session.rollback()
+            raise ValueError("El nombre de usuario o email ya existe")
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -84,11 +107,36 @@ class Empresa(db.Model):
     __tablename__ = "empresas"
     id = Column(Integer, primary_key=True)
     nombre = Column(String(100), nullable=False)
+    rnc = Column(String(20), unique=True)
+    direccion = Column(String(200))
     estado = Column(String(20), default="activo")
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
     usuarios = relationship("Usuario", secondary=usuario_empresa, back_populates="empresas")
 
+    @classmethod
+    def crear_empresa(cls, nombre, rnc, direccion):
+        nueva_empresa = cls(nombre=nombre, rnc=rnc, direccion=direccion)
+        try:
+            db.session.add(nueva_empresa)
+            db.session.commit()
+            notificar_asistente(f"Nueva empresa creada: {nombre}")
+            return nueva_empresa
+        except IntegrityError:
+            db.session.rollback()
+            raise ValueError("Ya existe una empresa con ese RNC")
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
     def to_dict(self):
-        return {"id": self.id, "nombre": self.nombre, "estado": self.estado}
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "rnc": self.rnc,
+            "direccion": self.direccion,
+            "estado": self.estado,
+            "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None
+        }
 
 class Rol(db.Model):
     __tablename__ = "roles"
@@ -294,3 +342,19 @@ def notify_cuenta_insert(mapper, connection, target):
 @event.listens_for(Cuenta, "after_update")
 def notify_cuenta_update(mapper, connection, target):
     notificar_asistente(f"Cuenta actualizada: {target.numero}")
+
+@event.listens_for(Usuario, "after_insert")
+def notify_usuario_insert(mapper, connection, target):
+    notificar_asistente(f"Nuevo usuario creado: {target.nombre_usuario}")
+
+@event.listens_for(Usuario, "after_update")
+def notify_usuario_update(mapper, connection, target):
+    notificar_asistente(f"Usuario actualizado: {target.nombre_usuario}")
+
+@event.listens_for(Empresa, "after_insert")
+def notify_empresa_insert(mapper, connection, target):
+    notificar_asistente(f"Nueva empresa creada: {target.nombre}")
+
+@event.listens_for(Empresa, "after_update")
+def notify_empresa_update(mapper, connection, target):
+    notificar_asistente(f"Empresa actualizada: {target.nombre}")
