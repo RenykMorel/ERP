@@ -2,9 +2,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, Table, ForeignKey, Boolean, JSON, event, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.mutable import MutableDict
 
 db = SQLAlchemy()
 
@@ -12,7 +13,7 @@ def notificar_asistente(mensaje):
     print(f"Notificación al asistente: {mensaje}")
     # Aquí se implementaría la lógica real para notificar al asistente
 
-# Tablas de asociación existentes
+# Tablas de asociación
 usuario_roles = Table(
     "usuario_roles",
     db.metadata,
@@ -42,7 +43,7 @@ usuario_empresa = Table(
     Column("rol_en_empresa", String(50)),
 )
 
-# Modelos existentes
+# Modelos
 class Usuario(UserMixin, db.Model):
     __tablename__ = "usuarios"
     id = Column(Integer, primary_key=True)
@@ -186,18 +187,47 @@ class Modulo(db.Model):
 
 class UsuarioModulo(db.Model):
     __tablename__ = "usuario_modulo"
-    usuario_id = Column(Integer, ForeignKey("usuarios.id"), primary_key=True)
-    modulo_id = Column(Integer, ForeignKey("modulos.id"), primary_key=True)
-    permisos = Column(JSON)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), primary_key=True)
+    modulo_id = Column(Integer, ForeignKey("modulos.id", ondelete="CASCADE"), primary_key=True)
+    permisos = Column(MutableDict.as_mutable(JSON), default={})
+    fecha_asignacion = Column(DateTime, default=datetime.utcnow)
+    
     usuario = relationship("Usuario", backref=db.backref("usuario_modulos", cascade="all, delete-orphan"))
     modulo = relationship("Modulo", backref=db.backref("usuario_modulos", cascade="all, delete-orphan"))
+
+    @validates('permisos')
+    def validate_permisos(self, key, permisos):
+        if not isinstance(permisos, dict):
+            raise ValueError("Los permisos deben ser un diccionario")
+        return permisos
+
+    def add_permiso(self, permiso, valor):
+        if self.permisos is None:
+            self.permisos = {}
+        self.permisos[permiso] = valor
+
+    def remove_permiso(self, permiso):
+        if self.permisos and permiso in self.permisos:
+            del self.permisos[permiso]
+
+    def has_permiso(self, permiso):
+        return self.permisos and permiso in self.permisos and self.permisos[permiso]
 
     def to_dict(self):
         return {
             "usuario_id": self.usuario_id,
             "modulo_id": self.modulo_id,
-            "permisos": self.permisos
+            "permisos": self.permisos,
+            "fecha_asignacion": self.fecha_asignacion.isoformat() if self.fecha_asignacion else None
         }
+
+    @classmethod
+    def get_permisos_usuario(cls, usuario_id):
+        return db.session.query(cls).filter_by(usuario_id=usuario_id).all()
+
+    @classmethod
+    def get_usuarios_modulo(cls, modulo_id):
+        return db.session.query(cls).filter_by(modulo_id=modulo_id).all()
 
 class Notificacion(db.Model):
     __tablename__ = "notificaciones"

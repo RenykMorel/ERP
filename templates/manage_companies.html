@@ -78,6 +78,7 @@
                         <table class="min-w-full bg-white">
                             <thead>
                                 <tr>
+                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">RNC</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
@@ -106,6 +107,7 @@
                         <table class="min-w-full bg-white">
                             <thead>
                                 <tr>
+                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rol</th>
@@ -128,6 +130,7 @@
                         <table class="min-w-full bg-white">
                             <thead>
                                 <tr>
+                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre del Rol</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
                                 </tr>
@@ -277,11 +280,11 @@
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Crear/Editar Empresa</h3>
                     <div class="mt-2 space-y-4">
-                        <input type="text" id="company-name" class="w-full px-3 py-2 border rounded" placeholder="Nombre de la empresa">
-                        <input type="text" id="company-rnc" class="w-full px-3 py-2 border rounded" placeholder="RNC">
-                        <input type="text" id="company-address" class="w-full px-3 py-2 border rounded" placeholder="Dirección">
-                        <input type="text" id="company-type" class="w-full px-3 py-2 border rounded" placeholder="Tipo de empresa">
-                        <input type="text" id="company-representative" class="w-full px-3 py-2 border rounded" placeholder="Representante legal">
+                        <input type="text" id="company-name" class="w-full px-3 py-2 border rounded" placeholder="Nombre de la empresa" required>
+                        <input type="text" id="company-rnc" class="w-full px-3 py-2 border rounded" placeholder="RNC" required>
+                        <input type="text" id="company-address" class="w-full px-3 py-2 border rounded" placeholder="Dirección" required>
+                        <input type="text" id="company-type" class="w-full px-3 py-2 border rounded" placeholder="Tipo de empresa" required>
+                        <input type="text" id="company-representative" class="w-full px-3 py-2 border rounded" placeholder="Representante legal" required>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
@@ -320,13 +323,14 @@
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900" id="user-modal-title">Crear/Editar Usuario</h3>
                     <div class="mt-2 space-y-4">
-                        <input type="text" id="user-name" class="w-full px-3 py-2 border rounded" placeholder="Nombre de usuario">
-                        <input type="email" id="user-email" class="w-full px-3 py-2 border rounded" placeholder="Email">
-                        <select id="user-role" class="w-full px-3 py-2 border rounded">
+                        <input type="text" id="user-name" class="w-full px-3 py-2 border rounded" placeholder="Nombre de usuario" required>
+                        <input type="email" id="user-email" class="w-full px-3 py-2 border rounded" placeholder="Email" required>
+                        <select id="user-role" class="w-full px-3 py-2 border rounded" required>
+                            <option value="">Seleccione un rol</option>
                             <option value="usuario">Usuario</option>
                             <option value="administrador">Administrador</option>
                         </select>
-                        <input type="password" id="user-password" class="w-full px-3 py-2 border rounded" placeholder="Contraseña">
+                        <input type="password" id="user-password" class="w-full px-3 py-2 border rounded" placeholder="Contraseña" required>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
@@ -416,6 +420,7 @@
                     companiesToRender.forEach(company => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">${company.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${company.nombre}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${company.rnc}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${company.estado}</td>
@@ -441,6 +446,7 @@
             users.forEach(user => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${user.nombre}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${user.rol}</td>
@@ -459,6 +465,7 @@
             roles.forEach((role, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${index + 1}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${role}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <button onclick="editRole(${index})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
@@ -475,6 +482,7 @@
             permissions.forEach(permission => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${permission.id}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${permission.nombre}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${permission.descripcion}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${permission.roles.join(', ')}</td>

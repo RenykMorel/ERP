@@ -479,36 +479,43 @@
         });
 
         // Empresas
-        function loadEmpresas(page = 1) {
-            fetch(`/admin/companies?page=${page}`)
-                .then(response => response.json())
-                .then(data => {
-                    const empresasList = document.getElementById('empresas-list');
-                    empresasList.innerHTML = data.companies.map(empresa => 
-                        `<div>
-                            ${empresa.nombre} - ${empresa.estado}
-                            <button onclick="editEmpresa(${empresa.id})" class="btn">Editar</button>
-                            <button onclick="deleteEmpresa(${empresa.id})" class="btn">Eliminar</button>
-                            <button onclick="toggleEmpresaStatus(${empresa.id})" class="btn">
-                                ${empresa.estado === 'activo' ? 'Desactivar' : 'Activar'}
-                            </button>
-                        </div>`
-                    ).join('');
-                    
-                    const paginationControls = `
-                        <div class="pagination">
-                            ${page > 1 ? `<button onclick="loadEmpresas(${page - 1})">Anterior</button>` : ''}
-                            <span>Página ${page} de ${data.total_pages}</span>
-                            ${page < data.total_pages ? `<button onclick="loadEmpresas(${page + 1})">Siguiente</button>` : ''}
-                        </div>
-                    `;
-                    empresasList.insertAdjacentHTML('afterend', paginationControls);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showFeedback('Error al cargar empresas', true);
-                });
-        }
+        let empresas = [];
+
+function loadEmpresas(page = 1) {
+    fetch(`/admin/companies?page=${page}`)
+        .then(response => response.json())
+        .then(data => {
+            empresas = data.companies.map((empresa, index) => ({
+                ...empresa,
+                id: (page - 1) * data.per_page + index + 1
+            }));
+
+            const empresasList = document.getElementById('empresas-list');
+            empresasList.innerHTML = empresas.map(empresa => 
+                `<div>
+                    ${empresa.id} - ${empresa.nombre} - ${empresa.rnc} - ${empresa.estado}
+                    <button onclick="editEmpresa(${empresa.id})" class="btn">Editar</button>
+                    <button onclick="deleteEmpresa(${empresa.id})" class="btn">Eliminar</button>
+                    <button onclick="toggleEmpresaStatus(${empresa.id})" class="btn">
+                        ${empresa.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                    </button>
+                </div>`
+            ).join('');
+            
+            const paginationControls = `
+                <div class="pagination">
+                    ${page > 1 ? `<button onclick="loadEmpresas(${page - 1})">Anterior</button>` : ''}
+                    <span>Página ${page} de ${data.total_pages}</span>
+                    ${page < data.total_pages ? `<button onclick="loadEmpresas(${page + 1})">Siguiente</button>` : ''}
+                </div>
+            `;
+            empresasList.insertAdjacentHTML('afterend', paginationControls);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showFeedback('Error al cargar empresas', true);
+        });
+}
 
         function showEmpresaForm() {
             showModal('empresa-modal');

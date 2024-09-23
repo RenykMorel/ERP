@@ -6,6 +6,7 @@ from config import Config
 import requests
 import json
 from admin_routes import admin
+from dotenv import load_dotenv
 import os
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
@@ -17,6 +18,11 @@ import threading
 import queue
 from flask_migrate import Migrate
 from models import db, Usuario, Banco, Transaccion, Notificacion, Empresa, Rol, Permiso, Modulo, UsuarioModulo, Cuenta
+from mailjet_rest import Client
+import secrets
+import string
+
+load_dotenv()
 
 # Configura logging
 import logging
@@ -27,6 +33,9 @@ logger = logging.getLogger(__name__)
 
 login_manager = LoginManager()
 limiter = Limiter(key_func=get_remote_address, default_limits=["2000 per day", "500 per hour"])
+
+# Configura tus claves API de Mailjet
+mailjet = Client(auth=(os.getenv('MJ_APIKEY_PUBLIC'), os.getenv('MJ_APIKEY_PRIVATE')), version='v3.1')
 
 def setup_logging(app):
     if not app.debug:
@@ -136,9 +145,57 @@ class AsistenteVirtual:
 
         return respuesta
 
+def generate_password():
+    """Genera una contraseña aleatoria segura."""
+    alphabet = string.ascii_letters + string.digits
+    password = ''.join(secrets.choice(alphabet) for i in range(12))
+    return password
+
+def send_welcome_email(user_email, user_name, login_link, username, password):
+    """Envía un correo de bienvenida al nuevo usuario."""
+    data = {
+        'Messages': [
+            {
+                "From": {
+                    "Email": "soporte@sendiu.net",
+                    "Name": "CalculAI"
+                },
+                "To": [
+                    {
+                        "Email": user_email,
+                        "Name": user_name
+                    }
+                ],
+                "Subject": "Bienvenido a CalculAI - Tu período de prueba de 14 días ha comenzado",
+                "HTMLPart": f"""
+                <h1>Hola {user_name},</h1>
+                <p>¡Bienvenido a CalculAI! Estamos emocionados de que comiences tu prueba de 14 días.</p>
+                <p>Para acceder al sistema, puedes iniciar sesión usando las siguientes credenciales:</p>
+                <ul>
+                  <li><strong>Nombre de usuario:</strong> {username}</li>
+                  <li><strong>Contraseña:</strong> {password}</li>
+                </ul>
+                <p>Puedes acceder al sistema a través de este enlace: <a href='{login_link}'>Iniciar sesión en CalculAI</a>.</p>
+                <p>Durante tu período de prueba de 14 días, tendrás acceso completo a todas las funcionalidades del sistema.</p>
+                <p>Si tienes alguna duda, no dudes en contactarnos.</p>
+                <p>¡Gracias por elegir CalculAI!</p>
+                """
+            }
+        ]
+    }
+    try:
+        result = mailjet.send.create(data=data)
+        return result.status_code, result.json()
+    except Exception as e:
+        logger.error(f"Error al enviar correo de bienvenida: {str(e)}")
+        return 500, {"error": str(e)}
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    
+    if not os.getenv('MJ_APIKEY_PUBLIC') or not os.getenv('MJ_APIKEY_PRIVATE'):
+        app.logger.error('Mailjet API keys are not set. Please check your .env file.')
     
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0001@localhost:5432/calculai_db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -176,7 +233,7 @@ def create_app():
         return render_template('index.html')
 
     @app.route('/login', methods=['GET', 'POST'])
-    @limiter.limit("5 per minute")
+    @limiter.limit("50 por minute")
     def login():
         if current_user.is_authenticated:
             return redirect(url_for('index'))
@@ -255,7 +312,7 @@ def create_app():
         return redirect(url_for('login'))
 
     @app.route('/registro', methods=['GET', 'POST'])
-    @limiter.limit("3 per minute")
+    @limiter.limit("30 per minute")
     def registro():
         if current_user.is_authenticated:
             return redirect(url_for('index'))
@@ -264,14 +321,10 @@ def create_app():
             data = request.form
             username = data.get('nombre_usuario')
             email = data.get('email')
-            password = data.get('password')
-            confirm_password = data.get('confirm_password')
+            password = generate_password()  # Genera una contraseña aleatoria
 
-            if not all([username, email, password, confirm_password]):
+            if not all([username, email]):
                 return jsonify({"success": False, "error": "Todos los campos son obligatorios"}), 400
-
-            if password != confirm_password:
-                return jsonify({"success": False, "error": "Las contraseñas no coinciden"}), 400
 
             if Usuario.query.filter_by(nombre_usuario=username).first():
                 return jsonify({"success": False, "error": "El nombre de usuario ya está en uso"}), 400
@@ -281,12 +334,21 @@ def create_app():
 
             try:
                 new_user = Usuario(nombre_usuario=username, email=email)
-                new_user.set_password(password)
+                new_user.set_password(password)  # Asegúrate de que esta línea esté presente
                 db.session.add(new_user)
                 db.session.commit()
-                login_user(new_user)
-                logger.info(f"Nuevo usuario registrado: {username}")
-                return jsonify({"success": True, "message": "Registro exitoso", "user_id": new_user.id}), 200
+
+                # Enviar correo de bienvenida
+                login_link = url_for('login', _external=True)
+                status_code, response = send_welcome_email(email, username, login_link, username, password)
+
+                if status_code == 200:
+                    logger.info(f"Nuevo usuario registrado y correo enviado: {username}")
+                    return jsonify({"success": True, "message": "Registro exitoso. Por favor, revisa tu correo electrónico para obtener tus credenciales de acceso.", "user_id": new_user.id}), 200
+                else:
+                    logger.error(f"Error al enviar correo de bienvenida: {response}")
+                    return jsonify({"success": True, "message": "Registro exitoso, pero hubo un problema al enviar el correo de bienvenida. Por favor, contacta al soporte.", "user_id": new_user.id}), 200
+
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error en el registro: {str(e)}")
