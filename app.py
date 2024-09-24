@@ -151,8 +151,100 @@ def generate_password():
     password = ''.join(secrets.choice(alphabet) for i in range(12))
     return password
 
-def send_welcome_email(user_email, user_name, login_link, username, password):
-    """Envía un correo de bienvenida al nuevo usuario."""
+from flask import render_template_string
+from mailjet_rest import Client
+import os
+
+mailjet = Client(auth=(os.environ.get('MJ_APIKEY_PUBLIC'), os.environ.get('MJ_APIKEY_PRIVATE')), version='v3.1')
+
+def send_welcome_email(email, nombre, apellido, login_link, nombre_usuario, password):
+    nombre_completo = f"{nombre} {apellido}"
+    
+    html_content = render_template_string("""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bienvenido a CalculAI</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .container {
+                background-color: #f8f9fa;
+                border-radius: 10px;
+                padding: 30px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            .logo {
+                font-size: 2rem;
+                font-weight: bold;
+                color: #007bff;
+            }
+            .ai-text {
+                color: #2b0ae6;
+                font-style: italic;
+            }
+            h1 {
+                color: #007bff;
+            }
+            .credentials {
+                background-color: #e9ecef;
+                border-radius: 5px;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            .btn {
+                display: inline-block;
+                background-color: #007bff;
+                color: #ffffff;
+                text-decoration: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                margin-top: 20px;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                font-size: 0.9rem;
+                color: #6c757d;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">Calcul<span class="ai-text">AI</span></div>
+            </div>
+            <h1>¡Bienvenido a CalculAI, {{ nombre_completo }}!</h1>
+            <p>Estamos emocionados de que comiences tu prueba de 14 días con nosotros.</p>
+            <p>Para acceder al sistema, utiliza las siguientes credenciales:</p>
+            <div class="credentials">
+                <p><strong>Nombre de usuario:</strong> {{ nombre_usuario }}</p>
+                <p><strong>Contraseña:</strong> {{ password }}</p>
+            </div>
+            <p>Durante tu período de prueba, tendrás acceso completo a todas las funcionalidades del sistema.</p>
+            <a href="{{ login_link }}" class="btn">Iniciar sesión en CalculAI</a>
+            <p>Si tienes alguna duda o necesitas ayuda, no dudes en contactarnos.</p>
+            <p>¡Gracias por elegir CalculAI!</p>
+            <div class="footer">
+                <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """, nombre_completo=nombre_completo, nombre_usuario=nombre_usuario, password=password, login_link=login_link)
+
     data = {
         'Messages': [
             {
@@ -162,27 +254,16 @@ def send_welcome_email(user_email, user_name, login_link, username, password):
                 },
                 "To": [
                     {
-                        "Email": user_email,
-                        "Name": user_name
+                        "Email": email,
+                        "Name": nombre_completo
                     }
                 ],
                 "Subject": "Bienvenido a CalculAI - Tu período de prueba de 14 días ha comenzado",
-                "HTMLPart": f"""
-                <h1>Hola {user_name},</h1>
-                <p>¡Bienvenido a CalculAI! Estamos emocionados de que comiences tu prueba de 14 días.</p>
-                <p>Para acceder al sistema, puedes iniciar sesión usando las siguientes credenciales:</p>
-                <ul>
-                  <li><strong>Nombre de usuario:</strong> {username}</li>
-                  <li><strong>Contraseña:</strong> {password}</li>
-                </ul>
-                <p>Puedes acceder al sistema a través de este enlace: <a href='{login_link}'>Iniciar sesión en CalculAI</a>.</p>
-                <p>Durante tu período de prueba de 14 días, tendrás acceso completo a todas las funcionalidades del sistema.</p>
-                <p>Si tienes alguna duda, no dudes en contactarnos.</p>
-                <p>¡Gracias por elegir CalculAI!</p>
-                """
+                "HTMLPart": html_content
             }
         ]
     }
+    
     try:
         result = mailjet.send.create(data=data)
         return result.status_code, result.json()
@@ -319,40 +400,97 @@ def create_app():
 
         if request.method == 'POST':
             data = request.form
-            username = data.get('nombre_usuario')
+            logger.info(f"Datos de registro recibidos: {data}")
+
+            # Lista de campos requeridos
+            required_fields = ['nombre', 'apellido', 'telefono', 'nombre_usuario', 'email', 
+                            'nombre_empresa', 'rnc_empresa', 'direccion_empresa', 'telefono_empresa']
+            
+            # Validar campos faltantes
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields:
+                logger.warning(f"Campos faltantes en el registro: {', '.join(missing_fields)}")
+                return jsonify({"success": False, "error": f"Faltan los siguientes campos: {', '.join(missing_fields)}"}), 400
+
+            nombre = data.get('nombre')
+            apellido = data.get('apellido')
+            telefono = data.get('telefono')
+            nombre_usuario = data.get('nombre_usuario')
             email = data.get('email')
             password = generate_password()  # Genera una contraseña aleatoria
 
-            if not all([username, email]):
-                return jsonify({"success": False, "error": "Todos los campos son obligatorios"}), 400
+            # Datos de la empresa
+            nombre_empresa = data.get('nombre_empresa')
+            rnc_empresa = data.get('rnc_empresa')
+            direccion_empresa = data.get('direccion_empresa')
+            telefono_empresa = data.get('telefono_empresa')
 
-            if Usuario.query.filter_by(nombre_usuario=username).first():
+            # Validar si el nombre de usuario o email ya existen
+            if Usuario.query.filter_by(nombre_usuario=nombre_usuario).first():
                 return jsonify({"success": False, "error": "El nombre de usuario ya está en uso"}), 400
 
             if Usuario.query.filter_by(email=email).first():
                 return jsonify({"success": False, "error": "El correo electrónico ya está registrado"}), 400
 
             try:
-                new_user = Usuario(nombre_usuario=username, email=email)
-                new_user.set_password(password)  # Asegúrate de que esta línea esté presente
+                # Crear nueva empresa
+                nueva_empresa = Empresa(
+                    nombre=nombre_empresa,
+                    rnc=rnc_empresa,
+                    direccion=direccion_empresa,
+                    telefono=telefono_empresa,
+                    estado="activo"
+                )
+                db.session.add(nueva_empresa)
+                db.session.flush()  # Para obtener el ID de la empresa
+
+                # Crear nuevo usuario
+                new_user = Usuario(
+                    nombre_usuario=nombre_usuario,
+                    email=email,
+                    nombre=nombre,
+                    apellido=apellido,
+                    telefono=telefono,
+                    empresa_id=nueva_empresa.id
+                )
+                new_user.set_password(password)
                 db.session.add(new_user)
                 db.session.commit()
 
                 # Enviar correo de bienvenida
                 login_link = url_for('login', _external=True)
-                status_code, response = send_welcome_email(email, username, login_link, username, password)
+                status_code, response = send_welcome_email(email, nombre, apellido, login_link, nombre_usuario, password)
 
                 if status_code == 200:
-                    logger.info(f"Nuevo usuario registrado y correo enviado: {username}")
-                    return jsonify({"success": True, "message": "Registro exitoso. Por favor, revisa tu correo electrónico para obtener tus credenciales de acceso.", "user_id": new_user.id}), 200
+                    logger.info(f"Nuevo usuario registrado y correo enviado: {nombre_usuario}")
+                    return jsonify({
+                        "success": True,
+                        "message": "Registro exitoso. Por favor, revisa tu correo electrónico para obtener tus credenciales de acceso.",
+                        "user_id": new_user.id
+                    }), 200
                 else:
                     logger.error(f"Error al enviar correo de bienvenida: {response}")
-                    return jsonify({"success": True, "message": "Registro exitoso, pero hubo un problema al enviar el correo de bienvenida. Por favor, contacta al soporte.", "user_id": new_user.id}), 200
+                    return jsonify({
+                        "success": True,
+                        "message": "Registro exitoso, pero hubo un problema al enviar el correo de bienvenida. Por favor, contacta al soporte.",
+                        "user_id": new_user.id
+                    }), 200
+
+            except IntegrityError as e:
+                db.session.rollback()
+                logger.error(f"Error de integridad en el registro: {str(e)}")
+                return jsonify({
+                    "success": False,
+                    "error": "Ya existe un usuario o empresa con esos datos"
+                }), 400
 
             except Exception as e:
                 db.session.rollback()
-                logger.error(f"Error en el registro: {str(e)}")
-                return jsonify({"success": False, "error": "Error en el registro"}), 500
+                logger.error(f"Error inesperado en el registro: {str(e)}")
+                return jsonify({
+                    "success": False,
+                    "error": f"Error en el registro: {str(e)}"
+                }), 500
 
         return render_template('registro.html')
 

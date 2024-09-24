@@ -42,7 +42,8 @@ def create_company():
         nueva_empresa = Empresa.crear_empresa(
             nombre=data["nombre"],
             rnc=data["rnc"],
-            direccion=data["direccion"]
+            direccion=data["direccion"],
+            telefono=data["telefono"]
         )
         
         # Actualizar campos adicionales
@@ -132,12 +133,29 @@ def create_user():
     data = request.json or request.form
     try:
         nuevo_usuario = Usuario(
-            nombre_usuario=data["nombre"],
+            nombre=data["nombre"],
+            apellido=data["apellido"],
+            telefono=data["telefono"],
+            nombre_usuario=data["nombre_usuario"],
             email=data["email"],
             rol=data.get("rol", "usuario"),
             estado="activo",
         )
         nuevo_usuario.set_password(data.get("password", "defaultpassword"))
+        
+        # Crear o asignar empresa
+        empresa = Empresa.query.filter_by(nombre=data["nombre_empresa"]).first()
+        if not empresa:
+            empresa = Empresa(
+                nombre=data["nombre_empresa"],
+                rnc=data["rnc_empresa"],
+                direccion=data["direccion_empresa"],
+                telefono=data["telefono_empresa"]
+            )
+            db.session.add(empresa)
+        
+        nuevo_usuario.empresa = empresa
+        
         db.session.add(nuevo_usuario)
         db.session.commit()
         current_app.logger.info(f"Nuevo usuario creado: {nuevo_usuario.to_dict()}")
@@ -162,12 +180,29 @@ def update_user(usuario_id):
     usuario = Usuario.query.get_or_404(usuario_id)
     data = request.json
     try:
+        usuario.nombre = data.get("nombre", usuario.nombre)
+        usuario.apellido = data.get("apellido", usuario.apellido)
+        usuario.telefono = data.get("telefono", usuario.telefono)
         usuario.nombre_usuario = data.get("nombre_usuario", usuario.nombre_usuario)
         usuario.email = data.get("email", usuario.email)
         usuario.estado = data.get("estado", usuario.estado)
         usuario.rol = data.get("rol", usuario.rol)
         if "password" in data:
             usuario.set_password(data["password"])
+        
+        # Actualizar información de la empresa
+        if "nombre_empresa" in data:
+            empresa = Empresa.query.filter_by(nombre=data["nombre_empresa"]).first()
+            if not empresa:
+                empresa = Empresa(
+                    nombre=data["nombre_empresa"],
+                    rnc=data.get("rnc_empresa"),
+                    direccion=data.get("direccion_empresa"),
+                    telefono=data.get("telefono_empresa")
+                )
+                db.session.add(empresa)
+            usuario.empresa = empresa
+        
         db.session.commit()
         current_app.logger.info(f"Usuario actualizado: {usuario.to_dict()}")
         return jsonify({"message": "Usuario actualizado exitosamente", "usuario": usuario.to_dict()})

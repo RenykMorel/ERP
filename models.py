@@ -44,82 +44,22 @@ usuario_empresa = Table(
 )
 
 # Modelos
-class Usuario(UserMixin, db.Model):
-    __tablename__ = "usuarios"
-    id = Column(Integer, primary_key=True)
-    nombre_usuario = Column(String(64), index=True, unique=True, nullable=False)
-    email = Column(String(120), index=True, unique=True, nullable=False)
-    password_hash = Column(String(500), nullable=False)
-    es_admin = Column(Boolean, default=False)
-    es_super_admin = Column(Boolean, default=False)
-    rol = Column(String(20), default="usuario")
-    estado = Column(String(20), default="activo")
-    fecha_registro = Column(DateTime, default=datetime.utcnow)
-
-    roles = relationship("Rol", secondary=usuario_roles, back_populates="usuarios")
-    modulos = relationship("Modulo", secondary=usuario_modulos, back_populates="usuarios")
-    empresas = relationship("Empresa", secondary=usuario_empresa, back_populates="usuarios")
-    notificaciones = relationship("Notificacion", back_populates="usuario")
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    @staticmethod
-    def get_by_email(email):
-        return Usuario.query.filter_by(email=email).first()
-
-    @classmethod
-    def crear_usuario(cls, nombre_usuario, email, password, es_admin=False, es_super_admin=False, rol="usuario"):
-        nuevo_usuario = cls(
-            nombre_usuario=nombre_usuario,
-            email=email,
-            es_admin=es_admin,
-            es_super_admin=es_super_admin,
-            rol=rol
-        )
-        nuevo_usuario.set_password(password)
-        try:
-            db.session.add(nuevo_usuario)
-            db.session.commit()
-            notificar_asistente(f"Nuevo usuario creado: {nombre_usuario}")
-            return nuevo_usuario
-        except IntegrityError:
-            db.session.rollback()
-            raise ValueError("El nombre de usuario o email ya existe")
-        except Exception as e:
-            db.session.rollback()
-            raise e
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "nombre_usuario": self.nombre_usuario,
-            "email": self.email,
-            "es_admin": self.es_admin,
-            "es_super_admin": self.es_super_admin,
-            "estado": self.estado,
-            "rol": self.rol,
-            "fecha_registro": self.fecha_registro.isoformat() if self.fecha_registro else None,
-        }
-
 class Empresa(db.Model):
     __tablename__ = "empresas"
     id = Column(Integer, primary_key=True)
     nombre = Column(String(100), nullable=False)
     rnc = Column(String(20), unique=True)
     direccion = Column(String(200))
+    telefono = Column(String(20))
     tipo = Column(String(50))
     representante = Column(String(100))
     estado = Column(String(20), default="activo")
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
-    usuarios = relationship("Usuario", secondary=usuario_empresa, back_populates="empresas")
+    usuarios = relationship("Usuario", back_populates="empresa")
 
     @classmethod
-    def crear_empresa(cls, nombre, rnc, direccion):
-        nueva_empresa = cls(nombre=nombre, rnc=rnc, direccion=direccion)
+    def crear_empresa(cls, nombre, rnc, direccion, telefono):
+        nueva_empresa = cls(nombre=nombre, rnc=rnc, direccion=direccion, telefono=telefono)
         try:
             db.session.add(nueva_empresa)
             db.session.flush()  # Esto asigna un ID a nueva_empresa sin hacer commit
@@ -137,10 +77,88 @@ class Empresa(db.Model):
             "nombre": self.nombre,
             "rnc": self.rnc,
             "direccion": self.direccion,
+            "telefono": self.telefono,
             "tipo": self.tipo,
             "representante": self.representante,
             "estado": self.estado,
             "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None
+        }
+
+class Usuario(UserMixin, db.Model):
+    __tablename__ = "usuarios"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(64), nullable=False)
+    apellido = Column(String(64), nullable=False)
+    telefono = Column(String(20))
+    nombre_usuario = Column(String(64), index=True, unique=True, nullable=False)
+    email = Column(String(120), index=True, unique=True, nullable=False)
+    password_hash = Column(String(500), nullable=False)
+    es_admin = Column(Boolean, default=False)
+    es_super_admin = Column(Boolean, default=False)
+    rol = Column(String(20), default="usuario")
+    estado = Column(String(20), default="activo")
+    fecha_registro = Column(DateTime, default=datetime.utcnow)
+    empresa_id = Column(Integer, ForeignKey('empresas.id'))
+
+    empresa = relationship("Empresa", back_populates="usuarios")
+    roles = relationship("Rol", secondary=usuario_roles, back_populates="usuarios")
+    modulos = relationship("Modulo", secondary=usuario_modulos, back_populates="usuarios")
+    notificaciones = relationship("Notificacion", back_populates="usuario")
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    @staticmethod
+    def get_by_email(email):
+        return Usuario.query.filter_by(email=email).first()
+
+    @classmethod
+    def crear_usuario(cls, nombre, apellido, telefono, nombre_usuario, email, password, nombre_empresa, rnc_empresa, direccion_empresa, telefono_empresa, es_admin=False, es_super_admin=False, rol="usuario"):
+        empresa = Empresa.query.filter_by(nombre=nombre_empresa).first()
+        if not empresa:
+            empresa = Empresa.crear_empresa(nombre_empresa, rnc_empresa, direccion_empresa, telefono_empresa)
+        
+        nuevo_usuario = cls(
+            nombre=nombre,
+            apellido=apellido,
+            telefono=telefono,
+            nombre_usuario=nombre_usuario,
+            email=email,
+            es_admin=es_admin,
+            es_super_admin=es_super_admin,
+            rol=rol,
+            empresa=empresa
+        )
+        nuevo_usuario.set_password(password)
+        try:
+            db.session.add(nuevo_usuario)
+            db.session.commit()
+            notificar_asistente(f"Nuevo usuario creado: {nombre_usuario}")
+            return nuevo_usuario
+        except IntegrityError:
+            db.session.rollback()
+            raise ValueError("El nombre de usuario o email ya existe")
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "apellido": self.apellido,
+            "telefono": self.telefono,
+            "nombre_usuario": self.nombre_usuario,
+            "email": self.email,
+            "es_admin": self.es_admin,
+            "es_super_admin": self.es_super_admin,
+            "estado": self.estado,
+            "rol": self.rol,
+            "fecha_registro": self.fecha_registro.isoformat() if self.fecha_registro else None,
+            "empresa": self.empresa.nombre if self.empresa else None
         }
 
 class Rol(db.Model):

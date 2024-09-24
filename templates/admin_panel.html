@@ -220,13 +220,20 @@
             <h3>Agregar/Editar Usuario</h3>
             <form id="user-form">
                 <input type="hidden" id="user-id">
+                <input type="text" id="user-nombre" placeholder="Nombre" required>
+                <input type="text" id="user-apellido" placeholder="Apellido" required>
+                <input type="tel" id="user-telefono" placeholder="Teléfono" required>
                 <input type="text" id="username" placeholder="Nombre de usuario" required>
                 <input type="email" id="email" placeholder="Correo electrónico" required>
                 <input type="password" id="password" placeholder="Contraseña">
                 <select id="role">
-                    <option value="user">Usuario</option>
+                    <option value="usuario">Usuario</option>
                     <option value="admin">Administrador</option>
                 </select>
+                <input type="text" id="user-empresa" placeholder="Nombre de la empresa" required>
+                <input type="text" id="user-empresa-rnc" placeholder="RNC de la empresa" required>
+                <input type="text" id="user-empresa-direccion" placeholder="Dirección de la empresa" required>
+                <input type="tel" id="user-empresa-telefono" placeholder="Teléfono de la empresa" required>
                 <button type="submit" class="btn">Guardar</button>
             </form>
         </div>
@@ -239,6 +246,11 @@
             <form id="empresa-form">
                 <input type="hidden" id="empresa-id">
                 <input type="text" id="empresa-nombre" placeholder="Nombre de la empresa" required>
+                <input type="text" id="empresa-rnc" placeholder="RNC" required>
+                <input type="text" id="empresa-direccion" placeholder="Dirección" required>
+                <input type="tel" id="empresa-telefono" placeholder="Teléfono" required>
+                <input type="text" id="empresa-tipo" placeholder="Tipo de empresa">
+                <input type="text" id="empresa-representante" placeholder="Representante">
                 <select id="empresa-estado">
                     <option value="activo">Activa</option>
                     <option value="inactivo">Inactiva</option>
@@ -408,9 +420,16 @@
                 .then(response => response.json())
                 .then(user => {
                     document.getElementById('user-id').value = user.id;
+                    document.getElementById('user-nombre').value = user.nombre;
+                    document.getElementById('user-apellido').value = user.apellido;
+                    document.getElementById('user-telefono').value = user.telefono;
                     document.getElementById('username').value = user.nombre_usuario;
                     document.getElementById('email').value = user.email;
                     document.getElementById('role').value = user.rol;
+                    document.getElementById('user-empresa').value = user.empresa ? user.empresa.nombre : '';
+                    document.getElementById('user-empresa-rnc').value = user.empresa ? user.empresa.rnc : '';
+                    document.getElementById('user-empresa-direccion').value = user.empresa ? user.empresa.direccion : '';
+                    document.getElementById('user-empresa-telefono').value = user.empresa ? user.empresa.telefono : '';
                     showUserForm();
                 })
                 .catch(error => {
@@ -450,15 +469,22 @@
         document.getElementById('user-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const userData = {
+                nombre: document.getElementById('user-nombre').value,
+                apellido: document.getElementById('user-apellido').value,
+                telefono: document.getElementById('user-telefono').value,
                 nombre_usuario: document.getElementById('username').value,
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value,
-                rol: document.getElementById('role').value
+                rol: document.getElementById('role').value,
+                nombre_empresa: document.getElementById('user-empresa').value,
+                rnc_empresa: document.getElementById('user-empresa-rnc').value,
+                direccion_empresa: document.getElementById('user-empresa-direccion').value,
+                telefono_empresa: document.getElementById('user-empresa-telefono').value
             };
             const userId = document.getElementById('user-id').value;
             const method = userId ? 'PUT' : 'POST';
             const url = userId ? `/admin/users/${userId}` : '/admin/users';
-
+        
             fetch(url, {
                 method: method,
                 headers: {
@@ -527,6 +553,11 @@ function loadEmpresas(page = 1) {
                 .then(empresa => {
                     document.getElementById('empresa-id').value = empresa.id;
                     document.getElementById('empresa-nombre').value = empresa.nombre;
+                    document.getElementById('empresa-rnc').value = empresa.rnc;
+                    document.getElementById('empresa-direccion').value = empresa.direccion;
+                    document.getElementById('empresa-telefono').value = empresa.telefono;
+                    document.getElementById('empresa-tipo').value = empresa.tipo;
+                    document.getElementById('empresa-representante').value = empresa.representante;
                     document.getElementById('empresa-estado').value = empresa.estado;
                     showEmpresaForm();
                 })
@@ -568,12 +599,17 @@ function loadEmpresas(page = 1) {
             e.preventDefault();
             const empresaData = {
                 nombre: document.getElementById('empresa-nombre').value,
+                rnc: document.getElementById('empresa-rnc').value,
+                direccion: document.getElementById('empresa-direccion').value,
+                telefono: document.getElementById('empresa-telefono').value,
+                tipo: document.getElementById('empresa-tipo').value,
+                representante: document.getElementById('empresa-representante').value,
                 estado: document.getElementById('empresa-estado').value
             };
             const empresaId = document.getElementById('empresa-id').value;
             const method = empresaId ? 'PUT' : 'POST';
             const url = empresaId ? `/admin/companies/${empresaId}` : '/admin/companies';
-
+        
             fetch(url, {
                 method: method,
                 headers: {

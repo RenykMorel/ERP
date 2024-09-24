@@ -283,6 +283,7 @@
                         <input type="text" id="company-name" class="w-full px-3 py-2 border rounded" placeholder="Nombre de la empresa" required>
                         <input type="text" id="company-rnc" class="w-full px-3 py-2 border rounded" placeholder="RNC" required>
                         <input type="text" id="company-address" class="w-full px-3 py-2 border rounded" placeholder="Dirección" required>
+                        <input type="tel" id="company-phone" class="w-full px-3 py-2 border rounded" placeholder="Teléfono" required>
                         <input type="text" id="company-type" class="w-full px-3 py-2 border rounded" placeholder="Tipo de empresa" required>
                         <input type="text" id="company-representative" class="w-full px-3 py-2 border rounded" placeholder="Representante legal" required>
                     </div>
@@ -410,7 +411,7 @@
 
         function renderCompanies(filteredCompanies = null) {
             const companiesList = document.getElementById('companies-list');
-            companiesList.innerHTML = '<tr><td colspan="4" class="text-center py-4">Cargando...</td></tr>';
+            companiesList.innerHTML = '<tr><td colspan="6" class="text-center py-4">Cargando...</td></tr>';
         
             fetch('/admin/companies')
                 .then(response => response.json())
@@ -423,6 +424,7 @@
                             <td class="px-6 py-4 whitespace-nowrap">${company.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${company.nombre}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${company.rnc}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${company.telefono}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${company.estado}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <button onclick="showCompanyDetails(${company.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Ver</button>
@@ -436,7 +438,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    companiesList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-600">Error al cargar las empresas</td></tr>';
+                    companiesList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-600">Error al cargar las empresas</td></tr>';
                 });
         }
 
@@ -622,51 +624,58 @@
             document.getElementById('modal-title').textContent = 'Crear Nueva Empresa';
             companyModal.classList.remove('hidden');
         };
-        function createCompany() {
-            const companyData = {
-                nombre: companyNameInput.value,
-                rnc: companyRncInput.value,
-                direccion: companyAddressInput.value,
-                tipo: companyTypeInput.value,
-                representante: companyRepresentativeInput.value,
-                estado: 'activo'
-            };
+        document.getElementById('save-company').onclick = () => {
+            if (editingCompanyId) {
+                // Update existing company
+                const companyData = {
+                    nombre: document.getElementById('company-name').value,
+                    rnc: document.getElementById('company-rnc').value,
+                    direccion: document.getElementById('company-address').value,
+                    telefono: document.getElementById('company-phone').value,
+                    tipo: document.getElementById('company-type').value,
+                    representante: document.getElementById('company-representative').value,
+                };
         
-            fetch('/admin/companies', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(companyData),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    showToast(data.error, 'error');
-                } else {
-                    showToast('Empresa creada exitosamente');
-                    companyModal.classList.add('hidden');
-                    renderCompanies();
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Error al crear la empresa', 'error');
-            });
-        }
-
+                fetch(`/admin/companies/${editingCompanyId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(companyData),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showToast(data.error, 'error');
+                    } else {
+                        showToast('Empresa actualizada exitosamente');
+                        document.getElementById('company-modal').classList.add('hidden');
+                        renderCompanies();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error al actualizar la empresa', 'error');
+                });
+            } else {
+                // Create new company
+                createCompany();
+            }
+        };
+        
         function editCompany(id) {
             fetch(`/admin/companies/${id}`)
                 .then(response => response.json())
                 .then(company => {
                     editingCompanyId = id;
-                    companyNameInput.value = company.nombre;
-                    companyRncInput.value = company.rnc;
-                    companyAddressInput.value = company.direccion;
-                    companyTypeInput.value = company.tipo;
-                    companyRepresentativeInput.value = company.representante;
+                    document.getElementById('company-name').value = company.nombre;
+                    document.getElementById('company-rnc').value = company.rnc;
+                    document.getElementById('company-address').value = company.direccion;
+                    document.getElementById('company-phone').value = company.telefono;
+                    document.getElementById('company-type').value = company.tipo;
+                    document.getElementById('company-representative').value = company.representante;
                     document.getElementById('modal-title').textContent = 'Editar Empresa';
-                    companyModal.classList.remove('hidden');
+                    document.getElementById('company-modal').classList.remove('hidden');
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -717,19 +726,25 @@
         };
 
         function showCompanyDetails(id) {
-            const company = companies.find(c => c.id === id);
-            if (company) {
-                const detailsContainer = document.getElementById('company-details');
-                detailsContainer.innerHTML = `
-                    <p><strong>Nombre:</strong> ${company.nombre}</p>
-                    <p><strong>RNC:</strong> ${company.rnc}</p>
-                    <p><strong>Dirección:</strong> ${company.direccion}</p>
-                    <p><strong>Tipo:</strong> ${company.tipo}</p>
-                    <p><strong>Representante Legal:</strong> ${company.representante}</p>
-                    <p><strong>Estado:</strong> ${company.estado}</p>
-                `;
-                document.getElementById('company-details-modal').classList.remove('hidden');
-            }
+            fetch(`/admin/companies/${id}`)
+                .then(response => response.json())
+                .then(company => {
+                    const detailsContainer = document.getElementById('company-details');
+                    detailsContainer.innerHTML = `
+                        <p><strong>Nombre:</strong> ${company.nombre}</p>
+                        <p><strong>RNC:</strong> ${company.rnc}</p>
+                        <p><strong>Dirección:</strong> ${company.direccion}</p>
+                        <p><strong>Teléfono:</strong> ${company.telefono}</p>
+                        <p><strong>Tipo:</strong> ${company.tipo}</p>
+                        <p><strong>Representante Legal:</strong> ${company.representante}</p>
+                        <p><strong>Estado:</strong> ${company.estado}</p>
+                    `;
+                    document.getElementById('company-details-modal').classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error al cargar los detalles de la empresa', 'error');
+                });
         }
 
         document.getElementById('close-details').onclick = () => {

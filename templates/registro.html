@@ -11,15 +11,17 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
         }
         .login-container {
             background-color: #ffffff;
             padding: 2rem;
             border-radius: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-            width: 300px;
+            width: 100%;
+            max-width: 400px;
             position: relative;
         }
         .login-header {
@@ -112,24 +114,6 @@
             color: #007bff;
             text-decoration: none;
         }
-        .numpad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 1rem;
-        }
-        .numpad-btn {
-            background-color: #f0f0f0;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2), -2px -2px 5px rgba(255,255,255,0.7);
-            cursor: pointer;
-        }
         .decorative-element {
             position: absolute;
             background-color: #ccc;
@@ -153,6 +137,11 @@
             margin-top: 10px;
             display: none;
         }
+        .section-title {
+            font-weight: bold;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -162,6 +151,16 @@
             <button class="login-button">REGISTRO</button>
         </div>
         <form id="form-registro">
+            <div class="section-title">Información Personal</div>
+            <div class="input-group">
+                <input type="text" name="nombre" placeholder="Nombre" required>
+            </div>
+            <div class="input-group">
+                <input type="text" name="apellido" placeholder="Apellido" required>
+            </div>
+            <div class="input-group">
+                <input type="tel" name="telefono" placeholder="Teléfono" required>
+            </div>
             <div class="input-group">
                 <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
             </div>
@@ -176,25 +175,26 @@
                 <input type="password" name="confirm_password" placeholder="Confirmar contraseña" required>
                 <button type="button" class="password-toggle">👁️</button>
             </div>
+
+            <div class="section-title">Información de la Empresa</div>
+            <div class="input-group">
+                <input type="text" name="nombre_empresa" placeholder="Nombre de la empresa" required>
+            </div>
+            <div class="input-group">
+                <input type="text" name="rnc_empresa" placeholder="RNC de la empresa" required>
+            </div>
+            <div class="input-group">
+                <input type="text" name="direccion_empresa" placeholder="Dirección de la empresa" required>
+            </div>
+            <div class="input-group">
+                <input type="tel" name="telefono_empresa" placeholder="Teléfono de la empresa" required>
+            </div>
+
             <button type="submit" class="login-btn">REGISTRARSE</button>
         </form>
         <div id="auth-error"></div>
         <div class="forgot-password">
             <a href="{{ url_for('login') }}">¿Ya tienes una cuenta? Inicia sesión</a>
-        </div>
-        <div class="numpad">
-            <button class="numpad-btn">1</button>
-            <button class="numpad-btn">2</button>
-            <button class="numpad-btn">3</button>
-            <button class="numpad-btn">4</button>
-            <button class="numpad-btn">5</button>
-            <button class="numpad-btn">6</button>
-            <button class="numpad-btn">7</button>
-            <button class="numpad-btn">8</button>
-            <button class="numpad-btn">9</button>
-            <button class="numpad-btn">*</button>
-            <button class="numpad-btn">0</button>
-            <button class="numpad-btn">#</button>
         </div>
         <div class="decorative-element top-left"></div>
         <div class="decorative-element bottom-right"></div>
