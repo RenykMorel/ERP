@@ -80,8 +80,10 @@
                                 <tr>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
-                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">RNC</th>
-                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
+                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Teléfono</th>
+                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Empresa</th>
+                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rol</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
@@ -110,6 +112,8 @@
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Teléfono</th>
+                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Empresa</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rol</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
                                 </tr>
@@ -324,8 +328,14 @@
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900" id="user-modal-title">Crear/Editar Usuario</h3>
                     <div class="mt-2 space-y-4">
-                        <input type="text" id="user-name" class="w-full px-3 py-2 border rounded" placeholder="Nombre de usuario" required>
+                        <input type="text" id="user-name" class="w-full px-3 py-2 border rounded" placeholder="Nombre" required>
+                        <input type="text" id="user-last-name" class="w-full px-3 py-2 border rounded" placeholder="Apellido" required>
                         <input type="email" id="user-email" class="w-full px-3 py-2 border rounded" placeholder="Email" required>
+                        <input type="tel" id="user-phone" class="w-full px-3 py-2 border rounded" placeholder="Teléfono" required>
+                        <input type="text" id="user-address" class="w-full px-3 py-2 border rounded" placeholder="Dirección" required>
+                        <input type="text" id="user-company" class="w-full px-3 py-2 border rounded" placeholder="Nombre de la empresa" required>
+                        <input type="text" id="user-company-type" class="w-full px-3 py-2 border rounded" placeholder="Tipo de empresa" required>
+                        <input type="text" id="user-representative" class="w-full px-3 py-2 border rounded" placeholder="Representante legal" required>
                         <select id="user-role" class="w-full px-3 py-2 border rounded" required>
                             <option value="">Seleccione un rol</option>
                             <option value="usuario">Usuario</option>
@@ -340,6 +350,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <script>
@@ -442,24 +453,68 @@
                 });
         }
 
-        function renderUsers() {
+        function renderUsers(searchTerm = '', roleFilter = '') {
             const usersList = document.getElementById('users-list');
-            usersList.innerHTML = '';
-            users.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${user.nombre}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${user.rol}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <button onclick="editUser(${user.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
-                        <button onclick="deleteUser(${user.id})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
-                    </td>
-                `;
-                usersList.appendChild(row);
-            });
+            usersList.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando...</td></tr>';
+        
+            fetch('/admin/users')
+                .then(response => response.json())
+                .then(data => {
+                    usersList.innerHTML = '';
+                    const filteredUsers = data.users.filter(user => 
+                        (user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         user.apellido.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         user.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                        (roleFilter === '' || user.rol.toLowerCase() === roleFilter.toLowerCase())
+                    );
+        
+                    if (filteredUsers.length === 0) {
+                        usersList.innerHTML = '<tr><td colspan="7" class="text-center py-4">No se encontraron usuarios</td></tr>';
+                        return;
+                    }
+        
+                    filteredUsers.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-user-id', user.id);
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.nombre} ${user.apellido}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.telefono || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.empresa || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.rol}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button onclick="editUser(${user.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
+                                <button onclick="deleteUser(${user.id})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
+                            </td>
+                        `;
+                        usersList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    usersList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-600">Error al cargar los usuarios</td></tr>';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Hubo un problema al cargar los usuarios. Por favor, intenta de nuevo más tarde.',
+                    });
+                });
         }
+        
+        // Funciones para manejar la búsqueda y filtrado
+        function handleSearch() {
+            const searchTerm = document.getElementById('user-search').value;
+            const roleFilter = document.getElementById('user-role-filter').value;
+            renderUsers(searchTerm, roleFilter);
+        }
+        
+        // Event listeners para la búsqueda y filtrado
+        document.getElementById('user-search').addEventListener('input', handleSearch);
+        document.getElementById('user-role-filter').addEventListener('change', handleSearch);
+        
+        // Llamada inicial para cargar todos los usuarios
+        renderUsers();
 
         function renderRoles() {
             const rolesList = document.getElementById('roles-list');
@@ -478,6 +533,56 @@
             });
         }
 
+        function searchUsers() {
+            const searchTerm = document.getElementById('user-search').value.toLowerCase();
+            const roleFilter = document.getElementById('user-role-filter').value.toLowerCase();
+        
+            fetch('/admin/users')
+                .then(response => response.json())
+                .then(data => {
+                    const filteredUsers = data.users.filter(user => 
+                        (user.nombre.toLowerCase().includes(searchTerm) || 
+                         user.apellido.toLowerCase().includes(searchTerm) || 
+                         user.email.toLowerCase().includes(searchTerm)) &&
+                        (roleFilter === '' || user.rol.toLowerCase() === roleFilter)
+                    );
+                    renderFilteredUsers(filteredUsers);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Hubo un problema al buscar usuarios',
+                    });
+                });
+        }
+        
+        function renderFilteredUsers(users) {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '';
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${user.nombre} ${user.apellido}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${user.telefono || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${user.nombre_empresa || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${user.rol}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="editUser(${user.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
+                        <button onclick="deleteUser(${user.id})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
+                    </td>
+                `;
+                usersList.appendChild(row);
+            });
+        }
+        
+        // Agregar event listeners para la búsqueda y filtrado
+        document.getElementById('user-search').addEventListener('input', searchUsers);
+        document.getElementById('user-role-filter').addEventListener('change', searchUsers);
+
         function renderPermissions() {
             const permissionsList = document.getElementById('permissions-list');
             permissionsList.innerHTML = '';
@@ -495,6 +600,27 @@
                 `;
                 permissionsList.appendChild(row);
             });
+        }
+
+        function validateCompanyForm() {
+            const requiredFields = ['company-name', 'company-rnc', 'company-address', 'company-phone'];
+            for (let field of requiredFields) {
+                if (!document.getElementById(field).value.trim()) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de validación',
+                        text: 'Por favor, complete todos los campos requeridos.',
+                    });
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        // Modifica la función createCompany para incluir esta validación
+        function createCompany() {
+            if (!validateCompanyForm()) return;
+            // ... resto del código de createCompany
         }
 
         function renderSubscriptionPlans() {
@@ -772,15 +898,40 @@
 
         // User management functions
         function editUser(id) {
-            const user = users.find(u => u.id === id);
-            if (user) {
-                document.getElementById('user-name').value = user.nombre;
-                document.getElementById('user-email').value = user.email;
-                document.getElementById('user-role').value = user.rol.toLowerCase();
-                document.getElementById('user-password').value = ''; // Clear password for security
-                document.getElementById('user-modal-title').textContent = 'Editar Usuario';
-                document.getElementById('user-modal').classList.remove('hidden');
-            }
+            fetch(`/admin/users/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Usuario no encontrado');
+                    }
+                    return response.json();
+                })
+                .then(user => {
+                    document.getElementById('user-name').value = user.nombre;
+                    document.getElementById('user-last-name').value = user.apellido;
+                    document.getElementById('user-email').value = user.email;
+                    document.getElementById('user-phone').value = user.telefono;
+                    document.getElementById('user-address').value = user.direccion;
+                    document.getElementById('user-company').value = user.nombre_empresa;
+                    document.getElementById('user-company-type').value = user.rnc_empresa;
+                    document.getElementById('user-role').value = user.rol;
+                    document.getElementById('user-password').value = '';
+        
+                    document.getElementById('user-modal-title').textContent = 'Editar Usuario';
+                    document.getElementById('user-modal').classList.remove('hidden');
+        
+                    document.getElementById('save-user').onclick = function() {
+                        // ... (código para guardar cambios)
+                    };
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo cargar la información del usuario. Es posible que el usuario ya no exista.',
+                    });
+                    renderUsers(); // Actualizar la lista de usuarios
+                });
         }
 
         function deleteUser(id) {
@@ -795,16 +946,135 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    users = users.filter(u => u.id !== id);
-                    renderUsers();
-                    Swal.fire(
-                        'Eliminado',
-                        'El usuario ha sido eliminado.',
-                        'success'
-                    )
+                    fetch(`/admin/users/${id}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Eliminado',
+                                    'El usuario ha sido eliminado.',
+                                    'success'
+                                );
+                                refreshUserList();
+                            } else {
+                                Swal.fire(
+                                    'Error',
+                                    data.error || 'No se pudo eliminar el usuario',
+                                    'error'
+                                );
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire(
+                                'Error',
+                                'Hubo un problema al conectar con el servidor',
+                                'error'
+                            );
+                        });
+                }
+            });
+        }
+        
+        let isCreatingCompany = false;
+
+        function createCompany() {
+            const companyData = {
+                nombre: document.getElementById('company-name').value,
+                rnc: document.getElementById('company-rnc').value,
+                direccion: document.getElementById('company-address').value,
+                telefono: document.getElementById('company-phone').value,
+                tipo: document.getElementById('company-type').value,
+                representante: document.getElementById('company-representative').value
+            };
+        
+            fetch('/admin/companies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(companyData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Empresa creada exitosamente',
+                        text: `Se ha creado la empresa ${companyData.nombre}`,
+                    });
+                    document.getElementById('company-modal').classList.add('hidden');
+                    renderCompanies();
+                } else {
+                    throw new Error(data.error || 'Error desconocido al crear la empresa');
                 }
             })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al crear empresa',
+                    text: error.message || 'Hubo un problema al crear la empresa. Por favor, inténtelo de nuevo.',
+                });
+            });
         }
+
+// Modificar el evento del botón de guardar
+document.getElementById('save-company').addEventListener('click', function(event) {
+    event.preventDefault();  // Previene el comportamiento por defecto del botón
+    if (!isCreatingCompany) {
+        createCompany();
+    }
+});
+        
+        // Asegúrate de que esta línea esté presente en tu código
+        document.getElementById('save-company').addEventListener('click', function() {
+            this.disabled = true;  // Deshabilita el botón
+            if (editingCompanyId) {
+                // Código para actualizar una empresa existente
+            } else {
+                createCompany();
+            }
+            // Habilita el botón después de un breve retraso
+            setTimeout(() => { this.disabled = false; }, 2000);
+        });
+
+        function refreshUserList() {
+            fetch('/admin/users')
+                .then(response => response.json())
+                .then(data => {
+                    const usersList = document.getElementById('users-list');
+                    usersList.innerHTML = '';
+                    data.users.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-user-id', user.id);
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.nombre} ${user.apellido}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.telefono || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.empresa || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.rol}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button onclick="editUser(${user.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
+                                <button onclick="deleteUser(${user.id})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
+                            </td>
+                        `;
+                        usersList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Hubo un problema al cargar los usuarios. Por favor, intenta de nuevo más tarde.',
+                    });
+                });
+        }
+        
+        // Llamar a refreshUserList cuando se carga la página
+        document.addEventListener('DOMContentLoaded', refreshUserList);
 
         // Role management functions
         function editRole(index) {
@@ -965,38 +1235,52 @@
 
         // User modal functionality
         document.getElementById('save-user').addEventListener('click', function() {
-            const userName = document.getElementById('user-name').value;
-            const userEmail = document.getElementById('user-email').value;
-            const userRole = document.getElementById('user-role').value;
-            const userPassword = document.getElementById('user-password').value;
-
-            if (document.getElementById('user-modal-title').textContent === 'Crear Usuario') {
-                // Create new user
-                const newUser = {
-                    id: users.length + 1,
-                    nombre: userName,
-                    email: userEmail,
-                    rol: userRole.charAt(0).toUpperCase() + userRole.slice(1)
-                };
-                users.push(newUser);
-                showToast('Usuario creado exitosamente');
-            } else {
-                // Update existing user
-                const userId = users.find(u => u.email === userEmail).id;
-                const index = users.findIndex(u => u.id === userId);
-                if (index !== -1) {
-                    users[index] = {
-                        ...users[index],
-                        nombre: userName,
-                        email: userEmail,
-                        rol: userRole.charAt(0).toUpperCase() + userRole.slice(1)
-                    };
-                    showToast('Usuario actualizado exitosamente');
+            const userData = {
+                nombre: document.getElementById('user-name').value,
+                apellido: document.getElementById('user-last-name').value,
+                email: document.getElementById('user-email').value,
+                telefono: document.getElementById('user-phone').value,
+                direccion: document.getElementById('user-address').value,
+                nombre_empresa: document.getElementById('user-company').value,
+                rnc_empresa: document.getElementById('user-company-type').value,
+                nombre_usuario: document.getElementById('user-email').value,
+                password: document.getElementById('user-password').value,
+                rol: document.getElementById('user-role').value
+            };
+        
+            fetch('/admin/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Usuario creado exitosamente',
+                        text: `Se ha creado el usuario ${data.user.nombre_usuario}`,
+                    });
+                    document.getElementById('user-modal').classList.add('hidden');
+                    renderUsers();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error al crear usuario',
+                        text: data.error || 'Hubo un problema al crear el usuario',
+                    });
                 }
-            }
-
-            renderUsers();
-            document.getElementById('user-modal').classList.add('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un problema al conectar con el servidor',
+                });
+            });
         });
 
         document.getElementById('cancel-user').addEventListener('click', function() {

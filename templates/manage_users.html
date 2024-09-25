@@ -89,6 +89,8 @@
 <h1>Administrar Usuarios</h1>
 
 <form id="create-user-form" class="user-form">
+    <input type="text" name="nombre" placeholder="Nombre" required>
+    <input type="text" name="apellido" placeholder="Apellido" required>
     <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
     <input type="email" name="email" placeholder="Correo electrónico" required>
     <input type="password" name="password" placeholder="Contraseña" required>
@@ -96,26 +98,40 @@
         <option value="usuario">Usuario</option>
         <option value="admin">Administrador</option>
     </select>
+    <select name="empresa_id">
+        <option value="">Seleccionar Empresa (opcional)</option>
+        {% for company in companies %}
+        <option value="{{ company.id }}">{{ company.nombre }}</option>
+        {% endfor %}
+    </select>
     <button type="submit" class="btn btn-create">Crear Usuario</button>
 </form>
 
 <table class="user-table">
     <thead>
         <tr>
+            <th>ID</th>
             <th>Nombre de Usuario</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
             <th>Correo Electrónico</th>
             <th>Rol</th>
             <th>Estado</th>
+            <th>Empresa</th>
             <th>Acciones</th>
         </tr>
     </thead>
     <tbody id="users-list">
         {% for user in users %}
         <tr data-user-id="{{ user.id }}">
+            <td>{{ user.id }}</td>
             <td>{{ user.nombre_usuario }}</td>
+            <td>{{ user.nombre }}</td>
+            <td>{{ user.apellido }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.rol }}</td>
             <td>{{ user.estado }}</td>
+            <td>{{ user.empresa.nombre if user.empresa else 'N/A' }}</td>
             <td>
                 <button class="btn btn-edit" onclick="editUser({{ user.id }})">Editar</button>
                 <button class="btn btn-delete" onclick="deleteUser({{ user.id }})">Eliminar</button>
@@ -157,12 +173,20 @@
         <h2>Editar Usuario</h2>
         <form id="edit-user-form">
             <input type="hidden" name="id">
+            <input type="text" name="nombre" placeholder="Nombre" required>
+            <input type="text" name="apellido" placeholder="Apellido" required>
             <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
             <input type="email" name="email" placeholder="Correo electrónico" required>
             <input type="password" name="password" placeholder="Nueva contraseña (dejar en blanco para no cambiar)">
             <select name="rol">
                 <option value="usuario">Usuario</option>
                 <option value="admin">Administrador</option>
+            </select>
+            <select name="empresa_id">
+                <option value="">Seleccionar Empresa (opcional)</option>
+                {% for company in companies %}
+                <option value="{{ company.id }}">{{ company.nombre }}</option>
+                {% endfor %}
             </select>
             <button type="submit" class="btn btn-edit">Guardar Cambios</button>
         </form>
@@ -172,52 +196,59 @@
 
 {% block extra_js %}
 <script>
-function createUser(event) {
-    event.preventDefault();
-    const form = event.target;
-    const formData = new FormData(form);
+    function createUser(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+    
+        fetch("{{ url_for('admin.create_user') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.user) {
+                const usersList = document.getElementById('users-list');
+                const newRow = `
+                    <tr data-user-id="${data.user.id}">
+                        <td>${data.user.id}</td>
+                        <td>${data.user.nombre_usuario}</td>
+                        <td>${data.user.nombre}</td>
+                        <td>${data.user.apellido}</td>
+                        <td>${data.user.email}</td>
+                        <td>${data.user.rol}</td>
+                        <td>${data.user.estado}</td>
+                        <td>${data.user.empresa ? data.user.empresa.nombre : 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="editUser(${data.user.id})">Editar</button>
+                            <button class="btn btn-delete" onclick="deleteUser(${data.user.id})">Eliminar</button>
+                            <button class="btn btn-delete" onclick="toggleUserStatus(${data.user.id})">Desactivar</button>
+                        </td>
+                    </tr>
+                `;
+                usersList.insertAdjacentHTML('beforeend', newRow);
+                form.reset();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
-    fetch("{{ url_for('admin.create_user') }}", {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.user) {
-            const usersList = document.getElementById('users-list');
-            const newRow = `
-                <tr data-user-id="${data.user.id}">
-                    <td>${data.user.nombre_usuario}</td>
-                    <td>${data.user.email}</td>
-                    <td>${data.user.rol}</td>
-                    <td>${data.user.estado}</td>
-                    <td>
-                        <button class="btn btn-edit" onclick="editUser(${data.user.id})">Editar</button>
-                        <button class="btn btn-delete" onclick="deleteUser(${data.user.id})">Eliminar</button>
-                        <button class="btn btn-delete" onclick="toggleUserStatus(${data.user.id})">Desactivar</button>
-                    </td>
-                </tr>
-            `;
-            usersList.insertAdjacentHTML('beforeend', newRow);
-            form.reset();
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
-
-function editUser(userId) {
-    fetch(`{{ url_for('admin.get_user', user_id=0) }}`.replace('0', userId))
-    .then(response => response.json())
-    .then(user => {
-        const form = document.getElementById('edit-user-form');
-        form.id.value = user.id;
-        form.nombre_usuario.value = user.nombre_usuario;
-        form.email.value = user.email;
-        form.rol.value = user.rol;
-        document.getElementById('editUserModal').style.display = 'block';
-    })
-    .catch(error => console.error('Error:', error));
-}
+    function editUser(userId) {
+        fetch(`{{ url_for('admin.get_user', user_id=0) }}`.replace('0', userId))
+        .then(response => response.json())
+        .then(user => {
+            const form = document.getElementById('edit-user-form');
+            form.id.value = user.id;
+            form.nombre.value = user.nombre;
+            form.apellido.value = user.apellido;
+            form.nombre_usuario.value = user.nombre_usuario;
+            form.email.value = user.email;
+            form.rol.value = user.rol;
+            form.empresa_id.value = user.empresa ? user.empresa.id : '';
+            document.getElementById('editUserModal').style.display = 'block';
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
 function deleteUser(userId) {
     if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
@@ -285,8 +316,6 @@ function assignUserToCompany(event) {
     .catch(error => console.error('Error:', error));
 }
 
-document.getElementById('create-user-form').addEventListener('submit', createUser);
-document.getElementById('assign-user-form').addEventListener('submit', assignUserToCompany);
 document.getElementById('edit-user-form').addEventListener('submit', function(event) {
     event.preventDefault();
     const form = event.target;
@@ -301,9 +330,12 @@ document.getElementById('edit-user-form').addEventListener('submit', function(ev
     .then(data => {
         if (data.success) {
             const row = document.querySelector(`tr[data-user-id="${userId}"]`);
-            row.cells[0].textContent = data.user.nombre_usuario;
-            row.cells[1].textContent = data.user.email;
-            row.cells[2].textContent = data.user.rol;
+            row.cells[1].textContent = data.user.nombre_usuario;
+            row.cells[2].textContent = data.user.nombre;
+            row.cells[3].textContent = data.user.apellido;
+            row.cells[4].textContent = data.user.email;
+            row.cells[5].textContent = data.user.rol;
+            row.cells[7].textContent = data.user.empresa ? data.user.empresa.nombre : 'N/A';
             document.getElementById('editUserModal').style.display = 'none';
         } else {
             alert(data.error);

@@ -3,6 +3,10 @@ from flask_login import login_required, current_user
 from models import db, Usuario, Empresa, usuario_empresa, Rol, Permiso
 from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import IntegrityError
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 admin = Blueprint("admin", __name__)
 
@@ -32,43 +36,37 @@ def get_companies():
 @login_required
 def create_company():
     if not current_user.es_admin:
-        current_app.logger.warning(f"Usuario no autorizado intentó crear una empresa: {current_user.nombre_usuario}")
-        return jsonify({"error": "Acceso no autorizado"}), 403
+        return jsonify({"success": False, "error": "Acceso no autorizado"}), 403
     
-    data = request.json or request.form
-    current_app.logger.info(f"Datos recibidos para crear empresa: {data}")
-
+    data = request.json
     try:
-        nueva_empresa = Empresa.crear_empresa(
-            nombre=data["nombre"],
-            rnc=data["rnc"],
-            direccion=data["direccion"],
-            telefono=data["telefono"]
+        # Verificar si ya existe una empresa con el mismo nombre o RNC
+        existing_company = Empresa.query.filter(
+            (Empresa.nombre == data['nombre']) | (Empresa.rnc == data['rnc'])
+        ).first()
+        if existing_company:
+            if existing_company.nombre == data['nombre']:
+                return jsonify({"success": False, "error": "Ya existe una empresa con ese nombre"}), 400
+            elif existing_company.rnc == data['rnc']:
+                return jsonify({"success": False, "error": "Ya existe una empresa con ese RNC"}), 400
+
+        nueva_empresa = Empresa(
+            nombre=data['nombre'],
+            rnc=data['rnc'],
+            direccion=data.get('direccion'),
+            telefono=data.get('telefono'),
+            tipo=data.get('tipo'),
+            representante=data.get('representante')
         )
-        
-        # Actualizar campos adicionales
-        nueva_empresa.tipo = data["tipo"]
-        nueva_empresa.representante = data["representante"]
-        nueva_empresa.estado = data.get("estado", "activo")
-        
+        db.session.add(nueva_empresa)
         db.session.commit()
-        
-        current_app.logger.info(f"Nueva empresa creada exitosamente: {nueva_empresa.to_dict()}")
-        return jsonify({"message": "Empresa creada exitosamente", "empresa": nueva_empresa.to_dict()}), 201
-    
-    except ValueError as e:
-        current_app.logger.error(f"Error de validación al crear empresa: {str(e)}")
-        return jsonify({"error": str(e)}), 400
-    
+        return jsonify({"success": True, "message": "Empresa creada exitosamente", "company": nueva_empresa.to_dict()}), 201
     except IntegrityError as e:
         db.session.rollback()
-        current_app.logger.error(f"Error de integridad al crear empresa: {str(e)}")
-        return jsonify({"error": "Ya existe una empresa con ese nombre o RNC"}), 400
-    
+        return jsonify({"success": False, "error": "Error de integridad en la base de datos. La empresa puede estar duplicada."}), 400
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error inesperado al crear empresa: {str(e)}")
-        return jsonify({"error": "Error interno del servidor"}), 500
+        return jsonify({"success": False, "error": f"Error inesperado: {str(e)}"}), 500
 
 @admin.route("/companies/<int:empresa_id>", methods=["DELETE"])
 @login_required
@@ -129,48 +127,35 @@ def get_users():
 @login_required
 def create_user():
     if not current_user.es_admin:
-        return jsonify({"error": "Acceso no autorizado"}), 403
-    data = request.json or request.form
+        return jsonify({"success": False, "error": "Acceso no autorizado"}), 403
+    
+    data = request.json
+    logger.info(f"Datos recibidos para crear usuario: {data}")
+    
     try:
-        nuevo_usuario = Usuario(
-            nombre=data["nombre"],
-            apellido=data["apellido"],
-            telefono=data["telefono"],
-            nombre_usuario=data["nombre_usuario"],
-            email=data["email"],
-            rol=data.get("rol", "usuario"),
-            estado="activo",
+        nuevo_usuario = Usuario.crear_usuario(
+            nombre=data['nombre'],
+            apellido=data['apellido'],
+            telefono=data.get('telefono'),
+            nombre_usuario=data['nombre_usuario'],
+            email=data['email'],
+            password=data['password'],
+            nombre_empresa=data['nombre_empresa'],
+            rnc_empresa=data.get('rnc_empresa'),
+            direccion_empresa=data.get('direccion_empresa'),
+            telefono_empresa=data.get('telefono_empresa'),
+            es_admin=data.get('es_admin', False),
+            es_super_admin=data.get('es_super_admin', False),
+            rol=data.get('rol', 'usuario')
         )
-        nuevo_usuario.set_password(data.get("password", "defaultpassword"))
-        
-        # Crear o asignar empresa
-        empresa = Empresa.query.filter_by(nombre=data["nombre_empresa"]).first()
-        if not empresa:
-            empresa = Empresa(
-                nombre=data["nombre_empresa"],
-                rnc=data["rnc_empresa"],
-                direccion=data["direccion_empresa"],
-                telefono=data["telefono_empresa"]
-            )
-            db.session.add(empresa)
-        
-        nuevo_usuario.empresa = empresa
-        
-        db.session.add(nuevo_usuario)
-        db.session.commit()
-        current_app.logger.info(f"Nuevo usuario creado: {nuevo_usuario.to_dict()}")
-        return jsonify({"message": "Usuario creado exitosamente", "usuario": nuevo_usuario.to_dict()}), 201
-    except IntegrityError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error de integridad al crear usuario: {str(e)}")
-        return jsonify({"error": "Ya existe un usuario con ese nombre o email"}), 400
-    except KeyError as e:
-        current_app.logger.error(f"Falta campo requerido al crear usuario: {str(e)}")
-        return jsonify({"error": f"Falta el campo requerido: {str(e)}"}), 400
+        logger.info(f"Usuario creado exitosamente: {nuevo_usuario.to_dict()}")
+        return jsonify({"success": True, "message": "Usuario creado exitosamente", "user": nuevo_usuario.to_dict()}), 201
+    except ValueError as e:
+        logger.warning(f"Error de validación al crear usuario: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error inesperado al crear usuario: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error inesperado al crear usuario: {str(e)}")
+        return jsonify({"success": False, "error": "Error interno del servidor"}), 500
 
 @admin.route("/users/<int:usuario_id>", methods=["PUT"])
 @login_required

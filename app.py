@@ -21,6 +21,7 @@ from models import db, Usuario, Banco, Transaccion, Notificacion, Empresa, Rol, 
 from mailjet_rest import Client
 import secrets
 import string
+from logging.config import dictConfig
 
 load_dotenv()
 
@@ -350,6 +351,25 @@ def create_app():
 
         return render_template('login.html')
 
+    @app.route('/registro_exitoso')
+    @login_required  # Si quieres que solo usuarios registrados vean esta página
+    def registro_exitoso():
+        return render_template('registro_exitoso.html')
+
+    # API que devuelve los datos JSON que usará el frontend React
+    @app.route('/api/registro_exitoso', methods=['GET'])
+    def api_registro_exitoso():
+        data = {
+            "title": "¡Registro Exitoso!",
+            "description": "Tu cuenta ha sido creada correctamente.",
+            "message": "Hemos enviado un correo electrónico de confirmación.",
+            "emailMessage": "Revisa tu bandeja de entrada o la carpeta de spam para confirmar tu correo.",
+            "spamMessage": "Si no recibes el correo, intenta registrarte nuevamente.",
+            "loginButtonText": "Iniciar Sesión"
+        }
+        return jsonify(data)
+
+    
     @app.route("/reset_password", methods=["POST"])
     def reset_password():
         username = request.form.get("username")

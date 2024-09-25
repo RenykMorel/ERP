@@ -6,6 +6,9 @@ from sqlalchemy.orm import relationship, validates
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.mutable import MutableDict
+import logging
+
+logger = logging.getLogger(__name__)
 
 db = SQLAlchemy()
 
@@ -47,7 +50,7 @@ usuario_empresa = Table(
 class Empresa(db.Model):
     __tablename__ = "empresas"
     id = Column(Integer, primary_key=True)
-    nombre = Column(String(100), nullable=False)
+    nombre = Column(String(100), nullable=False, unique=True)
     rnc = Column(String(20), unique=True)
     direccion = Column(String(200))
     telefono = Column(String(20))
@@ -58,17 +61,36 @@ class Empresa(db.Model):
     usuarios = relationship("Usuario", back_populates="empresa")
 
     @classmethod
-    def crear_empresa(cls, nombre, rnc, direccion, telefono):
-        nueva_empresa = cls(nombre=nombre, rnc=rnc, direccion=direccion, telefono=telefono)
+    def crear_empresa(cls, nombre, rnc, direccion, telefono, tipo=None, representante=None):
+        logger.info(f"Intentando crear empresa: {nombre}")
         try:
+            if not nombre or not rnc:
+                raise ValueError("El nombre y el RNC son campos obligatorios")
+
+            # Verificar si ya existe una empresa con el mismo nombre o RNC
+            empresa_existente = cls.query.filter((cls.nombre == nombre) | (cls.rnc == rnc)).first()
+            if empresa_existente:
+                raise ValueError("Ya existe una empresa con ese nombre o RNC")
+
+            nueva_empresa = cls(
+                nombre=nombre,
+                rnc=rnc,
+                direccion=direccion,
+                telefono=telefono,
+                tipo=tipo,
+                representante=representante
+            )
             db.session.add(nueva_empresa)
-            db.session.flush()  # Esto asigna un ID a nueva_empresa sin hacer commit
+            db.session.commit()
+            logger.info(f"Empresa creada exitosamente: {nombre}")
             return nueva_empresa
         except IntegrityError as e:
             db.session.rollback()
+            logger.error(f"Error de integridad al crear empresa {nombre}: {str(e)}")
             raise ValueError(f"Ya existe una empresa con ese RNC o nombre: {str(e)}")
         except Exception as e:
             db.session.rollback()
+            logger.error(f"Error inesperado al crear empresa {nombre}: {str(e)}")
             raise ValueError(f"Error al crear la empresa: {str(e)}")
 
     def to_dict(self):
@@ -83,6 +105,7 @@ class Empresa(db.Model):
             "estado": self.estado,
             "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None
         }
+
 
 class Usuario(UserMixin, db.Model):
     __tablename__ = "usuarios"
@@ -116,34 +139,51 @@ class Usuario(UserMixin, db.Model):
         return Usuario.query.filter_by(email=email).first()
 
     @classmethod
-    def crear_usuario(cls, nombre, apellido, telefono, nombre_usuario, email, password, nombre_empresa, rnc_empresa, direccion_empresa, telefono_empresa, es_admin=False, es_super_admin=False, rol="usuario"):
-        empresa = Empresa.query.filter_by(nombre=nombre_empresa).first()
-        if not empresa:
-            empresa = Empresa.crear_empresa(nombre_empresa, rnc_empresa, direccion_empresa, telefono_empresa)
-        
-        nuevo_usuario = cls(
-            nombre=nombre,
-            apellido=apellido,
-            telefono=telefono,
-            nombre_usuario=nombre_usuario,
-            email=email,
-            es_admin=es_admin,
-            es_super_admin=es_super_admin,
-            rol=rol,
-            empresa=empresa
-        )
-        nuevo_usuario.set_password(password)
+    def crear_usuario(cls, nombre, apellido, telefono, nombre_usuario, email, password, 
+                      nombre_empresa, rnc_empresa, direccion_empresa, telefono_empresa, 
+                      es_admin=False, es_super_admin=False, rol="usuario"):
+        logger.info(f"Intentando crear usuario: {nombre_usuario}")
         try:
+            # Validaciones
+            if not nombre or not apellido or not nombre_usuario or not email or not password:
+                raise ValueError("Todos los campos obligatorios deben ser proporcionados")
+
+            if cls.query.filter_by(nombre_usuario=nombre_usuario).first():
+                raise ValueError("El nombre de usuario ya existe")
+
+            if cls.query.filter_by(email=email).first():
+                raise ValueError("El email ya está registrado")
+
+            empresa = Empresa.query.filter_by(nombre=nombre_empresa).first()
+            if not empresa:
+                logger.info(f"Creando nueva empresa: {nombre_empresa}")
+                empresa = Empresa.crear_empresa(nombre_empresa, rnc_empresa, direccion_empresa, telefono_empresa)
+            
+            nuevo_usuario = cls(
+                nombre=nombre,
+                apellido=apellido,
+                telefono=telefono,
+                nombre_usuario=nombre_usuario,
+                email=email,
+                es_admin=es_admin,
+                es_super_admin=es_super_admin,
+                rol=rol,
+                empresa=empresa
+            )
+            nuevo_usuario.set_password(password)
             db.session.add(nuevo_usuario)
             db.session.commit()
+            logger.info(f"Usuario creado exitosamente: {nombre_usuario}")
             notificar_asistente(f"Nuevo usuario creado: {nombre_usuario}")
             return nuevo_usuario
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            raise ValueError("El nombre de usuario o email ya existe")
+            logger.error(f"Error de integridad al crear usuario {nombre_usuario}: {str(e)}")
+            raise ValueError("Error de integridad al crear el usuario")
         except Exception as e:
             db.session.rollback()
-            raise e
+            logger.error(f"Error inesperado al crear usuario {nombre_usuario}: {str(e)}")
+            raise ValueError(f"Error al crear el usuario: {str(e)}")
 
     def to_dict(self):
         return {
