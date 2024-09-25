@@ -420,13 +420,10 @@
             section.style.display = 'block';
             document.getElementById('section-title').textContent = sections.find(s => s.id === sectionId).name;
         
-            // Solo llamar a renderUsers si estamos mostrando la sección de usuarios y la lista está vacía
-            if (sectionId === 'users-section' && document.getElementById('users-list').children.length === 0) {
-                renderUsers();
-            }
-            // Solo llamar a renderCompanies si estamos mostrando la sección de empresas y la lista está vacía
-            if (sectionId === 'empresas-section' && document.getElementById('companies-list').children.length === 0) {
+            if (sectionId === 'empresas-section') {
                 renderCompanies();
+            } else if (sectionId === 'users-section') {
+                renderUsers();
             }
         }
         
@@ -437,14 +434,14 @@
 
         function renderCompanies(filteredCompanies = null) {
             const companiesList = document.getElementById('companies-list');
-            companiesList.innerHTML = '<tr><td colspan="6" class="text-center py-4">Cargando...</td></tr>';
+            companiesList.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando...</td></tr>';
         
-            fetch('/admin/companies')
-                .then(response => response.json())
-                .then(data => {
+            const companiesToRender = filteredCompanies || fetch('/admin/companies').then(response => response.json()).then(data => data.companies);
+        
+            Promise.resolve(companiesToRender)
+                .then(companies => {
                     companiesList.innerHTML = '';
-                    const companiesToRender = filteredCompanies || data.companies;
-                    companiesToRender.forEach(company => {
+                    companies.forEach(company => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap">${company.id}</td>
@@ -464,33 +461,22 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    companiesList.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-600">Error al cargar las empresas</td></tr>';
+                    companiesList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-600">Error al cargar las empresas</td></tr>';
                 });
         }
-
-        function renderUsers(searchTerm = '', roleFilter = '') {
+        
+        function renderUsers(filteredUsers = null) {
             const usersList = document.getElementById('users-list');
             usersList.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando...</td></tr>';
         
-            fetch('/admin/users')
-                .then(response => response.json())
-                .then(data => {
+            const usersToRender = filteredUsers || fetch('/admin/users').then(response => response.json()).then(data => data.users);
+        
+            Promise.resolve(usersToRender)
+                .then(users => {
                     usersList.innerHTML = '';
-                    const filteredUsers = data.users.filter(user => 
-                        (user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         user.apellido.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
-                        (roleFilter === '' || user.rol.toLowerCase() === roleFilter.toLowerCase())
-                    );
-        
-                    if (filteredUsers.length === 0) {
-                        usersList.innerHTML = '<tr><td colspan="7" class="text-center py-4">No se encontraron usuarios</td></tr>';
-                        return;
-                    }
-        
-                    filteredUsers.forEach(user => {
+                    users.forEach(user => {
                         const row = document.createElement('tr');
-                        row.setAttribute('data-user-id', user.id);  // Añadir el atributo data-user-id
+                        row.setAttribute('data-user-id', user.id);
                         row.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${user.nombre} ${user.apellido}</td>
@@ -512,45 +498,74 @@
                 });
         }
         
-        function setupUserSearchListeners() {
+        // Función principal para buscar y filtrar usuarios
+        function searchAndFilterUsers() {
+            const searchTerm = document.getElementById('user-search').value.toLowerCase();
+            const roleFilter = document.getElementById('user-role-filter').value.toLowerCase();
+
+            fetch('/admin/users')
+                .then(response => response.json())
+                .then(data => {
+                    const filteredUsers = data.users.filter(user => 
+                        (user.nombre.toLowerCase().includes(searchTerm) || 
+                        user.apellido.toLowerCase().includes(searchTerm) || 
+                        user.email.toLowerCase().includes(searchTerm)) &&
+                        (roleFilter === '' || user.rol.toLowerCase() === roleFilter)
+                    );
+                    renderUsers(filteredUsers);
+                })
+                .catch(error => {
+                    console.error('Error al filtrar usuarios:', error);
+                    showToast('Error al filtrar usuarios', 'error');
+                });
+        }
+
+        // Función para configurar los listeners de búsqueda y filtrado
+        function setupSearchAndFilterListeners() {
+            // Listeners para usuarios
             const userSearch = document.getElementById('user-search');
             const userRoleFilter = document.getElementById('user-role-filter');
-        
-            // Eliminar listeners existentes para evitar duplicados
-            userSearch.removeEventListener('input', handleUserSearch);
-            userRoleFilter.removeEventListener('change', handleUserSearch);
-        
-            // Añadir nuevos listeners
-            userSearch.addEventListener('input', handleUserSearch);
-            userRoleFilter.addEventListener('change', handleUserSearch);
+
+            if (userSearch && userRoleFilter) {
+                userSearch.addEventListener('input', searchAndFilterUsers);
+                userRoleFilter.addEventListener('change', searchAndFilterUsers);
+            }
+
+            // Listeners para empresas (mantenemos esto por si lo necesitas en el futuro)
+            const companyNameSearch = document.getElementById('company-name-search');
+            const companyRncSearch = document.getElementById('company-rnc-search');
+            const companyStatusFilter = document.getElementById('company-status-filter');
+
+            if (companyNameSearch && companyRncSearch && companyStatusFilter) {
+                companyNameSearch.addEventListener('input', handleCompanySearch);
+                companyRncSearch.addEventListener('input', handleCompanySearch);
+                companyStatusFilter.addEventListener('change', handleCompanySearch);
+            }
         }
-        
-        function handleUserSearch() {
-            const searchTerm = document.getElementById('user-search').value;
-            const roleFilter = document.getElementById('user-role-filter').value;
-            renderUsers(searchTerm, roleFilter);
+
+        // Función para manejar la búsqueda de empresas (la mantenemos por si la necesitas)
+        function handleCompanySearch() {
+            // Implementa la lógica de búsqueda de empresas aquí
+            console.log('Búsqueda de empresas no implementada');
         }
-        
-        // Llamar a esta función una vez al cargar la página
+
+        // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
-            setupUserSearchListeners();
-            setupCompanySearchListeners();  // Asegúrate de tener esta función definida
-            showSection('empresas-section');  // Esto llamará a renderCompanies si es necesario
+            setupSearchAndFilterListeners();
+            renderUsers(); // Carga inicial de usuarios
         });
 
-        // Funciones para manejar la búsqueda y filtrado
-        function handleSearch() {
-            const searchTerm = document.getElementById('user-search').value;
-            const roleFilter = document.getElementById('user-role-filter').value;
-            renderUsers(searchTerm, roleFilter);
+        // Función para renderizar usuarios (asegúrate de que esta función esté definida en tu código)
+        function renderUsers(users) {
+            // Implementa la lógica para mostrar los usuarios en la UI
+            console.log('Renderizando usuarios:', users);
         }
-        
-        // Event listeners para la búsqueda y filtrado
-        document.getElementById('user-search').addEventListener('input', handleSearch);
-        document.getElementById('user-role-filter').addEventListener('change', handleSearch);
-        
-        // Llamada inicial para cargar todos los usuarios
-        renderUsers();
+
+        // Función para mostrar mensajes toast (asegúrate de que esta función esté definida en tu código)
+        function showToast(message, type) {
+            // Implementa la lógica para mostrar mensajes toast
+            console.log(`Toast: ${message} (${type})`);
+        }
 
         function renderRoles() {
             const rolesList = document.getElementById('roles-list');
@@ -750,6 +765,56 @@
                 }
             })
         }
+
+        function searchAndFilterCompanies() {
+            const nameFilter = document.getElementById('company-name-search').value.toLowerCase();
+            const rncFilter = document.getElementById('company-rnc-search').value.toLowerCase();
+            const statusFilter = document.getElementById('company-status-filter').value.toLowerCase();
+        
+            fetch('/admin/companies')
+                .then(response => response.json())
+                .then(data => {
+                    const filteredCompanies = data.companies.filter(company => 
+                        company.nombre.toLowerCase().includes(nameFilter) &&
+                        company.rnc.toLowerCase().includes(rncFilter) &&
+                        (statusFilter === '' || company.estado.toLowerCase() === statusFilter)
+                    );
+                    renderCompanies(filteredCompanies);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error al filtrar empresas', 'error');
+                });
+        }
+
+        // Función para manejar la búsqueda de empresas
+        function handleCompanySearch() {
+            const nameFilter = document.getElementById('company-name-search').value.toLowerCase();
+            const rncFilter = document.getElementById('company-rnc-search').value.toLowerCase();
+            const statusFilter = document.getElementById('company-status-filter').value;
+
+            fetch('/admin/companies')
+                .then(response => response.json())
+                .then(data => {
+                    const filteredCompanies = data.companies.filter(company => 
+                        company.nombre.toLowerCase().includes(nameFilter) &&
+                        company.rnc.toLowerCase().includes(rncFilter) &&
+                        (statusFilter === '' || company.estado === statusFilter)
+                    );
+                    renderCompanies(filteredCompanies);
+                })
+                .catch(error => {
+                    console.error('Error al buscar empresas:', error);
+                    showToast('Error al buscar empresas', 'error');
+                });
+        }
+
+        // Llamar a la función de configuración cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupCompanySearchListeners();
+            setupUserSearchListeners();
+            showSection('empresas-section');  // O la sección que quieras mostrar por defecto
+        });
 
         function showToast(message) {
             Swal.fire({
