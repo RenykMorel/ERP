@@ -197,6 +197,7 @@ class Usuario(UserMixin, db.Model):
             "es_super_admin": self.es_super_admin,
             "estado": self.estado,
             "rol": self.rol,
+            "roles": [rol.nombre for rol in self.roles],
             "fecha_registro": self.fecha_registro.isoformat() if self.fecha_registro else None,
             "empresa": self.empresa.nombre if self.empresa else None
         }
@@ -205,14 +206,29 @@ class Rol(db.Model):
     __tablename__ = "roles"
     id = Column(Integer, primary_key=True)
     nombre = Column(String(50), unique=True, nullable=False)
+    descripcion = Column(String(200))
     usuarios = relationship("Usuario", secondary=usuario_roles, back_populates="roles")
     permisos = relationship("Permiso", secondary=rol_permisos, back_populates="roles")
     permisos_json = Column(JSON)
+
+    @classmethod
+    def insert_default_roles(cls):
+        default_roles = [
+            {'nombre': 'Admin', 'descripcion': 'Administrador con todos los permisos'},
+            {'nombre': 'Usuario', 'descripcion': 'Usuario estándar sin permisos de administrador'}
+        ]
+        for role in default_roles:
+            existing_role = cls.query.filter_by(nombre=role['nombre']).first()
+            if not existing_role:
+                new_role = cls(**role)
+                db.session.add(new_role)
+        db.session.commit()
 
     def to_dict(self):
         return {
             "id": self.id,
             "nombre": self.nombre,
+            "descripcion": self.descripcion,
             "permisos_json": self.permisos_json
         }
 

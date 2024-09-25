@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .admin-section {
             display: none;
@@ -136,6 +137,7 @@
                                 <tr>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre del Rol</th>
+                                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Descripción</th>
                                     <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
@@ -320,6 +322,7 @@
     </div>
 
     <!-- Modal for creating/editing a user -->
+    <!-- Modal para crear/editar un usuario -->
     <div id="user-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
@@ -335,13 +338,20 @@
                         <input type="text" id="user-address" class="w-full px-3 py-2 border rounded" placeholder="Dirección" required>
                         <input type="text" id="user-company" class="w-full px-3 py-2 border rounded" placeholder="Nombre de la empresa" required>
                         <input type="text" id="user-company-type" class="w-full px-3 py-2 border rounded" placeholder="Tipo de empresa" required>
-                        <input type="text" id="user-representative" class="w-full px-3 py-2 border rounded" placeholder="Representante legal" required>
                         <select id="user-role" class="w-full px-3 py-2 border rounded" required>
-                            <option value="">Seleccione un rol</option>
+                            <option value="">Seleccione un rol principal</option>
                             <option value="usuario">Usuario</option>
                             <option value="administrador">Administrador</option>
                         </select>
-                        <input type="password" id="user-password" class="w-full px-3 py-2 border rounded" placeholder="Contraseña" required>
+                        <input type="password" id="user-password" class="w-full px-3 py-2 border rounded" placeholder="Contraseña (dejar en blanco para no cambiar)">
+                        
+                        <!-- Contenedor para los checkboxes de roles -->
+                        <div class="mt-4">
+                            <h4 class="text-md font-medium text-gray-700 mb-2">Roles adicionales</h4>
+                            <div id="user-roles" class="space-y-2">
+                                <!-- Los checkboxes de roles se insertarán aquí dinámicamente -->
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
@@ -350,7 +360,6 @@
                 </div>
             </div>
         </div>
-    </div>
     </div>
 
     <script>
@@ -427,6 +436,24 @@
             }
         }
         
+        function updateRoleFilter() {
+            fetch('/admin/roles')
+                .then(response => response.json())
+                .then(data => {
+                    const roleFilter = document.getElementById('user-role-filter');
+                    roleFilter.innerHTML = '<option value="">Todos los roles</option>';
+                    data.roles.forEach(role => {
+                        roleFilter.innerHTML += `<option value="${role.nombre}">${role.nombre}</option>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar roles para el filtro:', error);
+                });
+        }
+        
+        // Llamar a esta función cuando se carga la página y después de crear/editar/eliminar roles
+        document.addEventListener('DOMContentLoaded', updateRoleFilter);
+
         // Asegúrate de que esta función se llame solo una vez al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
             showSection('empresas-section'); // O la sección que quieras mostrar por defecto
@@ -501,16 +528,17 @@
         // Función principal para buscar y filtrar usuarios
         function searchAndFilterUsers() {
             const searchTerm = document.getElementById('user-search').value.toLowerCase();
-            const roleFilter = document.getElementById('user-role-filter').value.toLowerCase();
-
+            const roleFilter = document.getElementById('user-role-filter').value;
+        
             fetch('/admin/users')
                 .then(response => response.json())
                 .then(data => {
                     const filteredUsers = data.users.filter(user => 
                         (user.nombre.toLowerCase().includes(searchTerm) || 
-                        user.apellido.toLowerCase().includes(searchTerm) || 
-                        user.email.toLowerCase().includes(searchTerm)) &&
-                        (roleFilter === '' || user.rol.toLowerCase() === roleFilter)
+                         user.apellido.toLowerCase().includes(searchTerm) || 
+                         user.email.toLowerCase().includes(searchTerm) || 
+                         user.nombre_usuario.toLowerCase().includes(searchTerm)) &&
+                        (roleFilter === '' || user.rol.toLowerCase() === roleFilter.toLowerCase())
                     );
                     renderUsers(filteredUsers);
                 })
@@ -786,6 +814,128 @@
                     showToast('Error al filtrar empresas', 'error');
                 });
         }
+        
+        // Función para cargar y mostrar roles
+        function loadRoles() {
+            fetch('/admin/roles')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const rolesList = document.getElementById('roles-list');
+                    rolesList.innerHTML = '';
+                    data.roles.forEach(role => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">${role.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${role.nombre}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${role.descripcion || 'Sin descripción'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button onclick="editRole(${role.id})" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mr-2">Editar</button>
+                                <button onclick="deleteRole(${role.id})" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Eliminar</button>
+                            </td>
+                        `;
+                        rolesList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'No se pudieron cargar los roles: ' + error.message, 'error');
+                });
+        }
+        
+        function createRole() {
+            Swal.fire({
+                title: 'Crear Nuevo Rol',
+                html:
+                    '<input id="swal-input1" class="swal2-input" placeholder="Nombre del rol">' +
+                    '<input id="swal-input2" class="swal2-input" placeholder="Descripción del rol">',
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Crear',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const name = document.getElementById('swal-input1').value;
+                    const description = document.getElementById('swal-input2').value;
+                    if (!name.trim()) {
+                        Swal.showValidationMessage('El nombre del rol es requerido');
+                        return false;
+                    }
+                    return { nombre: name, descripcion: description };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/admin/roles', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(result.value),
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Éxito', data.message || 'Rol creado correctamente', 'success');
+                            loadRoles();
+                            updateRoleFilter();
+                        } else {
+                            throw new Error(data.error || 'Error desconocido al crear el rol');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error', 'Error al crear el rol: ' + error.message, 'error');
+                    });
+                }
+            });
+        }
+        
+        
+        
+        function deleteRole(roleId) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/roles/${roleId}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Eliminado', 'El rol ha sido eliminado', 'success');
+                                loadRoles();
+                                updateRoleFilter();
+                            } else {
+                                throw new Error(data.error || 'Error desconocido al eliminar el rol');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'Hubo un problema al eliminar el rol: ' + error.message, 'error');
+                        });
+                }
+            });
+        }
+        
+        
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRoles();
+            updateRoleFilter();
+            document.getElementById('create-role-btn').addEventListener('click', createRole);
+        });
 
         // Función para manejar la búsqueda de empresas
         function handleCompanySearch() {
@@ -1017,11 +1167,14 @@
                     document.getElementById('user-role').value = user.rol;
                     document.getElementById('user-password').value = '';
         
+                    // Cargar los roles del usuario
+                    loadUserRoles(id);
+        
                     document.getElementById('user-modal-title').textContent = 'Editar Usuario';
                     document.getElementById('user-modal').classList.remove('hidden');
         
                     document.getElementById('save-user').onclick = function() {
-                        // ... (código para guardar cambios)
+                        updateUser(id);
                     };
                 })
                 .catch(error => {
@@ -1033,6 +1186,92 @@
                     });
                     renderUsers(); // Actualizar la lista de usuarios
                 });
+        }
+        
+        function loadUserRoles(userId) {
+            fetch('/admin/roles')
+                .then(response => response.json())
+                .then(rolesData => {
+                    fetch(`/admin/users/${userId}`)
+                        .then(response => response.json())
+                        .then(userData => {
+                            const roleCheckboxes = document.getElementById('user-roles');
+                            roleCheckboxes.innerHTML = '';
+                            rolesData.roles.forEach(role => {
+                                const checkbox = document.createElement('input');
+                                checkbox.type = 'checkbox';
+                                checkbox.id = `role-${role.id}`;
+                                checkbox.name = 'user-roles';
+                                checkbox.value = role.nombre;
+                                checkbox.checked = userData.roles.includes(role.nombre);
+                                
+                                const label = document.createElement('label');
+                                label.htmlFor = `role-${role.id}`;
+                                label.textContent = role.nombre;
+                                
+                                roleCheckboxes.appendChild(checkbox);
+                                roleCheckboxes.appendChild(label);
+                            });
+                        });
+                })
+                .catch(error => console.error('Error al cargar roles:', error));
+        }
+        
+        function updateUser(userId) {
+            const roles = Array.from(document.querySelectorAll('input[name="user-roles"]:checked'))
+                              .map(checkbox => checkbox.value);
+            
+            const userData = {
+                nombre: document.getElementById('user-name').value,
+                apellido: document.getElementById('user-last-name').value,
+                email: document.getElementById('user-email').value,
+                telefono: document.getElementById('user-phone').value,
+                direccion: document.getElementById('user-address').value,
+                nombre_empresa: document.getElementById('user-company').value,
+                rnc_empresa: document.getElementById('user-company-type').value,
+                rol: document.getElementById('user-role').value,
+                roles: roles
+            };
+        
+            // Si se ha introducido una nueva contraseña, inclúyela en los datos
+            const newPassword = document.getElementById('user-password').value;
+            if (newPassword) {
+                userData.password = newPassword;
+            }
+        
+            fetch(`/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error,
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: 'Usuario actualizado exitosamente',
+                    });
+                    document.getElementById('user-modal').classList.add('hidden');
+                    renderUsers(); // Actualizar la lista de usuarios
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un problema al actualizar el usuario',
+                });
+            });
         }
 
         function deleteUser(id) {
@@ -1182,32 +1421,106 @@ document.getElementById('save-company').addEventListener('click', function(event
         document.addEventListener('DOMContentLoaded', refreshUserList);
 
         // Role management functions
-        function editRole(index) {
-            showToast('Función de editar rol no implementada');
+        function editRole(roleId) {
+            fetch(`/admin/roles/${roleId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 405) {
+                            throw new Error('El método GET no está permitido para esta ruta. Verifica la configuración del servidor.');
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.success || !data.rol) {
+                        throw new Error('La respuesta del servidor no contiene la información del rol');
+                    }
+                    Swal.fire({
+                        title: 'Editar Rol',
+                        html:
+                            `<input id="swal-input1" class="swal2-input" value="${data.rol.nombre}" placeholder="Nombre del rol">` +
+                            `<input id="swal-input2" class="swal2-input" value="${data.rol.descripcion || ''}" placeholder="Descripción del rol">`,
+                        focusConfirm: false,
+                        showCancelButton: true,
+                        confirmButtonText: 'Actualizar',
+                        cancelButtonText: 'Cancelar',
+                        preConfirm: () => {
+                            const name = document.getElementById('swal-input1').value;
+                            const description = document.getElementById('swal-input2').value;
+                            if (!name.trim()) {
+                                Swal.showValidationMessage('El nombre del rol es requerido');
+                                return false;
+                            }
+                            return { nombre: name, descripcion: description };
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            updateRole(roleId, result.value);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'No se pudo cargar la información del rol: ' + error.message, 'error');
+                });
         }
-
-        function deleteRole(index) {
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "No podrás revertir esta acción",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    roles.splice(index, 1);
-                    renderRoles();
-                    Swal.fire(
-                        'Eliminado',
-                        'El rol ha sido eliminado.',
-                        'success'
-                    )
+        
+        function updateRole(roleId, roleData) {
+            fetch(`/admin/roles/${roleId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(roleData),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Éxito', 'Rol actualizado correctamente', 'success');
+                    loadRoles();
+                    updateRoleFilter();
+                } else {
+                    throw new Error(data.error || 'Error desconocido al actualizar el rol');
                 }
             })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Error al actualizar el rol: ' + error.message, 'error');
+            });
         }
+        
+        function updateRole(roleId, roleData) {
+            fetch(`/admin/roles/${roleId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(roleData),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Éxito', 'Rol actualizado correctamente', 'success');
+                    loadRoles();
+                    updateRoleFilter();
+                } else {
+                    throw new Error(data.error || 'Error desconocido al actualizar el rol');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Error al actualizar el rol: ' + error.message, 'error');
+            });
+        }
+
+        
 
         // Permission management functions
         function editPermission(id) {
@@ -1323,7 +1636,51 @@ document.getElementById('save-company').addEventListener('click', function(event
         });
 
         document.getElementById('create-role-btn').addEventListener('click', function() {
-            showToast('Función de crear rol no implementada');
+            Swal.fire({
+                title: 'Crear Nuevo Rol',
+                html:
+                    '<input id="swal-input1" class="swal2-input" placeholder="Nombre del rol">' +
+                    '<input id="swal-input2" class="swal2-input" placeholder="Descripción del rol">',
+                focusConfirm: false,
+                preConfirm: () => {
+                    return [
+                        document.getElementById('swal-input1').value,
+                        document.getElementById('swal-input2').value
+                    ]
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const [roleName, roleDescription] = result.value;
+                    fetch('/admin/roles', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ nombre: roleName, descripcion: roleDescription }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Rol creado exitosamente',
+                                text: `Se ha creado el rol ${roleName}`,
+                            });
+                            loadRoles();  // Asegúrate de que esta función esté definida para recargar la lista de roles
+                        } else {
+                            throw new Error(data.error || 'Error al crear el rol');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Hubo un problema al crear el rol: ' + error.message,
+                        });
+                    });
+                }
+            });
         });
 
         document.getElementById('create-permission-btn').addEventListener('click', function() {

@@ -133,6 +133,10 @@ def create_user():
     logger.info(f"Datos recibidos para crear usuario: {data}")
     
     try:
+        rol_usuario = Rol.query.filter_by(nombre='Usuario').first()
+        if not rol_usuario:
+            return jsonify({"success": False, "error": "Rol de Usuario no encontrado"}), 500
+
         nuevo_usuario = Usuario.crear_usuario(
             nombre=data['nombre'],
             apellido=data['apellido'],
@@ -146,8 +150,11 @@ def create_user():
             telefono_empresa=data.get('telefono_empresa'),
             es_admin=data.get('es_admin', False),
             es_super_admin=data.get('es_super_admin', False),
-            rol=data.get('rol', 'usuario')
+            rol=rol_usuario.nombre
         )
+        nuevo_usuario.roles.append(rol_usuario)
+        db.session.commit()
+        
         logger.info(f"Usuario creado exitosamente: {nuevo_usuario.to_dict()}")
         return jsonify({"success": True, "message": "Usuario creado exitosamente", "user": nuevo_usuario.to_dict()}), 201
     except ValueError as e:
@@ -171,7 +178,16 @@ def update_user(usuario_id):
         usuario.nombre_usuario = data.get("nombre_usuario", usuario.nombre_usuario)
         usuario.email = data.get("email", usuario.email)
         usuario.estado = data.get("estado", usuario.estado)
-        usuario.rol = data.get("rol", usuario.rol)
+        
+        if "rol" in data:
+            nuevo_rol = Rol.query.filter_by(nombre=data["rol"]).first()
+            if nuevo_rol:
+                usuario.roles = [nuevo_rol]
+                usuario.rol = nuevo_rol.nombre
+                usuario.es_admin = (nuevo_rol.nombre == 'Admin')
+            else:
+                return jsonify({"error": f"Rol '{data['rol']}' no encontrado"}), 400
+        
         if "password" in data:
             usuario.set_password(data["password"])
         
@@ -347,67 +363,73 @@ def get_roles():
     if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
     roles = Rol.query.all()
-    current_app.logger.info("Obtenida lista de roles")
-    return jsonify([rol.to_dict() for rol in roles])
+    return jsonify({"roles": [rol.to_dict() for rol in roles]})
+
+@admin.route("/roles/<int:rol_id>", methods=["GET"])
+@login_required
+def get_role(rol_id):
+    if not current_user.es_admin:
+        return jsonify({"success": False, "error": "Acceso no autorizado"}), 403
+    rol = Rol.query.get_or_404(rol_id)
+    return jsonify({"success": True, "rol": rol.to_dict()})
 
 @admin.route("/roles", methods=["POST"])
 @login_required
 def create_role():
     if not current_user.es_admin:
-        return jsonify({"error": "Acceso no autorizado"}), 403
+        return jsonify({"success": False, "error": "Acceso no autorizado"}), 403
     data = request.json
     try:
         nuevo_rol = Rol(nombre=data["nombre"], descripcion=data.get("descripcion", ""))
         db.session.add(nuevo_rol)
         db.session.commit()
-        current_app.logger.info(f"Nuevo rol creado: {nuevo_rol.nombre}")
-        return jsonify({"message": "Rol creado exitosamente", "rol": nuevo_rol.to_dict()}), 201
+        return jsonify({
+            "success": True, 
+            "message": "Rol creado exitosamente", 
+            "rol": nuevo_rol.to_dict()
+        }), 201
     except IntegrityError:
         db.session.rollback()
-        current_app.logger.error(f"Error de integridad al crear rol: {data['nombre']}")
-        return jsonify({"error": "Ya existe un rol con ese nombre"}), 400
+        return jsonify({"success": False, "error": "Ya existe un rol con ese nombre"}), 400
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error al crear rol: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @admin.route("/roles/<int:rol_id>", methods=["PUT"])
 @login_required
 def update_role(rol_id):
     if not current_user.es_admin:
-        return jsonify({"error": "Acceso no autorizado"}), 403
+        return jsonify({"success": False, "error": "Acceso no autorizado"}), 403
     rol = Rol.query.get_or_404(rol_id)
     data = request.json
     try:
         rol.nombre = data.get("nombre", rol.nombre)
         rol.descripcion = data.get("descripcion", rol.descripcion)
         db.session.commit()
-        current_app.logger.info(f"Rol actualizado: {rol.nombre}")
-        return jsonify({"message": "Rol actualizado exitosamente", "rol": rol.to_dict()})
+        return jsonify({"success": True, "message": "Rol actualizado exitosamente", "rol": rol.to_dict()})
     except IntegrityError:
         db.session.rollback()
-        current_app.logger.error(f"Error de integridad al actualizar rol: {rol.nombre}")
-        return jsonify({"error": "Ya existe un rol con ese nombre"}), 400
+        return jsonify({"success": False, "error": "Ya existe un rol con ese nombre"}), 400
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error al actualizar rol: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @admin.route("/roles/<int:rol_id>", methods=["DELETE"])
 @login_required
 def delete_role(rol_id):
     if not current_user.es_admin:
-        return jsonify({"error": "Acceso no autorizado"}), 403
+        return jsonify({"success": False, "error": "Acceso no autorizado"}), 403
     rol = Rol.query.get_or_404(rol_id)
     try:
         db.session.delete(rol)
         db.session.commit()
         current_app.logger.info(f"Rol eliminado: {rol.nombre}")
-        return jsonify({"message": "Rol eliminado exitosamente"}), 200
+        return jsonify({"success": True, "message": "Rol eliminado exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error al eliminar rol: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @admin.route("/permisos", methods=["GET"])
 @login_required
