@@ -204,17 +204,17 @@ def update_user(usuario_id):
 @login_required
 def delete_user(usuario_id):
     if not current_user.es_admin:
-        return jsonify({"error": "Acceso no autorizado"}), 403
+        return jsonify({"success": False, "error": "Acceso no autorizado"}), 403
     usuario = Usuario.query.get_or_404(usuario_id)
     try:
         db.session.delete(usuario)
         db.session.commit()
         current_app.logger.info(f"Usuario eliminado: {usuario.nombre_usuario}")
-        return jsonify({"message": "Usuario eliminado exitosamente"}), 200
+        return jsonify({"success": True, "message": f"Usuario {usuario.nombre_usuario} eliminado exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error al eliminar usuario: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        current_app.logger.error(f"Error al eliminar usuario {usuario.nombre_usuario}: {str(e)}")
+        return jsonify({"success": False, "error": f"No se pudo eliminar el usuario: {str(e)}"}), 500
 
 @admin.route("/toggle_user_status/<int:usuario_id>", methods=["POST"])
 @login_required

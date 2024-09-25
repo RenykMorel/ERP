@@ -416,9 +416,24 @@
             document.querySelectorAll('.admin-section').forEach(section => {
                 section.style.display = 'none';
             });
-            document.getElementById(sectionId).style.display = 'block';
+            const section = document.getElementById(sectionId);
+            section.style.display = 'block';
             document.getElementById('section-title').textContent = sections.find(s => s.id === sectionId).name;
+        
+            // Solo llamar a renderUsers si estamos mostrando la sección de usuarios y la lista está vacía
+            if (sectionId === 'users-section' && document.getElementById('users-list').children.length === 0) {
+                renderUsers();
+            }
+            // Solo llamar a renderCompanies si estamos mostrando la sección de empresas y la lista está vacía
+            if (sectionId === 'empresas-section' && document.getElementById('companies-list').children.length === 0) {
+                renderCompanies();
+            }
         }
+        
+        // Asegúrate de que esta función se llame solo una vez al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection('empresas-section'); // O la sección que quieras mostrar por defecto
+        });
 
         function renderCompanies(filteredCompanies = null) {
             const companiesList = document.getElementById('companies-list');
@@ -475,7 +490,7 @@
         
                     filteredUsers.forEach(user => {
                         const row = document.createElement('tr');
-                        row.setAttribute('data-user-id', user.id);
+                        row.setAttribute('data-user-id', user.id);  // Añadir el atributo data-user-id
                         row.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${user.nombre} ${user.apellido}</td>
@@ -494,14 +509,35 @@
                 .catch(error => {
                     console.error('Error:', error);
                     usersList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-600">Error al cargar los usuarios</td></tr>';
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Hubo un problema al cargar los usuarios. Por favor, intenta de nuevo más tarde.',
-                    });
                 });
         }
         
+        function setupUserSearchListeners() {
+            const userSearch = document.getElementById('user-search');
+            const userRoleFilter = document.getElementById('user-role-filter');
+        
+            // Eliminar listeners existentes para evitar duplicados
+            userSearch.removeEventListener('input', handleUserSearch);
+            userRoleFilter.removeEventListener('change', handleUserSearch);
+        
+            // Añadir nuevos listeners
+            userSearch.addEventListener('input', handleUserSearch);
+            userRoleFilter.addEventListener('change', handleUserSearch);
+        }
+        
+        function handleUserSearch() {
+            const searchTerm = document.getElementById('user-search').value;
+            const roleFilter = document.getElementById('user-role-filter').value;
+            renderUsers(searchTerm, roleFilter);
+        }
+        
+        // Llamar a esta función una vez al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            setupUserSearchListeners();
+            setupCompanySearchListeners();  // Asegúrate de tener esta función definida
+            showSection('empresas-section');  // Esto llamará a renderCompanies si es necesario
+        });
+
         // Funciones para manejar la búsqueda y filtrado
         function handleSearch() {
             const searchTerm = document.getElementById('user-search').value;
@@ -947,28 +983,32 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     fetch(`/admin/users/${id}`, { method: 'DELETE' })
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
                         .then(data => {
                             if (data.success) {
                                 Swal.fire(
                                     'Eliminado',
-                                    'El usuario ha sido eliminado.',
+                                    data.message || 'El usuario ha sido eliminado.',
                                     'success'
                                 );
-                                refreshUserList();
+                                const userRow = document.querySelector(`tr[data-user-id="${id}"]`);
+                                if (userRow) {
+                                    userRow.remove();
+                                }
                             } else {
-                                Swal.fire(
-                                    'Error',
-                                    data.error || 'No se pudo eliminar el usuario',
-                                    'error'
-                                );
+                                throw new Error(data.error || 'No se pudo eliminar el usuario');
                             }
                         })
                         .catch(error => {
                             console.error('Error:', error);
                             Swal.fire(
                                 'Error',
-                                'Hubo un problema al conectar con el servidor',
+                                'Hubo un problema al eliminar el usuario: ' + error.message,
                                 'error'
                             );
                         });
