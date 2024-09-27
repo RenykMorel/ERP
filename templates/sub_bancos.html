@@ -281,7 +281,7 @@
     }
 
     function editarBanco(id) {
-        fetch(`/api/obtener-banco/${id}`)
+        fetch(`/banco/api/obtener-banco/${id}`)
             .then(response => response.json())
             .then(banco => {
                 document.getElementById('modal-title').textContent = 'Editar Banco';

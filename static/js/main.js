@@ -239,22 +239,50 @@ function loadModules() {
         .then(modulos => {
             const moduleContainer = document.getElementById('module-container');
             moduleContainer.innerHTML = '';
-            const colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#FFC0CB", "#98D8C8", "#F06292", "#AED581", "#FFD54F", "#800000", "#4DB6AC", "#075e56"];
-            modulos.forEach((modulo, index) => {
-                const moduleDiv = createModuleElement(modulo, colors[index % colors.length]);
-                moduleContainer.appendChild(moduleDiv);
+            const modulosConfig = [
+                { nombre: "Banco", color: "#FF6B6B", icon: "fas fa-university" },
+                { nombre: "Contabilidad", color: "#4ECDC4", icon: "fas fa-calculator" },
+                { nombre: "Activos Fijos", color: "#45B7D1", icon: "fas fa-building" },
+                { nombre: "Cuentas Por Cobrar", color: "#FFA07A", icon: "fas fa-file-invoice-dollar" },
+                { nombre: "Cuentas Por Pagar", color: "#FFC0CB", icon: "fas fa-file-invoice" },
+                { nombre: "Facturacion", color: "#98D8C8", icon: "fas fa-file-alt" },
+                { nombre: "Impuestos", color: "#F06292", icon: "fas fa-percentage" },
+                { nombre: "Inventario", color: "#AED581", icon: "fas fa-boxes" },
+                { nombre: "Compras", color: "#FFD54F", icon: "fas fa-shopping-cart" },
+                { nombre: "Importacion", color: "#800000", icon: "fas fa-ship" },
+                { nombre: "Proyectos", color: "#4DB6AC", icon: "fas fa-project-diagram" },
+                { nombre: "Recursos Humanos", color: "#075e56", icon: "fas fa-users" }
+            ];
+            
+            modulosConfig.forEach(config => {
+                if (modulos.includes(config.nombre)) {
+                    const moduleDiv = createModuleElement(config.nombre, config.color, config.icon);
+                    moduleContainer.appendChild(moduleDiv);
+                }
             });
+            if (isAdmin()) {
+                const adminPanel = createModuleElement("Panel de Administración", "#3498db", "fas fa-cogs");
+                adminPanel.querySelector('button').onclick = () => window.location.href = '/admin_panel';
+                moduleContainer.appendChild(adminPanel);
+            }
+
+            // Agregar botón de Cerrar Sesión
+            const logoutButton = createModuleElement("Cerrar Sesión", "#e74c3c", "fas fa-sign-out-alt");
+            logoutButton.querySelector('button').onclick = handleLogout;
+            moduleContainer.appendChild(logoutButton);
         })
         .catch(error => console.error('Error loading modules:', error));
 }
 
 // Crea un elemento HTML para un módulo
-function createModuleElement(modulo, color) {
+function createModuleElement(modulo, color, icon) {
     const moduleDiv = document.createElement('div');
     moduleDiv.className = 'module-wrapper';
     
-    const button = createButton(modulo, 'rectangular-button', color);
-    button.onclick = () => toggleSubmodules(modulo, moduleDiv);
+    const button = createButton(modulo, 'rectangular-button', color, icon);
+    if (modulo !== "Panel de Administración" && modulo !== "Cerrar Sesión") {
+        button.onclick = () => toggleSubmodules(modulo, moduleDiv);
+    }
     
     const submoduleContainer = document.createElement('div');
     submoduleContainer.className = 'submodule-container';
@@ -265,14 +293,22 @@ function createModuleElement(modulo, color) {
 }
 
 // Crea un botón genérico
-function createButton(text, className, color) {
+function createButton(text, className, color, icon) {
     const button = document.createElement('button');
-    button.textContent = text;
     button.className = className;
     if (color) button.style.backgroundColor = color;
-    if (className === 'submodule-button') {
-        button.style.width = 'auto';
+    
+    if (icon) {
+        const iconElement = document.createElement('i');
+        iconElement.className = icon;
+        iconElement.style.marginRight = '10px';
+        button.appendChild(iconElement);
     }
+    
+    const textSpan = document.createElement('span');
+    textSpan.textContent = text;
+    button.appendChild(textSpan);
+    
     return button;
 }
 
@@ -280,20 +316,23 @@ function createButton(text, className, color) {
 function toggleSubmodules(moduleName, moduleDiv) {
     const submoduleContainer = moduleDiv.querySelector('.submodule-container');
     const moduleButton = moduleDiv.querySelector('.rectangular-button');
-    const isOpen = submoduleContainer.style.display === 'block';
 
+    // Cerrar todos los otros contenedores de submódulos
     document.querySelectorAll('.submodule-container').forEach(container => {
         if (container !== submoduleContainer) {
             container.style.display = 'none';
         }
     });
+
+    // Quitar la clase 'active' de todos los otros botones de módulo
     document.querySelectorAll('.rectangular-button').forEach(btn => {
         if (btn !== moduleButton) {
             btn.classList.remove('active');
         }
     });
 
-    if (!isOpen) {
+    // Alternar la visibilidad del contenedor de submódulos actual
+    if (submoduleContainer.style.display === 'none' || submoduleContainer.style.display === '') {
         moduleButton.classList.add('active');
         submoduleContainer.style.display = 'block';
         loadSubmodules(moduleName, submoduleContainer);
@@ -311,23 +350,26 @@ function loadSubmodules(moduleName, submoduleContainer) {
             .then(submodulos => {
                 submoduleContainer.innerHTML = '';
                 submodulos.forEach(submodulo => {
-                    const button = createButton(submodulo, 'submodule-button');
+                    const button = createButton(submodulo, 'submodule-button', null, 'fas fa-circle');
                     button.onclick = (event) => {
                         event.preventDefault();
                         handleSubmoduleClick(moduleName, submodulo);
                     };
                     submoduleContainer.appendChild(button);
                 });
+                // Mostrar el contenedor de submódulos
+                submoduleContainer.style.display = 'flex';
+                submoduleContainer.style.flexDirection = 'column';
+                submoduleContainer.style.alignItems = 'center';
             })
             .catch(error => console.error('Error loading submodules:', error));
     }
 }
 
 // Carga el contenido de un submódulo específico
+// Carga el contenido de un submódulo específico
 function loadSubmoduleContent(moduleName, submoduleName) {
     console.log(`Loading content for ${moduleName} - ${submoduleName}`);
-    // Implementar lógica para cargar contenido del submódulo
-    // Por ejemplo:
     fetch(`/api/submodule-content/${moduleName}/${submoduleName}`)
         .then(response => response.json())
         .then(data => {
@@ -509,7 +551,7 @@ function initializeAsistente() {
     const asistenteInput = document.getElementById('asistente-input');
     const asistenteEnviar = document.getElementById('asistente-enviar');
 
-    // Comprobar si el asistente está activo (esto dependerá de cómo manejes el estado del asistente)
+    // Comprobar si el asistente está activo
     fetch('/api/asistente-status')
         .then(response => response.json())
         .then(data => {
@@ -540,4 +582,11 @@ function initializeAsistente() {
             }
         });
     }
+}
+
+// Función para verificar si el usuario es administrador
+function isAdmin() {
+    // Esta función debería implementarse según la lógica de tu aplicación
+    // Por ejemplo, podrías verificar una variable global o hacer una petición al servidor
+    return false; // Placeholder
 }

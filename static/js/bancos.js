@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const contacto = document.getElementById('contacto-banco').value;
         const estatus = document.getElementById('estatus-banco').value;
 
-        fetch(`/api/buscar-bancos?id=${id}&nombre=${nombre}&contacto=${contacto}&estatus=${estatus}`)
+        fetch(`/banco/api/buscar-bancos?id=${id}&nombre=${nombre}&contacto=${contacto}&estatus=${estatus}`)
             .then(response => response.json())
             .then(bancos => {
                 actualizarTablaBancos(bancos);
@@ -43,12 +43,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>
                     <button class="editar-banco" data-id="${banco.id}">Editar</button>
                     <button class="eliminar-banco" data-id="${banco.id}">Eliminar</button>
+                    <button class="cambiar-estatus" data-id="${banco.id}" data-estatus="${banco.estatus}">
+                        ${banco.estatus === 'activo' ? 'Desactivar' : 'Activar'}
+                    </button>
                 </td>
             `;
             bancosTabla.appendChild(tr);
         });
     }
-    
 
     function mostrarFormularioCrearBanco() {
         crearBancoForm.style.display = 'block';
@@ -68,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const id = bancoData.id;
         delete bancoData.id;
 
-        const url = id ? `/api/actualizar-banco/${id}` : '/api/crear-banco';
+        const url = id ? `/banco/api/actualizar-banco/${id}` : '/banco/api/crear-banco';
         const method = id ? 'PUT' : 'POST';
 
         fetch(url, {
@@ -110,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function editarBanco(id) {
-        fetch(`/api/obtener-banco/${id}`)
+        fetch(`/banco/api/obtener-banco/${id}`)
             .then(response => response.json())
             .then(banco => {
                 nuevoBancoForm.querySelector('[name="id"]').value = banco.id;
@@ -131,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function eliminarBanco(id) {
         if (confirm('¿Estás seguro de que deseas eliminar este banco?')) {
-            fetch(`/api/eliminar-banco/${id}`, { method: 'DELETE' })
+            fetch(`/banco/api/eliminar-banco/${id}`, { method: 'DELETE' })
                 .then(response => response.json())
                 .then(data => {
                     buscarBancos();
@@ -146,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function cambiarEstatus(id, estatusActual) {
         const nuevoEstatus = estatusActual === 'activo' ? 'inactivo' : 'activo';
-        fetch(`/api/cambiar-estatus-banco/${id}`, {
+        fetch(`/banco/api/cambiar-estatus-banco/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

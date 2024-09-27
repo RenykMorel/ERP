@@ -106,7 +106,6 @@ class Empresa(db.Model):
             "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None
         }
 
-
 class Usuario(UserMixin, db.Model):
     __tablename__ = "usuarios"
     id = Column(Integer, primary_key=True)
@@ -185,6 +184,20 @@ class Usuario(UserMixin, db.Model):
             logger.error(f"Error inesperado al crear usuario {nombre_usuario}: {str(e)}")
             raise ValueError(f"Error al crear el usuario: {str(e)}")
 
+    def asignar_rol(self, nombre_rol):
+        rol = Rol.query.filter_by(nombre=nombre_rol).first()
+        if rol:
+            if rol not in self.roles:
+                self.roles.append(rol)
+            self.rol = rol.nombre
+            self.es_admin = (rol.nombre.lower() == 'admin')
+        else:
+            raise ValueError(f"Rol '{nombre_rol}' no encontrado")
+    
+    @property
+    def rol_principal(self):
+        return self.rol
+    
     def to_dict(self):
         return {
             "id": self.id,
@@ -321,45 +334,6 @@ class Notificacion(db.Model):
             "usuario_id": self.usuario_id
         }
 
-class Banco(db.Model):
-    __tablename__ = "bancos"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    nombre = Column(String(100), nullable=False)
-    telefono = Column(String(20))
-    contacto = Column(String(100))
-    telefono_contacto = Column(String(20))
-    estatus = Column(Enum("activo", "inactivo", name="banco_estatus_enum"), default="activo")
-    fecha_creacion = Column(DateTime, default=datetime.utcnow)
-    fecha_actualizacion = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    @classmethod
-    def obtener_todos(cls):
-        bancos = cls.query.all()
-        notificar_asistente(f"Se han recuperado {len(bancos)} bancos de la base de datos.")
-        return bancos
-
-    @classmethod
-    def buscar(cls, **kwargs):
-        query = cls.query
-        for key, value in kwargs.items():
-            if value:
-                query = query.filter(getattr(cls, key).ilike(f"%{value}%"))
-        resultados = query.all()
-        notificar_asistente(f"Búsqueda de bancos realizada con {len(resultados)} resultados. Criterios: {kwargs}")
-        return resultados
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "nombre": self.nombre,
-            "telefono": self.telefono,
-            "contacto": self.contacto,
-            "telefono_contacto": self.telefono_contacto,
-            "estatus": self.estatus,
-            "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None,
-            "fecha_actualizacion": self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None,
-        }
-
 class Transaccion(db.Model):
     __tablename__ = "transacciones"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -410,7 +384,6 @@ class Cuenta(db.Model):
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
     fecha_actualizacion = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    banco = relationship("Banco", backref="cuentas")
     usuario = relationship("Usuario", backref="cuentas")
     transacciones = relationship("Transaccion", back_populates="cuenta")
 
@@ -510,14 +483,6 @@ class AdminReporte(db.Model):
         }
 
 # Eventos para notificar al asistente sobre operaciones en la base de datos
-@event.listens_for(Banco, "after_insert")
-def notify_banco_insert(mapper, connection, target):
-    notificar_asistente(f"Nuevo banco creado: {target.nombre}")
-
-@event.listens_for(Banco, "after_update")
-def notify_banco_update(mapper, connection, target):
-    notificar_asistente(f"Banco actualizado: {target.nombre}")
-
 @event.listens_for(Transaccion, "after_insert")
 def notify_transaccion_insert(mapper, connection, target):
     notificar_asistente(f"Nueva transacción creada: {target.tipo} por {target.monto}")

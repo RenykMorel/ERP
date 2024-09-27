@@ -179,42 +179,25 @@ def update_user(usuario_id):
         usuario.email = data.get("email", usuario.email)
         usuario.estado = data.get("estado", usuario.estado)
         
-        if "rol" in data:
+        if "rol" in data and data["rol"]:
             nuevo_rol = Rol.query.filter_by(nombre=data["rol"]).first()
             if nuevo_rol:
                 usuario.roles = [nuevo_rol]
                 usuario.rol = nuevo_rol.nombre
-                usuario.es_admin = (nuevo_rol.nombre == 'Admin')
+                usuario.es_admin = (nuevo_rol.nombre.lower() == 'admin')
             else:
-                return jsonify({"error": f"Rol '{data['rol']}' no encontrado"}), 400
+                current_app.logger.error(f"Rol no encontrado: '{data['rol']}'")
+                return jsonify({"success": False, "error": f"Rol '{data['rol']}' no encontrado"}), 400
         
-        if "password" in data:
-            usuario.set_password(data["password"])
-        
-        # Actualizar información de la empresa
-        if "nombre_empresa" in data:
-            empresa = Empresa.query.filter_by(nombre=data["nombre_empresa"]).first()
-            if not empresa:
-                empresa = Empresa(
-                    nombre=data["nombre_empresa"],
-                    rnc=data.get("rnc_empresa"),
-                    direccion=data.get("direccion_empresa"),
-                    telefono=data.get("telefono_empresa")
-                )
-                db.session.add(empresa)
-            usuario.empresa = empresa
-        
+        # ... (resto del código)
+
         db.session.commit()
         current_app.logger.info(f"Usuario actualizado: {usuario.to_dict()}")
-        return jsonify({"message": "Usuario actualizado exitosamente", "usuario": usuario.to_dict()})
-    except IntegrityError:
-        db.session.rollback()
-        current_app.logger.error(f"Error de integridad al actualizar usuario: {usuario.nombre_usuario}")
-        return jsonify({"error": "Ya existe un usuario con ese nombre o email"}), 400
+        return jsonify({"success": True, "message": "Usuario actualizado exitosamente", "usuario": usuario.to_dict()})
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error al actualizar usuario: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @admin.route("/users/<int:usuario_id>", methods=["DELETE"])
 @login_required

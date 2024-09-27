@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     {% endif %}
     {% block extra_css %}{% endblock %}
     <style>
@@ -197,9 +198,7 @@
             {% block content %}
             <div id="dashboard">
                 <div class="chart-controls">
-                    <button id="toggle-line-chart">Mostrar/Ocultar Gráfico de Líneas</button>
-                    <button id="toggle-bar-chart">Mostrar/Ocultar Gráfico de Barras</button>
-                    <button id="toggle-pie-chart">Mostrar/Ocultar Gráfico Circular</button>
+                    <button id="toggle-all-charts">Mostrar/Ocultar Todos los Gráficos</button>
                 </div>
                 <div class="dashboard-layout">
                     <div class="charts-container">
@@ -207,6 +206,7 @@
                             <h3>Ventas Mensuales</h3>
                             <canvas id="line-chart"></canvas>
                             <div class="chart-controls">
+                                <button onclick="toggleChartVisibility('line-chart')">Mostrar/Ocultar</button>
                                 <button onclick="adjustChartSize('line-chart', -50)">-</button>
                                 <button onclick="adjustChartSize('line-chart', 50)">+</button>
                             </div>
@@ -215,6 +215,7 @@
                             <h3>Ingresos vs Gastos</h3>
                             <canvas id="bar-chart"></canvas>
                             <div class="chart-controls">
+                                <button onclick="toggleChartVisibility('bar-chart')">Mostrar/Ocultar</button>
                                 <button onclick="adjustChartSize('bar-chart', -50)">-</button>
                                 <button onclick="adjustChartSize('bar-chart', 50)">+</button>
                             </div>
@@ -223,6 +224,7 @@
                             <h3>Distribución Financiera</h3>
                             <canvas id="pie-chart"></canvas>
                             <div class="chart-controls">
+                                <button onclick="toggleChartVisibility('pie-chart')">Mostrar/Ocultar</button>
                                 <button onclick="adjustChartSize('pie-chart', -50)">-</button>
                                 <button onclick="adjustChartSize('pie-chart', 50)">+</button>
                             </div>

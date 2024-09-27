@@ -304,40 +304,68 @@ body, html {
 }
 
 /* Estilos para botones */
-.rectangular-button, .submodule-button {
-    width: 95%;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 25px;
-    color: #fff;
-    background-color: #28a745;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-align: center;
-    margin: 5px auto;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-.rectangular-button:hover, .submodule-button:hover {
-    background-color: #12b2da;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-    transform: translateY(-8px);
+.module-wrapper {
+    margin-bottom: 10px;
 }
 
 .rectangular-button {
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    margin-bottom: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-.submodule-button {
-    font-size: 12px;
-    background-color: rgba(255, 255, 255, 0.2);
-    width: 90%;
+.rectangular-button:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transform: translateY(-2px);
+}
+
+.rectangular-button i {
+    margin-right: 10px;
+    font-size: 20px;
 }
 
 .submodule-container {
     display: none;
-    margin-top: 1px;
+    flex-direction: column;
+    align-items: center;
+    padding-left: 20px;
+}
+
+.submodule-button {
+    display: flex;
+    align-items: center;
+    width: 90%;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 20px;
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.2);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    margin: 3px 0;
+}
+
+.submodule-button:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.submodule-button i {
+    font-size: 8px;
+    margin-right: 8px;
 }
 
 /* Nuevos estilos para los formularios de registro y login */
@@ -440,22 +468,31 @@ body, html {
 
     /* Estilo para el botón de cerrar sesión */
     .logout-button {
-        background-color: #000000; /* Color de fondo rojo */
-        color: white; /* Color del texto blanco */
-        border: none; /* Sin borde */
-        padding: 10px 20px; /* Espaciado interno */
-        text-align: center; /* Centrar el texto */
-        text-decoration: none; /* Sin subrayado */
-        display: inline-block; /* Mostrar en línea */
-        font-size: 16px; /* Tamaño de fuente */
-        border-radius: 5px; /* Bordes redondeados */
-        cursor: pointer; /* Cambiar el cursor al pasar por encima */
-        transition: background-color 0.3s; /* Transición suave para el color de fondo */
+        background-color: #FF6B6B; /* Color rojo similar al módulo "Banco" */
+        color: #ffffff;
+        border: none;
+        padding: 8px 16px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        border-radius: 50px; /* Forma más redondeada */
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra más sutil */
+        width: 140px; /* Ajuste de tamaño para incluir el icono */
     }
-
+    
+    .logout-button i {
+        margin-right: 8px; /* Espacio entre el icono y el texto */
+    }
+    
     .logout-button:hover {
-        background-color: #000000; /* Color de fondo cuando el cursor está encima */
+        background-color: #E74C3C; /* Color hover más oscuro */
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3); /* Sombra similar */
     }
+    
 
 /* Estilos para los formularios de registro y login */
 .form-registro, .form-login {
