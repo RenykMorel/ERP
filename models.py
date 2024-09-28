@@ -1,4 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
+from extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, Table, ForeignKey, Boolean, JSON, event, Text
@@ -10,7 +10,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-db = SQLAlchemy()
 
 def notificar_asistente(mensaje):
     print(f"Notificación al asistente: {mensaje}")

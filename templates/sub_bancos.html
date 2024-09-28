@@ -3,6 +3,7 @@
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     .modal {
         transition: opacity 0.25s ease;
@@ -164,6 +165,7 @@
         }
         
         initializeBancos();
+        buscarBancos(); // Cargar bancos inicialmente
     });
 
     function initializeBancos() {
@@ -173,29 +175,29 @@
         const modal = document.querySelector('.modal');
         const modalOverlay = document.querySelector('.modal-overlay');
         const modalCloseButtons = document.querySelectorAll('.modal-close');
-
+    
         buscarBtn.addEventListener('click', buscarBancos);
-        crearNuevoBtn.addEventListener('click', () => {
-            document.getElementById('modal-title').textContent = 'Crear Nuevo Banco';
-            bancoForm.reset();
-            toggleModal();
-        });
+        crearNuevoBtn.addEventListener('click', mostrarFormularioCrearBanco);
         bancoForm.addEventListener('submit', guardarBanco);
-
+    
         modalOverlay.addEventListener('click', toggleModal);
-        modalCloseButtons.forEach(btn => {
-            btn.addEventListener('click', toggleModal);
-        });
+        modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+    
+        document.getElementById('bancos-tbody').addEventListener('click', manejarAccionesBanco);
+    }
 
-        document.querySelectorAll('.editar-banco').forEach(btn => {
-            btn.addEventListener('click', () => editarBanco(btn.dataset.id));
-        });
-        document.querySelectorAll('.eliminar-banco').forEach(btn => {
-            btn.addEventListener('click', () => eliminarBanco(btn.dataset.id));
-        });
-        document.querySelectorAll('.cambiar-estatus-banco').forEach(btn => {
-            btn.addEventListener('click', () => cambiarEstatusBanco(btn.dataset.id, btn.dataset.estatus));
-        });
+    function manejarAccionesBanco(event) {
+        const target = event.target.closest('button');
+        if (!target) return;
+    
+        const id = target.dataset.id;
+        if (target.classList.contains('editar-banco')) {
+            editarBanco(id);
+        } else if (target.classList.contains('eliminar-banco')) {
+            eliminarBanco(id);
+        } else if (target.classList.contains('cambiar-estatus-banco')) {
+            cambiarEstatusBanco(id, target.dataset.estatus);
+        }
     }
 
     function toggleModal() {
@@ -203,6 +205,9 @@
         modal.classList.toggle('opacity-0');
         modal.classList.toggle('pointer-events-none');
         document.body.classList.toggle('modal-active');
+        if (modal.classList.contains('opacity-0')) {
+            limpiarFormulario();
+        }
     }
 
     function buscarBancos() {
@@ -210,11 +215,41 @@
         const nombre = document.getElementById('nombre-banco').value;
         const contacto = document.getElementById('contacto-banco').value;
         const estatus = document.getElementById('estatus-banco').value;
-
+    
         fetch(`/api/buscar-bancos?id=${id}&nombre=${nombre}&contacto=${contacto}&estatus=${estatus}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
             .then(data => actualizarTablaBancos(data))
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Ocurrió un error al buscar bancos', 'error');
+            });
+    }
+
+    function limpiarFormulario() {
+        document.getElementById('banco-form').reset();
+        document.getElementById('banco-form').querySelector('[name="id"]').value = '';
+    }
+    
+    function mostrarFormularioCrearBanco() {
+        document.getElementById('modal-title').textContent = 'Crear Nuevo Banco';
+        limpiarFormulario();
+        toggleModal();
+    }
+    
+    // Modificar la función toggleModal para que limpie el formulario al cerrar
+    function toggleModal() {
+        const modal = document.querySelector('.modal');
+        modal.classList.toggle('opacity-0');
+        modal.classList.toggle('pointer-events-none');
+        document.body.classList.toggle('modal-active');
+        if (modal.classList.contains('opacity-0')) {
+            limpiarFormulario();
+        }
     }
 
     function actualizarTablaBancos(bancos) {
@@ -256,7 +291,7 @@
         const bancoId = formData.get('id');
         const url = bancoId ? `/api/actualizar-banco/${bancoId}` : '/api/crear-banco';
         const method = bancoId ? 'PUT' : 'POST';
-
+    
         fetch(url, {
             method: method,
             body: JSON.stringify(Object.fromEntries(formData)),
@@ -264,24 +299,28 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.error) {
-                Swal.fire('Error', data.error, 'error');
-            } else {
-                Swal.fire('Éxito', 'Banco guardado correctamente', 'success');
-                toggleModal();
-                buscarBancos();
+                throw new Error(data.error);
             }
+            Swal.fire('Éxito', bancoId ? 'Banco actualizado correctamente' : 'Banco creado correctamente', 'success');
+            toggleModal();
+            buscarBancos();
         })
         .catch(error => {
             console.error('Error:', error);
-            Swal.fire('Error', 'Ocurrió un error al guardar el banco', 'error');
+            Swal.fire('Error', error.message || 'Ocurrió un error al guardar el banco', 'error');
         });
     }
 
     function editarBanco(id) {
-        fetch(`/banco/api/obtener-banco/${id}`)
+        fetch(`/api/obtener-banco/${id}`)
             .then(response => response.json())
             .then(banco => {
                 document.getElementById('modal-title').textContent = 'Editar Banco';

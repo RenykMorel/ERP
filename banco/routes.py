@@ -2,9 +2,13 @@ from flask import jsonify, request
 from flask_login import login_required
 from sqlalchemy.exc import IntegrityError
 from . import banco_bp
-from .models import Banco
+from banco_models import Banco
 from app import db, logger
 from flask import render_template
+from flask import current_app
+import logging
+
+logger = logging.getLogger(__name__)
 
 @banco_bp.route("/bancos")
 @banco_bp.route("/Bancos")
@@ -75,24 +79,28 @@ def cambiar_estatus_banco(id):
         logger.error(f"Error al cambiar estatus del banco: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@banco_bp.route("/api/buscar-bancos")
+@banco_bp.route("/buscar-bancos")
 @login_required
 def buscar_bancos():
-    query = Banco.query
-    if request.args.get("id"):
-        query = query.filter(Banco.id == request.args.get("id"))
-    if request.args.get("nombre"):
-        query = query.filter(Banco.nombre.ilike(f"%{request.args.get('nombre')}%"))
-    if request.args.get("contacto"):
-        query = query.filter(Banco.contacto.ilike(f"%{request.args.get('contacto')}%"))
-    if request.args.get("estatus"):
-        query = query.filter(Banco.estatus == request.args.get("estatus"))
+    try:
+        query = Banco.query
+        if request.args.get("id"):
+            query = query.filter(Banco.id == request.args.get("id"))
+        if request.args.get("nombre"):
+            query = query.filter(Banco.nombre.ilike(f"%{request.args.get('nombre')}%"))
+        if request.args.get("contacto"):
+            query = query.filter(Banco.contacto.ilike(f"%{request.args.get('contacto')}%"))
+        if request.args.get("estatus"):
+            query = query.filter(Banco.estatus == request.args.get("estatus"))
 
-    bancos = query.all()
-    logger.info(f"Búsqueda de bancos realizada. Resultados: {len(bancos)}")
-    return jsonify([banco.to_dict() for banco in bancos])
+        bancos = query.all()
+        current_app.logger.info(f"Búsqueda de bancos realizada. Resultados: {len(bancos)}")
+        return jsonify([banco.to_dict() for banco in bancos])
+    except Exception as e:
+        current_app.logger.error(f"Error en buscar_bancos: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
 
-@banco_bp.route("/api/crear-banco", methods=["POST"])
+@banco_bp.route("/crear-banco", methods=["POST"])
 @login_required
 def crear_banco():
     datos = request.json
@@ -107,7 +115,10 @@ def crear_banco():
         db.session.add(nuevo_banco)
         db.session.commit()
         logger.info(f"Nuevo banco creado: {nuevo_banco.nombre}")
-        return jsonify(nuevo_banco.to_dict()), 201
+        return jsonify({
+            "message": "Banco creado exitosamente",
+            "banco": nuevo_banco.to_dict()
+        }), 201
     except IntegrityError:
         db.session.rollback()
         logger.warning(f"Intento de crear banco con nombre o teléfono duplicado: {datos}")

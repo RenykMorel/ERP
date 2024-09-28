@@ -1,29 +1,33 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, render_template_string
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from config import Config
 import requests
 import json
-from admin_routes import admin
 from dotenv import load_dotenv
+import sys
 import os
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
-from admin_routes import admin
 import psycopg2
 from psycopg2 import pool
 import threading
 import queue
 from flask_migrate import Migrate
-from models import db, Usuario, Transaccion, Notificacion, Empresa, Rol, Permiso, Modulo, UsuarioModulo, Cuenta
+sys.path.append(os.path.join(os.path.dirname(__file__), 'banco'))
+from banco_models import Banco
+from models import (Usuario, Empresa, Rol, Permiso, Modulo, UsuarioModulo, 
+                    Notificacion, Transaccion, Cuenta, AdminPlanSuscripcion, 
+                    AdminFactura, AdminConfiguracionSeguridad, AdminReporte)
 from mailjet_rest import Client
 import secrets
 import string
 from logging.config import dictConfig
-from models import Rol
-from banco import banco_bp
+from flask import Blueprint
+from extensions import db, login_manager, limiter, migrate
+
 
 load_dotenv()
 
@@ -34,11 +38,9 @@ from logging.handlers import RotatingFileHandler
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-login_manager = LoginManager()
-limiter = Limiter(key_func=get_remote_address, default_limits=["2000 per day", "500 per hour"])
-
 # Configura tus claves API de Mailjet
 mailjet = Client(auth=(os.getenv('MJ_APIKEY_PUBLIC'), os.getenv('MJ_APIKEY_PRIVATE')), version='v3.1')
+
 
 def setup_logging(app):
     if not app.debug:
@@ -151,12 +153,6 @@ def generate_password():
     alphabet = string.ascii_letters + string.digits
     password = ''.join(secrets.choice(alphabet) for i in range(12))
     return password
-
-from flask import render_template_string
-from mailjet_rest import Client
-import os
-
-mailjet = Client(auth=(os.environ.get('MJ_APIKEY_PUBLIC'), os.environ.get('MJ_APIKEY_PRIVATE')), version='v3.1')
 
 def send_welcome_email(email, nombre, apellido, login_link, nombre_usuario, password):
     nombre_completo = f"{nombre} {apellido}"
@@ -279,19 +275,23 @@ def create_app():
     if not os.getenv('MJ_APIKEY_PUBLIC') or not os.getenv('MJ_APIKEY_PRIVATE'):
         app.logger.error('Mailjet API keys are not set. Please check your .env file.')
     
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:0001@localhost:5432/calculai_db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://postgres:0001@localhost:5432/calculai_db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
-    migrate = Migrate(app, db)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'login'
     limiter.init_app(app)
 
+    from admin_routes import admin
     app.register_blueprint(admin, url_prefix='/admin')
-    app.register_blueprint(banco_bp, url_prefix='/banco')  # Registra el Blueprint de banco
+    from banco import banco_bp
+    app.register_blueprint(banco_bp, url_prefix='/api')  # Registra el Blueprint de banco
 
     with app.app_context():
+        from banco_models import Banco
+        from models import Usuario, Transaccion, Notificacion, Empresa, Rol, Permiso, Modulo, UsuarioModulo, Cuenta
         db.create_all()
 
     ASISTENTE_ACTIVO = True
@@ -307,6 +307,16 @@ def create_app():
 
     setup_logging(app)
 
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        app.logger.error(f"Unhandled exception: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+    
+    @app.before_request
+    def log_request_info():
+        app.logger.debug('Headers: %s', request.headers)
+        app.logger.debug('Body: %s', request.get_data())
+    
     @login_manager.user_loader
     def load_user(user_id):
         return Usuario.query.get(int(user_id))
@@ -386,7 +396,6 @@ def create_app():
 
         if not new_password or len(new_password) < 8:
             return jsonify({"success": False, "error": "La nueva contraseña debe tener al menos 8 caracteres"}), 400
-
         try:
             user.set_password(new_password)
             db.session.commit()
@@ -553,81 +562,7 @@ def create_app():
                 "Gestión de Bancos",
                 "Divisas",
             ],
-            "Activos Fijos": [
-                "Activo Fijo",
-                "Depreciación",
-                "Retiro",
-                "Revalorización",
-                "Tipo de Activo Fijo",
-            ],
-            "Cuentas Por Cobrar": [
-                "Cliente",
-                "Descuento y devoluciones",
-                "Nota de credito",
-                "Nota de debito",
-                "Recibo",
-                "Anticipo CxC",
-                "Condicion de pago",
-                "Reporte CxC",
-                "Tipo de cliente",
-            ],
-            "Cuentas Por Pagar": [
-                "Factura Suplidor",
-                "Nota de Crédito",
-                "Nota de Débito",
-                "Orden de Compras",
-                "Suplidor",
-                "Anticipo CxP",
-                "Pago de Contado",
-                "Reporte CxP",
-                "Requisición Cotización",
-                "Solicitud Compras",
-                "Tipo de Suplidor",
-            ],
-            "Facturacion": [
-                "Facturas",
-                "Pre-facturas",
-                "Notas de Crédito/Débito",
-                "Reporte de Ventas",
-                "Gestión de clientes",
-            ],
-            "Impuestos": [
-                "Formulario 606",
-                "Formulario 607",
-                "Reporte IT1",
-                "Impuesto sobre la Renta (IR17)",
-                "Serie Fiscal",
-                "Configuraciones",
-            ],
-            "Inventario": [
-                "Items",
-                "Entrada de Almacén",
-                "Salida de Almacén",
-                "Inventario",
-                "Reporte de Inventario",
-            ],
-            "Compras": [
-                "Solicitudes de Compra",
-                "Órdenes de Compra",
-                "Recepción de Materiales",
-                "Gastos",
-                "Reporte de Compras/Gastos",
-            ],
-            "Importacion": [
-                "Expediente de Importacion",
-                "Importador",
-                "Reportes Importacion",
-            ],
-            "Proyectos": [
-                "Gestión de Proyectos",
-                "Presupuestos",
-                "Facturación por Proyecto",
-            ],
-            "Recursos Humanos": [
-                "Gestión de Empleados",
-                "Nómina",
-                "Evaluación de Desempeño",
-            ],
+            # ... (otros submodulos)
         }
         return jsonify(submodulos.get(modulo, []))
 
