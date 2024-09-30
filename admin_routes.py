@@ -114,13 +114,18 @@ def manage_users():
 def get_users():
     if not current_user.es_admin:
         return jsonify({"error": "Acceso no autorizado"}), 403
-    page = request.args.get('page', 1, type=int)
-    per_page = 10
-    usuarios = Usuario.query.paginate(page=page, per_page=per_page, error_out=False)
+    users = Usuario.query.all()
     return jsonify({
-        'users': [usuario.to_dict() for usuario in usuarios.items],
-        'total_pages': usuarios.pages,
-        'current_page': page
+        'users': [{
+            'id': user.id,
+            'nombre': user.nombre,
+            'apellido': user.apellido,
+            'email': user.email,
+            'telefono': user.telefono,
+            'empresa': user.empresa.nombre if user.empresa else None,
+            'rol': user.rol,
+            'asistente_activo': user.asistente_activo  # Asegúrate de incluir este campo
+        } for user in users]
     })
 
 @admin.route("/users", methods=["POST"])
@@ -531,3 +536,21 @@ def remove_permiso_from_rol():
         db.session.rollback()
         current_app.logger.error(f"Error al remover permiso de rol: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    
+    
+@admin.route("/toggle_asistente_usuario/<int:usuario_id>", methods=["POST"])
+@login_required
+def toggle_asistente_usuario(usuario_id):
+    if not current_user.es_admin and not current_user.es_super_admin:
+        return jsonify({"error": "Acceso no autorizado"}), 403
+    
+    usuario = Usuario.query.get_or_404(usuario_id)
+    usuario.asistente_activo = not usuario.asistente_activo
+    db.session.commit()
+    
+    return jsonify({
+        "success": True, 
+        "message": f"Asistente {'activado' if usuario.asistente_activo else 'desactivado'} para {usuario.nombre_usuario}",
+        "asistente_activo": usuario.asistente_activo
+    })
+    

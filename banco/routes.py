@@ -7,6 +7,7 @@ from app import db, logger
 from flask import render_template
 from flask import current_app
 import logging
+from sqlalchemy.exc import IntegrityError
 
 logger = logging.getLogger(__name__)
 
@@ -23,34 +24,38 @@ def sub_bancos():
         logger.error(f"Error al cargar la página de bancos: {error_message}")
         return jsonify({"error": f"Error al cargar la página de bancos: {error_message}"}), 500
 
-@banco_bp.route("/api/obtener-banco/<int:id>")
+@banco_bp.route("/obtener-banco/<int:id>")
 @login_required
 def obtener_banco(id):
     banco = Banco.query.get_or_404(id)
     return jsonify(banco.to_dict())
 
-@banco_bp.route("/api/actualizar-banco/<int:id>", methods=["PUT"])
+@banco_bp.route("/actualizar-banco/<int:id>", methods=["PUT"])
 @login_required
 def actualizar_banco(id):
     banco = Banco.query.get_or_404(id)
     datos = request.json
+    campos_actualizables = ["nombre", "telefono", "contacto", "telefono_contacto", "estatus"]
+    
     try:
         for key, value in datos.items():
-            if key in ["nombre", "telefono", "contacto", "telefono_contacto", "estatus"]:
+            if key in campos_actualizables and value != getattr(banco, key):
+                # Verificar unicidad solo si el valor ha cambiado
+                if key in ["nombre", "telefono"]:
+                    existing = Banco.query.filter(Banco.id != id, getattr(Banco, key) == value).first()
+                    if existing:
+                        return jsonify({"error": f"Ya existe un banco con ese {key}"}), 400
                 setattr(banco, key, value)
+        
         db.session.commit()
         logger.info(f"Banco actualizado: {banco.nombre}")
         return jsonify(banco.to_dict())
-    except IntegrityError:
-        db.session.rollback()
-        logger.warning(f"Intento de actualizar banco con nombre o teléfono duplicado: {datos}")
-        return jsonify({"error": "Ya existe un banco con ese nombre o teléfono"}), 400
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error al actualizar banco: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@banco_bp.route("/api/eliminar-banco/<int:id>", methods=["DELETE"])
+@banco_bp.route("/eliminar-banco/<int:id>", methods=["DELETE"])
 @login_required
 def eliminar_banco(id):
     banco = Banco.query.get_or_404(id)
@@ -64,7 +69,7 @@ def eliminar_banco(id):
         logger.error(f"Error al eliminar banco: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@banco_bp.route("/api/cambiar-estatus-banco/<int:id>", methods=["PUT"])
+@banco_bp.route("/cambiar-estatus-banco/<int:id>", methods=["PUT"])
 @login_required
 def cambiar_estatus_banco(id):
     banco = Banco.query.get_or_404(id)

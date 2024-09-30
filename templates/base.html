@@ -53,15 +53,15 @@
             bottom: 20px;
             right: 20px;
             z-index: 1000;
-            width: 200px;
-            height: 300px;
+            width: 100px;
+            height: 150px;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         #assistant-icon {
             width: 100%;
             height: 100%;
-            cursor: pointer;
         }
 
         #chat-window {
@@ -69,13 +69,14 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 300px; /* Reduced from 400px to 300px */
-            height: 500px; /* Reduced from 600px to 500px for better proportion */
+            width: 300px;
+            height: 500px;
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             overflow: hidden;
             transition: all 0.3s ease;
+            z-index: 1001;
         }
 
         #chat-header {
@@ -102,7 +103,7 @@
         }
 
         #chat-messages {
-            height: 380px; /* Adjusted to maintain proportion */
+            height: 380px;
             overflow-y: auto;
             padding: 15px;
             background-color: #f9f9f9;
@@ -159,7 +160,7 @@
         }
 
         .chat-open #virtual-assistant {
-            transform: translate(-150px, -520px); /* Adjusted for new chat window size */
+            transform: translate(-150px, -520px);
             z-index: 1002;
         }
 
@@ -175,7 +176,7 @@
             <div id="user-info">
                 <img id="user-avatar" src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="User Avatar">
                 <h2 id="user-name"></h2>
-                <p id="user-id"></p>
+                <p id="user-empresa"></p>          
             </div>
             <div id="module-container"></div>
             <ul class="auth-links">
@@ -195,55 +196,7 @@
             <header>
                 <h1></h1>
             </header>
-            {% block content %}
-            <div id="dashboard">
-                <div class="chart-controls">
-                    <button id="toggle-all-charts">Mostrar/Ocultar Todos los Gráficos</button>
-                </div>
-                <div class="dashboard-layout">
-                    <div class="charts-container">
-                        <div class="chart-wrapper">
-                            <h3>Ventas Mensuales</h3>
-                            <canvas id="line-chart"></canvas>
-                            <div class="chart-controls">
-                                <button onclick="toggleChartVisibility('line-chart')">Mostrar/Ocultar</button>
-                                <button onclick="adjustChartSize('line-chart', -50)">-</button>
-                                <button onclick="adjustChartSize('line-chart', 50)">+</button>
-                            </div>
-                        </div>
-                        <div class="chart-wrapper">
-                            <h3>Ingresos vs Gastos</h3>
-                            <canvas id="bar-chart"></canvas>
-                            <div class="chart-controls">
-                                <button onclick="toggleChartVisibility('bar-chart')">Mostrar/Ocultar</button>
-                                <button onclick="adjustChartSize('bar-chart', -50)">-</button>
-                                <button onclick="adjustChartSize('bar-chart', 50)">+</button>
-                            </div>
-                        </div>
-                        <div class="chart-wrapper">
-                            <h3>Distribución Financiera</h3>
-                            <canvas id="pie-chart"></canvas>
-                            <div class="chart-controls">
-                                <button onclick="toggleChartVisibility('pie-chart')">Mostrar/Ocultar</button>
-                                <button onclick="adjustChartSize('pie-chart', -50)">-</button>
-                                <button onclick="adjustChartSize('pie-chart', 50)">+</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="calendar"></div>
-                </div>
-                <div class="bottom-widgets">
-                    <div id="tasks">
-                        <h3>Tareas Pendientes</h3>
-                        <ul id="task-list"></ul>
-                    </div>
-                    <div id="notifications">
-                        <h3>Notificaciones y Alertas</h3>
-                        <ul id="notification-list"></ul>
-                    </div>
-                </div>
-            </div>
-            {% endblock %}
+            {% block content %}{% endblock %}
         </main>
         
         <!-- Virtual assistant component -->
@@ -346,8 +299,8 @@
             </div>
             <div id="chat-messages"></div>
             <div id="chat-input">
-                <input type="text" placeholder="Escribe tu pregunta..." aria-label="Escribe tu pregunta">
-                <button aria-label="Enviar mensaje">Enviar</button>
+                <input type="text" id="assistant-input" placeholder="Escribe tu pregunta..." aria-label="Escribe tu pregunta">
+                <button id="assistant-send" aria-label="Enviar mensaje">Enviar</button>
             </div>
         </div>
     </div>
@@ -360,18 +313,16 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% if current_user.is_authenticated %}
     <script>
-        // Inicialización del asistente virtual
         document.addEventListener('DOMContentLoaded', function() {
             const virtualAssistant = document.getElementById('virtual-assistant');
             const assistantIcon = document.getElementById('assistant-icon');
             const chatWindow = document.getElementById('chat-window');
             const minimizeChat = document.getElementById('minimize-chat');
             const chatMessages = document.getElementById('chat-messages');
-            const chatInput = document.getElementById('chat-input').querySelector('input');
-            const chatSendButton = document.getElementById('chat-input').querySelector('button');
+            const chatInput = document.getElementById('assistant-input');
+            const chatSendButton = document.getElementById('assistant-send');
 
-            // Verificar si el asistente está activo (esto debería venir del backend)
-            const ASISTENTE_ACTIVO = {{ 'true' if config.ASISTENTE_ACTIVO else 'false' }};
+            let asistenteActivo = false;
 
             function mostrarMensajeAsistente(mensaje, esUsuario = false) {
                 const mensajeElement = document.createElement('p');
@@ -383,18 +334,19 @@
 
             assistantIcon.addEventListener('click', function() {
                 document.body.classList.add('chat-open');
+                chatWindow.style.display = 'block';
             });
 
             minimizeChat.addEventListener('click', function() {
                 document.body.classList.remove('chat-open');
+                chatWindow.style.display = 'none';
             });
 
             function enviarMensaje() {
                 const pregunta = chatInput.value.trim();
                 if (pregunta) {
                     mostrarMensajeAsistente(pregunta, true);
-                    if (ASISTENTE_ACTIVO) {
-                        // Enviar pregunta al asistente
+                    if (asistenteActivo) {
                         fetch('/api/asistente', {
                             method: 'POST',
                             headers: {
@@ -402,8 +354,14 @@
                             },
                             body: JSON.stringify({ pregunta: pregunta })
                         })
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
                         .then(data => {
+                            console.log('Respuesta del servidor:', data);
                             mostrarMensajeAsistente(data.respuesta);
                         })
                         .catch(error => {
@@ -425,12 +383,25 @@
                 }
             });
 
-            // Mensaje inicial del asistente
-            if (ASISTENTE_ACTIVO) {
-                mostrarMensajeAsistente("¡Hola! Soy tu asistente virtual de CalculAI. ¿En qué puedo ayudarte hoy?");
-            } else {
-                mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
-            }
+            // Verificar el estado del asistente al cargar la página
+            fetch('/api/asistente_status')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Estado del asistente:', data);
+                asistenteActivo = data.activo;
+                if (asistenteActivo) {
+                    mostrarMensajeAsistente("¡Hola! Soy tu asistente virtual de CalculAI. ¿En qué puedo ayudarte hoy?");
+                } else {
+                    mostrarMensajeAsistente("El asistente no está activo. Por favor, contacta al administrador para activarlo.");
+                }
+            })
+            .catch(error => {
+                console.error('Error al verificar el estado del asistente:', error);
+                mostrarMensajeAsistente("Ha ocurrido un error al verificar el estado del asistente. Por favor, intenta de nuevo más tarde.");
+            });
+
+            // Asegurarse de que el asistente sea visible inicialmente
+            virtualAssistant.style.display = 'block';
         });
     </script>
     {% endif %}

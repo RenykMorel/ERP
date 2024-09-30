@@ -384,20 +384,23 @@
         });
 
         // Users
-        function renderUsers(page = 1) {
-            fetch(`/admin/users?page=${page}`)
+        function renderUsers() {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando...</td></tr>';
+        
+            fetch('/admin/users')
                 .then(response => response.json())
                 .then(data => {
-                    const usersList = document.getElementById('users-list');
                     usersList.innerHTML = '';
                     data.users.forEach(user => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${user.nombre} ${user.apellido}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.nombre_usuario}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">${user.telefono}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">${user.empresa}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.telefono || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${user.empresa || 'N/A'}</td>
                             <td class="px-6 py-4 whitespace-nowrap">${user.rol}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <button onclick="editUser(${user.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
@@ -406,6 +409,12 @@
                         `;
                         usersList.appendChild(row);
                     });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    usersList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-600">Error al cargar los usuarios</td></tr>';
+                });
+        }
                     
                     // Agregar controles de paginación
                     const paginationControls = `

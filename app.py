@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, render_template_string
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, render_template_string, current_app
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -27,20 +27,60 @@ import string
 from logging.config import dictConfig
 from flask import Blueprint
 from extensions import db, login_manager, limiter, migrate
-
-
-load_dotenv()
-
-# Configura logging
+from blinker import signal
+from sqlalchemy import event
 import logging
 from logging.handlers import RotatingFileHandler
+
+load_dotenv()
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Configura tus claves API de Mailjet
 mailjet = Client(auth=(os.getenv('MJ_APIKEY_PUBLIC'), os.getenv('MJ_APIKEY_PRIVATE')), version='v3.1')
 
+class AsistenteVirtual:
+    def __init__(self, api_key, get_context_func):
+        self.api_key = api_key
+        self.get_context_func = get_context_func
+        self.context = "Eres un asistente virtual para CalculAI. Debes responder preguntas basándote en la información proporcionada en el contexto y la pregunta del usuario."
+        self.base_url = "https://api.anthropic.com/v1/messages"
+
+    def responder(self, pregunta):
+        info_db = self.get_context_func()
+        context_updated = f"{self.context}\n\nInformación actual del sistema: {json.dumps(info_db)}"
+
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": self.api_key,
+            "anthropic-version": "2023-06-01",
+        }
+        
+        data = {
+            "model": "claude-2.1",
+            "system": context_updated,
+            "messages": [
+                {"role": "user", "content": pregunta}
+            ],
+            "max_tokens": 300
+        }
+
+        try:
+            logger.debug(f"Enviando solicitud a la API de Claude. API Key: {self.api_key[:5]}...")
+            response = requests.post(
+                self.base_url,
+                headers=headers,
+                json=data,
+                timeout=10,
+            )
+            response.raise_for_status()
+            logger.info("Respuesta recibida de la API de Claude")
+            return response.json()["content"][0]["text"]
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error al comunicarse con la API de Claude: {str(e)}")
+            if hasattr(e, 'response') and e.response is not None:
+                logger.error(f"Respuesta de error: {e.response.text}")
+            raise Exception(f"Error al comunicarse con la API de Claude: {str(e)}")
 
 def setup_logging(app):
     if not app.debug:
@@ -55,7 +95,7 @@ def setup_logging(app):
     app.logger.info('CalculAI startup')
 
 def get_assistant_context():
-    with db.app.app_context():
+    with current_app.app_context():
         empresa_count = Empresa.query.count()
         usuario_count = Usuario.query.count()
         return {
@@ -63,93 +103,7 @@ def get_assistant_context():
             "usuario_count": usuario_count,
         }
 
-class AsistenteVirtual:
-    def __init__(self, api_key, db_config, activo=True):
-        self.api_key = api_key
-        self.context = "Eres un asistente virtual para CalculAI. Debes responder preguntas basándote en la información proporcionada en el contexto y la pregunta del usuario."
-        self.db_pool = psycopg2.pool.SimpleConnectionPool(1, 10, **db_config)
-        self.crear_tablas()
-        self.lock = threading.Lock()
-        self.cola_actualizaciones = queue.Queue()
-        self.activo = activo
-        threading.Thread(target=self.procesar_actualizaciones, daemon=True).start()
-
-    def crear_tablas(self):
-        with self.db_pool.getconn() as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS historial (
-                        id SERIAL PRIMARY KEY,
-                        accion TEXT NOT NULL,
-                        fecha TIMESTAMP NOT NULL
-                    )
-                """)
-            conn.commit()
-        self.db_pool.putconn(conn)
-
-    def procesar_actualizaciones(self):
-        while True:
-            try:
-                accion = self.cola_actualizaciones.get(timeout=1)
-                with self.lock:
-                    self.registrar_accion(accion)
-            except queue.Empty:
-                pass
-
-    def registrar_accion(self, accion):
-        fecha = datetime.now()
-        with self.db_pool.getconn() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "INSERT INTO historial (accion, fecha) VALUES (%s, %s)",
-                    (accion, fecha)
-                )
-            conn.commit()
-        self.db_pool.putconn(conn)
-
-    def log_accion(self, accion):
-        if self.activo:
-            self.cola_actualizaciones.put(accion)
-
-    def responder(self, pregunta_con_contexto):
-        if not self.activo:
-            return "El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación."
-
-        headers = {
-            "Content-Type": "application/json",
-            "x-api-key": self.api_key,
-            "anthropic-version": "2023-06-01",
-        }
-        data = {
-            "model": "claude-2.1",
-            "prompt": f"{self.context}\n\nHuman: {pregunta_con_contexto}\n\nAssistant:",
-            "max_tokens": 300,
-            "temperature": 0.7,
-            "stop_sequences": ["\n\nHuman:"],
-        }
-
-        try:
-            response = requests.post(
-                "https://api.anthropic.com/v1/complete",
-                headers=headers,
-                json=data,
-                timeout=10,
-            )
-            response.raise_for_status()
-            respuesta = response.json()["completion"].strip()
-        except requests.exceptions.RequestException as e:
-            if e.response is not None:
-                error_detail = e.response.json().get("error", {}).get("message", str(e))
-                respuesta = f"Error al obtener respuesta: {error_detail}"
-            else:
-                respuesta = f"Error de conexión: {str(e)}"
-        except Exception as e:
-            respuesta = f"Error inesperado: {str(e)}"
-
-        return respuesta
-
 def generate_password():
-    """Genera una contraseña aleatoria segura."""
     alphabet = string.ascii_letters + string.digits
     password = ''.join(secrets.choice(alphabet) for i in range(12))
     return password
@@ -287,23 +241,20 @@ def create_app():
     from admin_routes import admin
     app.register_blueprint(admin, url_prefix='/admin')
     from banco import banco_bp
-    app.register_blueprint(banco_bp, url_prefix='/api')  # Registra el Blueprint de banco
+    app.register_blueprint(banco_bp, url_prefix='/api')
 
     with app.app_context():
         from banco_models import Banco
         from models import Usuario, Transaccion, Notificacion, Empresa, Rol, Permiso, Modulo, UsuarioModulo, Cuenta
         db.create_all()
+        
+    CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY')
+    if not CLAUDE_API_KEY:
+        app.logger.error('Claude API key is not set. Please check your .env file.')    
 
-    ASISTENTE_ACTIVO = True
+    app.config['ASISTENTE_ACTIVO'] = True
     
-    db_config = {
-        'dbname': 'calculai_db',
-        'user': 'postgres',
-        'password': '0001',
-        'host': 'localhost',
-        'port': '5432'
-    }
-    asistente = AsistenteVirtual(Config.CLAUDE_API_KEY, db_config, activo=ASISTENTE_ACTIVO)
+    asistente = AsistenteVirtual(CLAUDE_API_KEY, get_assistant_context)
 
     setup_logging(app)
 
@@ -311,6 +262,20 @@ def create_app():
     def handle_exception(e):
         app.logger.error(f"Unhandled exception: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+    
+    asistente_notificacion = signal('asistente-notificacion')
+
+    @asistente_notificacion.connect
+    def log_notificacion(sender, mensaje):
+        print(f"Notificación al asistente: {mensaje}")
+    
+    @event.listens_for(Banco, 'after_insert')
+    def notificar_nuevo_banco(mapper, connection, target):
+        asistente_notificacion.send('Banco', mensaje=f"Nuevo banco creado: {target.nombre}")
+
+    @event.listens_for(Banco, 'after_update')
+    def notificar_actualizacion_banco(mapper, connection, target):
+        asistente_notificacion.send('Banco', mensaje=f"Banco actualizado: {target.nombre}")    
     
     @app.before_request
     def log_request_info():
@@ -363,7 +328,7 @@ def create_app():
         return render_template('login.html')
 
     @app.route('/registro_exitoso')
-    @login_required  # Si quieres que solo usuarios registrados vean esta página
+    @login_required
     def registro_exitoso():
         return render_template('registro_exitoso.html')
 
@@ -478,7 +443,8 @@ def create_app():
                     nombre=nombre,
                     apellido=apellido,
                     telefono=telefono,
-                    empresa_id=nueva_empresa.id
+                    empresa_id=nueva_empresa.id,
+                    asistente_activo=True
                 )
                 new_user.set_password(password)
                 db.session.add(new_user)
@@ -562,7 +528,81 @@ def create_app():
                 "Gestión de Bancos",
                 "Divisas",
             ],
-            # ... (otros submodulos)
+            "Activos Fijos": [
+                "Activo Fijo",
+                "Depreciación",
+                "Retiro",
+                "Revalorización",
+                "Tipo de Activo Fijo",
+            ],
+            "Cuentas Por Cobrar": [
+                "Cliente",
+                "Descuento y devoluciones",
+                "Nota de credito",
+                "Nota de debito",
+                "Recibo",
+                "Anticipo CxC",
+                "Condicion de pago",
+                "Reporte CxC",
+                "Tipo de cliente",
+            ],
+            "Cuentas Por Pagar": [
+                "Factura Suplidor",
+                "Nota de Crédito",
+                "Nota de Débito",
+                "Orden de Compras",
+                "Suplidor",
+                "Anticipo CxP",
+                "Pago de Contado",
+                "Reporte CxP",
+                "Requisición Cotización",
+                "Solicitud Compras",
+                "Tipo de Suplidor",
+            ],
+            "Facturacion": [
+                "Facturas",
+                "Pre-facturas",
+                "Notas de Crédito/Débito",
+                "Reporte de Ventas",
+                "Gestión de clientes",
+            ],
+            "Impuestos": [
+                "Formulario 606",
+                "Formulario 607",
+                "Reporte IT1",
+                "Impuesto sobre la Renta (IR17)",
+                "Serie Fiscal",
+                "Configuraciones",
+            ],
+            "Inventario": [
+                "Items",
+                "Entrada de Almacén",
+                "Salida de Almacén",
+                "Inventario",
+                "Reporte de Inventario",
+            ],
+            "Compras": [
+                "Solicitudes de Compra",
+                "Órdenes de Compra",
+                "Recepción de Materiales",
+                "Gastos",
+                "Reporte de Compras/Gastos",
+            ],
+            "Importacion": [
+                "Expediente de Importacion",
+                "Importador",
+                "Reportes Importacion",
+            ],
+            "Proyectos": [
+                "Gestión de Proyectos",
+                "Presupuestos",
+                "Facturación por Proyecto",
+            ],
+            "Recursos Humanos": [
+                "Gestión de Empleados",
+                "Nómina",
+                "Evaluación de Desempeño",
+            ],
         }
         return jsonify(submodulos.get(modulo, []))
 
@@ -626,22 +666,40 @@ def create_app():
     @app.route('/api/asistente', methods=['POST'])
     @login_required
     def consultar_asistente():
+        logger.debug(f"Solicitud al asistente recibida. Usuario: {current_user.nombre_usuario}")
+        if not app.config['ASISTENTE_ACTIVO'] or not current_user.asistente_activo:
+            logger.warning(f"Intento de uso del asistente por usuario no autorizado: {current_user.nombre_usuario}")
+            return jsonify({"respuesta": "El asistente no está activo para tu usuario. Contacta al administrador."}), 403
+
         pregunta = request.json.get('pregunta', '').strip()
-
+        logger.debug(f"Pregunta recibida: {pregunta}")
         if not pregunta:
-            return jsonify({"respuesta": ""}), 200
+            return jsonify({"respuesta": "Por favor, proporciona una pregunta."}), 400
+        
+        try:
+            respuesta = asistente.responder(pregunta)
+            logger.info(f"Respuesta del asistente obtenida. Longitud: {len(respuesta)}")
+            return jsonify({"respuesta": respuesta})
+        except Exception as e:
+            logger.error(f"Error al consultar el asistente: {str(e)}")
+            return jsonify({"respuesta": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde."}), 500
 
-        if not ASISTENTE_ACTIVO:
-            return jsonify({
-                "respuesta": "El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación."
-            }), 200
+    @app.route('/api/asistente_status')
+    @login_required
+    def asistente_status():
+        return jsonify({
+            "activo": current_user.asistente_activo and app.config['ASISTENTE_ACTIVO']
+        })
 
-        context = get_assistant_context()
-        pregunta_con_contexto = f"Contexto: {json.dumps(context)}\n\nPregunta: {pregunta}"
-        respuesta = asistente.responder(pregunta_con_contexto)
-
-        logger.info(f"Consulta al asistente: {pregunta}")
-        return jsonify({"respuesta": respuesta})
+    @app.route('/api/actualizar_estado_asistente', methods=['POST'])
+    @login_required
+    def actualizar_estado_asistente():
+        if current_user.rol != 'admin':
+            return jsonify({"error": "No tienes permisos para realizar esta acción"}), 403
+        
+        nuevo_estado = request.json.get('activo', False)
+        app.config['ASISTENTE_ACTIVO'] = nuevo_estado
+        return jsonify({"mensaje": "Estado del asistente actualizado correctamente"})
 
     @app.route("/api/datos_graficos")
     @login_required
@@ -667,9 +725,10 @@ def create_app():
     @login_required
     def get_usuario():
         usuario = {
-            "nombre": "Renyk Morel",
-            "id": "P11863",
+            "nombre": f"{current_user.nombre} {current_user.apellido}",
+            "id": current_user.id,
             "avatar": "/api/placeholder/100/100",
+            "empresa": current_user.empresa.nombre if current_user.empresa else "Sin empresa"
         }
         return jsonify(usuario)
 

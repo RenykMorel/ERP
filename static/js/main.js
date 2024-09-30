@@ -552,9 +552,10 @@ function initializeAsistente() {
     const asistenteEnviar = document.getElementById('asistente-enviar');
 
     // Comprobar si el asistente está activo
-    fetch('/api/asistente-status')
+    fetch('/api/asistente_status')
         .then(response => response.json())
         .then(data => {
+            console.log('Estado del asistente:', data);
             const asistenteActivo = data.activo;
             if (!asistenteActivo) {
                 chatWindow.classList.add('asistente-inactivo');

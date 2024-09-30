@@ -126,6 +126,8 @@ class Usuario(UserMixin, db.Model):
     modulos = relationship("Modulo", secondary=usuario_modulos, back_populates="usuarios")
     notificaciones = relationship("Notificacion", back_populates="usuario")
 
+    asistente_activo = Column(Boolean, default=True)  # Cambiado a True por defecto
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -139,7 +141,7 @@ class Usuario(UserMixin, db.Model):
     @classmethod
     def crear_usuario(cls, nombre, apellido, telefono, nombre_usuario, email, password, 
                       nombre_empresa, rnc_empresa, direccion_empresa, telefono_empresa, 
-                      es_admin=False, es_super_admin=False, rol="usuario"):
+                      es_admin=False, es_super_admin=False, rol="usuario", asistente_activo=True):
         logger.info(f"Intentando crear usuario: {nombre_usuario}")
         try:
             # Validaciones
@@ -166,7 +168,8 @@ class Usuario(UserMixin, db.Model):
                 es_admin=es_admin,
                 es_super_admin=es_super_admin,
                 rol=rol,
-                empresa=empresa
+                empresa=empresa,
+                asistente_activo=asistente_activo  # Añadido el nuevo campo
             )
             nuevo_usuario.set_password(password)
             db.session.add(nuevo_usuario)
@@ -211,8 +214,14 @@ class Usuario(UserMixin, db.Model):
             "rol": self.rol,
             "roles": [rol.nombre for rol in self.roles],
             "fecha_registro": self.fecha_registro.isoformat() if self.fecha_registro else None,
-            "empresa": self.empresa.nombre if self.empresa else None
+            "empresa": self.empresa.nombre if self.empresa else None,
+            "asistente_activo": self.asistente_activo  # Añadido al diccionario
         }
+
+    def toggle_asistente(self):
+        self.asistente_activo = not self.asistente_activo
+        db.session.commit()
+        return self.asistente_activo
 
 class Rol(db.Model):
     __tablename__ = "roles"

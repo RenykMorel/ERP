@@ -1,5 +1,5 @@
 // asistente.js
-const ASISTENTE_ACTIVO = false; // Esto debería venir de tu configuración o backend
+const ASISTENTE_ACTIVO = true; // Esto debería venir de tu configuración o backend
 
 function initializeAsistente() {
     const chatWindow = document.getElementById('chat-window');

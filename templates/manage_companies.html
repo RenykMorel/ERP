@@ -492,36 +492,22 @@
                 });
         }
         
-        function renderUsers(filteredUsers = null) {
-            const usersList = document.getElementById('users-list');
-            usersList.innerHTML = '<tr><td colspan="7" class="text-center py-4">Cargando...</td></tr>';
         
-            const usersToRender = filteredUsers || fetch('/admin/users').then(response => response.json()).then(data => data.users);
         
-            Promise.resolve(usersToRender)
-                .then(users => {
-                    usersList.innerHTML = '';
-                    users.forEach(user => {
-                        const row = document.createElement('tr');
-                        row.setAttribute('data-user-id', user.id);
-                        row.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap">${user.id}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">${user.nombre} ${user.apellido}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">${user.email}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">${user.telefono || 'N/A'}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">${user.empresa || 'N/A'}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">${user.rol}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <button onclick="editUser(${user.id})" class="action-button px-2 py-1 text-sm text-blue-600 hover:text-blue-900 bg-blue-100 rounded mr-1">Editar</button>
-                                <button onclick="deleteUser(${user.id})" class="action-button px-2 py-1 text-sm text-red-600 hover:text-red-900 bg-red-100 rounded">Eliminar</button>
-                            </td>
-                        `;
-                        usersList.appendChild(row);
-                    });
+        function toggleAsistenteUsuario(usuarioId) {
+            fetch(`/admin/toggle_asistente_usuario/${usuarioId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message);
+                        renderUsers();  // Vuelve a renderizar la lista de usuarios para actualizar el botón
+                    } else {
+                        throw new Error(data.error || 'Error desconocido');
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    usersList.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-600">Error al cargar los usuarios</td></tr>';
+                    showToast('Error al cambiar el estado del asistente', 'error');
                 });
         }
         
