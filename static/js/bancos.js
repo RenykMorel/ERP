@@ -15,13 +15,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const contacto = document.getElementById('contacto-banco').value;
         const estatus = document.getElementById('estatus-banco').value;
     
+        console.log(`Buscando bancos con criterios: id=${id}, nombre=${nombre}, contacto=${contacto}, estatus=${estatus}`);
+    
         fetch(`/api/buscar-bancos?id=${id}&nombre=${nombre}&contacto=${contacto}&estatus=${estatus}`)
             .then(response => response.json())
             .then(bancos => {
+                console.log(`Se encontraron ${bancos.length} bancos`);
                 actualizarTablaBancos(bancos);
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error al buscar bancos:', error);
                 Swal.fire('Error', 'Error al buscar bancos', 'error');
             });
     }
@@ -29,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function actualizarTablaBancos(bancos) {
         bancosTabla.innerHTML = '';
         bancos.forEach(banco => {
+            console.log(`Añadiendo banco a la tabla: ID=${banco.id}, Nombre=${banco.nombre}`);
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${banco.id}</td>
@@ -58,14 +62,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function mostrarFormularioCrearBanco() {
+        console.log('Mostrando formulario para crear nuevo banco');
         bancoForm.reset();
         bancoForm.querySelector('[name="id"]').value = '';
         document.getElementById('form-title').textContent = 'Crear Nuevo Banco';
         // Aquí deberías mostrar el formulario (por ejemplo, un modal)
-    }
-
-    function ocultarFormularioCrearBanco() {
-        crearBancoForm.style.display = 'none';
     }
 
     function guardarBanco(e) {
@@ -74,6 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const bancoData = Object.fromEntries(formData.entries());
         const id = bancoData.id;
         delete bancoData.id;
+    
+        console.log(`${id ? 'Actualizando' : 'Creando'} banco con datos:`, bancoData);
     
         const url = id ? `/api/actualizar-banco/${id}` : '/api/crear-banco';
         const method = id ? 'PUT' : 'POST';
@@ -92,6 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
+            console.log(`Banco ${id ? 'actualizado' : 'creado'} exitosamente:`, data);
             Swal.fire({
                 title: '¡Éxito!',
                 text: id ? 'Banco actualizado correctamente' : 'Banco creado correctamente',
@@ -102,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Aquí deberías ocultar el formulario
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error(`Error al ${id ? 'actualizar' : 'crear'} banco:`, error);
             Swal.fire({
                 title: 'Error',
                 text: error.error || 'Ocurrió un error al guardar el banco',
@@ -123,9 +127,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function editarBanco(id) {
+        console.log(`Editando banco con ID: ${id}`);
         fetch(`/api/obtener-banco/${id}`)
             .then(response => response.json())
             .then(banco => {
+                console.log('Datos del banco obtenidos:', banco);
                 for (let key in banco) {
                     if (bancoForm.elements[key]) {
                         bancoForm.elements[key].value = banco[key];
@@ -135,12 +141,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Aquí deberías mostrar el formulario
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error al cargar los datos del banco:', error);
                 Swal.fire('Error', 'Error al cargar los datos del banco', 'error');
             });
     }
 
     function eliminarBanco(id) {
+        console.log(`Iniciando proceso de eliminación del banco con ID: ${id}`);
         Swal.fire({
             title: '¿Estás seguro?',
             text: "No podrás revertir esta acción",
@@ -151,21 +158,26 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmButtonText: 'Sí, eliminar'
         }).then((result) => {
             if (result.isConfirmed) {
+                console.log(`Confirmada la eliminación del banco con ID: ${id}`);
                 fetch(`/api/eliminar-banco/${id}`, { method: 'DELETE' })
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Banco eliminado exitosamente:', data);
                         buscarBancos();
                         Swal.fire('Eliminado', 'El banco ha sido eliminado', 'success');
                     })
                     .catch(error => {
-                        console.error('Error:', error);
+                        console.error('Error al eliminar el banco:', error);
                         Swal.fire('Error', 'Error al eliminar el banco', 'error');
                     });
+            } else {
+                console.log(`Cancelada la eliminación del banco con ID: ${id}`);
             }
         });
     }
 
     function crearBanco(datos) {
+        console.log('Creando nuevo banco con datos:', datos);
         fetch('/api/crear-banco', {
             method: 'POST',
             headers: {
@@ -178,8 +190,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.error) {
                 throw new Error(data.error);
             }
-            // Cerrar el modal
-            toggleModal();
+            console.log('Banco creado exitosamente:', data);
+            // Cerrar el modal si existe
+            if (typeof toggleModal === 'function') {
+                toggleModal();
+            }
             // Mostrar mensaje de éxito
             Swal.fire({
                 title: '¡Éxito!',
@@ -192,10 +207,19 @@ document.addEventListener('DOMContentLoaded', function() {
             // Limpiar el formulario
             document.getElementById('banco-form').reset();
         })
-        
+        .catch(error => {
+            console.error('Error al crear el banco:', error.message);
+            Swal.fire({
+                title: 'Error',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        });
     }
     
     function agregarBancoATabla(banco) {
+        console.log('Agregando nuevo banco a la tabla:', banco);
         const tbody = document.getElementById('bancos-tbody');
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -234,6 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function cambiarEstatus(id, estatusActual) {
         const nuevoEstatus = estatusActual === 'activo' ? 'inactivo' : 'activo';
+        console.log(`Cambiando estatus del banco ${id} de ${estatusActual} a ${nuevoEstatus}`);
         fetch(`/api/cambiar-estatus-banco/${id}`, {
             method: 'PUT',
             headers: {
@@ -243,15 +268,17 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
+            console.log(`Estatus del banco ${id} cambiado exitosamente a ${nuevoEstatus}`);
             buscarBancos();
             Swal.fire('Éxito', `Estatus del banco cambiado a ${nuevoEstatus}`, 'success');
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error(`Error al cambiar el estatus del banco ${id}:`, error);
             Swal.fire('Error', 'Error al cambiar el estatus del banco', 'error');
         });
     }
 
     // Cargar bancos al iniciar la página
+    console.log('Cargando bancos al iniciar la página');
     buscarBancos();
 });

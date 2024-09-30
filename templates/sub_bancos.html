@@ -288,34 +288,46 @@
     function guardarBanco(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
-        const bancoId = formData.get('id');
+        const bancoData = Object.fromEntries(formData);
+        const bancoId = bancoData.id;
         const url = bancoId ? `/api/actualizar-banco/${bancoId}` : '/api/crear-banco';
         const method = bancoId ? 'PUT' : 'POST';
     
+        console.log(`Iniciando ${bancoId ? 'actualización' : 'creación'} de banco:`, bancoData);
+    
         fetch(url, {
             method: method,
-            body: JSON.stringify(Object.fromEntries(formData)),
+            body: JSON.stringify(bancoData),
             headers: {
                 'Content-Type': 'application/json'
             }
         })
         .then(response => {
+            console.log(`Respuesta del servidor recibida. Status: ${response.status}`);
             if (!response.ok) {
-                throw new Error('Error en la respuesta del servidor');
+                console.warn(`Respuesta del servidor no exitosa. Status: ${response.status}`);
+                return response.json().then(err => { throw err; });
             }
             return response.json();
         })
         .then(data => {
             if (data.error) {
+                console.error(`Error reportado por el servidor:`, data.error);
                 throw new Error(data.error);
             }
+            console.log(`Banco ${bancoId ? 'actualizado' : 'creado'} exitosamente:`, data);
             Swal.fire('Éxito', bancoId ? 'Banco actualizado correctamente' : 'Banco creado correctamente', 'success');
             toggleModal();
             buscarBancos();
         })
         .catch(error => {
-            console.error('Error:', error);
-            Swal.fire('Error', error.message || 'Ocurrió un error al guardar el banco', 'error');
+            console.error(`Error al ${bancoId ? 'actualizar' : 'crear'} banco:`, error);
+            let errorMessage = error.message || 'Ocurrió un error al guardar el banco';
+            if (error.error) {
+                errorMessage = error.error;
+            }
+            console.error('Mensaje de error mostrado al usuario:', errorMessage);
+            Swal.fire('Error', errorMessage, 'error');
         });
     }
 

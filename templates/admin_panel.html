@@ -926,18 +926,58 @@ function loadEmpresas(page = 1) {
             loadUsersForInvoiceForm();
         }
 
-        function loadUsersForInvoiceForm() {
-            fetch('/admin/users')
+        function renderUsers(users) {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '';
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.nombre} ${user.apellido}</td>
+                    <td>${user.email}</td>
+                    <td>${user.telefono || 'N/A'}</td>
+                    <td>${user.empresa || 'N/A'}</td>
+                    <td>${user.rol}</td>
+                    <td>
+                        <button onclick="editUser(${user.id})" class="btn btn-primary btn-sm">Editar</button>
+                        <button onclick="deleteUser(${user.id})" class="btn btn-danger btn-sm">Eliminar</button>
+                        <button onclick="toggleAsistenteUsuario(${user.id})" class="btn btn-sm ${user.asistente_activo ? 'btn-warning' : 'btn-success'}">
+                            ${user.asistente_activo ? 'Desactivar Asistente' : 'Activar Asistente'}
+                        </button>
+                    </td>
+                `;
+                usersList.appendChild(row);
+            });
+        }
+        
+        function toggleAsistenteUsuario(userId) {
+            fetch(`/admin/toggle_asistente_usuario/${userId}`, { method: 'POST' })
                 .then(response => response.json())
-                .then(users => {
-                    const userSelect = document.getElementById('invoice-user');
-                    userSelect.innerHTML = users.map(user => 
-                        `<option value="${user.id}">${user.nombre_usuario}</option>`
-                    ).join('');
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Éxito', data.message, 'success');
+                        // Actualizar la lista de usuarios
+                        loadUsers();
+                    } else {
+                        throw new Error(data.error || 'Error desconocido');
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showFeedback('Error al cargar usuarios para la factura', true);
+                    Swal.fire('Error', 'Hubo un problema al cambiar el estado del asistente', 'error');
+                });
+        }
+
+        function loadUsers() {
+            console.log('loadUsers function called'); // Añadir este log para depuración
+            fetch('/admin/users')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('User data received:', data);
+                    renderUsers(data.users);
+                })
+                .catch(error => {
+                    console.error('Error loading users:', error);
                 });
         }
 

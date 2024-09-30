@@ -124,11 +124,26 @@ def crear_banco():
             "message": "Banco creado exitosamente",
             "banco": nuevo_banco.to_dict()
         }), 201
-    except IntegrityError:
+    except IntegrityError as e:
         db.session.rollback()
-        logger.warning(f"Intento de crear banco con nombre o teléfono duplicado: {datos}")
-        return jsonify({"error": "Ya existe un banco con ese nombre o teléfono"}), 400
+        error_info = str(e.orig)
+        
+        # Intentar extraer el nombre de la restricción violada
+        match = re.search(r'violates unique constraint "(\w+)"', error_info)
+        if match:
+            constraint_name = match.group(1)
+            if 'nombre' in constraint_name:
+                mensaje = f"Ya existe un banco con el nombre '{datos['nombre']}'."
+            elif 'telefono' in constraint_name:
+                mensaje = f"Ya existe un banco con el número de teléfono '{datos['telefono']}'."
+            else:
+                mensaje = f"Violación de la restricción única: {constraint_name}"
+        else:
+            mensaje = "Error de integridad al crear el banco. Posible duplicación de datos."
+        
+        logger.warning(f"Error al crear banco: {mensaje} Error completo: {error_info}")
+        return jsonify({"error": mensaje}), 400
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error al crear banco: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error inesperado al crear banco: {str(e)}")
+        return jsonify({"error": f"Error inesperado al crear el banco: {str(e)}"}), 500

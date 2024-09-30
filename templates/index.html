@@ -5,401 +5,148 @@
 {% block extra_css %}
 <style>
     #dashboard {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 10px;
-        background-color: #f0f2f5;
-    }
-    
-    .chart-controls {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .charts-container {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 200px 1fr;
         gap: 20px;
-        max-width: 600px; /* Ajusta este valor según tus necesidades */
-        margin: 0 auto;
+        padding: 20px;
+        background-color: #f0f2f5;
+        height: calc(100vh - 40px); /* Altura total menos el padding */
     }
+
     
-    .chart-wrapper {
-        background-color: #ffffff;
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        overflow: hidden;
+
+    .main-content {
+        grid-column: 2;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
-    
-    .chart-wrapper:hover {
-        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
     }
-    
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
+
+    .charts-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
     }
-    
-    .chart-container {
-        height: 200px; /* Altura reducida */
-    }
-    
-    .chart-wrapper.hidden {
-        padding: 10px;
-        height: auto;
-    }
-    
-    .chart-wrapper.hidden .chart-header {
-        margin-bottom: 0;
-    }
-    
-    .chart-wrapper.hidden .chart-container {
-        display: none;
-    }
-    
-    .chart-button {
-        padding: 5px 10px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    
-    .chart-button:hover {
-        background-color: #45a049;
-    }
-    
+
     .widgets-container {
         display: grid;
-        grid-template-columns: 1fr; /* Cambiado a una columna */
+        grid-template-columns: repeat(3, 1fr);
         gap: 20px;
     }
-    
-    .widget {
-        background-color: #ffffff;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: box-shadow 0.3s;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .widget:hover {
-        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-    }
-    
-    .widget h3 {
-        font-size: 1.2rem;
-        color: #333;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #e0e0e0;
-    }
-    
-    /* Estilos responsivos */
-    @media (max-width: 768px) {
-        .charts-container {
-            max-width: 100%;
-        }
-    
-        .chart-container {
-            height: 180px; /* Altura aún más reducida para móviles */
-        }
-    
-        .widget h3 {
-            font-size: 1rem;
-        }
-    }
-    /* Estilos para las tarjetas de resumen */
-    /* Estilos para las tarjetas de resumen */
-    /* Estilos para las tarjetas de resumen */
-    /* Estilos para las tarjetas de resumen */
-    .summary-cards {
-        display: flex;
-        flex-direction: column;
-        gap: 50px;
-        max-width: 200px; /* Ancho reducido para una columna */
-        padding: 15px;
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+
+    .summary-card, .chart-wrapper, .widget {
+        background-color: white;
         border-radius: 8px;
+        padding: 15px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    .summary-card {
-        background-color: white;
-        border-radius: 8px;
-        padding: 12px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .summary-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #007EA7, #00A8E8);
-        transform: scaleX(0);
-        transition: transform 0.3s ease;
-    }
-
-    .summary-card:hover {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px);
-    }
-
-    .summary-card:hover::before {
-        transform: scaleX(1);
-    }
-
     .summary-card h4 {
-        margin: 0 0 6px 0;
-        font-size: 12px;
+        margin: 0 0 10px 0;
+        font-size: 14px;
         color: #333;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .summary-card p {
-        margin: 0 0 6px 0;
-        font-size: 18px;
+        margin: 0;
+        font-size: 24px;
         font-weight: bold;
         color: #007EA7;
-        line-height: 1.2;
     }
 
-    .change {
-        font-size: 11px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        transition: transform 0.3s ease;
+    .chart-container {
+        height: 300px;
     }
 
-    .change::before {
-        content: '';
-        display: inline-block;
-        width: 0;
-        height: 0;
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        margin-right: 4px;
+    .widget-title {
+        font-size: 18px;
+        margin-bottom: 15px;
     }
 
-    .positive-change {
-        color: #28a745;
-    }
-
-    .positive-change::before {
-        border-bottom: 4px solid #28a745;
-    }
-
-    .negative-change {
-        color: #dc3545;
-    }
-
-    .negative-change::before {
-        border-top: 4px solid #dc3545;
-    }
-
-    .summary-card:hover .change {
-        transform: translateX(3px);
-    }
-
-    /* Ajustes responsivos */
-    @media (max-width: 1200px) {
-        .summary-cards {
-            max-width: 100%;
-            flex-direction: row;
-            flex-wrap: wrap;
-            justify-content: space-between;
-        }
-
-        .summary-card {
-            flex: 1 1 calc(50% - 5px);
-            min-width: calc(50% - 5px);
-        }
-    }
-
-    @media (max-width: 768px) {
-        .summary-cards {
-            padding: 10px;
-        }
-
-        .summary-card {
-            flex: 1 1 100%;
-            min-width: 100%;
-        }
-
-        .summary-card h4 {
-            font-size: 11px;
-        }
-
-        .summary-card p {
-            font-size: 16px;
-        }
-
-        .change {
-            font-size: 10px;
-        }
-    }
     .task-list, .notification-list {
         list-style-type: none;
         padding: 0;
+        margin: 0;
+        max-height: 300px;
         overflow-y: auto;
-        flex-grow: 1;
     }
+
     .task-item, .notification-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px;
-        margin-bottom: 10px;
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        transition: background-color 0.3s;
+        padding: 10px 0;
+        border-bottom: 1px solid #e0e0e0;
     }
-    .task-item:hover, .notification-item:hover {
-        background-color: #f0f0f0;
+
+    .task-item:last-child, .notification-item:last-child {
+        border-bottom: none;
     }
-    .task-description, .notification-message {
-        flex-grow: 1;
-        margin-right: 10px;
-    }
-    .task-due-date, .notification-type {
-        font-size: 0.8rem;
-        color: #666;
-        white-space: nowrap;
-    }
-    .notification-advertencia {
-        border-left: 4px solid #ffa000;
-    }
-    .notification-informacion {
-        border-left: 4px solid #2196f3;
-    }
-    #tasks {
-        height: 500px;
-    }
-    #notifications {
-        height: 400px;
-    }
-    .widget-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-    }
-    .widget-title {
-        display: flex;
-        align-items: center;
-        font-size: 1.2rem;
-        color: #333;
-    }
-    .widget-icon {
-        margin-right: 10px;
-        font-size: 1.5rem;
-    }
-    .widget-count {
-        background-color: #4CAF50;
-        color: white;
-        border-radius: 50%;
-        padding: 2px 8px;
-        font-size: 0.8rem;
-        margin-left: 10px;
-    }
+
+    
 </style>
 {% endblock %}
 
 {% block content %}
-<div id="dashboard">
-        <div class="summary-cards column-layout">
+
+
+    <div class="main-content">
+        <div class="summary-cards">
             <div class="summary-card">
                 <h4>Ingresos Totales</h4>
                 <p>$24,000</p>
-                <span class="change positive-change">+15% vs. mes anterior</span>
             </div>
             <div class="summary-card">
                 <h4>Gastos Totales</h4>
                 <p>$12,000</p>
-                <span class="change negative-change">-5% vs. mes anterior</span>
             </div>
             <div class="summary-card">
                 <h4>Beneficio Neto</h4>
                 <p>$12,000</p>
-                <span class="change positive-change">+25% vs. mes anterior</span>
             </div>
             <div class="summary-card">
                 <h4>Nuevos Clientes</h4>
                 <p>120</p>
-                <span class="change positive-change">+10% vs. mes anterior</span>
             </div>
         </div>
 
-    <div class="charts-container">
-        <div class="chart-wrapper" id="line-chart-wrapper">
-            <div class="chart-header">
+        <div class="charts-container">
+            <div class="chart-wrapper">
                 <h3>Ventas Mensuales</h3>
-                <button class="chart-button" onclick="toggleChartVisibility('line-chart-wrapper')">Ocultar</button>
+                <div class="chart-container">
+                    <canvas id="line-chart"></canvas>
+                </div>
             </div>
-            <div class="chart-container">
-                <canvas id="line-chart"></canvas>
-            </div>
-        </div>
-        <div class="chart-wrapper" id="bar-chart-wrapper">
-            <div class="chart-header">
+            <div class="chart-wrapper">
                 <h3>Ingresos vs Gastos</h3>
-                <button class="chart-button" onclick="toggleChartVisibility('bar-chart-wrapper')">Ocultar</button>
+                <div class="chart-container">
+                    <canvas id="bar-chart"></canvas>
+                </div>
             </div>
-            <div class="chart-container">
-                <canvas id="bar-chart"></canvas>
-            </div>
-        </div>
-        <div class="chart-wrapper" id="pie-chart-wrapper">
-            <div class="chart-header">
+            <div class="chart-wrapper">
                 <h3>Distribución Financiera</h3>
-                <button class="chart-button" onclick="toggleChartVisibility('pie-chart-wrapper')">Ocultar</button>
-            </div>
-            <div class="chart-container">
-                <canvas id="pie-chart"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <div class="widgets-container">
-        <div id="tasks" class="widget">
-            <div class="widget-header">
-                <div class="widget-title">
-                    <span class="widget-icon">📋</span>
-                    Tareas Pendientes
-                    <span class="widget-count" id="task-count">0</span>
+                <div class="chart-container">
+                    <canvas id="pie-chart"></canvas>
                 </div>
             </div>
-            <ul id="task-list" class="task-list"></ul>
         </div>
-        <div id="notifications" class="widget">
-            <div class="widget-header">
-                <div class="widget-title">
-                    <span class="widget-icon">🔔</span>
-                    Notificaciones y Alertas
-                    <span class="widget-count" id="notification-count">0</span>
-                </div>
+
+        <div class="widgets-container">
+            <div id="virtual-assistant">
+                <h3>Asistente Virtual</h3>
+                <!-- Contenido del asistente virtual -->
             </div>
-            <ul id="notification-list" class="notification-list"></ul>
+            <div class="widget">
+                <h3 class="widget-title">Tareas Pendientes</h3>
+                <ul id="task-list" class="task-list"></ul>
+            </div>
+            <div class="widget">
+                <h3 class="widget-title">Notificaciones</h3>
+                <ul id="notification-list" class="notification-list"></ul>
+            </div>
         </div>
     </div>
 </div>
@@ -435,19 +182,12 @@ function createLineChart(data) {
                 label: 'Ventas',
                 data: data.values,
                 borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                tension: 0.3,
-                fill: true
+                tension: 0.1
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
+            maintainAspectRatio: false
         }
     });
 }
@@ -473,12 +213,7 @@ function createBarChart(data) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
+            maintainAspectRatio: false
         }
     });
 }
@@ -500,33 +235,9 @@ function createPieChart(data) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
+            maintainAspectRatio: false
         }
     });
-}
-
-function toggleChartVisibility(wrapperId) {
-    const wrapper = document.getElementById(wrapperId);
-    const button = wrapper.querySelector('.chart-button');
-    wrapper.classList.toggle('hidden');
-    if (wrapper.classList.contains('hidden')) {
-        button.textContent = 'Mostrar';
-        wrapper.style.height = wrapper.querySelector('.chart-header').offsetHeight + 'px';
-    } else {
-        button.textContent = 'Ocultar';
-        wrapper.style.height = 'auto';
-        // Redimensionar el gráfico para que se ajuste correctamente
-        const chartId = wrapperId.replace('-wrapper', '');
-        const chart = Chart.getChart(chartId);
-        if (chart) {
-            chart.resize();
-        }
-    }
 }
 
 function loadTasks() {
@@ -536,11 +247,10 @@ function loadTasks() {
             const taskList = document.getElementById('task-list');
             taskList.innerHTML = tasks.map(task => `
                 <li class="task-item">
-                    <span class="task-description">${task.descripcion}</span>
-                    <span class="task-due-date">Vence: ${task.vence}</span>
+                    <div>${task.descripcion}</div>
+                    <small>Vence: ${task.vence}</small>
                 </li>
             `).join('');
-            document.getElementById('task-count').textContent = tasks.length;
         })
         .catch(error => console.error('Error loading tasks:', error));
 }
@@ -551,12 +261,11 @@ function loadNotifications() {
         .then(notifications => {
             const notificationList = document.getElementById('notification-list');
             notificationList.innerHTML = notifications.map(notification => `
-                <li class="notification-item notification-${notification.tipo}">
-                    <span class="notification-message">${notification.mensaje}</span>
-                    <span class="notification-type">${notification.tipo === 'warning' ? 'Advertencia' : 'Información'}</span>
+                <li class="notification-item">
+                    <div>${notification.mensaje}</div>
+                    <small>${notification.tipo}</small>
                 </li>
             `).join('');
-            document.getElementById('notification-count').textContent = notifications.length;
         })
         .catch(error => console.error('Error loading notifications:', error));
 }
