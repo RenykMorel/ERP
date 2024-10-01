@@ -35,6 +35,9 @@ from sqlalchemy import inspect
 from sqlalchemy.orm import joinedload
 from typing import Any
 from typing import Tuple, Dict, Any
+import secrets
+import string
+from flask import render_template_string
 
 load_dotenv()
 
@@ -42,6 +45,122 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 mailjet = Client(auth=(os.getenv('MJ_APIKEY_PUBLIC'), os.getenv('MJ_APIKEY_PRIVATE')), version='v3.1')
+
+def send_welcome_email(email, nombre, apellido, login_link, nombre_usuario, password):
+    nombre_completo = f"{nombre} {apellido}"
+    
+    html_content = render_template_string("""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bienvenido a CalculAI</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .container {
+                background-color: #f8f9fa;
+                border-radius: 10px;
+                padding: 30px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            .logo {
+                font-size: 2rem;
+                font-weight: bold;
+                color: #007bff;
+            }
+            .ai-text {
+                color: #2b0ae6;
+                font-style: italic;
+            }
+            h1 {
+                color: #007bff;
+            }
+            .credentials {
+                background-color: #e9ecef;
+                border-radius: 5px;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            .btn {
+                display: inline-block;
+                background-color: #007bff;
+                color: #ffffff;
+                text-decoration: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                margin-top: 20px;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                font-size: 0.9rem;
+                color: #6c757d;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">Calcul<span class="ai-text">AI</span></div>
+            </div>
+            <h1>¡Bienvenido a CalculAI, {{ nombre_completo }}!</h1>
+            <p>Estamos emocionados de que comiences tu prueba de 14 días con nosotros.</p>
+            <p>Para acceder al sistema, utiliza las siguientes credenciales:</p>
+            <div class="credentials">
+                <p><strong>Nombre de usuario:</strong> {{ nombre_usuario }}</p>
+                <p><strong>Contraseña:</strong> {{ password }}</p>
+            </div>
+            <p>Durante tu período de prueba, tendrás acceso completo a todas las funcionalidades del sistema.</p>
+            <a href="{{ login_link }}" class="btn">Iniciar sesión en CalculAI</a>
+            <p>Si tienes alguna duda o necesitas ayuda, no dudes en contactarnos.</p>
+            <p>¡Gracias por elegir CalculAI!</p>
+            <div class="footer">
+                <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """, nombre_completo=nombre_completo, nombre_usuario=nombre_usuario, password=password, login_link=login_link)
+
+    data = {
+        'Messages': [
+            {
+                "From": {
+                    "Email": "soporte@sendiu.net",
+                    "Name": "CalculAI"
+                },
+                "To": [
+                    {
+                        "Email": email,
+                        "Name": nombre_completo
+                    }
+                ],
+                "Subject": "Bienvenido a CalculAI - Tu período de prueba de 14 días ha comenzado",
+                "HTMLPart": html_content
+            }
+        ]
+    }
+
+    try:
+        result = mailjet.send.create(data=data)
+        return result.status_code, result.json()
+    except Exception as e:
+        logger.error(f"Error al enviar correo de bienvenida: {str(e)}")
+        return 500, {"error": str(e)}
+
+       
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -53,7 +172,7 @@ class AsistenteVirtual:
     def __init__(self, api_key, get_context_func):
         self.api_key = api_key
         self.get_context_func = get_context_func
-        self.context = "Eres un asistente virtual para CalculAI. Debes responder preguntas basándote en la información proporcionada en el contexto y la pregunta del usuario. Tienes acceso a la información de la base de datos de CalculAI, incluyendo usuarios, empresas, transacciones, cuentas y bancos. Si la pregunta no está relacionada con CalculAI o la información disponible, responde que no puedes ayudar con eso."
+        self.context = "Eres un asistente virtual para CalculAI. Debes responder preguntas basándote en la información proporcionada en el contexto y la pregunta del usuario. Tienes acceso a la información de la base de datos de CalculAI, incluyendo usuarios, empresas, transacciones, cuentas y bancos. Si la pregunta no está relacionada con CalculAI o la información disponible, responde que no puedes ayudar con eso. si la informacion que te solicitan es de la base de datos, siempre da la informacion en un formato de lista y ordenado"
         self.base_url = "https://api.anthropic.com/v1/messages"
 
     def object_as_dict(self, obj):
@@ -329,6 +448,11 @@ def create_app():
         logout_user()
         return redirect(url_for('login'))
     
+    def generate_password(length=12):
+        alphabet = string.ascii_letters + string.digits + string.punctuation
+        password = ''.join(secrets.choice(alphabet) for i in range(length))
+        return password
+
     @app.route('/registro', methods=['GET', 'POST'])
     @limiter.limit("30 per minute")
     def registro():
@@ -352,7 +476,7 @@ def create_app():
             telefono = data.get('telefono')
             nombre_usuario = data.get('nombre_usuario')
             email = data.get('email')
-            password = generate_password()
+            password = data.get('password')  # Asumiendo que el password se envía desde el frontend
 
             nombre_empresa = data.get('nombre_empresa')
             rnc_empresa = data.get('rnc_empresa')
@@ -383,7 +507,7 @@ def create_app():
                     apellido=apellido,
                     telefono=telefono,
                     empresa_id=nueva_empresa.id,
-                    asistente_activo=True
+                    asistente_activo=False  # Cambiado a False para desactivar el asistente por defecto
                 )
                 new_user.set_password(password)
                 db.session.add(new_user)
