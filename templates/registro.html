@@ -71,6 +71,7 @@
             justify-content: center;
             align-items: center;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.2), -2px -2px 5px rgba(255,255,255,0.7);
+            cursor: pointer;
         }
         .input-group {
             margin-bottom: 1rem;
@@ -148,51 +149,52 @@
     <div class="login-container">
         <div class="login-header">
             <div class="login-title">Calcul<span class="ai-text">AI</span></div>
-            <button class="login-button">REGISTRO</button>
+            <button class="login-button" onclick="window.location.href='{{ url_for('login') }}'" aria-label="Ir a inicio de sesión">INICIO</button>
         </div>
         <form id="form-registro">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="section-title">Información Personal</div>
             <div class="input-group">
-                <input type="text" name="nombre" placeholder="Nombre" required>
+                <input type="text" name="nombre" placeholder="Nombre" required aria-label="Nombre">
             </div>
             <div class="input-group">
-                <input type="text" name="apellido" placeholder="Apellido" required>
+                <input type="text" name="apellido" placeholder="Apellido" required aria-label="Apellido">
             </div>
             <div class="input-group">
-                <input type="tel" name="telefono" placeholder="Teléfono" required>
+                <input type="tel" name="telefono" placeholder="Teléfono" required aria-label="Teléfono" pattern="[0-9]{10}">
             </div>
             <div class="input-group">
-                <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
+                <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required aria-label="Nombre de usuario" minlength="4">
             </div>
             <div class="input-group">
-                <input type="email" name="email" placeholder="Correo electrónico" required>
+                <input type="email" name="email" placeholder="Correo electrónico" required aria-label="Correo electrónico">
             </div>
             <div class="input-group password-group">
-                <input type="password" name="password" placeholder="Contraseña" required>
-                <button type="button" class="password-toggle">👁️</button>
+                <input type="password" name="password" placeholder="Contraseña" required aria-label="Contraseña" minlength="8">
+                <button type="button" class="password-toggle" aria-label="Mostrar/Ocultar contraseña">👁️</button>
             </div>
             <div class="input-group password-group">
-                <input type="password" name="confirm_password" placeholder="Confirmar contraseña" required>
-                <button type="button" class="password-toggle">👁️</button>
+                <input type="password" name="confirm_password" placeholder="Confirmar contraseña" required aria-label="Confirmar contraseña" minlength="8">
+                <button type="button" class="password-toggle" aria-label="Mostrar/Ocultar contraseña">👁️</button>
             </div>
 
             <div class="section-title">Información de la Empresa</div>
             <div class="input-group">
-                <input type="text" name="nombre_empresa" placeholder="Nombre de la empresa" required>
+                <input type="text" name="nombre_empresa" placeholder="Nombre de la empresa" required aria-label="Nombre de la empresa">
             </div>
             <div class="input-group">
-                <input type="text" name="rnc_empresa" placeholder="RNC de la empresa" required>
+                <input type="text" name="rnc_empresa" placeholder="RNC de la empresa" required aria-label="RNC de la empresa" pattern="[0-9]{9}|[0-9]{11}">
             </div>
             <div class="input-group">
-                <input type="text" name="direccion_empresa" placeholder="Dirección de la empresa" required>
+                <input type="text" name="direccion_empresa" placeholder="Dirección de la empresa" required aria-label="Dirección de la empresa">
             </div>
             <div class="input-group">
-                <input type="tel" name="telefono_empresa" placeholder="Teléfono de la empresa" required>
+                <input type="tel" name="telefono_empresa" placeholder="Teléfono de la empresa" required aria-label="Teléfono de la empresa" pattern="[0-9]{10}">
             </div>
 
             <button type="submit" class="login-btn">REGISTRARSE</button>
         </form>
-        <div id="auth-error"></div>
+        <div id="auth-error" role="alert"></div>
         <div class="forgot-password">
             <a href="{{ url_for('login') }}">¿Ya tienes una cuenta? Inicia sesión</a>
         </div>
@@ -202,51 +204,115 @@
 
     <script>
         function togglePasswordVisibility(passwordInput, toggleButton) {
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleButton.textContent = '🔒';
-            } else {
-                passwordInput.type = 'password';
-                toggleButton.textContent = '👁️';
-            }
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            toggleButton.textContent = type === 'password' ? '👁️' : '🔒';
         }
-
+    
         function showError(message) {
             const errorDiv = document.getElementById('auth-error');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
         }
-
-        function initializePasswordToggles() {
-            document.querySelectorAll('.password-toggle').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    togglePasswordVisibility(this.previousElementSibling, this);
-                });
-            });
+    
+        function hideError() {
+            document.getElementById('auth-error').style.display = 'none';
         }
-
+    
+        function validatePassword(password) {
+            const minLength = 8;
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumbers = /\d/.test(password);
+            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+            if (password.length < minLength) {
+                return "La contraseña debe tener al menos 8 caracteres.";
+            }
+            if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+                return "La contraseña debe incluir al menos una mayúscula, una minúscula, un número y un carácter especial.";
+            }
+            return "";
+        }
+    
+        function validateRNC(rnc) {
+            if (!/^[0-9]{9}$|^[0-9]{11}$/.test(rnc)) {
+                return "El RNC debe tener 9 u 11 dígitos numéricos.";
+            }
+            return "";
+        }
+    
+        function validatePhoneNumber(phone) {
+            if (!/^[0-9]{10}$/.test(phone)) {
+                return "El número de teléfono debe tener 10 dígitos numéricos.";
+            }
+            return "";
+        }
+    
         document.getElementById('form-registro').addEventListener('submit', function(e) {
             e.preventDefault();
+            hideError();
             const formData = new FormData(this);
-
-            if (formData.get('password') !== formData.get('confirm_password')) {
-                showError('Las contraseñas no coinciden');
+    
+            // Validaciones individuales
+            const passwordError = validatePassword(formData.get('password'));
+            if (passwordError) {
+                showError(passwordError);
                 return;
             }
-
+    
+            if (formData.get('password') !== formData.get('confirm_password')) {
+                showError('Las contraseñas no coinciden.');
+                return;
+            }
+    
+            const rncError = validateRNC(formData.get('rnc_empresa'));
+            if (rncError) {
+                showError(rncError);
+                return;
+            }
+    
+            const phoneError = validatePhoneNumber(formData.get('telefono'));
+            if (phoneError) {
+                showError(phoneError);
+                return;
+            }
+    
+            const companyPhoneError = validatePhoneNumber(formData.get('telefono_empresa'));
+            if (companyPhoneError) {
+                showError('Teléfono de la empresa: ' + companyPhoneError);
+                return;
+            }
+    
+            // Validación de campos requeridos
+            const requiredFields = ['nombre', 'apellido', 'nombre_usuario', 'email', 'nombre_empresa', 'direccion_empresa'];
+            for (const field of requiredFields) {
+                if (!formData.get(field)) {
+                    showError(`El campo ${field.replace('_', ' ')} es obligatorio.`);
+                    return;
+                }
+            }
+    
+            // Si todas las validaciones pasan, enviar el formulario
             fetch('{{ url_for("registro") }}', {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrf_token')
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    window.location.href = '{{ url_for("index") }}';
+                    window.location.href = data.redirect || '{{ url_for("registro_exitoso") }}';
                 } else {
-                    showError(data.error);
+                    showError(data.error || 'Error desconocido durante el registro');
                 }
             })
             .catch(error => {
@@ -254,8 +320,11 @@
                 showError('Ocurrió un error durante el registro. Por favor, inténtalo de nuevo.');
             });
         });
-
-        initializePasswordToggles();
+    
+        // Inicializar los toggles de contraseña
+        document.querySelectorAll('.password-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                togglePasswordVisibility(this.previousElementSibling, this);
+            });
+        });
     </script>
-</body>
-</html>

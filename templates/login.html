@@ -136,7 +136,7 @@
             width: 60px;
             height: 60px;
         }
-        #auth-error {
+        .error-message {
             color: #ff0000;
             text-align: center;
             margin-top: 10px;
@@ -159,7 +159,7 @@
             </div>
             <button type="submit" class="login-btn">INICIAR SESIÓN</button>
         </form>
-        <div id="auth-error"></div>
+        <div id="error-message" class="error-message"></div>
         <div class="forgot-password">
             <a href="#" id="forgot-password-link">¿Olvidaste tu contraseña?</a>
         </div>
@@ -196,16 +196,21 @@
         }
 
         function showError(message) {
-            const errorDiv = document.getElementById('auth-error');
+            const errorDiv = document.getElementById('error-message');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.style.display = 'none';
         }
 
         function showPasswordResetOption(username) {
             const loginContainer = document.querySelector('.login-container');
             loginContainer.innerHTML = `
                 <h2>Cambiar Contraseña</h2>
-                <form id="form-reset-password">
+                <form id="reset-password-form" onsubmit="handlePasswordReset(event)">
                     <input type="hidden" name="username" value="${username}">
                     <div class="input-group password-group">
                         <input type="password" name="new_password" placeholder="Nueva contraseña" required>
@@ -217,9 +222,8 @@
                     </div>
                     <button type="submit" class="login-btn">Cambiar Contraseña</button>
                 </form>
-                <div id="auth-error"></div>
+                <div id="error-message" class="error-message"></div>
             `;
-            document.getElementById('form-reset-password').addEventListener('submit', handlePasswordReset);
             initializePasswordToggles();
         }
 
@@ -262,6 +266,7 @@
 
         document.getElementById('form-login').addEventListener('submit', function(e) {
             e.preventDefault();
+            hideError();
             const formData = new FormData(this);
 
             fetch('{{ url_for("login") }}', {
@@ -298,13 +303,14 @@
                     </div>
                     <button type="submit" class="login-btn">Enviar Instrucciones</button>
                 </form>
-                <div id="auth-error"></div>
+                <div id="error-message" class="error-message"></div>
             `;
             document.getElementById('form-forgot-password').addEventListener('submit', handleForgotPassword);
         });
 
         function handleForgotPassword(e) {
             e.preventDefault();
+            hideError();
             const formData = new FormData(e.target);
             fetch('{{ url_for("request_password_reset") }}', {
                 method: 'POST',

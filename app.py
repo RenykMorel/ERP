@@ -1,7 +1,8 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, render_template_string, current_app
+from flask import Flask, session, render_template, jsonify, request, redirect, url_for, flash, render_template_string, current_app
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from config import Config
 import requests
 import json
@@ -33,11 +34,10 @@ import logging
 from logging.handlers import RotatingFileHandler
 from sqlalchemy import inspect
 from sqlalchemy.orm import joinedload
-from typing import Any
+from typing import Any, Optional
 from typing import Tuple, Dict, Any
-import secrets
-import string
-from flask import render_template_string
+from flask import send_from_directory
+
 
 load_dotenv()
 
@@ -160,8 +160,6 @@ def send_welcome_email(email, nombre, apellido, login_link, nombre_usuario, pass
         logger.error(f"Error al enviar correo de bienvenida: {str(e)}")
         return 500, {"error": str(e)}
 
-       
-
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
@@ -277,6 +275,10 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = 'login'
     limiter.init_app(app)
+    csrf = CSRFProtect(app)
+    
+    app.config['WTF_CSRF_ENABLED'] = False
+    
 
     from admin_routes import admin
     app.register_blueprint(admin, url_prefix='/admin')
@@ -349,7 +351,7 @@ def create_app():
         return render_template('index.html')
 
     @app.route('/login', methods=['GET', 'POST'])
-    @limiter.limit("50 por minute")
+    @limiter.limit("50 per minute")
     def login():
         if current_user.is_authenticated:
             return redirect(url_for('index'))
@@ -385,12 +387,7 @@ def create_app():
 
         return render_template('login.html')
 
-    @app.route('/registro_exitoso')
-    @login_required
-    def registro_exitoso():
-        return render_template('registro_exitoso.html')
-
-    @app.route('/api/registro_exitoso', methods=['GET'])
+    @app.route('/api/registro_exitoso')
     def api_registro_exitoso():
         data = {
             "title": "¡Registro Exitoso!",
@@ -401,6 +398,10 @@ def create_app():
             "loginButtonText": "Iniciar Sesión"
         }
         return jsonify(data)
+
+    @app.route('/registro_exitoso')
+    def registro_exitoso():
+        return render_template('registro_exitoso.html')
 
     @app.route("/Bancos")
     @login_required
@@ -454,7 +455,6 @@ def create_app():
         return password
 
     @app.route('/registro', methods=['GET', 'POST'])
-    @limiter.limit("30 per minute")
     def registro():
         if current_user.is_authenticated:
             return redirect(url_for('index'))
@@ -476,20 +476,22 @@ def create_app():
             telefono = data.get('telefono')
             nombre_usuario = data.get('nombre_usuario')
             email = data.get('email')
-            password = data.get('password')  # Asumiendo que el password se envía desde el frontend
+            password = data.get('password')
 
             nombre_empresa = data.get('nombre_empresa')
             rnc_empresa = data.get('rnc_empresa')
             direccion_empresa = data.get('direccion_empresa')
             telefono_empresa = data.get('telefono_empresa')
 
-            if Usuario.query.filter_by(nombre_usuario=nombre_usuario).first():
-                return jsonify({"success": False, "error": "El nombre de usuario ya está en uso"}), 400
-
-            if Usuario.query.filter_by(email=email).first():
-                return jsonify({"success": False, "error": "El correo electrónico ya está registrado"}), 400
-
             try:
+                if Usuario.query.filter_by(nombre_usuario=nombre_usuario).first():
+                    logger.warning(f"Intento de registro con nombre de usuario existente: {nombre_usuario}")
+                    return jsonify({"success": False, "error": "El nombre de usuario ya está en uso"}), 400
+
+                if Usuario.query.filter_by(email=email).first():
+                    logger.warning(f"Intento de registro con email existente: {email}")
+                    return jsonify({"success": False, "error": "El correo electrónico ya está registrado"}), 400
+
                 nueva_empresa = Empresa(
                     nombre=nombre_empresa,
                     rnc=rnc_empresa,
@@ -507,45 +509,33 @@ def create_app():
                     apellido=apellido,
                     telefono=telefono,
                     empresa_id=nueva_empresa.id,
-                    asistente_activo=False  # Cambiado a False para desactivar el asistente por defecto
+                    asistente_activo=False
                 )
                 new_user.set_password(password)
                 db.session.add(new_user)
                 db.session.commit()
 
+                logger.info(f"Nuevo usuario registrado: {nombre_usuario}")
+
                 login_link = url_for('login', _external=True)
                 status_code, response = send_welcome_email(email, nombre, apellido, login_link, nombre_usuario, password)
 
                 if status_code == 200:
-                    logger.info(f"Nuevo usuario registrado y correo enviado: {nombre_usuario}")
-                    return jsonify({
-                        "success": True,
-                        "message": "Registro exitoso. Por favor, revisa tu correo electrónico para obtener tus credenciales de acceso.",
-                        "user_id": new_user.id
-                    }), 200
+                    logger.info(f"Correo de bienvenida enviado a: {email}")
+                    session['registro_exitoso'] = True
+                    return jsonify({"success": True, "message": "Registro exitoso", "redirect": url_for('registro_exitoso')})
                 else:
                     logger.error(f"Error al enviar correo de bienvenida: {response}")
-                    return jsonify({
-                        "success": True,
-                        "message": "Registro exitoso, pero hubo un problema al enviar el correo de bienvenida. Por favor, contacta al soporte.",
-                        "user_id": new_user.id
-                    }), 200
+                    return jsonify({"success": True, "message": "Registro exitoso, pero hubo un problema al enviar el correo de bienvenida", "redirect": url_for('registro_exitoso')})
 
             except IntegrityError as e:
                 db.session.rollback()
                 logger.error(f"Error de integridad en el registro: {str(e)}")
-                return jsonify({
-                    "success": False,
-                    "error": "Ya existe un usuario o empresa con esos datos"
-                }), 400
-
+                return jsonify({"success": False, "error": "Error de integridad en la base de datos"}), 500
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error inesperado en el registro: {str(e)}")
-                return jsonify({
-                    "success": False,
-                    "error": f"Error en el registro: {str(e)}"
-                }), 500
+                return jsonify({"success": False, "error": "Ocurrió un error inesperado durante el registro"}), 500
 
         return render_template('registro.html')
 
@@ -666,7 +656,7 @@ def create_app():
                 "Nómina",
                 "Evaluación de Desempeño",
             ],
-        }
+       }
         return jsonify(submodulos.get(modulo, []))
 
     @app.route("/transacciones")
@@ -747,7 +737,6 @@ def create_app():
             logger.error(f"Error al consultar el asistente: {str(e)}")
             return jsonify({"respuesta": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde."}), 500
 
-
     @app.route('/api/asistente_status')
     @login_required
     def asistente_status():
@@ -764,7 +753,7 @@ def create_app():
         nuevo_estado = request.json.get('activo', False)
         app.config['ASISTENTE_ACTIVO'] = nuevo_estado
         return jsonify({"mensaje": "Estado del asistente actualizado correctamente"})
-
+    
     @app.route("/api/datos_graficos")
     @login_required
     def get_datos_graficos():
@@ -791,7 +780,7 @@ def create_app():
         usuario = {
             "nombre": f"{current_user.nombre} {current_user.apellido}",
             "id": current_user.id,
-            "avatar": "/api/placeholder/100/100",
+            "avatar": url_for('placeholder_image', width=100, height=100),
             "empresa": current_user.empresa.nombre if current_user.empresa else "Sin empresa"
         }
         return jsonify(usuario)
@@ -804,6 +793,15 @@ def create_app():
             {"Content-Type": "text/plain"},
         )
 
+    @app.route('/favicon.ico')
+    def favicon():
+        try:
+            return send_from_directory(os.path.join(app.root_path, 'static'),
+                                    'favicon.ico', mimetype='image/vnd.microsoft.icon')
+        except FileNotFoundError:
+            app.logger.warning("Favicon not found. Returning 404.")
+            return '', 404
+
     @app.route("/admin_panel")
     @login_required
     def admin_panel():
@@ -811,6 +809,25 @@ def create_app():
             flash("Acceso no autorizado", "error")
             return redirect(url_for("index"))
         return render_template("admin_panel.html")
+
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        return jsonify({"error": "CSRF token missing or incorrect"}), 400
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return render_template('500.html'), 500
+
+    @app.after_request
+    def add_header(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        return response
 
     return app
 
