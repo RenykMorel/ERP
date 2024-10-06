@@ -1,244 +1,328 @@
-{% extends "facturacion/base_facturacion.html" %}
-
-{% block title %}Notas de Crédito/Débito - CalculAI{% endblock %}
+{% extends "base.html" %}
+{% block title %}Gestión de Notas de Crédito/Débito - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Notas de Crédito/Débito</h1>
-
-    <ul class="nav nav-tabs mb-3" id="notasTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="credito-tab" data-bs-toggle="tab" data-bs-target="#credito" type="button" role="tab" aria-controls="credito" aria-selected="true">Notas de Crédito</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="debito-tab" data-bs-toggle="tab" data-bs-target="#debito" type="button" role="tab" aria-controls="debito" aria-selected="false">Notas de Débito</button>
-        </li>
-    </ul>
-
-    <div class="tab-content" id="notasTabContent">
-        <div class="tab-pane fade show active" id="credito" role="tabpanel" aria-labelledby="credito-tab">
-            <div class="row mb-3">
-                <div class="col">
-                    <button id="crear-nota-credito-btn" class="btn btn-success">Nueva Nota de Crédito</button>
-                </div>
+<div id="notas-credito-debito-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Notas de Crédito/Débito</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="numero-nota" placeholder="Número de nota">
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Número</th>
-                            <th>Factura Relacionada</th>
-                            <th>Cliente</th>
-                            <th>Fecha</th>
-                            <th>Monto</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="notas-credito-tbody">
-                        <!-- Las notas de crédito se cargarán aquí dinámicamente -->
-                    </tbody>
-                </table>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="cliente-nota" placeholder="Cliente">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="date" id="fecha-nota">
+            </div>
+            <div>
+                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" id="tipo-nota">
+                    <option value="">Todos los tipos</option>
+                    <option value="credito">Crédito</option>
+                    <option value="debito">Débito</option>
+                </select>
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="factura-relacionada" placeholder="Factura relacionada">
             </div>
         </div>
-        <div class="tab-pane fade" id="debito" role="tabpanel" aria-labelledby="debito-tab">
-            <div class="row mb-3">
-                <div class="col">
-                    <button id="crear-nota-debito-btn" class="btn btn-success">Nueva Nota de Débito</button>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Número</th>
-                            <th>Factura Relacionada</th>
-                            <th>Cliente</th>
-                            <th>Fecha</th>
-                            <th>Monto</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="notas-debito-tbody">
-                        <!-- Las notas de débito se cargarán aquí dinámicamente -->
-                    </tbody>
-                </table>
-            </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-nuevo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nueva Nota
+            </button>
         </div>
+    </div>
+    
+    <div id="notas-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="notas-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Número</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Tipo</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Cliente</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Fecha</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Monto</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Factura Relacionada</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="notas-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Las notas se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- Modal para crear/editar nota de crédito/débito -->
-<div class="modal fade" id="notaModal" tabindex="-1" aria-labelledby="notaModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="notaModalLabel">Nueva Nota</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Modal para crear/editar nota -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-xl font-bold" id="modal-title">Crear Nueva Nota</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
             </div>
-            <div class="modal-body">
-                <form id="nota-form">
-                    <input type="hidden" id="nota-id" name="id">
-                    <input type="hidden" id="nota-tipo" name="tipo">
-                    <div class="mb-3">
-                        <label for="nota-numero" class="form-label">Número de Nota</label>
-                        <input type="text" class="form-control" id="nota-numero" name="numero" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="nota-factura" class="form-label">Factura Relacionada</label>
-                        <input type="text" class="form-control" id="nota-factura" name="factura" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="nota-cliente" class="form-label">Cliente</label>
-                        <input type="text" class="form-control" id="nota-cliente" name="cliente" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="nota-fecha" class="form-label">Fecha</label>
-                        <input type="date" class="form-control" id="nota-fecha" name="fecha" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="nota-monto" class="form-label">Monto</label>
-                        <input type="number" step="0.01" class="form-control" id="nota-monto" name="monto" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="nota-motivo" class="form-label">Motivo</label>
-                        <textarea class="form-control" id="nota-motivo" name="motivo" rows="3" required></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" id="guardar-nota-btn">Guardar</button>
-            </div>
+
+            <form id="nota-form" class="mt-4">
+                <input type="hidden" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="numero">
+                        Número de Nota
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="numero" type="text" placeholder="Número de nota" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo">
+                        Tipo de Nota
+                    </label>
+                    <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="tipo" required>
+                        <option value="credito">Crédito</option>
+                        <option value="debito">Débito</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cliente">
+                        Cliente
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="cliente" type="text" placeholder="Nombre del cliente" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
+                        Fecha
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="fecha" type="date" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="monto">
+                        Monto
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="monto" type="number" step="0.01" placeholder="0.00" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="factura_relacionada">
+                        Factura Relacionada
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="factura_relacionada" type="text" placeholder="Número de factura relacionada" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Guardar
+                    </button>
+                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const crearNotaCreditoBtn = document.getElementById('crear-nota-credito-btn');
-    const crearNotaDebitoBtn = document.getElementById('crear-nota-debito-btn');
-    const guardarNotaBtn = document.getElementById('guardar-nota-btn');
-    const notaModal = new bootstrap.Modal(document.getElementById('notaModal'));
-
-    crearNotaCreditoBtn.addEventListener('click', () => mostrarModal('credito'));
-    crearNotaDebitoBtn.addEventListener('click', () => mostrarModal('debito'));
-    guardarNotaBtn.addEventListener('click', guardarNota);
-
-    cargarNotas('credito');
-    cargarNotas('debito');
-
-    function mostrarModal(tipo, id = null) {
-        document.getElementById('notaModalLabel').textContent = id ? `Editar Nota de ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}` : `Nueva Nota de ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
-        document.getElementById('nota-tipo').value = tipo;
-        document.getElementById('nota-form').reset();
-        if (id) {
-            cargarDatosNota(id, tipo);
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof initializeAsistente === 'function') {
+            initializeAsistente();
         }
-        notaModal.show();
+        
+        initializeNotasCreditoDebito();
+        buscarNotas(); // Cargar notas inicialmente
+    });
+
+    function initializeNotasCreditoDebito() {
+        const buscarBtn = document.getElementById('buscar-btn');
+        const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
+        const notaForm = document.getElementById('nota-form');
+        const modal = document.querySelector('.modal');
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const modalCloseButtons = document.querySelectorAll('.modal-close');
+    
+        buscarBtn.addEventListener('click', buscarNotas);
+        crearNuevoBtn.addEventListener('click', mostrarFormularioCrearNota);
+        notaForm.addEventListener('submit', guardarNota);
+    
+        modalOverlay.addEventListener('click', toggleModal);
+        modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+    
+        document.getElementById('notas-tbody').addEventListener('click', manejarAccionesNota);
     }
 
-    function cargarNotas(tipo) {
-        fetch(`/facturacion/api/notas/${tipo}`)
+    function toggleModal() {
+        const modal = document.querySelector('.modal');
+        modal.classList.toggle('opacity-0');
+        modal.classList.toggle('pointer-events-none');
+        document.body.classList.toggle('modal-active');
+    }
+
+    function buscarNotas() {
+        const numero = document.getElementById('numero-nota').value;
+        const cliente = document.getElementById('cliente-nota').value;
+        const fecha = document.getElementById('fecha-nota').value;
+        const tipo = document.getElementById('tipo-nota').value;
+        const facturaRelacionada = document.getElementById('factura-relacionada').value;
+    
+        fetch(`/facturacion/api/buscar-notas?numero=${numero}&cliente=${cliente}&fecha=${fecha}&tipo=${tipo}&factura_relacionada=${facturaRelacionada}`)
             .then(response => response.json())
-            .then(data => actualizarTablaNota(data, tipo))
+            .then(data => actualizarTablaNotas(data))
             .catch(error => {
                 console.error('Error:', error);
-                alert(`Ocurrió un error al cargar las notas de ${tipo}`);
+                Swal.fire('Error', 'Ocurrió un error al buscar notas', 'error');
             });
     }
 
-    function actualizarTablaNota(notas, tipo) {
-        const tbody = document.getElementById(`notas-${tipo}-tbody`);
+    function actualizarTablaNotas(notas) {
+        const tbody = document.getElementById('notas-tbody');
         tbody.innerHTML = '';
         notas.forEach(nota => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${nota.numero}</td>
-                <td>${nota.factura}</td>
-                <td>${nota.cliente}</td>
-                <td>${nota.fecha}</td>
-                <td>${nota.monto.toFixed(2)}</td>
-                <td>
-                    <button onclick="editarNota(${nota.id}, '${tipo}')" class="btn btn-sm btn-info">Editar</button>
-                    <button onclick="eliminarNota(${nota.id}, '${tipo}')" class="btn btn-sm btn-danger">Eliminar</button>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${nota.numero}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${nota.tipo}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${nota.cliente}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${nota.fecha}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${nota.monto.toFixed(2)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${nota.factura_relacionada}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button class="editar-nota text-blue-600 hover:text-blue-900 mr-2" data-id="${nota.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="eliminar-nota text-red-600 hover:text-red-900" data-id="${nota.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
     }
 
-    function cargarDatosNota(id, tipo) {
-        fetch(`/facturacion/api/notas/${tipo}/${id}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('nota-id').value = data.id;
-                document.getElementById('nota-numero').value = data.numero;
-                document.getElementById('nota-factura').value = data.factura;
-                document.getElementById('nota-cliente').value = data.cliente;
-                document.getElementById('nota-fecha').value = data.fecha;
-                document.getElementById('nota-monto').value = data.monto;
-                document.getElementById('nota-motivo').value = data.motivo;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al cargar los datos de la nota');
-            });
+    function mostrarFormularioCrearNota() {
+        document.getElementById('modal-title').textContent = 'Crear Nueva Nota';
+        document.getElementById('nota-form').reset();
+        toggleModal();
     }
 
-    function guardarNota() {
-        const form = document.getElementById('nota-form');
-        const formData = new FormData(form);
-        const notaData = Object.fromEntries(formData);
+    function guardarNota(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const notaData = Object.fromEntries(form
+
+Data);
         const notaId = notaData.id;
-        const tipo = notaData.tipo;
-        const url = notaId ? `/facturacion/api/notas/${tipo}/${notaId}` : `/facturacion/api/notas/${tipo}`;
+        const url = notaId ? `/facturacion/api/notas/${notaId}` : '/facturacion/api/notas';
         const method = notaId ? 'PUT' : 'POST';
 
         fetch(url, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
             },
             body: JSON.stringify(notaData)
         })
         .then(response => response.json())
         .then(data => {
-            alert(notaId ? 'Nota actualizada correctamente' : 'Nota creada correctamente');
-            notaModal.hide();
-            cargarNotas(tipo);
+            if (data.success) {
+                Swal.fire('Éxito', 'Nota guardada correctamente', 'success');
+                toggleModal();
+                buscarNotas();
+            } else {
+                Swal.fire('Error', data.message || 'Ocurrió un error al guardar la nota', 'error');
+            }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Ocurrió un error al guardar la nota');
+            Swal.fire('Error', 'Ocurrió un error al guardar la nota', 'error');
         });
     }
 
-    window.editarNota = function(id, tipo) {
-        mostrarModal(tipo, id);
+    function manejarAccionesNota(event) {
+        const target = event.target.closest('button');
+        if (!target) return;
+
+        const notaId = target.dataset.id;
+
+        if (target.classList.contains('editar-nota')) {
+            editarNota(notaId);
+        } else if (target.classList.contains('eliminar-nota')) {
+            eliminarNota(notaId);
+        }
     }
 
-    window.eliminarNota = function(id, tipo) {
-        if (confirm(`¿Estás seguro de que quieres eliminar esta nota de ${tipo}?`)) {
-            fetch(`/facturacion/api/notas/${tipo}/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
-            })
+    function editarNota(id) {
+        fetch(`/facturacion/api/notas/${id}`)
             .then(response => response.json())
             .then(data => {
-                alert('Nota eliminada correctamente');
-                cargarNotas(tipo);
+                const form = document.getElementById('nota-form');
+                form.id.value = data.id;
+                form.numero.value = data.numero;
+                form.tipo.value = data.tipo;
+                form.cliente.value = data.cliente;
+                form.fecha.value = data.fecha;
+                form.monto.value = data.monto;
+                form.factura_relacionada.value = data.factura_relacionada;
+
+                document.getElementById('modal-title').textContent = 'Editar Nota';
+                toggleModal();
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Ocurrió un error al eliminar la nota');
+                Swal.fire('Error', 'Ocurrió un error al cargar los datos de la nota', 'error');
             });
-        }
     }
-});
+
+    function eliminarNota(id) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "No podrás revertir esta acción",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/facturacion/api/notas/${id}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Eliminado', 'La nota ha sido eliminada', 'success');
+                        buscarNotas();
+                    } else {
+                        Swal.fire('Error', data.message || 'Ocurrió un error al eliminar la nota', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Ocurrió un error al eliminar la nota', 'error');
+                });
+            }
+        });
+    }
 </script>
 {% endblock %}

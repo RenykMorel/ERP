@@ -410,19 +410,17 @@ def create_app():
     def redirect_to_bancos():
         return redirect(url_for('banco.sub_bancos'))
 
-    
-
     @app.route("/facturacion/facturas")
     @login_required
     def facturas():
         return render_template('facturacion/facturas.html')
 
-    @app.route("/facturacion/pre_facturas")
+    @app.route('/facturacion/pre-facturas')
     @login_required
     def pre_facturas():
         return render_template('facturacion/pre_facturas.html')
 
-    @app.route("/facturacion/notas_de_credito_debito")
+    @app.route("/facturacion/notas-de-credito-debito")
     @login_required
     def notas_credito_debito():
         return render_template('facturacion/notas_de_credito_debito.html')

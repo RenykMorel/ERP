@@ -218,16 +218,16 @@ function handleSubmoduleClick(moduleName, submoduleName) {
                 window.location.href = '/facturacion/facturas';
                 break;
             case 'Pre-facturas':
-                window.location.href = '/facturacion/pre_facturas';
+                window.location.href = '/facturacion/pre-facturas';
                 break;
             case 'Notas de Crédito/Débito':
-                window.location.href = '/facturacion/notas_de_credito_debito';
+                window.location.href = '/facturacion/notas-de-credito-debito';
                 break;
             case 'Reporte de Ventas':
-                window.location.href = '/facturacion/reporte_de_ventas';
+                window.location.href = '/facturacion/reporte-de-ventas';
                 break;
             case 'Gestión de Clientes':
-                window.location.href = '/facturacion/gestion_de_clientes';
+                window.location.href = '/facturacion/gestion-de-clientes';
                 break;
             default:
                 console.log('Submódulo de Facturación no reconocido');
@@ -371,18 +371,18 @@ function loadSubmodules(moduleName, submoduleContainer) {
                 submoduleContainer.innerHTML = '';
                 submodulos.forEach(submodulo => {
                     const button = createButton(submodulo, 'submodule-button', null, 'fas fa-circle');
-                    button.onclick = (event) => {
-                        event.preventDefault();
-                        handleSubmoduleClick(moduleName, submodulo);
-                    };
-                    submoduleContainer.appendChild(button);
-                });
-                // Mostrar el contenedor de submódulos
-                submoduleContainer.style.display = 'flex';
-                submoduleContainer.style.flexDirection = 'column';
-                submoduleContainer.style.alignItems = 'center';
-            })
-            .catch(error => console.error('Error loading submodules:', error));
+                button.onclick = (event) => {
+                    event.preventDefault();
+                    handleSubmoduleClick(moduleName, submodulo);
+                };
+                submoduleContainer.appendChild(button);
+            });
+            // Mostrar el contenedor de submódulos
+            submoduleContainer.style.display = 'flex';
+            submoduleContainer.style.flexDirection = 'column';
+            submoduleContainer.style.alignItems = 'center';
+        })
+        .catch(error => console.error('Error loading submodules:', error));
     }
 }
 
@@ -390,9 +390,28 @@ function loadSubmodules(moduleName, submoduleContainer) {
 function loadSubmoduleContent(moduleName, submoduleName) {
     console.log(`Loading content for ${moduleName} - ${submoduleName}`);
     
-    // Construir la URL correcta
-    let url = `/facturacion`;
-    if (moduleName !== 'Facturacion' || submoduleName !== 'Facturas') {
+    let url;
+    if (moduleName === 'Facturacion') {
+        switch (submoduleName) {
+            case 'Facturas':
+                url = '/facturacion/facturas';
+                break;
+            case 'Pre-facturas':
+                url = '/facturacion/pre-facturas';
+                break;
+            case 'Notas de Crédito/Débito':
+                url = '/facturacion/notas-de-credito-debito';
+                break;
+            case 'Reporte de Ventas':
+                url = '/facturacion/reporte-de-ventas';
+                break;
+            case 'Gestión de Clientes':
+                url = '/facturacion/gestion-de-clientes';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
+    } else {
         url = `/api/submodule-content/${moduleName}/${submoduleName}`;
     }
     console.log('Fetching from URL:', url);
