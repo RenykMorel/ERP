@@ -1,5 +1,6 @@
 from flask import Flask, session, render_template, jsonify, request, redirect, url_for, flash, render_template_string, current_app
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
+from facturas.facturas_models import Facturacion, PreFactura, NotaCredito, NotaDebito, Cliente
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -37,7 +38,6 @@ from sqlalchemy.orm import joinedload
 from typing import Any, Optional
 from typing import Tuple, Dict, Any
 from flask import send_from_directory
-
 
 load_dotenv()
 
@@ -269,6 +269,9 @@ def create_app():
     
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://postgres:0001@localhost:5432/calculai_db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    from facturas import facturacion_bp
+    app.register_blueprint(facturacion_bp, url_prefix='/facturacion')
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -279,7 +282,6 @@ def create_app():
     
     app.config['WTF_CSRF_ENABLED'] = False
     
-
     from admin_routes import admin
     app.register_blueprint(admin, url_prefix='/admin')
     from banco import banco_bp
@@ -407,6 +409,33 @@ def create_app():
     @login_required
     def redirect_to_bancos():
         return redirect(url_for('banco.sub_bancos'))
+
+    
+
+    @app.route("/facturacion/facturas")
+    @login_required
+    def facturas():
+        return render_template('facturacion/facturas.html')
+
+    @app.route("/facturacion/pre_facturas")
+    @login_required
+    def pre_facturas():
+        return render_template('facturacion/pre_facturas.html')
+
+    @app.route("/facturacion/notas_de_credito_debito")
+    @login_required
+    def notas_credito_debito():
+        return render_template('facturacion/notas_de_credito_debito.html')
+
+    @app.route("/facturacion/reporte_de_ventas")
+    @login_required
+    def reporte_ventas():
+        return render_template('facturacion/reporte_de_ventas.html')
+
+    @app.route("/facturacion/gestion_de_clientes")
+    @login_required
+    def gestion_clientes():
+        return render_template('facturacion/gestion_de_clientes.html')
 
     @app.route("/reset_password", methods=["POST"])
     def reset_password():
@@ -821,6 +850,8 @@ def create_app():
     @app.errorhandler(500)
     def internal_server_error(e):
         return render_template('500.html'), 500
+
+    
 
     @app.after_request
     def add_header(response):

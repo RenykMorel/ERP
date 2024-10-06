@@ -1,0 +1,311 @@
+{% extends "facturacion/base_facturacion.html" %}
+
+{% block title %}Gestión de Clientes - CalculAI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .cliente-card {
+        transition: all 0.3s ease;
+    }
+    .cliente-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Gestión de Clientes</h1>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <input type="text" id="buscar-cliente" class="form-control" placeholder="Buscar cliente...">
+        </div>
+        <div class="col-md-6 text-end">
+            <button id="crear-cliente-btn" class="btn btn-primary">Nuevo Cliente</button>
+        </div>
+    </div>
+
+    <div id="lista-clientes" class="row">
+        <!-- Los clientes se cargarán aquí dinámicamente -->
+    </div>
+
+    <nav aria-label="Paginación de clientes">
+        <ul class="pagination justify-content-center mt-4" id="paginacion">
+            <!-- La paginación se generará dinámicamente -->
+        </ul>
+    </nav>
+</div>
+
+<!-- Modal para crear/editar cliente -->
+<div class="modal fade" id="clienteModal" tabindex="-1" aria-labelledby="clienteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clienteModalLabel">Nuevo Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="cliente-form">
+                    <input type="hidden" id="cliente-id" name="id">
+                    <div class="mb-3">
+                        <label for="cliente-nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="cliente-nombre" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cliente-email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="cliente-email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cliente-telefono" class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" id="cliente-telefono" name="telefono">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cliente-direccion" class="form-label">Dirección</label>
+                        <textarea class="form-control" id="cliente-direccion" name="direccion" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="guardar-cliente-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver transacciones del cliente -->
+<div class="modal fade" id="transaccionesModal" tabindex="-1" aria-labelledby="transaccionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="transaccionesModalLabel">Transacciones del Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Número</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transacciones-tbody">
+                            <!-- Las transacciones se cargarán aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const clienteModal = new bootstrap.Modal(document.getElementById('clienteModal'));
+    const transaccionesModal = new bootstrap.Modal(document.getElementById('transaccionesModal'));
+    const crearClienteBtn = document.getElementById('crear-cliente-btn');
+    const guardarClienteBtn = document.getElementById('guardar-cliente-btn');
+    const buscarClienteInput = document.getElementById('buscar-cliente');
+    
+    let paginaActual = 1;
+    const clientesPorPagina = 9;
+
+    crearClienteBtn.addEventListener('click', () => mostrarModalCliente());
+    guardarClienteBtn.addEventListener('click', guardarCliente);
+    buscarClienteInput.addEventListener('input', debounce(buscarClientes, 300));
+
+    cargarClientes();
+
+    function mostrarModalCliente(clienteId = null) {
+        document.getElementById('clienteModalLabel').textContent = clienteId ? 'Editar Cliente' : 'Nuevo Cliente';
+        document.getElementById('cliente-form').reset();
+        if (clienteId) {
+            cargarDatosCliente(clienteId);
+        }
+        clienteModal.show();
+    }
+
+    function cargarClientes(pagina = 1) {
+        fetch(`/facturacion/api/clientes?pagina=${pagina}&por_pagina=${clientesPorPagina}`)
+            .then(response => response.json())
+            .then(data => {
+                actualizarListaClientes(data.clientes);
+                actualizarPaginacion(data.total, pagina);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al cargar los clientes');
+            });
+    }
+
+    function actualizarListaClientes(clientes) {
+        const listaClientes = document.getElementById('lista-clientes');
+        listaClientes.innerHTML = '';
+        clientes.forEach(cliente => {
+            const clienteCard = document.createElement('div');
+            clienteCard.className = 'col-md-4 mb-3';
+            clienteCard.innerHTML = `
+                <div class="card cliente-card">
+                    <div class="card-body">
+                        <h5 class="card-title">${cliente.nombre}</h5>
+                        <p class="card-text">${cliente.email}</p>
+                        <p class="card-text">${cliente.telefono || 'No especificado'}</p>
+                        <button onclick="editarCliente(${cliente.id})" class="btn btn-sm btn-primary">Editar</button>
+                        <button onclick="eliminarCliente(${cliente.id})" class="btn btn-sm btn-danger">Eliminar</button>
+                        <button onclick="verTransacciones(${cliente.id})" class="btn btn-sm btn-info">Ver Transacciones</button>
+                    </div>
+                </div>
+            `;
+            listaClientes.appendChild(clienteCard);
+        });
+    }
+
+    function actualizarPaginacion(totalClientes, paginaActual) {
+        const totalPaginas = Math.ceil(totalClientes / clientesPorPagina);
+        const paginacion = document.getElementById('paginacion');
+        paginacion.innerHTML = '';
+
+        for (let i = 1; i <= totalPaginas; i++) {
+            const li = document.createElement('li');
+            li.className = `page-item ${i === paginaActual ? 'active' : ''}`;
+            li.innerHTML = `<a class="page-link" href="#" onclick="cambiarPagina(${i})">${i}</a>`;
+            paginacion.appendChild(li);
+        }
+    }
+
+    function cargarDatosCliente(clienteId) {
+        fetch(`/facturacion/api/clientes/${clienteId}`)
+            .then(response => response.json())
+            .then(cliente => {
+                document.getElementById('cliente-id').value = cliente.id;
+                document.getElementById('cliente-nombre').value = cliente.nombre;
+                document.getElementById('cliente-email').value = cliente.email;
+                document.getElementById('cliente-telefono').value = cliente.telefono;
+                document.getElementById('cliente-direccion').value = cliente.direccion;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar los datos del cliente');
+            });
+    }
+
+    function guardarCliente() {
+        const form = document.getElementById('cliente-form');
+        const formData = new FormData(form);
+        const clienteData = Object.fromEntries(formData);
+        const clienteId = clienteData.id;
+        const url = clienteId ? `/facturacion/api/clientes/${clienteId}` : '/facturacion/api/clientes';
+        const method = clienteId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(clienteData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(clienteId ? 'Cliente actualizado correctamente' : 'Cliente creado correctamente');
+            clienteModal.hide();
+            cargarClientes(paginaActual);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al guardar el cliente');
+        });
+    }
+
+    window.editarCliente = function(id) {
+        mostrarModalCliente(id);
+    }
+
+    window.eliminarCliente = function(id) {
+        if (confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
+            fetch(`/facturacion/api/clientes/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Cliente eliminado correctamente');
+                cargarClientes(paginaActual);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al eliminar el cliente');
+            });
+        }
+    }
+
+    window.verTransacciones = function(clienteId) {
+        fetch(`/facturacion/api/clientes/${clienteId}/transacciones`)
+            .then(response => response.json())
+            .then(transacciones => {
+                const tbody = document.getElementById('transacciones-tbody');
+                tbody.innerHTML = '';
+                transacciones.forEach(t => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${t.fecha}</td>
+                        <td>${t.tipo}</td>
+                        <td>${t.numero}</td>
+                        <td>$${t.monto.toFixed(2)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                transaccionesModal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar las transacciones del cliente');
+            });
+    }
+
+    window.cambiarPagina = function(pagina) {
+        paginaActual = pagina;
+        cargarClientes(pagina);
+    }
+
+    function buscarClientes() {
+        const termino = buscarClienteInput.value;
+        fetch(`/facturacion/api/clientes/buscar?termino=${termino}`)
+            .then(response => response.json())
+            .then(data => {
+                actualizarListaClientes(data);
+                document.getElementById('paginacion').style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al buscar clientes');
+            });
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+});
+</script>
+{% endblock %}

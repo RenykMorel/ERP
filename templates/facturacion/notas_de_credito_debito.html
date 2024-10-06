@@ -1,0 +1,244 @@
+{% extends "facturacion/base_facturacion.html" %}
+
+{% block title %}Notas de Crédito/Débito - CalculAI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Notas de Crédito/Débito</h1>
+
+    <ul class="nav nav-tabs mb-3" id="notasTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="credito-tab" data-bs-toggle="tab" data-bs-target="#credito" type="button" role="tab" aria-controls="credito" aria-selected="true">Notas de Crédito</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="debito-tab" data-bs-toggle="tab" data-bs-target="#debito" type="button" role="tab" aria-controls="debito" aria-selected="false">Notas de Débito</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="notasTabContent">
+        <div class="tab-pane fade show active" id="credito" role="tabpanel" aria-labelledby="credito-tab">
+            <div class="row mb-3">
+                <div class="col">
+                    <button id="crear-nota-credito-btn" class="btn btn-success">Nueva Nota de Crédito</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Factura Relacionada</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notas-credito-tbody">
+                        <!-- Las notas de crédito se cargarán aquí dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="debito" role="tabpanel" aria-labelledby="debito-tab">
+            <div class="row mb-3">
+                <div class="col">
+                    <button id="crear-nota-debito-btn" class="btn btn-success">Nueva Nota de Débito</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Factura Relacionada</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notas-debito-tbody">
+                        <!-- Las notas de débito se cargarán aquí dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear/editar nota de crédito/débito -->
+<div class="modal fade" id="notaModal" tabindex="-1" aria-labelledby="notaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notaModalLabel">Nueva Nota</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="nota-form">
+                    <input type="hidden" id="nota-id" name="id">
+                    <input type="hidden" id="nota-tipo" name="tipo">
+                    <div class="mb-3">
+                        <label for="nota-numero" class="form-label">Número de Nota</label>
+                        <input type="text" class="form-control" id="nota-numero" name="numero" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nota-factura" class="form-label">Factura Relacionada</label>
+                        <input type="text" class="form-control" id="nota-factura" name="factura" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nota-cliente" class="form-label">Cliente</label>
+                        <input type="text" class="form-control" id="nota-cliente" name="cliente" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nota-fecha" class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="nota-fecha" name="fecha" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nota-monto" class="form-label">Monto</label>
+                        <input type="number" step="0.01" class="form-control" id="nota-monto" name="monto" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nota-motivo" class="form-label">Motivo</label>
+                        <textarea class="form-control" id="nota-motivo" name="motivo" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="guardar-nota-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const crearNotaCreditoBtn = document.getElementById('crear-nota-credito-btn');
+    const crearNotaDebitoBtn = document.getElementById('crear-nota-debito-btn');
+    const guardarNotaBtn = document.getElementById('guardar-nota-btn');
+    const notaModal = new bootstrap.Modal(document.getElementById('notaModal'));
+
+    crearNotaCreditoBtn.addEventListener('click', () => mostrarModal('credito'));
+    crearNotaDebitoBtn.addEventListener('click', () => mostrarModal('debito'));
+    guardarNotaBtn.addEventListener('click', guardarNota);
+
+    cargarNotas('credito');
+    cargarNotas('debito');
+
+    function mostrarModal(tipo, id = null) {
+        document.getElementById('notaModalLabel').textContent = id ? `Editar Nota de ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}` : `Nueva Nota de ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
+        document.getElementById('nota-tipo').value = tipo;
+        document.getElementById('nota-form').reset();
+        if (id) {
+            cargarDatosNota(id, tipo);
+        }
+        notaModal.show();
+    }
+
+    function cargarNotas(tipo) {
+        fetch(`/facturacion/api/notas/${tipo}`)
+            .then(response => response.json())
+            .then(data => actualizarTablaNota(data, tipo))
+            .catch(error => {
+                console.error('Error:', error);
+                alert(`Ocurrió un error al cargar las notas de ${tipo}`);
+            });
+    }
+
+    function actualizarTablaNota(notas, tipo) {
+        const tbody = document.getElementById(`notas-${tipo}-tbody`);
+        tbody.innerHTML = '';
+        notas.forEach(nota => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${nota.numero}</td>
+                <td>${nota.factura}</td>
+                <td>${nota.cliente}</td>
+                <td>${nota.fecha}</td>
+                <td>${nota.monto.toFixed(2)}</td>
+                <td>
+                    <button onclick="editarNota(${nota.id}, '${tipo}')" class="btn btn-sm btn-info">Editar</button>
+                    <button onclick="eliminarNota(${nota.id}, '${tipo}')" class="btn btn-sm btn-danger">Eliminar</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function cargarDatosNota(id, tipo) {
+        fetch(`/facturacion/api/notas/${tipo}/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('nota-id').value = data.id;
+                document.getElementById('nota-numero').value = data.numero;
+                document.getElementById('nota-factura').value = data.factura;
+                document.getElementById('nota-cliente').value = data.cliente;
+                document.getElementById('nota-fecha').value = data.fecha;
+                document.getElementById('nota-monto').value = data.monto;
+                document.getElementById('nota-motivo').value = data.motivo;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar los datos de la nota');
+            });
+    }
+
+    function guardarNota() {
+        const form = document.getElementById('nota-form');
+        const formData = new FormData(form);
+        const notaData = Object.fromEntries(formData);
+        const notaId = notaData.id;
+        const tipo = notaData.tipo;
+        const url = notaId ? `/facturacion/api/notas/${tipo}/${notaId}` : `/facturacion/api/notas/${tipo}`;
+        const method = notaId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(notaData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(notaId ? 'Nota actualizada correctamente' : 'Nota creada correctamente');
+            notaModal.hide();
+            cargarNotas(tipo);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al guardar la nota');
+        });
+    }
+
+    window.editarNota = function(id, tipo) {
+        mostrarModal(tipo, id);
+    }
+
+    window.eliminarNota = function(id, tipo) {
+        if (confirm(`¿Estás seguro de que quieres eliminar esta nota de ${tipo}?`)) {
+            fetch(`/facturacion/api/notas/${tipo}/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Nota eliminada correctamente');
+                cargarNotas(tipo);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al eliminar la nota');
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

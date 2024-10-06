@@ -1,0 +1,227 @@
+{% extends "facturacion/base_facturacion.html" %}
+
+{% block title %}Pre-Facturas - CalculAI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Pre-Facturas</h1>
+
+    <div class="row mb-3">
+        <div class="col">
+            <button id="crear-prefactura-btn" class="btn btn-success">Nueva Pre-Factura</button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <input type="text" id="numero-prefactura" class="form-control" placeholder="Número de pre-factura">
+        </div>
+        <div class="col-md-3">
+            <input type="text" id="cliente-prefactura" class="form-control" placeholder="Cliente">
+        </div>
+        <div class="col-md-2">
+            <input type="date" id="fecha-prefactura" class="form-control">
+        </div>
+        <div class="col-md-2">
+            <select id="estatus-prefactura" class="form-control">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="aprobada">Aprobada</option>
+                <option value="rechazada">Rechazada</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button id="buscar-prefactura-btn" class="btn btn-primary">Buscar</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Cliente</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Estatus</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="prefacturas-tbody">
+                <!-- Las pre-facturas se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para crear/editar pre-factura -->
+<div class="modal fade" id="prefacturaModal" tabindex="-1" aria-labelledby="prefacturaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="prefacturaModalLabel">Nueva Pre-Factura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="prefactura-form">
+                    <input type="hidden" id="prefactura-id" name="id">
+                    <div class="mb-3">
+                        <label for="prefactura-numero" class="form-label">Número de Pre-Factura</label>
+                        <input type="text" class="form-control" id="prefactura-numero" name="numero" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="prefactura-cliente" class="form-label">Cliente</label>
+                        <input type="text" class="form-control" id="prefactura-cliente" name="cliente" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="prefactura-fecha" class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="prefactura-fecha" name="fecha" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="prefactura-total" class="form-label">Total</label>
+                        <input type="number" step="0.01" class="form-control" id="prefactura-total" name="total" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="prefactura-estatus" class="form-label">Estatus</label>
+                        <select class="form-control" id="prefactura-estatus" name="estatus" required>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="aprobada">Aprobada</option>
+                            <option value="rechazada">Rechazada</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="guardar-prefactura-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const crearPrefacturaBtn = document.getElementById('crear-prefactura-btn');
+    const buscarPrefacturaBtn = document.getElementById('buscar-prefactura-btn');
+    const guardarPrefacturaBtn = document.getElementById('guardar-prefactura-btn');
+    const prefacturaModal = new bootstrap.Modal(document.getElementById('prefacturaModal'));
+
+    crearPrefacturaBtn.addEventListener('click', () => {
+        document.getElementById('prefacturaModalLabel').textContent = 'Nueva Pre-Factura';
+        document.getElementById('prefactura-form').reset();
+        prefacturaModal.show();
+    });
+
+    buscarPrefacturaBtn.addEventListener('click', buscarPrefacturas);
+
+    guardarPrefacturaBtn.addEventListener('click', guardarPrefactura);
+
+    // Cargar pre-facturas iniciales
+    buscarPrefacturas();
+
+    function buscarPrefacturas() {
+        const numero = document.getElementById('numero-prefactura').value;
+        const cliente = document.getElementById('cliente-prefactura').value;
+        const fecha = document.getElementById('fecha-prefactura').value;
+        const estatus = document.getElementById('estatus-prefactura').value;
+
+        fetch(`/facturacion/api/buscar-prefacturas?numero=${numero}&cliente=${cliente}&fecha=${fecha}&estatus=${estatus}`)
+            .then(response => response.json())
+            .then(data => actualizarTablaPrefacturas(data))
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al buscar pre-facturas');
+            });
+    }
+
+    function actualizarTablaPrefacturas(prefacturas) {
+        const tbody = document.getElementById('prefacturas-tbody');
+        tbody.innerHTML = '';
+        prefacturas.forEach(prefactura => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${prefactura.numero}</td>
+                <td>${prefactura.cliente}</td>
+                <td>${prefactura.fecha}</td>
+                <td>${prefactura.total.toFixed(2)}</td>
+                <td>${prefactura.estatus}</td>
+                <td>
+                    <button onclick="editarPrefactura(${prefactura.id})" class="btn btn-sm btn-info">Editar</button>
+                    <button onclick="eliminarPrefactura(${prefactura.id})" class="btn btn-sm btn-danger">Eliminar</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function guardarPrefactura() {
+        const form = document.getElementById('prefactura-form');
+        const formData = new FormData(form);
+        const prefacturaData = Object.fromEntries(formData);
+        const prefacturaId = prefacturaData.id;
+        const url = prefacturaId ? `/facturacion/api/prefacturas/${prefacturaId}` : '/facturacion/api/prefacturas';
+        const method = prefacturaId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(prefacturaData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(prefacturaId ? 'Pre-factura actualizada correctamente' : 'Pre-factura creada correctamente');
+            prefacturaModal.hide();
+            buscarPrefacturas();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al guardar la pre-factura');
+        });
+    }
+
+    window.editarPrefactura = function(id) {
+        fetch(`/facturacion/api/prefacturas/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('prefacturaModalLabel').textContent = 'Editar Pre-Factura';
+                document.getElementById('prefactura-id').value = data.id;
+                document.getElementById('prefactura-numero').value = data.numero;
+                document.getElementById('prefactura-cliente').value = data.cliente;
+                document.getElementById('prefactura-fecha').value = data.fecha;
+                document.getElementById('prefactura-total').value = data.total;
+                document.getElementById('prefactura-estatus').value = data.estatus;
+                prefacturaModal.show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar los datos de la pre-factura');
+            });
+    }
+
+    window.eliminarPrefactura = function(id) {
+        if (confirm('¿Estás seguro de que quieres eliminar esta pre-factura?')) {
+            fetch(`/facturacion/api/prefacturas/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Pre-factura eliminada correctamente');
+                buscarPrefacturas();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al eliminar la pre-factura');
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

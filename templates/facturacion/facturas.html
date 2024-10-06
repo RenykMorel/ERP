@@ -1,0 +1,94 @@
+{% extends "base_facturacion.html" %}
+
+{% block title %}Gestión de Facturas - CalculAI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Gestión de Facturas</h1>
+
+    <div class="row mb-3">
+        <div class="col">
+            <button id="crear-nuevo-btn" class="btn btn-primary">Crear Nueva Factura</button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <input type="text" id="numero-factura" class="form-control" placeholder="Número de factura">
+        </div>
+        <div class="col-md-3">
+            <input type="text" id="cliente-factura" class="form-control" placeholder="Cliente">
+        </div>
+        <div class="col-md-3">
+            <input type="date" id="fecha-factura" class="form-control">
+        </div>
+        <div class="col-md-2">
+            <select id="estatus-factura" class="form-control">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="pagada">Pagada</option>
+                <option value="anulada">Anulada</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button id="buscar-btn" class="btn btn-secondary">Buscar</button>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="facturas-tbody">
+            <!-- Las facturas se cargarán aquí dinámicamente -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para crear/editar factura -->
+<div id="facturaModal" class="modal">
+    <div class="modal-content">
+        <span class="close modal-close">&times;</span>
+        <h2 id="modal-title">Crear/Editar Factura</h2>
+        <form id="factura-form">
+            <input type="hidden" id="factura-id" name="id">
+            <div class="form-group">
+                <label for="numero">Número de Factura:</label>
+                <input type="text" id="numero" name="numero" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="cliente">Cliente:</label>
+                <input type="text" id="cliente" name="cliente" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="fecha">Fecha:</label>
+                <input type="date" id="fecha" name="fecha" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="total">Total:</label>
+                <input type="number" id="total" name="total" step="0.01" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="estatus">Estado:</label>
+                <select id="estatus" name="estatus" required class="form-control">
+                    <option value="pendiente">Pendiente</option>
+                    <option value="pagada">Pagada</option>
+                    <option value="anulada">Anulada</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/facturacion.js') }}"></script>
+{% endblock %}

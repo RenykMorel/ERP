@@ -212,7 +212,27 @@ function initializeSubmoduleHandlers() {
 // Maneja el clic en submódulos
 function handleSubmoduleClick(moduleName, submoduleName) {
     console.log(`Clicked on ${submoduleName} of ${moduleName}`);
-    if (moduleName === 'Banco' && submoduleName === 'Bancos') {
+    if (moduleName === 'Facturacion') {
+        switch (submoduleName) {
+            case 'Facturas':
+                window.location.href = '/facturacion/facturas';
+                break;
+            case 'Pre-facturas':
+                window.location.href = '/facturacion/pre_facturas';
+                break;
+            case 'Notas de Crédito/Débito':
+                window.location.href = '/facturacion/notas_de_credito_debito';
+                break;
+            case 'Reporte de Ventas':
+                window.location.href = '/facturacion/reporte_de_ventas';
+                break;
+            case 'Gestión de Clientes':
+                window.location.href = '/facturacion/gestion_de_clientes';
+                break;
+            default:
+                console.log('Submódulo de Facturación no reconocido');
+        }
+    } else if (moduleName === 'Banco' && submoduleName === 'Bancos') {
         window.location.href = '/Bancos';
     } else {
         // Manejar otros submódulos aquí
@@ -367,33 +387,89 @@ function loadSubmodules(moduleName, submoduleContainer) {
 }
 
 // Carga el contenido de un submódulo específico
-// Carga el contenido de un submódulo específico
 function loadSubmoduleContent(moduleName, submoduleName) {
     console.log(`Loading content for ${moduleName} - ${submoduleName}`);
-    fetch(`/api/submodule-content/${moduleName}/${submoduleName}`)
-        .then(response => response.json())
-        .then(data => {
-            // Actualizar el contenido en la interfaz de usuario
-            const contentContainer = document.getElementById('submodule-content');
-            if (contentContainer) {
-                contentContainer.innerHTML = data.content;
-            }
-        })
-        .catch(error => console.error('Error loading submodule content:', error));
+    
+    // Construir la URL correcta
+    let url = `/facturacion`;
+    if (moduleName !== 'Facturacion' || submoduleName !== 'Facturas') {
+        url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+    }
+    console.log('Fetching from URL:', url);
+
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
+        
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+            });
+        }
+        return response.text();
+    })
+    .then(htmlContent => {
+        console.log("Contenido recibido (primeros 100 caracteres):", htmlContent.substring(0, 100));
+        
+        let contentContainer = document.getElementById('contenido-principal');
+        if (!contentContainer) {
+            console.log('Creando nuevo contenedor de contenido');
+            contentContainer = document.createElement('div');
+            contentContainer.id = 'contenido-principal';
+            document.body.appendChild(contentContainer);
+        }
+        
+        contentContainer.innerHTML = htmlContent;
+    })
+    .catch(error => {
+        console.error('Error loading submodule content:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        
+        let contentContainer = document.getElementById('contenido-principal');
+        if (!contentContainer) {
+            contentContainer = document.createElement('div');
+            contentContainer.id = 'contenido-principal';
+            document.body.appendChild(contentContainer);
+        }
+        
+        contentContainer.innerHTML = `
+            <p>Error al cargar el contenido:</p>
+            <pre>${error.name}: ${error.message}</pre>
+            <p>Por favor, revise la consola para más detalles y contacte al soporte técnico si el problema persiste.</p>
+        `;
+    });
 }
 
-// Carga las tareas pendientes desde la API
-function loadTasks() {
-    fetch('/api/tareas')
-        .then(response => response.json())
-        .then(tareas => {
-            const taskList = document.getElementById('task-list');
-            taskList.innerHTML = tareas.map(tarea => 
-                `<li>${tarea.descripcion} - Vence: ${new Date(tarea.vence).toLocaleDateString()}</li>`
-            ).join('');
-        })
-        .catch(error => console.error('Error loading tasks:', error));
-}
+// Asegúrate de que esta función se llame cuando se haga clic en un submódulo
+document.addEventListener('DOMContentLoaded', function() {
+    const facturacionLink = document.querySelector('.facturacion-link');
+    if (facturacionLink) {
+        facturacionLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            loadSubmoduleContent('Facturacion', 'Facturas');
+        });
+    }
+
+    document.querySelectorAll('.submodule-button').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const moduleName = this.closest('.module-wrapper').querySelector('.rectangular-button').textContent;
+            const submoduleName = this.textContent;
+            loadSubmoduleContent(moduleName, submoduleName);
+        });
+    });
+});
 
 // Carga las notificaciones desde la API
 function loadNotifications() {
@@ -590,4 +666,27 @@ function isAdmin() {
     // Esta función debería implementarse según la lógica de tu aplicación
     // Por ejemplo, podrías verificar una variable global o hacer una petición al servidor
     return false; // Placeholder
+}
+
+// Función para manejar el cierre de sesión
+function handleLogout() {
+    // Implementa la lógica de cierre de sesión aquí
+    console.log('Cerrando sesión...');
+    // Por ejemplo:
+    // fetch('/logout', { method: 'POST' })
+    //     .then(() => window.location.href = '/login')
+    //     .catch(error => console.error('Error during logout:', error));
+}
+
+// Carga las tareas desde la API
+function loadTasks() {
+    fetch('/api/tareas')
+        .then(response => response.json())
+        .then(tareas => {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = tareas.map(tarea => 
+                `<li>${tarea.descripcion} - Vence: ${tarea.vence}</li>`
+            ).join('');
+        })
+        .catch(error => console.error('Error loading tasks:', error));
 }

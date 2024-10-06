@@ -1,0 +1,106 @@
+{% extends "facturacion/base_facturacion.html" %}
+
+{% block title %}Módulo de Facturación - CalculAI{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Módulo de Facturación</h1>
+
+<div id="submodulos-container" class="mb-4">
+    <!-- Los submodulos se cargarán aquí dinámicamente -->
+</div>
+
+<div id="contenido-principal">
+    <div class="row mb-3">
+        <div class="col">
+            <button id="crear-nuevo-btn" class="btn btn-success">Nueva Factura</button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <input type="text" id="numero-factura" class="form-control" placeholder="Número de factura">
+        </div>
+        <div class="col-md-3">
+            <input type="text" id="cliente-factura" class="form-control" placeholder="Cliente">
+        </div>
+        <div class="col-md-2">
+            <input type="date" id="fecha-factura" class="form-control">
+        </div>
+        <div class="col-md-2">
+            <select id="estatus-factura" class="form-control">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="pagada">Pagada</option>
+                <option value="anulada">Anulada</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button id="buscar-btn" class="btn btn-primary">Buscar</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Número</th>
+                    <th>Cliente</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Estatus</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="facturas-tbody">
+                <!-- Las facturas se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para crear/editar factura -->
+<div class="modal" id="facturaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">Nueva Factura</h5>
+                <button type="button" class="btn-close modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="factura-form">
+                    <input type="hidden" id="id" name="id">
+                    <div class="mb-3">
+                        <label for="numero" class="form-label">Número de Factura</label>
+                        <input type="text" class="form-control" id="numero" name="numero" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cliente" class="form-label">Cliente</label>
+                        <input type="text" class="form-control" id="cliente" name="cliente" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fecha" class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="fecha" name="fecha" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="total" class="form-label">Total</label>
+                        <input type="number" step="0.01" class="form-control" id="total" name="total" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estatus" class="form-label">Estatus</label>
+                        <select class="form-control" id="estatus" name="estatus" required>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="pagada">Pagada</option>
+                            <option value="anulada">Anulada</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/facturacion.js') }}"></script>
+{% endblock %}

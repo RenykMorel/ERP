@@ -490,6 +490,8 @@ class AdminReporte(db.Model):
             "usuario_id": self.usuario_id,
         }
 
+
+
 # Eventos para notificar al asistente sobre operaciones en la base de datos
 @event.listens_for(Transaccion, "after_insert")
 def notify_transaccion_insert(mapper, connection, target):

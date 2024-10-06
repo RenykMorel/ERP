@@ -1,13 +1,10 @@
-from flask import jsonify, request
+from flask import jsonify, request, render_template
 from flask_login import login_required
 from sqlalchemy.exc import IntegrityError
 from . import banco_bp
 from banco_models import Banco
-from app import db, logger
-from flask import render_template
-from flask import current_app
+from extensions import db
 import logging
-from sqlalchemy.exc import IntegrityError
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +14,6 @@ logger = logging.getLogger(__name__)
 def sub_bancos():
     try:
         bancos = Banco.query.all()
-        # Enviar los bancos a la plantilla sub_bancos.html
         return render_template('sub_bancos.html', bancos=bancos)
     except Exception as e:
         error_message = str(e)
@@ -40,7 +36,6 @@ def actualizar_banco(id):
     try:
         for key, value in datos.items():
             if key in campos_actualizables and value != getattr(banco, key):
-                # Verificar unicidad solo si el valor ha cambiado
                 if key in ["nombre", "telefono"]:
                     existing = Banco.query.filter(Banco.id != id, getattr(Banco, key) == value).first()
                     if existing:
@@ -99,10 +94,10 @@ def buscar_bancos():
             query = query.filter(Banco.estatus == request.args.get("estatus"))
 
         bancos = query.all()
-        current_app.logger.info(f"Búsqueda de bancos realizada. Resultados: {len(bancos)}")
+        logger.info(f"Búsqueda de bancos realizada. Resultados: {len(bancos)}")
         return jsonify([banco.to_dict() for banco in bancos])
     except Exception as e:
-        current_app.logger.error(f"Error en buscar_bancos: {str(e)}")
+        logger.error(f"Error en buscar_bancos: {str(e)}")
         return jsonify({"error": "Error interno del servidor"}), 500
 
 @banco_bp.route("/crear-banco", methods=["POST"])

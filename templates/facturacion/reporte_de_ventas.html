@@ -1,0 +1,247 @@
+{% extends "facturacion/base_facturacion.html" %}
+
+{% block title %}Reporte de Ventas - CalculAI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Reporte de Ventas</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Filtrar por Fecha</h5>
+                    <form id="reporte-form">
+                        <div class="mb-3">
+                            <label for="fecha-inicio" class="form-label">Fecha de Inicio</label>
+                            <input type="text" class="form-control" id="fecha-inicio" name="fecha_inicio">
+                        </div>
+                        <div class="mb-3">
+                            <label for="fecha-fin" class="form-label">Fecha de Fin</label>
+                            <input type="text" class="form-control" id="fecha-fin" name="fecha_fin">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Generar Reporte</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reporte-contenido" style="display: none;">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Ventas</h5>
+                        <p class="card-text" id="total-ventas">$0.00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Número de Ventas</h5>
+                        <p class="card-text" id="numero-ventas">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Promedio por Venta</h5>
+                        <p class="card-text" id="promedio-venta">$0.00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">Mayor Venta</h5>
+                        <p class="card-text" id="mayor-venta">$0.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Ventas por Día</h5>
+                        <canvas id="ventas-por-dia"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Top 5 Clientes</h5>
+                        <canvas id="top-clientes"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Detalle de Ventas</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="tabla-ventas">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Número de Factura</th>
+                                        <th>Cliente</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Las ventas se cargarán aquí dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <button id="exportar-btn" class="btn btn-success">Exportar a Excel</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr("#fecha-inicio", {
+        dateFormat: "Y-m-d"
+    });
+    flatpickr("#fecha-fin", {
+        dateFormat: "Y-m-d"
+    });
+
+    const reporteForm = document.getElementById('reporte-form');
+    const exportarBtn = document.getElementById('exportar-btn');
+
+    reporteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        generarReporte();
+    });
+
+    exportarBtn.addEventListener('click', exportarAExcel);
+
+    function generarReporte() {
+        const fechaInicio = document.getElementById('fecha-inicio').value;
+        const fechaFin = document.getElementById('fecha-fin').value;
+
+        fetch(`/facturacion/api/reporte-ventas?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('reporte-contenido').style.display = 'block';
+                actualizarResumen(data.resumen);
+                actualizarGraficos(data.ventas_por_dia, data.top_clientes);
+                actualizarTablaVentas(data.detalle_ventas);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al generar el reporte');
+            });
+    }
+
+    function actualizarResumen(resumen) {
+        document.getElementById('total-ventas').textContent = `$${resumen.total_ventas.toFixed(2)}`;
+        document.getElementById('numero-ventas').textContent = resumen.numero_ventas;
+        document.getElementById('promedio-venta').textContent = `$${resumen.promedio_venta.toFixed(2)}`;
+        document.getElementById('mayor-venta').textContent = `$${resumen.mayor_venta.toFixed(2)}`;
+    }
+
+    function actualizarGraficos(ventasPorDia, topClientes) {
+        // Gráfico de ventas por día
+        new Chart(document.getElementById('ventas-por-dia').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ventasPorDia.map(v => v.fecha),
+                datasets: [{
+                    label: 'Ventas',
+                    data: ventasPorDia.map(v => v.total),
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Gráfico de top clientes
+        new Chart(document.getElementById('top-clientes').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: topClientes.map(c => c.cliente),
+                datasets: [{
+                    label: 'Total de Ventas',
+                    data: topClientes.map(c => c.total),
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function actualizarTablaVentas(ventas) {
+        const tbody = document.querySelector('#tabla-ventas tbody');
+        tbody.innerHTML = '';
+        ventas.forEach(venta => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${venta.fecha}</td>
+                <td>${venta.numero_factura}</td>
+                <td>${venta.cliente}</td>
+                <td>$${venta.total.toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function exportarAExcel() {
+        const tabla = document.getElementById('tabla-ventas');
+        const wb = XLSX.utils.table_to_book(tabla, {sheet: "Reporte de Ventas"});
+        XLSX.writeFile(wb, 'reporte_ventas.xlsx');
+    }
+});
+</script>
+{% endblock %}
