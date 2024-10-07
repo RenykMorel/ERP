@@ -40,6 +40,9 @@ from typing import Any, Optional
 from typing import Tuple, Dict, Any
 from flask import send_from_directory
 
+# Importar el nuevo módulo de marketing
+from marketing.routes import marketing
+
 load_dotenv()
 
 logging.basicConfig(level=logging.DEBUG)
@@ -277,6 +280,9 @@ def create_app():
     from inventario import inventario_bp
     app.register_blueprint(inventario_bp, url_prefix='/inventario')
     
+    from marketing.routes import marketing
+    app.register_blueprint(marketing, url_prefix='/marketing')
+    
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
@@ -297,6 +303,7 @@ def create_app():
     with app.app_context():
         from banco_models import Banco
         from models import Usuario, Transaccion, Notificacion, Empresa, Rol, Permiso, Modulo, UsuarioModulo, Cuenta
+        from marketing.models import Contact, Campaign, CampaignMetrics
         db.create_all()
         
     CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY')
@@ -472,19 +479,6 @@ def create_app():
     def inventario_reporte():
         return render_template('inventario/reporte.html')
 
-    # Ruta API para obtener los submódulos de inventario
-    @app.route('/api/submodulos/Inventario')
-    @login_required
-    def get_inventario_submodulos():
-        submodulos = [
-            "Items",
-            "Entrada de Almacén",
-            "Salida de Almacén",
-            "Inventario",
-            "Reporte de Inventario"
-        ]
-        return jsonify(submodulos)
-
     @app.route("/reset_password", methods=["POST"])
     def reset_password():
         username = request.form.get("username")
@@ -632,6 +626,7 @@ def create_app():
             "Importacion",
             "Proyectos",
             "Recursos Humanos",
+            "Marketing",  # Nuevo módulo agregado
         ]
         return jsonify(modulos)
 
@@ -733,7 +728,16 @@ def create_app():
                 "Nómina",
                 "Evaluación de Desempeño",
             ],
-       }
+            "Marketing": [
+                "Gestión de Contactos",
+                "Campañas de Email",
+                "Plantillas de Email",
+                "Reportes de Campañas",
+                "Segmentación de Contactos",
+                "Automatizaciones",
+                "Integración de Redes Sociales",
+            ],
+        }
         return jsonify(submodulos.get(modulo, []))
 
     @app.route("/transacciones")

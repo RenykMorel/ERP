@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeAsistente();
     initializeSubmoduleHandlers();
     initializeAuthForms();
+    initializeMarketingModule();
     window.addEventListener('resize', resizeCharts);
 
     ['line', 'bar', 'pie'].forEach(type => {
@@ -254,6 +255,32 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Inventario no reconocido');
         }
+    } else if (moduleName === 'Marketing') {
+        switch (submoduleName) {
+            case 'Gestión de Contactos':
+                window.location.href = '/marketing/contacts';
+                break;
+            case 'Campañas de Email':
+                window.location.href = '/marketing/campaigns';
+                break;
+            case 'Plantillas de Email':
+                window.location.href = '/marketing/templates';
+                break;
+            case 'Reportes de Campañas':
+                window.location.href = '/marketing/reports';
+                break;
+            case 'Segmentación de Contactos':
+                window.location.href = '/marketing/segmentation';
+                break;
+            case 'Automatizaciones':
+                window.location.href = '/marketing/automations';
+                break;
+            case 'Integración de Redes Sociales':
+                window.location.href = '/marketing/social-media';
+                break;
+            default:
+                console.log('Submódulo de Marketing no reconocido');
+        }
     } else {
         // Manejar otros submódulos aquí
         console.log('Otro submódulo clickeado');
@@ -291,7 +318,8 @@ function loadModules() {
                 { nombre: "Compras", color: "#FFD54F", icon: "fas fa-shopping-cart" },
                 { nombre: "Importacion", color: "#800000", icon: "fas fa-ship" },
                 { nombre: "Proyectos", color: "#4DB6AC", icon: "fas fa-project-diagram" },
-                { nombre: "Recursos Humanos", color: "#075e56", icon: "fas fa-users" }
+                { nombre: "Recursos Humanos", color: "#075e56", icon: "fas fa-users" },
+                { nombre: "Marketing", color: "#9C27B0", icon: "fas fa-bullhorn" }
             ];
             
             modulosConfig.forEach(config => {
@@ -451,6 +479,32 @@ function loadSubmoduleContent(moduleName, submoduleName) {
             default:
                 url = `/api/submodule-content/${moduleName}/${submoduleName}`;
         }
+    } else if (moduleName === 'Marketing') {
+        switch (submoduleName) {
+            case 'Gestión de Contactos':
+                url = '/marketing/contacts';
+                break;
+            case 'Campañas de Email':
+                url = '/marketing/campaigns';
+                break;
+            case 'Plantillas de Email':
+                url = '/marketing/templates';
+                break;
+            case 'Reportes de Campañas':
+                url = '/marketing/reports';
+                break;
+            case 'Segmentación de Contactos':
+                url = '/marketing/segmentation';
+                break;
+            case 'Automatizaciones':
+                url = '/marketing/automations';
+                break;
+            case 'Integración de Redes Sociales':
+                url = '/marketing/social-media';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
     } else {
         url = `/api/submodule-content/${moduleName}/${submoduleName}`;
     }
@@ -525,6 +579,14 @@ document.addEventListener('DOMContentLoaded', function() {
         inventarioLink.addEventListener('click', function(e) {
             e.preventDefault();
             loadSubmoduleContent('Inventario', 'Items');
+        });
+    }
+
+    const marketingLink = document.querySelector('.marketing-link');
+    if (marketingLink) {
+        marketingLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            loadSubmoduleContent('Marketing', 'Gestión de Contactos');
         });
     }
 
@@ -737,12 +799,16 @@ function isAdmin() {
 
 // Función para manejar el cierre de sesión
 function handleLogout() {
-    // Implementa la lógica de cierre de sesión aquí
-    console.log('Cerrando sesión...');
-    // Por ejemplo:
-    // fetch('/logout', { method: 'POST' })
-    //     .then(() => window.location.href = '/login')
-    //     .catch(error => console.error('Error during logout:', error));
+    fetch('/logout', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/login';
+            } else {
+                console.error('Error durante el cierre de sesión:', data.error);
+            }
+        })
+        .catch(error => console.error('Error durante el cierre de sesión:', error));
 }
 
 // Carga las tareas desde la API
@@ -757,3 +823,150 @@ function loadTasks() {
         })
         .catch(error => console.error('Error loading tasks:', error));
 }
+
+// Inicializa el módulo de Marketing
+function initializeMarketingModule() {
+    const marketingContainer = document.getElementById('marketing-container');
+    if (marketingContainer) {
+        loadContacts();
+        loadCampaigns();
+        initializeContactForm();
+        initializeCampaignForm();
+    }
+}
+
+// Carga los contactos desde la API
+function loadContacts() {
+    fetch('/marketing/api/contacts')
+        .then(response => response.json())
+        .then(contacts => {
+            const contactList = document.getElementById('contact-list');
+            if (contactList) {
+                contactList.innerHTML = contacts.map(contact => 
+                    `<li>${contact.name} - ${contact.email} - ${contact.company || 'N/A'}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading contacts:', error));
+}
+
+// Carga las campañas desde la API
+function loadCampaigns() {
+    fetch('/marketing/api/campaigns')
+        .then(response => response.json())
+        .then(campaigns => {
+            const campaignList = document.getElementById('campaign-list');
+            if (campaignList) {
+                campaignList.innerHTML = campaigns.map(campaign => 
+                    `<li>${campaign.name} - ${campaign.subject} 
+                    ${campaign.sent_at ? `Enviado: ${campaign.sent_at}` : 
+                    `<button onclick="sendCampaign(${campaign.id})">Enviar</button>`}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading campaigns:', error));
+}
+
+// Inicializa el formulario de contactos
+function initializeContactForm() {
+    const contactForm = document.getElementById('add-contact-form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(contactForm);
+            fetch('/marketing/api/contacts', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Contact added:', data);
+                loadContacts();
+                contactForm.reset();
+            })
+            .catch(error => console.error('Error adding contact:', error));
+        });
+    }
+}
+
+// Inicializa el formulario de campañas
+function initializeCampaignForm() {
+    const campaignForm = document.getElementById('create-campaign-form');
+    if (campaignForm) {
+        campaignForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(campaignForm);
+            fetch('/marketing/api/campaigns', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Campaign created:', data);
+                loadCampaigns();
+                campaignForm.reset();
+            })
+            .catch(error => console.error('Error creating campaign:', error));
+        });
+    }
+}
+
+// Función para enviar una campaña
+function sendCampaign(campaignId) {
+    fetch(`/marketing/api/send_campaign/${campaignId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Campaign sent:', data);
+        loadCampaigns();
+    })
+    .catch(error => console.error('Error sending campaign:', error));
+}
+
+// Función para cargar las métricas de una campaña
+function loadCampaignMetrics(campaignId) {
+    fetch(`/marketing/api/campaign_metrics/${campaignId}`)
+        .then(response => response.json())
+        .then(metrics => {
+            console.log('Campaign metrics:', metrics);
+            // Aquí puedes actualizar la UI con las métricas
+        })
+        .catch(error => console.error('Error loading campaign metrics:', error));
+}
+
+// Función para inicializar el editor de plantillas de email
+function initializeEmailTemplateEditor() {
+    // Aquí puedes implementar la lógica para el editor de plantillas
+    // Por ejemplo, podrías usar una librería como Quill o TinyMCE
+}
+
+// Función para cargar la segmentación de contactos
+function loadContactSegmentation() {
+    // Implementa la lógica para cargar y mostrar los segmentos de contactos
+}
+
+// Función para inicializar las automatizaciones de marketing
+function initializeMarketingAutomations() {
+    // Implementa la lógica para configurar y mostrar las automatizaciones
+}
+
+// Función para integrar redes sociales
+function initializeSocialMediaIntegration() {
+    // Implementa la lógica para conectar y mostrar las integraciones de redes sociales
+}
+
+// Asegúrate de llamar a estas nuevas funciones cuando sea necesario
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMarketingModule();
+    initializeEmailTemplateEditor();
+    loadContactSegmentation();
+    initializeMarketingAutomations();
+    initializeSocialMediaIntegration();
+});
