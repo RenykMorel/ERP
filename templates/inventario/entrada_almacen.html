@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Entrada de Almacén - Inventario{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Entrada de Almacén</h1>
+
+    <div class="mb-3">
+        <button id="nueva-entrada-btn" class="btn btn-primary">Nueva Entrada</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Número de Entrada</th>
+                    <th>Fecha</th>
+                    <th>Proveedor</th>
+                    <th>Total Items</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="entradas-tbody">
+                <!-- Las entradas se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para crear/editar entrada -->
+<div class="modal fade" id="entradaModal" tabindex="-1" aria-labelledby="entradaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="entradaModalLabel">Nueva Entrada de Almacén</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="entrada-form">
+                    <input type="hidden" id="entrada-id" name="id">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="entrada-numero" class="form-label">Número de Entrada</label>
+                            <input type="text" class="form-control" id="entrada-numero" name="numero" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="entrada-fecha" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="entrada-fecha" name="fecha" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="entrada-proveedor" class="form-label">Proveedor</label>
+                        <input type="text" class="form-control" id="entrada-proveedor" name="proveedor" required>
+                    </div>
+                    <h6>Items</h6>
+                    <div id="items-container">
+                        <!-- Aquí se agregarán dinámicamente los campos para los items -->
+                    </div>
+                    <button type="button" id="agregar-item-btn" class="btn btn-secondary mt-2">Agregar Item</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="guardar-entrada-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Aquí irá el código JavaScript para manejar la creación y edición de entradas de almacén
+</script>
+{% endblock %}

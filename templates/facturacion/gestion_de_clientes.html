@@ -1,13 +1,10 @@
-{% extends "facturacion/base_facturacion.html" %}
-
+{% extends "base.html" %}
 {% block title %}Gestión de Clientes - CalculAI{% endblock %}
-
 {% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
-    .modal-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-    }
     .cliente-card {
         transition: all 0.3s ease;
     }
@@ -19,90 +16,114 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Gestión de Clientes</h1>
-
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <input type="text" id="buscar-cliente" class="form-control" placeholder="Buscar cliente...">
+<div id="gestion-clientes-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Clientes</h1>
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+        <div class="w-full md:w-1/2 mb-4 md:mb-0">
+            <input type="text" id="buscar-cliente" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Buscar cliente...">
         </div>
-        <div class="col-md-6 text-end">
-            <button id="crear-cliente-btn" class="btn btn-primary">Nuevo Cliente</button>
+        <div>
+            <button id="crear-cliente-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-plus mr-2"></i>Nuevo Cliente
+            </button>
         </div>
     </div>
 
-    <div id="lista-clientes" class="row">
+    <div id="lista-clientes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Los clientes se cargarán aquí dinámicamente -->
     </div>
 
-    <nav aria-label="Paginación de clientes">
-        <ul class="pagination justify-content-center mt-4" id="paginacion">
+    <nav aria-label="Paginación de clientes" class="mt-6">
+        <ul class="flex justify-center" id="paginacion">
             <!-- La paginación se generará dinámicamente -->
         </ul>
     </nav>
 </div>
 
 <!-- Modal para crear/editar cliente -->
-<div class="modal fade" id="clienteModal" tabindex="-1" aria-labelledby="clienteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="clienteModalLabel">Nuevo Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center" id="clienteModal">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-xl font-bold" id="clienteModalLabel">Nuevo Cliente</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
             </div>
-            <div class="modal-body">
-                <form id="cliente-form">
-                    <input type="hidden" id="cliente-id" name="id">
-                    <div class="mb-3">
-                        <label for="cliente-nombre" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="cliente-nombre" name="nombre" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="cliente-email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="cliente-email" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="cliente-telefono" class="form-label">Teléfono</label>
-                        <input type="tel" class="form-control" id="cliente-telefono" name="telefono">
-                    </div>
-                    <div class="mb-3">
-                        <label for="cliente-direccion" class="form-label">Dirección</label>
-                        <textarea class="form-control" id="cliente-direccion" name="direccion" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" id="guardar-cliente-btn">Guardar</button>
-            </div>
+
+            <form id="cliente-form" class="mt-4">
+                <input type="hidden" id="cliente-id" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cliente-nombre">
+                        Nombre
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="cliente-nombre" name="nombre" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cliente-email">
+                        Email
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="cliente-email" name="email" type="email" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cliente-telefono">
+                        Teléfono
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="cliente-telefono" name="telefono" type="tel">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cliente-direccion">
+                        Dirección
+                    </label>
+                    <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="cliente-direccion" name="direccion" rows="3"></textarea>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Guardar
+                    </button>
+                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <!-- Modal para ver transacciones del cliente -->
-<div class="modal fade" id="transaccionesModal" tabindex="-1" aria-labelledby="transaccionesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="transaccionesModalLabel">Transacciones del Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Tipo</th>
-                                <th>Número</th>
-                                <th>Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transacciones-tbody">
-                            <!-- Las transacciones se cargarán aquí dinámicamente -->
-                        </tbody>
-                    </table>
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center" id="transaccionesModal">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-4xl mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-xl font-bold" id="transaccionesModalLabel">Transacciones del Cliente</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
                 </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transacciones-tbody" class="bg-white divide-y divide-gray-200">
+                        <!-- Las transacciones se cargarán aquí dinámicamente -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -110,30 +131,55 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const clienteModal = new bootstrap.Modal(document.getElementById('clienteModal'));
-    const transaccionesModal = new bootstrap.Modal(document.getElementById('transaccionesModal'));
+    if (typeof initializeAsistente === 'function') {
+        initializeAsistente();
+    }
+    
+    initializeGestionClientes();
+});
+
+function initializeGestionClientes() {
+    const clienteModal = document.getElementById('clienteModal');
+    const transaccionesModal = document.getElementById('transaccionesModal');
     const crearClienteBtn = document.getElementById('crear-cliente-btn');
-    const guardarClienteBtn = document.getElementById('guardar-cliente-btn');
+    const clienteForm = document.getElementById('cliente-form');
     const buscarClienteInput = document.getElementById('buscar-cliente');
+    const modalOverlays = document.querySelectorAll('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
     
     let paginaActual = 1;
     const clientesPorPagina = 9;
 
     crearClienteBtn.addEventListener('click', () => mostrarModalCliente());
-    guardarClienteBtn.addEventListener('click', guardarCliente);
+    clienteForm.addEventListener('submit', guardarCliente);
     buscarClienteInput.addEventListener('input', debounce(buscarClientes, 300));
+
+    modalOverlays.forEach(overlay => overlay.addEventListener('click', cerrarModales));
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', cerrarModales));
 
     cargarClientes();
 
     function mostrarModalCliente(clienteId = null) {
         document.getElementById('clienteModalLabel').textContent = clienteId ? 'Editar Cliente' : 'Nuevo Cliente';
-        document.getElementById('cliente-form').reset();
+        clienteForm.reset();
         if (clienteId) {
             cargarDatosCliente(clienteId);
         }
-        clienteModal.show();
+        toggleModal(clienteModal);
+    }
+
+    function toggleModal(modal) {
+        modal.classList.toggle('opacity-0');
+        modal.classList.toggle('pointer-events-none');
+    }
+
+    function cerrarModales() {
+        [clienteModal, transaccionesModal].forEach(modal => {
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        });
     }
 
     function cargarClientes(pagina = 1) {
@@ -145,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Ocurrió un error al cargar los clientes');
+                Swal.fire('Error', 'Ocurrió un error al cargar los clientes', 'error');
             });
     }
 
@@ -154,17 +200,21 @@ document.addEventListener('DOMContentLoaded', function() {
         listaClientes.innerHTML = '';
         clientes.forEach(cliente => {
             const clienteCard = document.createElement('div');
-            clienteCard.className = 'col-md-4 mb-3';
+            clienteCard.className = 'bg-white rounded-lg shadow-md p-4 cliente-card';
             clienteCard.innerHTML = `
-                <div class="card cliente-card">
-                    <div class="card-body">
-                        <h5 class="card-title">${cliente.nombre}</h5>
-                        <p class="card-text">${cliente.email}</p>
-                        <p class="card-text">${cliente.telefono || 'No especificado'}</p>
-                        <button onclick="editarCliente(${cliente.id})" class="btn btn-sm btn-primary">Editar</button>
-                        <button onclick="eliminarCliente(${cliente.id})" class="btn btn-sm btn-danger">Eliminar</button>
-                        <button onclick="verTransacciones(${cliente.id})" class="btn btn-sm btn-info">Ver Transacciones</button>
-                    </div>
+                <h3 class="text-lg font-semibold mb-2">${cliente.nombre}</h3>
+                <p class="text-gray-600 mb-1">${cliente.email}</p>
+                <p class="text-gray-600 mb-2">${cliente.telefono || 'No especificado'}</p>
+                <div class="flex justify-between">
+                    <button onclick="editarCliente(${cliente.id})" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-edit mr-1"></i>Editar
+                    </button>
+                    <button onclick="eliminarCliente(${cliente.id})" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-trash-alt mr-1"></i>Eliminar
+                    </button>
+                    <button onclick="verTransacciones(${cliente.id})" class="text-green-600 hover:text-green-800">
+                        <i class="fas fa-list mr-1"></i>Transacciones
+                    </button>
                 </div>
             `;
             listaClientes.appendChild(clienteCard);
@@ -178,8 +228,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         for (let i = 1; i <= totalPaginas; i++) {
             const li = document.createElement('li');
-            li.className = `page-item ${i === paginaActual ? 'active' : ''}`;
-            li.innerHTML = `<a class="page-link" href="#" onclick="cambiarPagina(${i})">${i}</a>`;
+            li.className = `mx-1 ${i === paginaActual ? 'bg-blue-500 text-white' : 'bg-white text-blue-500'} border border-blue-500 rounded`;
+            li.innerHTML = `<a class="block px-3 py-2" href="#" onclick="cambiarPagina(${i})">${i}</a>`;
             paginacion.appendChild(li);
         }
     }
@@ -196,13 +246,15 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error al cargar los datos del cliente');
+                Swal.fire('Error', 'Error al cargar los datos del cliente', 'error');
             });
     }
 
-    function guardarCliente() {
-        const form = document.getElementById('cliente-form');
-        const formData = new FormData(form);
+    function guardarCliente(event) {
+        event.preventDefault();
+        const formData = new FormData(client
+
+eForm);
         const clienteData = Object.fromEntries(formData);
         const clienteId = clienteData.id;
         const url = clienteId ? `/facturacion/api/clientes/${clienteId}` : '/facturacion/api/clientes';
@@ -212,19 +264,18 @@ document.addEventListener('DOMContentLoaded', function() {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
             },
             body: JSON.stringify(clienteData)
         })
         .then(response => response.json())
         .then(data => {
-            alert(clienteId ? 'Cliente actualizado correctamente' : 'Cliente creado correctamente');
-            clienteModal.hide();
+            Swal.fire('Éxito', clienteId ? 'Cliente actualizado correctamente' : 'Cliente creado correctamente', 'success');
+            cerrarModales();
             cargarClientes(paginaActual);
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Ocurrió un error al guardar el cliente');
+            Swal.fire('Error', 'Ocurrió un error al guardar el cliente', 'error');
         });
     }
 
@@ -233,23 +284,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.eliminarCliente = function(id) {
-        if (confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
-            fetch(`/facturacion/api/clientes/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('Cliente eliminado correctamente');
-                cargarClientes(paginaActual);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Ocurrió un error al eliminar el cliente');
-            });
-        }
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "No podrás revertir esta acción",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/facturacion/api/clientes/${id}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    Swal.fire('Eliminado', 'El cliente ha sido eliminado', 'success');
+                    cargarClientes(paginaActual);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Ocurrió un error al eliminar el cliente', 'error');
+                });
+            }
+        });
     }
 
     window.verTransacciones = function(clienteId) {
@@ -261,18 +320,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 transacciones.forEach(t => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${t.fecha}</td>
-                        <td>${t.tipo}</td>
-                        <td>${t.numero}</td>
-                        <td>$${t.monto.toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${t.fecha}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${t.tipo}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${t.numero}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${t.monto.toFixed(2)}</td>
                     `;
                     tbody.appendChild(tr);
                 });
-                transaccionesModal.show();
+                toggleModal(transaccionesModal);
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error al cargar las transacciones del cliente');
+                Swal.fire('Error', 'Error al cargar las transacciones del cliente', 'error');
             });
     }
 
@@ -291,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Ocurrió un error al buscar clientes');
+                Swal.fire('Error', 'Ocurrió un error al buscar clientes', 'error');
             });
     }
 
@@ -306,6 +365,6 @@ document.addEventListener('DOMContentLoaded', function() {
             timeout = setTimeout(later, wait);
         };
     }
-});
+}
 </script>
 {% endblock %}

@@ -1,6 +1,7 @@
 from flask import Flask, session, render_template, jsonify, request, redirect, url_for, flash, render_template_string, current_app
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
 from facturas.facturas_models import Facturacion, PreFactura, NotaCredito, NotaDebito, Cliente
+from inventario.inventario_models import InventarioItem, MovimientoInventario, ItemFactura
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -272,13 +273,19 @@ def create_app():
     
     from facturas import facturacion_bp
     app.register_blueprint(facturacion_bp, url_prefix='/facturacion')
-
+    
+    from inventario import inventario_bp
+    app.register_blueprint(inventario_bp, url_prefix='/inventario')
+    
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'login'
     limiter.init_app(app)
     csrf = CSRFProtect(app)
+    
+    from inventario import init_app as init_inventario
+    init_inventario(app)
     
     app.config['WTF_CSRF_ENABLED'] = False
     
@@ -425,15 +432,58 @@ def create_app():
     def notas_credito_debito():
         return render_template('facturacion/notas_de_credito_debito.html')
 
-    @app.route("/facturacion/reporte_de_ventas")
+    @app.route("/facturacion/reporte-de-ventas")
     @login_required
     def reporte_ventas():
         return render_template('facturacion/reporte_de_ventas.html')
 
-    @app.route("/facturacion/gestion_de_clientes")
+    @app.route("/facturacion/gestion-de-clientes")
     @login_required
     def gestion_clientes():
         return render_template('facturacion/gestion_de_clientes.html')
+    
+    @app.route('/inventario/')
+    @login_required
+    def inventario_index():
+        return render_template('inventario/index.html')
+
+    @app.route('/inventario/items')
+    @login_required
+    def inventario_items():
+        return render_template('inventario/items.html')
+
+    @app.route('/inventario/entrada-almacen')
+    @login_required
+    def inventario_entrada_almacen():
+        return render_template('inventario/entrada_almacen.html')
+
+    @app.route('/inventario/salida-almacen')
+    @login_required
+    def inventario_salida_almacen():
+        return render_template('inventario/salida_almacen.html')
+
+    @app.route('/inventario/inventario')
+    @login_required
+    def inventario_actual():
+        return render_template('inventario/inventario.html')
+
+    @app.route('/inventario/reporte')
+    @login_required
+    def inventario_reporte():
+        return render_template('inventario/reporte.html')
+
+    # Ruta API para obtener los submódulos de inventario
+    @app.route('/api/submodulos/Inventario')
+    @login_required
+    def get_inventario_submodulos():
+        submodulos = [
+            "Items",
+            "Entrada de Almacén",
+            "Salida de Almacén",
+            "Inventario",
+            "Reporte de Inventario"
+        ]
+        return jsonify(submodulos)
 
     @app.route("/reset_password", methods=["POST"])
     def reset_password():
@@ -848,8 +898,6 @@ def create_app():
     @app.errorhandler(500)
     def internal_server_error(e):
         return render_template('500.html'), 500
-
-    
 
     @app.after_request
     def add_header(response):

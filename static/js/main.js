@@ -234,6 +234,26 @@ function handleSubmoduleClick(moduleName, submoduleName) {
         }
     } else if (moduleName === 'Banco' && submoduleName === 'Bancos') {
         window.location.href = '/Bancos';
+    } else if (moduleName === 'Inventario') {
+        switch (submoduleName) {
+            case 'Items':
+                window.location.href = '/inventario/items';
+                break;
+            case 'Entrada de Almacén':
+                window.location.href = '/inventario/entrada-almacen';
+                break;
+            case 'Salida de Almacén':
+                window.location.href = '/inventario/salida-almacen';
+                break;
+            case 'Inventario':
+                window.location.href = '/inventario/inventario';
+                break;
+            case 'Reporte de Inventario':
+                window.location.href = '/inventario/reporte';
+                break;
+            default:
+                console.log('Submódulo de Inventario no reconocido');
+        }
     } else {
         // Manejar otros submódulos aquí
         console.log('Otro submódulo clickeado');
@@ -371,18 +391,18 @@ function loadSubmodules(moduleName, submoduleContainer) {
                 submoduleContainer.innerHTML = '';
                 submodulos.forEach(submodulo => {
                     const button = createButton(submodulo, 'submodule-button', null, 'fas fa-circle');
-                button.onclick = (event) => {
-                    event.preventDefault();
-                    handleSubmoduleClick(moduleName, submodulo);
-                };
-                submoduleContainer.appendChild(button);
-            });
-            // Mostrar el contenedor de submódulos
-            submoduleContainer.style.display = 'flex';
-            submoduleContainer.style.flexDirection = 'column';
-            submoduleContainer.style.alignItems = 'center';
-        })
-        .catch(error => console.error('Error loading submodules:', error));
+                    button.onclick = (event) => {
+                        event.preventDefault();
+                        handleSubmoduleClick(moduleName, submodulo);
+                    };
+                    submoduleContainer.appendChild(button);
+                });
+                // Mostrar el contenedor de submódulos
+                submoduleContainer.style.display = 'flex';
+                submoduleContainer.style.flexDirection = 'column';
+                submoduleContainer.style.alignItems = 'center';
+            })
+            .catch(error => console.error('Error loading submodules:', error));
     }
 }
 
@@ -407,6 +427,26 @@ function loadSubmoduleContent(moduleName, submoduleName) {
                 break;
             case 'Gestión de Clientes':
                 url = '/facturacion/gestion-de-clientes';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
+    } else if (moduleName === 'Inventario') {
+        switch (submoduleName) {
+            case 'Items':
+                url = '/inventario/items';
+                break;
+            case 'Entrada de Almacén':
+                url = '/inventario/entrada-almacen';
+                break;
+            case 'Salida de Almacén':
+                url = '/inventario/salida-almacen';
+                break;
+            case 'Inventario':
+                url = '/inventario/inventario';
+                break;
+            case 'Reporte de Inventario':
+                url = '/inventario/reporte';
                 break;
             default:
                 url = `/api/submodule-content/${moduleName}/${submoduleName}`;
@@ -477,6 +517,14 @@ document.addEventListener('DOMContentLoaded', function() {
         facturacionLink.addEventListener('click', function(e) {
             e.preventDefault();
             loadSubmoduleContent('Facturacion', 'Facturas');
+        });
+    }
+
+    const inventarioLink = document.querySelector('.inventario-link');
+    if (inventarioLink) {
+        inventarioLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            loadSubmoduleContent('Inventario', 'Items');
         });
     }
 

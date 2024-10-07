@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Inventario Actual{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Inventario Actual</h1>
+
+    <div class="mb-3">
+        <input type="text" id="buscar-item" class="form-control" placeholder="Buscar item...">
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Stock Actual</th>
+                    <th>Valor Unitario</th>
+                    <th>Valor Total</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="inventario-tbody">
+                <!-- Los items del inventario se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para ajustar stock -->
+<div class="modal fade" id="ajusteStockModal" tabindex="-1" aria-labelledby="ajusteStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ajusteStockModalLabel">Ajustar Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="ajuste-stock-form">
+                    <input type="hidden" id="item-id" name="id">
+                    <div class="mb-3">
+                        <label for="stock-actual" class="form-label">Stock Actual</label>
+                        <input type="number" class="form-control" id="stock-actual" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ajuste-cantidad" class="form-label">Cantidad a Ajustar</label>
+                        <input type="number" class="form-control" id="ajuste-cantidad" name="cantidad" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ajuste-motivo" class="form-label">Motivo del Ajuste</label>
+                        <textarea class="form-control" id="ajuste-motivo" name="motivo" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="guardar-ajuste-btn">Guardar Ajuste</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const buscarItemInput = document.getElementById('buscar-item');
+    const inventarioTbody = document.getElementById('inventario-tbody');
+    const ajusteStockModal = new bootstrap.Modal(document.getElementById('ajusteStockModal'));
+    const ajusteStockForm = document.getElementById('ajuste-stock-form');
+    const guardarAjusteBtn = document.getElementById('guardar-ajuste-btn');
+
+    cargarInventario();
+    buscarItemInput.addEventListener('input', cargarInventario);
+    guardarAjusteBtn.addEventListener('click', guardarAjusteStock);
+
+    function cargarInventario() {
+        const busqueda = buscarItemInput.value;
+        fetch(`/inventario/api/items?busqueda=${busqueda}`)
+            .then(response => response.json())
+            .then(data => actualizarTablaInventario(data))
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al cargar el inventario');
+            });
+    }
+
+    function actualizarTablaInventario(items) {
+        inventarioTbody.innerHTML = '';
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.codigo}</td>
+                <td>${item.nombre}</td>
+                <td>${item.categoria}</td>
+                <td>${item.stock_actual}</td>
+                <td>${item.valor_unitario.toFixed(2)}</td>
+                <td>${(item.stock_actual * item.valor_unitario).toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary ajustar-stock" data-id="${item.id}" data-stock="${item.stock_actual}">Ajustar Stock</button>
+                </td>
+            `;
+            inventarioTbody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.ajustar-stock').forEach(btn => {
+            btn.addEventListener('click', mostrarModalAjusteStock);
+        });
+    }
+
+    function mostrarModalAjusteStock(event) {
+        const itemId = event.target.dataset.id;
+        const stockActual = event.target.dataset.stock;
+        document.getElementById('item-id').value = itemId;
+        document.getElementById('stock-actual').value = stockActual;
+        document.getElementById('ajuste-cantidad').value = '';
+        document.getElementById('ajuste-motivo').value = '';
+        ajusteStockModal.show();
+    }
+
+    function guardarAjusteStock() {
+        const formData = new FormData(ajusteStockForm);
+        const ajusteData = Object.fromEntries(formData);
+        
+        fetch(`/inventario/api/ajustar-stock/${ajusteData.id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(ajusteData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Stock ajustado correctamente');
+                ajusteStockModal.hide();
+                cargarInventario();
+            } else {
+                alert(data.message || 'Ocurrió un error al ajustar el stock');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al ajustar el stock');
+        });
+    }
+});
+</script>
+{% endblock %}    

@@ -1,0 +1,117 @@
+/* Estilos generales */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1, h2 {
+    color: #333;
+}
+
+/* Estilos para la navegación */
+.nav {
+    list-style-type: none;
+    padding: 0;
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.nav-item {
+    display: inline-block;
+}
+
+.nav-link {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.nav-link:hover {
+    background-color: #e9ecef;
+}
+
+/* Estilos para las tablas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+/* Estilos para los formularios */
+form {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos específicos para cada sección */
+#items-section,
+#entrada-almacen-section,
+#salida-almacen-section,
+#inventario-actual-section,
+#reporte-inventario-section {
+    display: none;
+}
+
+#items-section.active,
+#entrada-almacen-section.active,
+#salida-almacen-section.active,
+#inventario-actual-section.active,
+#reporte-inventario-section.active {
+    display: block;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .nav-item {
+        display: block;
+    }
+
+    .nav-link {
+        border-bottom: 1px solid #ddd;
+    }
+}

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Items - Inventario{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Gestión de Items</h1>
+
+    <div class="mb-3">
+        <button id="crear-item-btn" class="btn btn-primary">Crear Nuevo Item</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Categoría</th>
+                    <th>Precio Unitario</th>
+                    <th>Stock Actual</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="items-tbody">
+                <!-- Los items se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para crear/editar item -->
+<div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Crear/Editar Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="item-form">
+                    <input type="hidden" id="item-id" name="id">
+                    <div class="mb-3">
+                        <label for="item-codigo" class="form-label">Código</label>
+                        <input type="text" class="form-control" id="item-codigo" name="codigo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="item-nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="item-nombre" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="item-tipo" class="form-label">Tipo</label>
+                        <select class="form-control" id="item-tipo" name="tipo" required>
+                            <option value="producto">Producto</option>
+                            <option value="servicio">Servicio</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="item-descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="item-descripcion" name="descripcion" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="item-categoria" class="form-label">Categoría</label>
+                        <input type="text" class="form-control" id="item-categoria" name="categoria">
+                    </div>
+                    <div class="mb-3">
+                        <label for="item-precio" class="form-label">Precio Unitario</label>
+                        <input type="number" step="0.01" class="form-control" id="item-precio" name="precio" required>
+                    </div>
+                    <div class="mb-3" id="stock-container">
+                        <label for="item-stock" class="form-label">Stock Inicial</label>
+                        <input type="number" class="form-control" id="item-stock" name="stock" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="guardar-item-btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const crearItemBtn = document.getElementById('crear-item-btn');
+    const guardarItemBtn = document.getElementById('guardar-item-btn');
+    const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
+    const itemForm = document.getElementById('item-form');
+    const itemTipo = document.getElementById('item-tipo');
+    const stockContainer = document.getElementById('stock-container');
+
+    crearItemBtn.addEventListener('click', () => mostrarModalItem());
+    guardarItemBtn.addEventListener('click', guardarItem);
+    itemTipo.addEventListener('change', toggleStockVisibility);
+
+    cargarItems();
+
+    function mostrarModalItem(id = null) {
+        itemForm.reset();
+        if (id) {
+            // Cargar datos del item para edición
+            cargarDatosItem(id);
+        }
+        toggleStockVisibility();
+        itemModal.show();
+    }
+
+    function toggleStockVisibility() {
+        if (itemTipo.value === 'producto') {
+            stockContainer.style.display = 'block';
+        } else {
+            stockContainer.style.display = 'none';
+        }
+    }
+
+    function cargarItems() {
+        fetch('/inventario/api/items')
+            .then(response => response.json())
+            .then(data => actualizarTablaItems(data))
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al cargar los items');
+            });
+    }
+
+    function actualizarTablaItems(items) {
+        const tbody = document.getElementById('items-tbody');
+        tbody.innerHTML = '';
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.codigo}</td>
+                <td>${item.nombre}</td>
+                <td>${item.tipo}</td>
+                <td>${item.descripcion}</td>
+                <td>${item.categoria}</td>
+                <td>${item.precio.toFixed(2)}</td>
+                <td>${item.tipo === 'producto' ? item.stock : 'N/A'}</td>
+                <td>
+                    <button class="btn btn-sm btn-info editar-item" data-id="${item.id}">Editar</button>
+                    <button class="btn btn-sm btn-danger eliminar-item" data-id="${item.id}">Eliminar</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Agregar event listeners para los botones de editar y eliminar
+        document.querySelectorAll('.editar-item').forEach(btn => {
+            btn.addEventListener('click', (e) => mostrarModalItem(e.target.dataset.id));
+        });
+        document.querySelectorAll('.eliminar-item').forEach(btn => {
+            btn.addEventListener('click', (e) => eliminarItem(e.target.dataset.id));
+        });
+    }
+
+    function guardarItem() {
+        const formData = new FormData(itemForm);
+        const itemData = Object.fromEntries(formData);
+        const itemId = itemData.id;
+        const url = itemId ? `/inventario/api/items/${itemId}` : '/inventario/api/items';
+        const method = itemId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(itemData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(itemId ? 'Item actualizado correctamente' : 'Item creado correctamente');
+                itemModal.hide();
+                cargarItems();
+            } else {
+                alert(data.message || 'Ocurrió un error al guardar el item');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al guardar el item');
+        });
+    }
+
+    function cargarDatosItem(id) {
+        fetch(`/inventario/api/items/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                for (const [key, value] of Object.entries(data)) {
+                    const input = document.getElementById(`item-${key}`);
+                    if (input) {
+                        input.value = value;
+                    }
+                }
+                toggleStockVisibility();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar los datos del item');
+            });
+    }
+
+    function eliminarItem(id) {
+        if (confirm('¿Estás seguro de que quieres eliminar este item?')) {
+            fetch(`/inventario/api/items/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Item eliminado correctamente');
+                    cargarItems();
+                } else {
+                    alert(data.message || 'Ocurrió un error al eliminar el item');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al eliminar el item');
+            });
+        }
+    }
+});
+</script>
+{% endblock %}
