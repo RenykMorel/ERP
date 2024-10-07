@@ -1,10 +1,12 @@
-from flask import render_template, request, jsonify, current_app
+from flask import render_template, request, jsonify, current_app, send_file
 from flask_login import login_required, current_user
 from . import inventario_bp
-from .inventario_models import InventarioItem, MovimientoInventario  # Cambiado de FacturaItem a InventarioItem
+from .inventario_models import InventarioItem, MovimientoInventario
 from extensions import db
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
+import io
+import csv
 
 @inventario_bp.route('/')
 @login_required
@@ -21,7 +23,7 @@ def items():
 @login_required
 def get_items():
     try:
-        items = InventarioItem.query.all()  # Cambiado de FacturaItem a InventarioItem
+        items = InventarioItem.query.all()
         return jsonify([item.to_dict() for item in items])
     except Exception as e:
         current_app.logger.error(f"Error al obtener items: {str(e)}")
@@ -32,7 +34,7 @@ def get_items():
 def create_item():
     data = request.json
     try:
-        new_item = InventarioItem(**data)  # Cambiado de FacturaItem a InventarioItem
+        new_item = InventarioItem(**data)
         db.session.add(new_item)
         db.session.commit()
         return jsonify(new_item.to_dict()), 201
@@ -51,7 +53,7 @@ def create_item():
 @inventario_bp.route('/api/items/<int:item_id>', methods=['PUT'])
 @login_required
 def update_item(item_id):
-    item = InventarioItem.query.get_or_404(item_id)  # Cambiado de FacturaItem a InventarioItem
+    item = InventarioItem.query.get_or_404(item_id)
     data = request.json
     try:
         item.update_from_dict(data)
@@ -72,7 +74,7 @@ def update_item(item_id):
 @inventario_bp.route('/api/items/<int:item_id>', methods=['DELETE'])
 @login_required
 def delete_item(item_id):
-    item = InventarioItem.query.get_or_404(item_id)  # Cambiado de FacturaItem a InventarioItem
+    item = InventarioItem.query.get_or_404(item_id)
     try:
         db.session.delete(item)
         db.session.commit()
@@ -94,7 +96,7 @@ def create_entrada_almacen():
     data = request.json
     try:
         for item_data in data['items']:
-            item = InventarioItem.query.get_or_404(item_data['item_id'])  # Cambiado de FacturaItem a InventarioItem
+            item = InventarioItem.query.get_or_404(item_data['item_id'])
             if item.tipo != 'producto':
                 return jsonify({"error": f"El item {item.codigo} no es un producto"}), 400
             
@@ -127,7 +129,7 @@ def create_salida_almacen():
     data = request.json
     try:
         for item_data in data['items']:
-            item = InventarioItem.query.get_or_404(item_data['item_id'])  # Cambiado de FacturaItem a InventarioItem
+            item = InventarioItem.query.get_or_404(item_data['item_id'])
             if item.tipo != 'producto':
                 return jsonify({"error": f"El item {item.codigo} no es un producto"}), 400
             if item.stock < item_data['cantidad']:
@@ -160,7 +162,7 @@ def inventario():
 @login_required
 def get_inventario():
     try:
-        items = InventarioItem.query.filter_by(tipo='producto').all()  # Cambiado de FacturaItem a InventarioItem
+        items = InventarioItem.query.filter_by(tipo='producto').all()
         return jsonify([item.to_dict() for item in items])
     except Exception as e:
         current_app.logger.error(f"Error al obtener inventario: {str(e)}")
@@ -177,6 +179,7 @@ def reporte():
 def get_reporte():
     fecha_inicio = request.args.get('fecha_inicio')
     fecha_fin = request.args.get('fecha_fin')
+    categoria = request.args.get('categoria')
     
     if not fecha_inicio or not fecha_fin:
         return jsonify({"error": "Se requieren fechas de inicio y fin"}), 400
@@ -185,9 +188,14 @@ def get_reporte():
         fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
         fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
         
-        movimientos = MovimientoInventario.query.filter(
+        query = MovimientoInventario.query.filter(
             MovimientoInventario.fecha.between(fecha_inicio, fecha_fin)
-        ).all()
+        )
+        
+        if categoria:
+            query = query.join(InventarioItem).filter(InventarioItem.categoria == categoria)
+        
+        movimientos = query.all()
         
         reporte = {}
         for movimiento in movimientos:
@@ -209,12 +217,81 @@ def get_reporte():
         current_app.logger.error(f"Error al generar reporte: {str(e)}")
         return jsonify({"error": "Error interno del servidor"}), 500
 
-@inventario_bp.route('/api/exportar-reporte', methods=['GET'])
+@inventario_bp.route('/api/categorias', methods=['GET'])
 @login_required
-def exportar_reporte():
-    # Aquí iría la lógica para exportar el reporte a Excel o PDF
-    # Por ahora, solo devolveremos un mensaje
-    return jsonify({"message": "Funcionalidad de exportación no implementada aún"}), 501
+def get_categorias():
+    try:
+        categorias = db.session.query(distinct(InventarioItem.categoria)).all()
+        categorias = [categoria[0] for categoria in categorias if categoria[0]]  # Filtra los valores None o vacíos
+        return jsonify(categorias)
+    except Exception as e:
+        current_app.logger.error(f"Error al obtener categorías: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@inventario_bp.route('/api/exportar-excel', methods=['GET'])
+@login_required
+def exportar_excel():
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+    categoria = request.args.get('categoria')
+    
+    if not fecha_inicio or not fecha_fin:
+        return jsonify({"error": "Se requieren fechas de inicio y fin"}), 400
+    
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
+        fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
+        
+        query = MovimientoInventario.query.filter(
+            MovimientoInventario.fecha.between(fecha_inicio, fecha_fin)
+        )
+        
+        if categoria:
+            query = query.join(InventarioItem).filter(InventarioItem.categoria == categoria)
+        
+        movimientos = query.all()
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        writer.writerow(['Código', 'Nombre', 'Categoría', 'Entradas', 'Salidas', 'Stock Final'])
+        
+        reporte = {}
+        for movimiento in movimientos:
+            if movimiento.item_id not in reporte:
+                reporte[movimiento.item_id] = {
+                    "item": movimiento.item,
+                    "entradas": 0,
+                    "salidas": 0
+                }
+            if movimiento.tipo == 'entrada':
+                reporte[movimiento.item_id]["entradas"] += movimiento.cantidad
+            else:
+                reporte[movimiento.item_id]["salidas"] += movimiento.cantidad
+        
+        for item_id, data in reporte.items():
+            item = data['item']
+            writer.writerow([
+                item.codigo,
+                item.nombre,
+                item.categoria,
+                data['entradas'],
+                data['salidas'],
+                item.stock
+            ])
+        
+        output.seek(0)
+        return send_file(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            mimetype='text/csv',
+            as_attachment=True,
+            attachment_filename='reporte_inventario.csv'
+        )
+    except ValueError:
+        return jsonify({"error": "Formato de fecha inválido. Use YYYY-MM-DD"}), 400
+    except Exception as e:
+        current_app.logger.error(f"Error al exportar reporte: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
 
 # Manejo de errores
 @inventario_bp.errorhandler(404)
@@ -225,4 +302,9 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     current_app.logger.error(f'Error del servidor: {str(error)}')
+    return jsonify({"error": "Error interno del servidor"}), 500
+
+@inventario_bp.errorhandler(Exception)
+def handle_exception(e):
+    current_app.logger.error(f"Unhandled exception: {str(e)}")
     return jsonify({"error": "Error interno del servidor"}), 500
