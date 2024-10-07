@@ -1,26 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Inventario Actual{% endblock %}
+{% block title %}Inventario Actual - CalculAI Inventario{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Inventario Actual</h1>
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Inventario Actual</h1>
 
-    <div class="mb-3">
-        <input type="text" id="buscar-item" class="form-control" placeholder="Buscar item...">
+    <div class="mb-6">
+        <div class="relative">
+            <input type="text" id="buscar-item" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Buscar item...">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-400"></i>
+            </div>
+        </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped">
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full leading-normal">
             <thead>
                 <tr>
-                    <th>Código</th>
-                    <th>Nombre</th>
-                    <th>Categoría</th>
-                    <th>Stock Actual</th>
-                    <th>Valor Unitario</th>
-                    <th>Valor Total</th>
-                    <th>Acciones</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Código
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Nombre
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Categoría
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Stock Actual
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Valor Unitario
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Valor Total
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Acciones
+                    </th>
                 </tr>
             </thead>
             <tbody id="inventario-tbody">
@@ -31,33 +55,38 @@
 </div>
 
 <!-- Modal para ajustar stock -->
-<div class="modal fade" id="ajusteStockModal" tabindex="-1" aria-labelledby="ajusteStockModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="ajusteStockModalLabel">Ajustar Stock</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="ajuste-stock-form">
+<div id="ajusteStockModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                    Ajustar Stock
+                </h3>
+                <form id="ajuste-stock-form" class="space-y-4">
                     <input type="hidden" id="item-id" name="id">
-                    <div class="mb-3">
-                        <label for="stock-actual" class="form-label">Stock Actual</label>
-                        <input type="number" class="form-control" id="stock-actual" readonly>
+                    <div>
+                        <label for="stock-actual" class="block text-sm font-medium text-gray-700 mb-1">Stock Actual</label>
+                        <input type="number" id="stock-actual" class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" readonly>
                     </div>
-                    <div class="mb-3">
-                        <label for="ajuste-cantidad" class="form-label">Cantidad a Ajustar</label>
-                        <input type="number" class="form-control" id="ajuste-cantidad" name="cantidad" required>
+                    <div>
+                        <label for="ajuste-cantidad" class="block text-sm font-medium text-gray-700 mb-1">Cantidad a Ajustar</label>
+                        <input type="number" id="ajuste-cantidad" name="cantidad" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="ajuste-motivo" class="form-label">Motivo del Ajuste</label>
-                        <textarea class="form-control" id="ajuste-motivo" name="motivo" rows="3" required></textarea>
+                    <div>
+                        <label for="ajuste-motivo" class="block text-sm font-medium text-gray-700 mb-1">Motivo del Ajuste</label>
+                        <textarea id="ajuste-motivo" name="motivo" rows="3" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required></textarea>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" id="guardar-ajuste-btn">Guardar Ajuste</button>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="guardar-ajuste-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Guardar Ajuste
+                </button>
+                <button type="button" id="cerrar-modal-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cerrar
+                </button>
             </div>
         </div>
     </div>
@@ -69,13 +98,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     const buscarItemInput = document.getElementById('buscar-item');
     const inventarioTbody = document.getElementById('inventario-tbody');
-    const ajusteStockModal = new bootstrap.Modal(document.getElementById('ajusteStockModal'));
+    const ajusteStockModal = document.getElementById('ajusteStockModal');
     const ajusteStockForm = document.getElementById('ajuste-stock-form');
     const guardarAjusteBtn = document.getElementById('guardar-ajuste-btn');
+    const cerrarModalBtn = document.getElementById('cerrar-modal-btn');
 
     cargarInventario();
     buscarItemInput.addEventListener('input', cargarInventario);
     guardarAjusteBtn.addEventListener('click', guardarAjusteStock);
+    cerrarModalBtn.addEventListener('click', () => ajusteStockModal.classList.add('hidden'));
 
     function cargarInventario() {
         const busqueda = buscarItemInput.value;
@@ -84,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => actualizarTablaInventario(data))
             .catch(error => {
                 console.error('Error:', error);
-                alert('Ocurrió un error al cargar el inventario');
+                mostrarNotificacion('Ocurrió un error al cargar el inventario', 'error');
             });
     }
 
@@ -93,14 +124,28 @@ document.addEventListener('DOMContentLoaded', function() {
         items.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${item.codigo}</td>
-                <td>${item.nombre}</td>
-                <td>${item.categoria}</td>
-                <td>${item.stock_actual}</td>
-                <td>${item.valor_unitario.toFixed(2)}</td>
-                <td>${(item.stock_actual * item.valor_unitario).toFixed(2)}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary ajustar-stock" data-id="${item.id}" data-stock="${item.stock_actual}">Ajustar Stock</button>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${item.codigo}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${item.nombre}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${item.categoria}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${item.stock_actual}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">$${item.valor_unitario.toFixed(2)}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">$${(item.stock_actual * item.valor_unitario).toFixed(2)}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ajustar-stock" data-id="${item.id}" data-stock="${item.stock_actual}">
+                        Ajustar Stock
+                    </button>
                 </td>
             `;
             inventarioTbody.appendChild(tr);
@@ -118,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('stock-actual').value = stockActual;
         document.getElementById('ajuste-cantidad').value = '';
         document.getElementById('ajuste-motivo').value = '';
-        ajusteStockModal.show();
+        ajusteStockModal.classList.remove('hidden');
     }
 
     function guardarAjusteStock() {
@@ -136,18 +181,28 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Stock ajustado correctamente');
-                ajusteStockModal.hide();
+                mostrarNotificacion('Stock ajustado correctamente', 'success');
+                ajusteStockModal.classList.add('hidden');
                 cargarInventario();
             } else {
-                alert(data.message || 'Ocurrió un error al ajustar el stock');
+                mostrarNotificacion(data.message || 'Ocurrió un error al ajustar el stock', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Ocurrió un error al ajustar el stock');
+            mostrarNotificacion('Ocurrió un error al ajustar el stock', 'error');
         });
+    }
+
+    function mostrarNotificacion(mensaje, tipo) {
+        const notificacion = document.createElement('div');
+        notificacion.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md text-white ${tipo === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        notificacion.textContent = mensaje;
+        document.body.appendChild(notificacion);
+        setTimeout(() => {
+            notificacion.remove();
+        }, 3000);
     }
 });
 </script>
-{% endblock %}    
+{% endblock %}

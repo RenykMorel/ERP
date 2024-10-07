@@ -1,27 +1,47 @@
 {% extends "base.html" %}
 
-{% block title %}Gestión de Items - Inventario{% endblock %}
+{% block title %}Gestión de Inventario - CalculAI{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Gestión de Items</h1>
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Gestión de Inventario</h1>
 
-    <div class="mb-3">
-        <button id="crear-item-btn" class="btn btn-primary">Crear Nuevo Item</button>
+    <div class="mb-6">
+        <button id="crear-item-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+            <i class="fas fa-plus mr-2"></i>Crear Nuevo Item
+        </button>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped">
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full leading-normal">
             <thead>
                 <tr>
-                    <th>Código</th>
-                    <th>Nombre</th>
-                    <th>Tipo</th>
-                    <th>Descripción</th>
-                    <th>Categoría</th>
-                    <th>Precio Unitario</th>
-                    <th>Stock Actual</th>
-                    <th>Acciones</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Código
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Nombre
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Tipo
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Categoría
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Precio Unitario
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Stock Actual
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Acciones
+                    </th>
                 </tr>
             </thead>
             <tbody id="items-tbody">
@@ -32,52 +52,81 @@
 </div>
 
 <!-- Modal para crear/editar item -->
-<div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="itemModalLabel">Crear/Editar Item</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="item-form">
+<!-- Modal para crear/editar item -->
+<div id="itemModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                    Crear/Editar Item
+                </h3>
+                <form id="item-form" class="space-y-4">
                     <input type="hidden" id="item-id" name="id">
-                    <div class="mb-3">
-                        <label for="item-codigo" class="form-label">Código</label>
-                        <input type="text" class="form-control" id="item-codigo" name="codigo" required>
+                    <div>
+                        <label for="item-codigo" class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                        <input type="text" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+                            focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" 
+                            id="item-codigo" name="codigo" required placeholder="Ingrese el código del item">
                     </div>
-                    <div class="mb-3">
-                        <label for="item-nombre" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="item-nombre" name="nombre" required>
+                    <div>
+                        <label for="item-nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                        <input type="text" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+                            focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" 
+                            id="item-nombre" name="nombre" required placeholder="Ingrese el nombre del item">
                     </div>
-                    <div class="mb-3">
-                        <label for="item-tipo" class="form-label">Tipo</label>
-                        <select class="form-control" id="item-tipo" name="tipo" required>
-                            <option value="producto">Producto</option>
-                            <option value="servicio">Servicio</option>
-                        </select>
+                    <div>
+                        <label for="item-tipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Item</label>
+                        <div class="relative">
+                            <select class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-3 pr-8 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm" 
+                                    id="item-tipo" 
+                                    name="tipo" 
+                                    required>
+                                <option value="">Seleccione un tipo</option>
+                                <option value="producto">Producto</option>
+                                <option value="servicio">Servicio</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="item-descripcion" class="form-label">Descripción</label>
-                        <textarea class="form-control" id="item-descripcion" name="descripcion" rows="3"></textarea>
+                    <div>
+                        <label for="item-descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                        <textarea class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+                            focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" 
+                            id="item-descripcion" name="descripcion" rows="3" placeholder="Ingrese una descripción del item"></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label for="item-categoria" class="form-label">Categoría</label>
-                        <input type="text" class="form-control" id="item-categoria" name="categoria">
+                    <div>
+                        <label for="item-categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                        <input type="text" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+                            focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" 
+                            id="item-categoria" name="categoria" placeholder="Ingrese la categoría del item">
                     </div>
-                    <div class="mb-3">
-                        <label for="item-precio" class="form-label">Precio Unitario</label>
-                        <input type="number" step="0.01" class="form-control" id="item-precio" name="precio" required>
+                    <div>
+                        <label for="item-precio" class="block text-sm font-medium text-gray-700 mb-1">Precio Unitario</label>
+                        <input type="number" step="0.01" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+                            focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" 
+                            id="item-precio" name="precio" required placeholder="0.00">
                     </div>
-                    <div class="mb-3" id="stock-container">
-                        <label for="item-stock" class="form-label">Stock Inicial</label>
-                        <input type="number" class="form-control" id="item-stock" name="stock" required>
+                    <div id="stock-container">
+                        <label for="item-stock" class="block text-sm font-medium text-gray-700 mb-1">Stock Inicial</label>
+                        <input type="number" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
+                            focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" 
+                            id="item-stock" name="stock" required placeholder="0">
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" id="guardar-item-btn">Guardar</button>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-item-btn">
+                    Guardar
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cerrar-modal-btn">
+                    Cerrar
+                </button>
             </div>
         </div>
     </div>
@@ -89,13 +138,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     const crearItemBtn = document.getElementById('crear-item-btn');
     const guardarItemBtn = document.getElementById('guardar-item-btn');
-    const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
+    const cerrarModalBtn = document.getElementById('cerrar-modal-btn');
+    const itemModal = document.getElementById('itemModal');
     const itemForm = document.getElementById('item-form');
     const itemTipo = document.getElementById('item-tipo');
     const stockContainer = document.getElementById('stock-container');
 
     crearItemBtn.addEventListener('click', () => mostrarModalItem());
     guardarItemBtn.addEventListener('click', guardarItem);
+    cerrarModalBtn.addEventListener('click', () => itemModal.classList.add('hidden'));
     itemTipo.addEventListener('change', toggleStockVisibility);
 
     cargarItems();
@@ -103,18 +154,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function mostrarModalItem(id = null) {
         itemForm.reset();
         if (id) {
-            // Cargar datos del item para edición
             cargarDatosItem(id);
         }
         toggleStockVisibility();
-        itemModal.show();
+        itemModal.classList.remove('hidden');
     }
 
     function toggleStockVisibility() {
         if (itemTipo.value === 'producto') {
-            stockContainer.style.display = 'block';
+            stockContainer.classList.remove('hidden');
         } else {
-            stockContainer.style.display = 'none';
+            stockContainer.classList.add('hidden');
         }
     }
 
@@ -134,27 +184,41 @@ document.addEventListener('DOMContentLoaded', function() {
         items.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${item.codigo}</td>
-                <td>${item.nombre}</td>
-                <td>${item.tipo}</td>
-                <td>${item.descripcion}</td>
-                <td>${item.categoria}</td>
-                <td>${item.precio.toFixed(2)}</td>
-                <td>${item.tipo === 'producto' ? item.stock : 'N/A'}</td>
-                <td>
-                    <button class="btn btn-sm btn-info editar-item" data-id="${item.id}">Editar</button>
-                    <button class="btn btn-sm btn-danger eliminar-item" data-id="${item.id}">Eliminar</button>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${item.codigo}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${item.nombre}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${item.tipo}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${item.categoria}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">$${item.precio.toFixed(2)}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${item.tipo === 'producto' ? item.stock : 'N/A'}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <button class="text-blue-600 hover:text-blue-900 mr-2 editar-item" data-id="${item.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-600 hover:text-red-900 eliminar-item" data-id="${item.id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
 
-        // Agregar event listeners para los botones de editar y eliminar
         document.querySelectorAll('.editar-item').forEach(btn => {
-            btn.addEventListener('click', (e) => mostrarModalItem(e.target.dataset.id));
+            btn.addEventListener('click', (e) => mostrarModalItem(e.target.closest('button').dataset.id));
         });
         document.querySelectorAll('.eliminar-item').forEach(btn => {
-            btn.addEventListener('click', (e) => eliminarItem(e.target.dataset.id));
+            btn.addEventListener('click', (e) => eliminarItem(e.target.closest('button').dataset.id));
         });
     }
 
@@ -177,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 alert(itemId ? 'Item actualizado correctamente' : 'Item creado correctamente');
-                itemModal.hide();
+                itemModal.classList.add('hidden');
                 cargarItems();
             } else {
                 alert(data.message || 'Ocurrió un error al guardar el item');
@@ -208,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function eliminarItem(id) {
-        if (confirm('¿Estás seguro de que quieres eliminar este item?')) {
+        if (confirm('¿Est�s seguro de que quieres eliminar este item?')) {
             fetch(`/inventario/api/items/${id}`, {
                 method: 'DELETE',
                 headers: {

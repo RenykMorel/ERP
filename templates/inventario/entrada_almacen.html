@@ -1,25 +1,44 @@
 {% extends "base.html" %}
 
-{% block title %}Entrada de Almacén - Inventario{% endblock %}
+{% block title %}Entrada de Almacén - CalculAI Inventario{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Entrada de Almacén</h1>
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Entrada de Almacén</h1>
 
-    <div class="mb-3">
-        <button id="nueva-entrada-btn" class="btn btn-primary">Nueva Entrada</button>
+    <div class="mb-6">
+        <button id="nueva-entrada-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fas fa-plus mr-2"></i>Nueva Entrada
+        </button>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped">
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full leading-normal">
             <thead>
                 <tr>
-                    <th>Número de Entrada</th>
-                    <th>Fecha</th>
-                    <th>Proveedor</th>
-                    <th>Total Items</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Número de Entrada
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Fecha
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Proveedor
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Total Items
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Estado
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Acciones
+                    </th>
                 </tr>
             </thead>
             <tbody id="entradas-tbody">
@@ -30,40 +49,49 @@
 </div>
 
 <!-- Modal para crear/editar entrada -->
-<div class="modal fade" id="entradaModal" tabindex="-1" aria-labelledby="entradaModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="entradaModalLabel">Nueva Entrada de Almacén</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="entrada-form">
+<div id="entradaModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                    Nueva Entrada de Almacén
+                </h3>
+                <form id="entrada-form" class="space-y-4">
                     <input type="hidden" id="entrada-id" name="id">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="entrada-numero" class="form-label">Número de Entrada</label>
-                            <input type="text" class="form-control" id="entrada-numero" name="numero" required>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="entrada-numero" class="block text-sm font-medium text-gray-700 mb-1">Número de Entrada</label>
+                            <input type="text" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" id="entrada-numero" name="numero" required>
                         </div>
-                        <div class="col-md-6">
-                            <label for="entrada-fecha" class="form-label">Fecha</label>
-                            <input type="date" class="form-control" id="entrada-fecha" name="fecha" required>
+                        <div>
+                            <label for="entrada-fecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                            <input type="date" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" id="entrada-fecha" name="fecha" required>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="entrada-proveedor" class="form-label">Proveedor</label>
-                        <input type="text" class="form-control" id="entrada-proveedor" name="proveedor" required>
+                    <div>
+                        <label for="entrada-proveedor" class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                        <input type="text" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" id="entrada-proveedor" name="proveedor" required>
                     </div>
-                    <h6>Items</h6>
-                    <div id="items-container">
-                        <!-- Aquí se agregarán dinámicamente los campos para los items -->
+                    <div>
+                        <h6 class="text-sm font-medium text-gray-700 mb-2">Items</h6>
+                        <div id="items-container" class="space-y-2">
+                            <!-- Aquí se agregarán dinámicamente los campos para los items -->
+                        </div>
+                        <button type="button" id="agregar-item-btn" class="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-plus mr-2"></i>Agregar Item
+                        </button>
                     </div>
-                    <button type="button" id="agregar-item-btn" class="btn btn-secondary mt-2">Agregar Item</button>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" id="guardar-entrada-btn">Guardar</button>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-entrada-btn">
+                    Guardar
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cerrar-modal-btn">
+                    Cerrar
+                </button>
             </div>
         </div>
     </div>
@@ -72,6 +100,149 @@
 
 {% block extra_js %}
 <script>
-    // Aquí irá el código JavaScript para manejar la creación y edición de entradas de almacén
+document.addEventListener('DOMContentLoaded', function() {
+    const nuevaEntradaBtn = document.getElementById('nueva-entrada-btn');
+    const guardarEntradaBtn = document.getElementById('guardar-entrada-btn');
+    const cerrarModalBtn = document.getElementById('cerrar-modal-btn');
+    const entradaModal = document.getElementById('entradaModal');
+    const entradaForm = document.getElementById('entrada-form');
+    const agregarItemBtn = document.getElementById('agregar-item-btn');
+    const itemsContainer = document.getElementById('items-container');
+
+    nuevaEntradaBtn.addEventListener('click', () => mostrarModalEntrada());
+    guardarEntradaBtn.addEventListener('click', guardarEntrada);
+    cerrarModalBtn.addEventListener('click', () => entradaModal.classList.add('hidden'));
+    agregarItemBtn.addEventListener('click', agregarItemCampo);
+
+    cargarEntradas();
+
+    function mostrarModalEntrada(id = null) {
+        entradaForm.reset();
+        if (id) {
+            cargarDatosEntrada(id);
+        }
+        entradaModal.classList.remove('hidden');
+    }
+
+    function agregarItemCampo() {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'flex space-x-2';
+        itemDiv.innerHTML = `
+            <input type="text" class="flex-grow px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" name="item_nombre[]" placeholder="Nombre del item" required>
+            <input type="number" class="w-24 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" name="item_cantidad[]" placeholder="Cantidad" required>
+            <button type="button" class="eliminar-item-btn px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        `;
+        itemsContainer.appendChild(itemDiv);
+
+        itemDiv.querySelector('.eliminar-item-btn').addEventListener('click', function() {
+            itemDiv.remove();
+        });
+    }
+
+    function cargarEntradas() {
+        // Simulación de carga de entradas
+        const entradas = [
+            { id: 1, numero: 'ENT-001', fecha: '2023-05-01', proveedor: 'Proveedor A', totalItems: 5, estado: 'Completado' },
+            { id: 2, numero: 'ENT-002', fecha: '2023-05-02', proveedor: 'Proveedor B', totalItems: 3, estado: 'Pendiente' },
+        ];
+        actualizarTablaEntradas(entradas);
+    }
+
+    function actualizarTablaEntradas(entradas) {
+        const tbody = document.getElementById('entradas-tbody');
+        tbody.innerHTML = '';
+        entradas.forEach(entrada => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${entrada.numero}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${entrada.fecha}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${entrada.proveedor}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${entrada.totalItems}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        entrada.estado === 'Completado' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }">${entrada.estado}</span>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <button class="text-blue-600 hover:text-blue-900 mr-2 editar-entrada" data-id="${entrada.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-600 hover:text-red-900 eliminar-entrada" data-id="${entrada.id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.editar-entrada').forEach(btn => {
+            btn.addEventListener('click', (e) => mostrarModalEntrada(e.target.closest('button').dataset.id));
+        });
+        document.querySelectorAll('.eliminar-entrada').forEach(btn => {
+            btn.addEventListener('click', (e) => eliminarEntrada(e.target.closest('button').dataset.id));
+        });
+    }
+
+    function guardarEntrada() {
+        const formData = new FormData(entradaForm);
+        const entradaData = Object.fromEntries(formData);
+        const entradaId = entradaData.id;
+
+        // Aquí iría la lógica para enviar los datos al servidor
+        console.log('Datos de la entrada:', entradaData);
+
+        alert(entradaId ? 'Entrada actualizada correctamente' : 'Entrada creada correctamente');
+        entradaModal.classList.add('hidden');
+        cargarEntradas(); // Recargar la lista de entradas
+    }
+
+    function cargarDatosEntrada(id) {
+        // Simulación de carga de datos de una entrada específica
+        const entradaSimulada = {
+            id: id,
+            numero: 'ENT-00' + id,
+            fecha: '2023-05-0' + id,
+            proveedor: 'Proveedor ' + id,
+            items: [
+                { nombre: 'Item 1', cantidad: 10 },
+                { nombre: 'Item 2', cantidad: 5 },
+            ]
+        };
+
+        document.getElementById('entrada-id').value = entradaSimulada.id;
+        document.getElementById('entrada-numero').value = entradaSimulada.numero;
+        document.getElementByI
+
+d('entrada-fecha').value = entradaSimulada.fecha;
+        document.getElementById('entrada-proveedor').value = entradaSimulada.proveedor;
+
+        itemsContainer.innerHTML = '';
+        entradaSimulada.items.forEach(item => {
+            agregarItemCampo();
+            const itemInputs = itemsContainer.lastElementChild.querySelectorAll('input');
+            itemInputs[0].value = item.nombre;
+            itemInputs[1].value = item.cantidad;
+        });
+    }
+
+    function eliminarEntrada(id) {
+        if (confirm('¿Estás seguro de que quieres eliminar esta entrada?')) {
+            // Aquí iría la lógica para eliminar la entrada en el servidor
+            console.log('Eliminando entrada con ID:', id);
+            alert('Entrada eliminada correctamente');
+            cargarEntradas(); // Recargar la lista de entradas
+        }
+    }
+});
 </script>
 {% endblock %}
