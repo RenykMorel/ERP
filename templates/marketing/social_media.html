@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Integración de Redes Sociales - Marketing CalculAI{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .social-button {
+        transition: all 0.3s ease;
+    }
+    .social-button:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">Integración de Redes Sociales</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Gestionar Conexiones</h2>
+            <div class="space-y-4">
+                <button id="toggle-facebook" class="social-button w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 flex items-center justify-center">
+                    <i class="fab fa-facebook-f mr-2"></i> Conectar con Facebook
+                </button>
+                <button id="toggle-twitter" class="social-button w-full bg-blue-400 text-white px-4 py-3 rounded-lg hover:bg-blue-500 flex items-center justify-center">
+                    <i class="fab fa-twitter mr-2"></i> Conectar con Twitter
+                </button>
+                <button id="toggle-linkedin" class="social-button w-full bg-blue-800 text-white px-4 py-3 rounded-lg hover:bg-blue-900 flex items-center justify-center">
+                    <i class="fab fa-linkedin-in mr-2"></i> Conectar con LinkedIn
+                </button>
+                <button id="toggle-instagram" class="social-button w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-4 py-3 rounded-lg hover:from-purple-600 hover:via-pink-600 hover:to-red-600 flex items-center justify-center">
+                    <i class="fab fa-instagram mr-2"></i> Conectar con Instagram
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Compartir en Redes Sociales</h2>
+            <form id="social-share-form" class="space-y-4">
+                <div>
+                    <label for="social-message" class="block text-sm font-medium text-gray-700 mb-1">Mensaje</label>
+                    <textarea id="social-message" name="message" rows="4" placeholder="Escribe tu mensaje aquí..." class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar redes</label>
+                    <div class="flex space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="share-facebook" class="form-checkbox h-5 w-5 text-blue-600" disabled>
+                            <span class="ml-2 text-gray-700">Facebook</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="share-twitter" class="form-checkbox h-5 w-5 text-blue-400" disabled>
+                            <span class="ml-2 text-gray-700">Twitter</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="share-linkedin" class="form-checkbox h-5 w-5 text-blue-800" disabled>
+                            <span class="ml-2 text-gray-700">LinkedIn</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="share-instagram" class="form-checkbox h-5 w-5 text-pink-500" disabled>
+                            <span class="ml-2 text-gray-700">Instagram</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300 flex items-center justify-center">
+                        <i class="fas fa-share-alt mr-2"></i> Compartir
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-8 bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-700">Actividad Reciente</h2>
+        <ul id="social-activity-list" class="space-y-2">
+            <!-- La actividad reciente se cargará aquí dinámicamente -->
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleButtons = document.querySelectorAll('.social-button');
+    const socialShareForm = document.getElementById('social-share-form');
+    const activityList = document.getElementById('social-activity-list');
+    const connectedNetworks = new Set();
+
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const network = this.id.split('-')[1];
+            toggleSocialNetwork(network, this);
+        });
+    });
+
+    socialShareForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        shareToSocialNetworks();
+    });
+
+    function toggleSocialNetwork(network, button) {
+        const isConnecting = !connectedNetworks.has(network);
+        
+        Swal.fire({
+            title: isConnecting ? 'Conectando...' : 'Desconectando...',
+            text: `${isConnecting ? 'Conectando con' : 'Desconectando de'} ${network}`,
+            icon: 'info',
+            showConfirmButton: false,
+            allowOutsideClick: false
+        });
+
+        setTimeout(() => {
+            if (isConnecting) {
+                connectedNetworks.add(network);
+                updateButtonStatus(button, true, network);
+                Swal.fire('Conectado', `Conexión exitosa con ${network}`, 'success');
+            } else {
+                connectedNetworks.delete(network);
+                updateButtonStatus(button, false, network);
+                Swal.fire('Desconectado', `Desconexión exitosa de ${network}`, 'success');
+            }
+            updateShareOptions();
+        }, 1500);
+    }
+
+    function updateButtonStatus(button, isConnected, network) {
+        if (isConnected) {
+            button.classList.remove('bg-blue-600', 'bg-blue-400', 'bg-blue-800', 'bg-gradient-to-r', 'from-purple-500', 'via-pink-500', 'to-red-500');
+            button.classList.add('bg-green-500', 'hover:bg-green-600');
+            button.innerHTML = `<i class="fas fa-check mr-2"></i> Conectado a ${network.charAt(0).toUpperCase() + network.slice(1)}`;
+        } else {
+            button.classList.remove('bg-green-500', 'hover:bg-green-600');
+            switch(network) {
+                case 'facebook':
+                    button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    break;
+                case 'twitter':
+                    button.classList.add('bg-blue-400', 'hover:bg-blue-500');
+                    break;
+                case 'linkedin':
+                    button.classList.add('bg-blue-800', 'hover:bg-blue-900');
+                    break;
+                case 'instagram':
+                    button.classList.add('bg-gradient-to-r', 'from-purple-500', 'via-pink-500', 'to-red-500', 'hover:from-purple-600', 'hover:via-pink-600', 'hover:to-red-600');
+                    break;
+            }
+            button.innerHTML = `<i class="fab fa-${network} mr-2"></i> Conectar con ${network.charAt(0).toUpperCase() + network.slice(1)}`;
+        }
+    }
+
+    function updateShareOptions() {
+        const checkboxes = socialShareForm.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            const network = checkbox.name.split('-')[1];
+            checkbox.disabled = !connectedNetworks.has(network);
+            checkbox.checked = connectedNetworks.has(network);
+        });
+    }
+
+    function shareToSocialNetworks() {
+        const message = document.getElementById('social-message').value;
+        const networks = Array.from(document.querySelectorAll('input[type="checkbox"]:checked:not(:disabled)'))
+            .map(checkbox => checkbox.name.split('-')[1]);
+
+        if (message.trim() === '' || networks.length === 0) {
+            Swal.fire('Error', 'Por favor, escribe un mensaje y selecciona al menos una red social conectada', 'error');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Compartiendo...',
+            text: 'Enviando mensaje a las redes sociales seleccionadas',
+            icon: 'info',
+            showConfirmButton: false,
+            allowOutsideClick: false
+        });
+
+        setTimeout(() => {
+            Swal.fire({
+                title: 'Compartido',
+                text: 'Mensaje compartido exitosamente',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+            addActivityItem(message, networks);
+            socialShareForm.reset();
+            updateShareOptions();
+        }, 2000);
+    }
+
+    function addActivityItem(message, networks) {
+        const li = document.createElement('li');
+        li.className = 'bg-gray-100 p-3 rounded-lg';
+        li.innerHTML = `
+            <p class="font-semibold">Mensaje compartido:</p>
+            <p class="text-gray-600">${message}</p>
+            <p class="text-sm text-gray-500 mt-2">Redes: ${networks.join(', ')}</p>
+            <p class="text-xs text-gray-400 mt-1">${new Date().toLocaleString()}</p>
+        `;
+        activityList.prepend(li);
+    }
+
+    function loadRecentActivity() {
+        const activities = [
+            { message: "¡Nueva oferta disponible!", networks: ["Facebook", "Twitter"], date: "2024-10-06 14:30:00" },
+            { message: "Webinar gratuito mañana", networks: ["LinkedIn"], date: "2024-10-06 10:15:00" },
+            { message: "¡Feliz día del cliente!", networks: ["Facebook", "Instagram", "Twitter"], date: "2024-10-05 09:00:00" }
+        ];
+
+        activities.forEach(activity => {
+            const li = document.createElement('li');
+            li.className = 'bg-gray-100 p-3 rounded-lg';
+            li.innerHTML = `
+                <p class="font-semibold">Mensaje compartido:</p>
+                <p class="text-gray-600">${activity.message}</p>
+                <p class="text-sm text-gray-500 mt-2">Redes: ${activity.networks.join(', ')}</p>
+                <p class="text-xs text-gray-400 mt-1">${activity.date}</p>
+            `;
+            activityList.appendChild(li);
+        });
+    }
+
+    loadRecentActivity();
+    updateShareOptions();
+});
+</script>
+{% endblock %}

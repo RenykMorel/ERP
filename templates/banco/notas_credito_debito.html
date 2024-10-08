@@ -1,0 +1,531 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Notas de Crédito/Débito - CalculAI{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+    .select2-container .select2-selection--single {
+        height: 38px;
+        line-height: 38px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-6 text-gray-800">Gestión de Notas de Crédito/Débito</h1>
+    
+    <div class="mb-8 flex flex-wrap items-center justify-between">
+        <div>
+            <button id="crear-nota-credito-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105 mr-2">
+                <i class="fas fa-plus mr-2"></i>Crear Nota de Crédito
+            </button>
+            <button id="crear-nota-debito-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105">
+                <i class="fas fa-plus mr-2"></i>Crear Nota de Débito
+            </button>
+        </div>
+        <div class="flex items-center space-x-4 mt-4 sm:mt-0">
+            <select id="filtro-banco" class="px-3 py-2 border rounded-md w-48">
+                <option value="">Todos los bancos</option>
+                <!-- Opciones de bancos se cargarán dinámicamente -->
+            </select>
+            <input type="text" id="filtro-fecha" placeholder="Filtrar por fecha" class="px-3 py-2 border rounded-md w-48">
+            <button id="aplicar-filtros-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+                <i class="fas fa-filter mr-2"></i>Aplicar Filtros
+            </button>
+        </div>
+    </div>
+
+    <div class="mb-8 bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="p-6">
+            <h2 class="text-2xl font-semibold mb-4">Resumen de Notas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-blue-100 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-blue-800">Total Notas de Crédito</h3>
+                    <p class="text-3xl font-bold text-blue-600" id="total-notas-credito">0</p>
+                </div>
+                <div class="bg-green-100 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-green-800">Total Notas de Débito</h3>
+                    <p class="text-3xl font-bold text-green-600" id="total-notas-debito">0</p>
+                </div>
+                <div class="bg-purple-100 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-purple-800">Monto Total Créditos</h3>
+                    <p class="text-3xl font-bold text-purple-600" id="monto-total-creditos">$0.00</p>
+                </div>
+                <div class="bg-yellow-100 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-yellow-800">Monto Total Débitos</h3>
+                    <p class="text-3xl font-bold text-yellow-600" id="monto-total-debitos">$0.00</p>
+                </div>
+            </div>
+        </div>
+        <div class="p-6 border-t">
+            <canvas id="grafico-notas" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Notas de Crédito</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table id="tabla-notas-credito" class="min-w-full leading-normal">
+                <thead>
+                    <tr>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Banco
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Monto
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Fecha
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Descripción
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="notas-credito-body">
+                    <!-- Las notas de crédito se cargarán dinámicamente aquí -->
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+            <span class="text-sm text-gray-700">
+                Mostrando <span id="credito-items-showing">0</span> de <span id="credito-total-items">0</span> notas de crédito
+            </span>
+            <div class="flex space-x-2">
+                <button id="credito-prev-page" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Anterior</button>
+                <button id="credito-next-page" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Siguiente</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Notas de Débito</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table id="tabla-notas-debito" class="min-w-full leading-normal">
+                <thead>
+                    <tr>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Banco
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Monto
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Fecha
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Descripción
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="notas-debito-body">
+                    <!-- Las notas de débito se cargarán dinámicamente aquí -->
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+            <span class="text-sm text-gray-700">
+                Mostrando <span id="debito-items-showing">0</span> de <span id="debito-total-items">0</span> notas de débito
+            </span>
+            <div class="flex space-x-2">
+                <button id="debito-prev-page" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Anterior</button>
+                <button id="debito-next-page" class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Siguiente</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear/editar nota -->
+<div id="nota-modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Crear Nota</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <form id="nota-form">
+                <input type="hidden" id="nota-id">
+                <input type="hidden" id="nota-tipo">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="banco">
+                        Banco
+                    </label>
+                    <select id="banco" name="banco" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="monto">
+                        Monto
+                    </label>
+                    <input type="number" step="0.01" id="monto" name="monto" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
+                        Fecha
+                    </label>
+                    <input type="text" id="fecha" name="fecha" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="descripcion">
+                        Descripción
+                    </label>
+                    <textarea id="descripcion" name="descripcion" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" rows="3"></textarea>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out">
+                        Guardar
+                    </button>
+                    <button type="button" class="modal-close bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script  src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const crearNotaCreditoBtn = document.getElementById('crear-nota-credito-btn');
+    const crearNotaDebitoBtn = document.getElementById('crear-nota-debito-btn');
+    const notaModal = document.getElementById('nota-modal');
+    const notaForm = document.getElementById('nota-form');
+    const notasCreditoBody = document.getElementById('notas-credito-body');
+    const notasDebitoBody = document.getElementById('notas-debito-body');
+    const aplicarFiltrosBtn = document.getElementById('aplicar-filtros-btn');
+    const creditoPrevPageBtn = document.getElementById('credito-prev-page');
+    const creditoNextPageBtn = document.getElementById('credito-next-page');
+    const debitoPrevPageBtn = document.getElementById('debito-prev-page');
+    const debitoNextPageBtn = document.getElementById('debito-next-page');
+
+    let currentCreditoPage = 1;
+    let currentDebitoPage = 1;
+    const itemsPerPage = 10;
+    let notasChart;
+
+    crearNotaCreditoBtn.addEventListener('click', () => showModal('Crear Nota de Crédito', 'credito'));
+    crearNotaDebitoBtn.addEventListener('click', () => showModal('Crear Nota de Débito', 'debito'));
+    notaForm.addEventListener('submit', handleSubmit);
+    aplicarFiltrosBtn.addEventListener('click', loadNotas);
+    creditoPrevPageBtn.addEventListener('click', () => changePage('credito', -1));
+    creditoNextPageBtn.addEventListener('click', () => changePage('credito', 1));
+    debitoPrevPageBtn.addEventListener('click', () => changePage('debito', -1));
+    debitoNextPageBtn.addEventListener('click', () => changePage('debito', 1));
+
+    document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', hideModal);
+    });
+
+    flatpickr("#fecha", {
+        dateFormat: "Y-m-d",
+    });
+
+    flatpickr("#filtro-fecha", {
+        dateFormat: "Y-m-d",
+    });
+
+    $('#banco').select2({
+        placeholder: "Seleccione un banco",
+        allowClear: true
+    });
+
+    $('#filtro-banco').select2({
+        placeholder: "Todos los bancos",
+        allowClear: true
+    });
+
+    loadBancos();
+    loadNotas();
+    initChart();
+
+    function showModal(title, tipo) {
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('nota-tipo').value = tipo;
+        notaModal.classList.remove('opacity-0', 'pointer-events-none');
+        document.body.classList.add('modal-active');
+    }
+
+    function hideModal() {
+        notaModal.classList.add('opacity-0', 'pointer-events-none');
+        document.body.classList.remove('modal-active');
+        notaForm.reset();
+        $('#banco').val(null).trigger('change');
+    }
+
+    function loadBancos() {
+        fetch('/api/bancos')
+            .then(response => response.json())
+            .then(bancos => {
+                const bancoSelect = document.getElementById('banco');
+                const filtroBancoSelect = document.getElementById('filtro-banco');
+                const options = bancos.map(banco => 
+                    `<option value="${banco.id}">${banco.nombre}</option>`
+                ).join('');
+                bancoSelect.innerHTML = options;
+                filtroBancoSelect.innerHTML = `<option value="">Todos los bancos</option>${options}`;
+                $('#banco').trigger('change');
+                $('#filtro-banco').trigger('change');
+            })
+            .catch(error => console.error('Error cargando bancos:', error));
+    }
+
+    function loadNotas() {
+        const banco = document.getElementById('filtro-banco').value;
+        const fecha = document.getElementById('filtro-fecha').value;
+        
+        loadNotasTipo('credito', banco, fecha);
+        loadNotasTipo('debito', banco, fecha);
+    }
+
+    function loadNotasTipo(tipo, banco, fecha) {
+        const page = tipo === 'credito' ? currentCreditoPage : currentDebitoPage;
+        fetch(`/api/notas/${tipo}?banco=${banco}&fecha=${fecha}&page=${page}&per_page=${itemsPerPage}`)
+            .then(response => response.json())
+            .then(data => {
+                updateTable(tipo, data.notas);
+                updatePagination(tipo, data.total, data.page, data.per_page);
+                updateResumen(data.resumen);
+                updateChart(data.resumen);
+            })
+            .catch(error => console.error(`Error cargando notas de ${tipo}:`, error));
+    }
+
+    function updateTable(tipo, notas) {
+        const tbody = tipo === 'credito' ? notasCreditoBody : notasDebitoBody;
+        tbody.innerHTML = notas.map(nota => `
+            <tr>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${nota.banco_nombre}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">$${nota.monto.toFixed(2)}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${nota.fecha}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${nota.descripcion}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <button class="editar-nota text-blue-600 hover:text-blue-900 mr-2" data-id="${nota.id}" data-tipo="${tipo}">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button class="eliminar-nota text-red-600 hover:text-red-900" data-id="${nota.id}" data-tipo="${tipo}">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        tbody.querySelectorAll('.editar-nota').forEach(btn => {
+            btn.addEventListener('click', () => editarNota(btn.dataset.id, btn.dataset.tipo));
+        });
+
+        tbody.querySelectorAll('.eliminar-nota').forEach(btn => {
+            btn.addEventListener('click', () => eliminarNota(btn.dataset.id, btn.dataset.tipo));
+        });
+    }
+
+    function updatePagination(tipo, total, page, perPage) {
+        const totalPages = Math.ceil(total / perPage);
+        const itemsShowingElement = document.getElementById(`${tipo}-items-showing`);
+        const totalItemsElement = document.getElementById(`${tipo}-total-items`);
+        const prevPageBtn = document.getElementById(`${tipo}-prev-page`);
+        const nextPageBtn = document.getElementById(`${tipo}-next-page`);
+
+        itemsShowingElement.textContent = `${(page - 1) * perPage + 1}-${Math.min(page * perPage, total)}`;
+        totalItemsElement.textContent = total;
+        prevPageBtn.disabled = page === 1;
+        nextPageBtn.disabled = page === totalPages;
+    }
+
+    function changePage(tipo, direction) {
+        if (tipo === 'credito') {
+            currentCreditoPage += direction;
+        } else {
+            currentDebitoPage += direction;
+        }
+        loadNotas();
+    }
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(notaForm);
+        const notaData = Object.fromEntries(formData.entries());
+        const notaId = document.getElementById('nota-id').value;
+        const notaTipo = document.getElementById('nota-tipo').value;
+
+        const url = notaId 
+            ? `/api/notas/${notaTipo}/${notaId}` 
+            : `/api/notas/${notaTipo}`;
+        const method = notaId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(notaData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: notaId ? 'Nota actualizada correctamente' : 'Nota creada correctamente',
+            });
+            hideModal();
+            loadNotas();
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Hubo un error al procesar la nota',
+            });
+        });
+    }
+
+    function editarNota(id, tipo) {
+        fetch(`/api/notas/${tipo}/${id}`)
+            .then(response => response.json())
+            .then(nota => {
+                document.getElementById('nota-id').value = nota.id;
+                document.getElementById('nota-tipo').value = tipo;
+                document.getElementById('banco').value = nota.banco_id;
+                document.getElementById('monto').value = nota.monto;
+                document.getElementById('fecha').value = nota.fecha;
+                document.getElementById('descripcion').value = nota.descripcion;
+                $('#banco').trigger('change');
+                showModal(`Editar Nota de ${tipo === 'credito' ? 'Crédito' : 'Débito'}`, tipo);
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar la información de la nota',
+                });
+            });
+    }
+
+    function eliminarNota(id, tipo) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "No podrás revertir esta acción",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/api/notas/${tipo}/${id}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    Swal.fire(
+                        'Eliminado',
+                        'La nota ha sido eliminada.',
+                        'success'
+                    );
+                    loadNotas();
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message || 'Hubo un error al eliminar la nota',
+                    });
+                });
+            }
+        });
+    }
+
+    function updateResumen(resumen) {
+        document.getElementById('total-notas-credito').textContent = resumen.total_credito;
+        document.getElementById('total-notas-debito').textContent = resumen.total_debito;
+        document.getElementById('monto-total-creditos').textContent = `$${resumen.monto_total_credito.toFixed(2)}`;
+        document.getElementById('monto-total-debitos').textContent = `$${resumen.monto_total_debito.toFixed(2)}`;
+    }
+
+    function initChart() {
+        const ctx = document.getElementById('grafico-notas').getContext('2d');
+        notasChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Notas de Crédito',
+                        data: [],
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Notas de Débito',
+                        data: [],
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function updateChart(resumen) {
+        const labels = Object.keys(resumen.notas_por_mes);
+        const creditoData = Object.values(resumen.notas_por_mes).map(item => item.credito);
+        const debitoData = Object.values(resumen.notas_por_mes).map(item => item.debito);
+
+        notasChart.data.labels = labels;
+        notasChart.data.datasets[0].data = creditoData;
+        notasChart.data.datasets[1].data = debitoData;
+        notasChart.update();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+
+{% block title %}Automatizaciones - Marketing CalculAI{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">Automatizaciones de Marketing</h1>
+
+    <div class="grid md:grid-cols-2 gap-8">
+        <!-- Formulario de Creación de Automatización -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Crear Nueva Automatización</h2>
+            <form id="automation-form" class="space-y-4">
+                <div>
+                    <label for="automation-name" class="block text-sm font-medium text-gray-700">Nombre de la automatización</label>
+                    <input type="text" id="automation-name" name="automation_name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="trigger-select" class="block text-sm font-medium text-gray-700">Trigger</label>
+                    <select id="trigger-select" name="trigger" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Seleccione un trigger</option>
+                        <option value="new_subscriber">Nuevo suscriptor</option>
+                        <option value="specific_date">Fecha específica</option>
+                        <option value="campaign_opened">Campaña abierta</option>
+                        <option value="link_clicked">Enlace clickeado</option>
+                        <option value="purchase_made">Compra realizada</option>
+                    </select>
+                </div>
+
+                <div id="trigger-details" class="hidden">
+                    <!-- Campos adicionales para triggers específicos se mostrarán aquí dinámicamente -->
+                </div>
+
+                <div>
+                    <label for="action-select" class="block text-sm font-medium text-gray-700">Acciones</label>
+                    <div class="flex space-x-2">
+                        <select id="action-select" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">Seleccione una acción</option>
+                            <option value="send_email">Enviar email</option>
+                            <option value="add_tag">Añadir etiqueta</option>
+                            <option value="move_to_list">Mover a lista</option>
+                            <option value="update_field">Actualizar campo</option>
+                            <option value="notify_team">Notificar al equipo</option>
+                        </select>
+                        <button type="button" id="add-action" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Añadir
+                        </button>
+                    </div>
+                </div>
+
+                <div id="action-list" class="space-y-2">
+                    <!-- Aquí se mostrarán las acciones añadidas -->
+                </div>
+
+                <div>
+                    <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Guardar Automatización
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Automatizaciones Activas -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Automatizaciones Activas</h2>
+            <ul id="automation-list" class="divide-y divide-gray-200">
+                <!-- Las automatizaciones se cargarán aquí dinámicamente -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div id="confirmation-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Eliminar Automatización
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">
+                                ¿Está seguro de que desea eliminar esta automatización? Esta acción no se puede deshacer.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="confirm-delete" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Eliminar
+                </button>
+                <button type="button" id="cancel-delete" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const automationForm = document.getElementById('automation-form');
+    const triggerSelect = document.getElementById('trigger-select');
+    const triggerDetails = document.getElementById('trigger-details');
+    const addActionButton = document.getElementById('add-action');
+    const actionList = document.getElementById('action-list');
+    const automationList = document.getElementById('automation-list');
+    const modal = document.getElementById('confirmation-modal');
+    const confirmDelete = document.getElementById('confirm-delete');
+    const cancelDelete = document.getElementById('cancel-delete');
+    let automationToDelete = null;
+
+    triggerSelect.addEventListener('change', updateTriggerDetails);
+    addActionButton.addEventListener('click', addAction);
+    automationForm.addEventListener('submit', saveAutomation);
+
+    loadAutomations();
+
+    function updateTriggerDetails() {
+        const selectedTrigger = triggerSelect.value;
+        triggerDetails.innerHTML = '';
+        triggerDetails.classList.add('hidden');
+
+        if (selectedTrigger === 'specific_date') {
+            triggerDetails.innerHTML = `
+                <label for="trigger-date" class="block text-sm font-medium text-gray-700">Fecha de activación</label>
+                <input type="date" id="trigger-date" name="trigger_date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            `;
+            triggerDetails.classList.remove('hidden');
+        } else if (selectedTrigger === 'campaign_opened') {
+            // Aquí podrías cargar dinámicamente las campañas disponibles
+            triggerDetails.innerHTML = `
+                <label for="trigger-campaign" class="block text-sm font-medium text-gray-700">Seleccionar campaña</label>
+                <select id="trigger-campaign" name="trigger_campaign" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Seleccione una campaña</option>
+                    <!-- Opciones de campaña se cargarían dinámicamente -->
+                </select>
+            `;
+            triggerDetails.classList.remove('hidden');
+        }
+    }
+
+    function addAction() {
+        const actionSelect = document.getElementById('action-select');
+        const selectedAction = actionSelect.value;
+        const selectedActionText = actionSelect.options[actionSelect.selectedIndex].text;
+
+        if (!selectedAction) {
+            Swal.fire('Error', 'Por favor, seleccione una acción', 'error');
+            return;
+        }
+
+        const actionItem = document.createElement('div');
+        actionItem.className = 'flex justify-between items-center bg-gray-100 p-2 rounded';
+        actionItem.innerHTML = `
+            <span>${selectedActionText}</span>
+            <button type="button" class="remove-action text-red-500 hover:text-red-700">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        actionItem.querySelector('.remove-action').addEventListener('click', () => actionItem.remove());
+
+        actionList.appendChild(actionItem);
+        actionSelect.value = '';
+    }
+
+    function saveAutomation(event) {
+        event.preventDefault();
+        const automationName = document.getElementById('automation-name').value;
+        const trigger = triggerSelect.value;
+        const actions = Array.from(actionList.children).map(item => item.querySelector('span').textContent);
+
+        if (!automationName || !trigger || actions.length === 0) {
+            Swal.fire('Error', 'Por favor, complete todos los campos requeridos', 'error');
+            return;
+        }
+
+        const automationData = {
+            name: automationName,
+            trigger: trigger,
+            triggerDetails: getTriggerDetails(),
+            actions: actions
+        };
+
+        fetch('/api/automations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(automationData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            Swal.fire('Éxito', 'Automatización creada correctamente', 'success');
+            automationForm.reset();
+            actionList.innerHTML = '';
+            loadAutomations();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'No se pudo crear la automatización', 'error');
+        });
+    }
+
+    function getTriggerDetails() {
+        if (triggerSelect.value === 'specific_date') {
+            return { date: document.getElementById('trigger-date').value };
+        } else if (triggerSelect.value === 'campaign_opened') {
+            return { campaign: document.getElementById('trigger-campaign').value };
+        }
+        return {};
+    }
+
+    function loadAutomations() {
+        fetch('/api/automations')
+            .then(response => response.json())
+            .then(automations => {
+                automationList.innerHTML = '';
+                automations.forEach(automation => {
+                    const automationItem = document.createElement('li');
+                    automationItem.className = 'py-4';
+                    automationItem.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-semibold">${automation.name}</h3>
+                                <p class="text-sm text-gray-500">Trigger: ${automation.trigger}</p>
+                                <p class="text-sm text-gray-500">Acciones: ${automation.actions.join(', ')}</p>
+                            </div>
+                            <div>
+                                <button class="edit-automation text-blue-500 hover:text-blue-700 mr-2" data-id="${automation.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-automation text-red-500 hover:text-red-700" data-id="${automation.id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                    `;
+                    automationList.appendChild(automationItem);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudieron cargar las automatizaciones', 'error');
+            });
+    }
+
+    automationList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('edit-automation') || e.target.parentElement.classList.contains('edit-automation')) {
+            const id = e.target.dataset.id || e.target.parentElement.dataset.id;
+            editAutomation(id);
+        } else if (e.target.classList.contains('delete-automation') || e.target.parentElement.classList.contains('delete-automation')) {
+            const id = e.target.dataset.id || e.target.parentElement.dataset.id;
+            showDeleteConfirmation(id);
+        }
+    });
+
+    function editAutomation(id) {
+        fetch(`/api/automations/${id}`)
+            .then(response => response.json())
+            .then(automation => {
+                document.getElementById('automation-name').value = automation.name;
+                triggerSelect.value = automation.trigger;
+                updateTriggerDetails();
+                if (automation.triggerDetails) {
+                    setTriggerDetails(automation.triggerDetails);
+                }
+                actionList.innerHTML = '';
+                automation.actions.forEach(action => {
+                    const actionItem = document.createElement('div');
+                    actionItem.className = 'flex justify-between items-center bg-gray-100 p-2 rounded';
+                    actionItem.innerHTML = `
+                        <span>${action}</span>
+                        <button type="button" class="remove-action text-red-500 hover:text-red-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    actionItem.querySelector('.remove-action').addEventListener('click', () => actionItem.remove());
+                    actionList.appendChild(actionItem);
+                });
+                automationForm.dataset.editId = id;
+                document.querySelector('button[type="submit"]').textContent = 'Actualizar Automatización';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudo cargar la automatización para editar', 'error');
+            });
+    }
+
+    function setTriggerDetails(details) {
+        if (triggerSelect.value === 'specific_date' && details.date) {
+            document.getElementById('trigger-date').value = details.date;
+        } else if (triggerSelect.value === 'campaign_opened' && details.campaign) {
+            document.getElementById('trigger-campaign').value = details.campaign;
+        }
+    }
+
+    function showDeleteConfirmation(id) {
+        automationToDelete = id;
+        modal.classList.remove('hidden');
+    }
+
+    function deleteAutomation() {
+        if (!automationToDelete) return;
+
+        fetch(`/api/automations/${automationToDelete}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                Swal.fire('Éxito', 'Automatización eliminada correctamente', 'success');
+                loadAutomations();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudo eliminar la automatización', 'error');
+            })
+            .finally(() => {
+                modal.classList.add('hidden');
+                automationToDelete = null;
+            });
+    }
+
+    confirmDelete.addEventListener('click', deleteAutomation);
+    cancelDelete.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        automationToDelete = null;
+    });
+
+    // Función para cargar las campañas disponibles (ejemplo)
+    function loadCampaigns() {
+        fetch('/api/campaigns')
+            .then(response => response.json())
+            .then(campaigns => {
+                const campaignSelect = document.getElementById('trigger-campaign');
+                if (campaignSelect) {
+                    campaignSelect.innerHTML = '<option value="">Seleccione una campaña</option>';
+                    campaigns.forEach(campaign => {
+                        const option = document.createElement('option');
+                        option.value = campaign.id;
+                        option.textContent = campaign.name;
+                        campaignSelect.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading campaigns:', error));
+    }
+
+    // Llama a loadCampaigns cuando sea necesario, por ejemplo, cuando se selecciona el trigger 'campaign_opened'
+    triggerSelect.addEventListener('change', function() {
+        if (this.value === 'campaign_opened') {
+            loadCampaigns();
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -25,6 +25,33 @@ def contacts():
 def campaigns():
     return render_template('marketing/campaigns.html')
 
+@marketing.route('/templates')
+@login_required
+def templates():
+    return render_template('marketing/templates.html')
+
+@marketing.route('/reports')
+@login_required
+def reports():
+    return render_template('marketing/reports.html')
+
+@marketing.route('/segmentation')
+@login_required
+def segmentation():
+    return render_template('marketing/segmentation.html')
+
+@marketing.route('/automation')
+@marketing.route('/automations')
+@login_required
+def automation():
+    return render_template('marketing/automation.html')
+
+@marketing.route('/social_media')
+@marketing.route('/social-media')
+@login_required
+def social_media():
+    return render_template('marketing/social_media.html')
+
 @marketing.route('/api/contacts', methods=['GET', 'POST'])
 @login_required
 def manage_contacts():
@@ -97,10 +124,8 @@ def send_campaign(campaign_id):
             db.session.commit()
             return jsonify({'message': 'Campaign sent successfully'}), 200
         else:
-            app.logger.error(f"Failed to send campaign. Mailjet response: {result.json()}")
             return jsonify({'error': 'Failed to send campaign', 'details': result.json()}), 500
     except Exception as e:
-        app.logger.error(f"Exception occurred while sending campaign: {str(e)}")
         return jsonify({'error': 'An unexpected error occurred while sending the campaign'}), 500
 
 @marketing.route('/api/campaign_metrics/<int:campaign_id>', methods=['GET'])
@@ -116,3 +141,19 @@ def get_campaign_metrics(campaign_id):
         })
     else:
         return jsonify({'error': 'Metrics not found'}), 404
+
+@marketing.route('/api/submodulos/Marketing')
+@login_required
+def get_marketing_submodulos():
+    submodulos = [
+        "Gestión de Contactos",
+        "Campañas de Email",
+        "Plantillas de Email",
+        "Reportes de Campañas",
+        "Segmentación de Contactos",
+        "Automatizaciones",
+        "Integración de Redes Sociales"
+    ]
+    return jsonify(submodulos)
+
+# Aquí puedes agregar más rutas API para manejar plantillas, reportes, segmentación, etc.

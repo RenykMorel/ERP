@@ -20,7 +20,7 @@ import threading
 import queue
 from flask_migrate import Migrate
 sys.path.append(os.path.join(os.path.dirname(__file__), 'banco'))
-from banco_models import Banco
+from banco.banco_models import NuevoBanco as Banco
 from models import (Usuario, Empresa, Rol, Permiso, Modulo, UsuarioModulo, 
                     Notificacion, Transaccion, Cuenta, AdminPlanSuscripcion, 
                     AdminFactura, AdminConfiguracionSeguridad, AdminReporte)
@@ -39,6 +39,7 @@ from sqlalchemy.orm import joinedload
 from typing import Any, Optional
 from typing import Tuple, Dict, Any
 from flask import send_from_directory
+from models import Usuario
 
 # Importar el nuevo módulo de marketing
 from marketing.routes import marketing
@@ -301,7 +302,7 @@ def create_app():
     app.register_blueprint(banco_bp, url_prefix='/api')
 
     with app.app_context():
-        from banco_models import Banco
+        from banco.banco_models import NuevoBanco as Banco
         from models import Usuario, Transaccion, Notificacion, Empresa, Rol, Permiso, Modulo, UsuarioModulo, Cuenta
         from marketing.models import Contact, Campaign, CampaignMetrics
         db.create_all()
@@ -419,10 +420,7 @@ def create_app():
     def registro_exitoso():
         return render_template('registro_exitoso.html')
 
-    @app.route("/Bancos")
-    @login_required
-    def redirect_to_bancos():
-        return redirect(url_for('banco.sub_bancos'))
+    
 
     @app.route("/facturacion/facturas")
     @login_required
@@ -434,10 +432,6 @@ def create_app():
     def pre_facturas():
         return render_template('facturacion/pre_facturas.html')
 
-    @app.route("/facturacion/notas-de-credito-debito")
-    @login_required
-    def notas_credito_debito():
-        return render_template('facturacion/notas_de_credito_debito.html')
 
     @app.route("/facturacion/reporte-de-ventas")
     @login_required
@@ -890,6 +884,84 @@ def create_app():
             flash("Acceso no autorizado", "error")
             return redirect(url_for("index"))
         return render_template("admin_panel.html")
+
+
+    
+
+    @app.route("/Bancos")
+    @login_required
+    def redirect_to_bancos():
+        return redirect(url_for('banco.sub_bancos'))
+    
+    @app.route("/depositos")
+    @login_required
+    def redirect_to_depositos():
+        return render_template('banco/depositos.html')
+    
+    @app.route("/notas-credito-debito")
+    @login_required
+    def notas_credito_debito():
+        return render_template('banco/notas_credito_debito.html')
+
+    @app.route("/transferencias-bancarias")
+    @login_required
+    def transferencias_bancarias():
+        return render_template('banco/transferencias.html')
+
+    @app.route("/conciliacion-bancaria")
+    @login_required
+    def conciliacion_bancaria():
+        return render_template('banco/conciliacion.html')
+
+    @app.route("/gestion-bancos")
+    @login_required
+    def gestion_bancos():
+        return render_template('banco/gestion_bancos.html')
+
+    @app.route("/divisas")
+    @login_required
+    def divisas():
+        return render_template('banco/divisa.html')
+
+    @app.route('/api/generar-contenido-email', methods=['POST'])
+    @login_required
+    def generar_contenido_email():
+        data = request.json
+        prompt = data.get('prompt')
+        
+        if not prompt:
+            return jsonify({"error": "Se requiere un prompt"}), 400 
+        
+        try:
+            # Construir el prompt para la IA
+            ai_prompt = f"""Actúa como un experto en diseño de plantillas de email y artes para campañas de marketing. 
+            Crea una plantilla de email HTML profesional y atractiva basada en la siguiente descripción: {prompt}. 
+            La plantilla debe ser responsive y utilizar estilos en línea para compatibilidad con clientes de email.
+            Incluye al menos una imagen relevante en la plantilla. Para las imágenes, utiliza placeholders de 
+            https://placehold.co con dimensiones y texto descriptivo apropiados. 
+            Asegúrate de que el diseño sea moderno, atractivo y optimizado para conversiones.
+            IMPORTANTE: Devuelve ÚNICAMENTE el código HTML de la plantilla, sin ningún texto explicativo adicional."""
+            
+            # Llamar a la función del asistente para generar el contenido
+            contenido_generado = app.asistente.responder(ai_prompt, current_user.id)
+            
+            # Extraer el HTML generado del contenido
+            html_content = extraer_html(contenido_generado)
+            
+            return jsonify({"contenido": html_content})
+        except Exception as e:
+            logger.error(f"Error al generar contenido de email con IA: {str(e)}")
+            return jsonify({"error": "Ocurrió un error al generar el contenido"}), 500
+
+    def extraer_html(contenido):
+        # Buscar el contenido HTML entre las etiquetas <html> y </html>
+        import re
+        match = re.search(r'<html>[\s\S]*?</html>', contenido)
+        if match:
+            return match.group(0)
+        else:
+            # Si no se encuentra la etiqueta HTML, devolver todo el contenido
+            return contenido
 
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):

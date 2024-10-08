@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Plantillas de Email - Marketing CalculAI{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/dracula.min.css">
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 bg-gray-100 min-h-screen">
+    <h1 class="text-4xl font-bold mb-8 text-center text-indigo-800">Gestión de Plantillas de Email</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Lista de plantillas existentes -->
+        <div class="col-span-1 bg-white shadow-xl rounded-lg overflow-hidden">
+            <div class="bg-indigo-600 text-white py-4 px-6">
+                <h2 class="text-xl font-semibold">Plantillas Existentes</h2>
+            </div>
+            <div id="template-list-container" class="max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar p-4">
+                <ul id="template-list" class="space-y-2">
+                    <!-- Las plantillas se cargarán aquí dinámicamente -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- Editor de plantillas -->
+        <div class="col-span-2 bg-white shadow-xl rounded-lg overflow-hidden">
+            <div class="bg-indigo-600 text-white py-4 px-6">
+                <h2 class="text-xl font-semibold">Editor de Plantillas</h2>
+            </div>
+            <form id="template-form" class="p-6 space-y-6">
+                <div>
+                    <label for="template-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre de la plantilla</label>
+                    <input type="text" id="template-name" name="template-name" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="ai-prompt" class="block text-sm font-medium text-gray-700 mb-1">Descripción para IA (opcional)</label>
+                    <textarea id="ai-prompt" name="ai-prompt" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="Describe el contenido y diseño que deseas para tu plantilla de email..."></textarea>
+                </div>
+                <div>
+                    <button type="button" id="generate-ai-content" class="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                        <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Generar Contenido con IA
+                    </button>
+                </div>
+                <div>
+                    <label for="template-content" class="block text-sm font-medium text-gray-700 mb-1">Contenido HTML de la plantilla</label>
+                    <textarea id="template-content" name="template-content" rows="12" required
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="preview-button" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                        <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        Vista Previa
+                    </button>
+                    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                        <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                        </svg>
+                        Guardar Plantilla
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de vista previa -->
+    <div id="preview-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 rounded-lg shadow-2xl overflow-hidden">
+            <div class="bg-indigo-600 text-white py-4 px-6 flex justify-between items-center">
+                <h3 class="text-xl font-semibold">Vista Previa de la Plantilla</h3>
+                <button id="close-preview" class="text-white hover:text-gray-200 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar">
+                <div id="preview-content" class="bg-gray-100 p-4 rounded"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/htmlmixed/htmlmixed.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const templateList = document.getElementById('template-list');
+        const templateForm = document.getElementById('template-form');
+        const templateName = document.getElementById('template-name');
+        const aiPrompt = document.getElementById('ai-prompt');
+        const generateAiContent = document.getElementById('generate-ai-content');
+        const previewButton = document.getElementById('preview-button');
+        const previewModal = document.getElementById('preview-modal');
+        const previewContent = document.getElementById('preview-content');
+        const closePreview = document.getElementById('close-preview');
+
+        // Inicializar CodeMirror
+        const editor = CodeMirror.fromTextArea(document.getElementById('template-content'), {
+            lineNumbers: true,
+            mode: 'htmlmixed',
+            theme: 'dracula',
+            lineWrapping: true,
+        });
+
+        // Cargar plantillas existentes
+        function loadTemplates() {
+            fetch('/api/email-templates')
+                .then(response => response.json())
+                .then(templates => {
+                    templateList.innerHTML = '';
+                    templates.forEach(template => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <div class="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                <span class="text-indigo-600 font-medium">${template.name}</span>
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </div>
+                        `;
+                        li.onclick = () => loadTemplate(template.id);
+                        templateList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Error al cargar las plantillas:', error));
+        }
+
+        // Cargar una plantilla específica
+        function loadTemplate(id) {
+            fetch(`/api/email-templates/${id}`)
+                .then(response => response.json())
+                .then(template => {
+                    templateName.value = template.name;
+                    editor.setValue(template.content);
+                })
+                .catch(error => console.error('Error al cargar la plantilla:', error));
+        }
+
+        // Guardar o actualizar una plantilla
+        templateForm.onsubmit = function(e) {
+            e.preventDefault();
+            const templateData = {name: templateName.value,
+                content: editor.getValue()
+            };
+
+            fetch('/api/email-templates', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(templateData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                showNotification('Plantilla guardada con éxito', 'success');
+                loadTemplates();
+                templateForm.reset();
+                editor.setValue('');
+            })
+            .catch(error => {
+                console.error('Error al guardar la plantilla:', error);
+                showNotification('Error al guardar la plantilla', 'error');
+            });
+        };
+
+        // Generar contenido con IA
+        generateAiContent.onclick = function() {
+            const prompt = aiPrompt.value;
+            if (!prompt) {
+                showNotification('Por favor, proporciona una descripción para la IA', 'warning');
+                return;
+            }
+
+            generateAiContent.disabled = true;
+            generateAiContent.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generando...';
+
+            fetch('/api/generar-contenido-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt: prompt }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.contenido) {
+                    editor.setValue(data.contenido);
+                    showNotification('Contenido generado con éxito', 'success');
+                } else {
+                    showNotification('Error al generar contenido: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error al generar contenido:', error);
+                showNotification('Error al generar contenido', 'error');
+            })
+            .finally(() => {
+                generateAiContent.disabled = false;
+                generateAiContent.innerHTML = '<svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>Generar Contenido con IA';
+            });
+        };
+
+        // Funcionalidad de vista previa
+        previewButton.onclick = function() {
+            const content = editor.getValue();
+            previewContent.innerHTML = content;
+            previewModal.classList.remove('hidden');
+        };
+
+        // Funcionalidad de vista previa
+        previewButton.onclick = function() {
+            const content = editor.getValue();
+            // Reemplazar los placeholders de imagen con imágenes reales
+            const updatedContent = content.replace(/https:\/\/placehold\.co\/(\d+)x(\d+)\?text=([^"]+)/g, 
+                (match, width, height, text) => {
+                    return `https://placehold.co/${width}x${height}?text=${encodeURIComponent(text)}`;
+                }
+            );
+            previewContent.innerHTML = updatedContent;
+            previewModal.classList.remove('hidden');
+        };
+
+        closePreview.onclick = function() {
+            previewModal.classList.add('hidden');
+        };
+
+        // Cerrar modal al hacer clic fuera de él
+        window.onclick = function(event) {
+            if (event.target == previewModal) {
+                previewModal.classList.add('hidden');
+            }
+        };
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type) {
+            const notificationColors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500'
+            };
+
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 ${notificationColors[type]} text-white px-6 py-4 rounded-md shadow-lg transition-opacity duration-500 ease-in-out`;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
+
+        // Función para confirmar antes de salir si hay cambios no guardados
+        window.onbeforeunload = function() {
+            if (editor.getValue() !== '') {
+                return "Tienes cambios no guardados. ¿Estás seguro de que quieres salir?";
+            }
+        };
+
+        // Cargar plantillas al iniciar
+        loadTemplates();
+
+        // Ajustar altura del editor
+        function adjustEditorHeight() {
+            const windowHeight = window.innerHeight;
+            const editorTop = editor.getWrapperElement().getBoundingClientRect().top;
+            const newHeight = windowHeight - editorTop - 100; // 100px de margen
+            editor.setSize(null, newHeight + "px");
+        }
+
+        window.addEventListener('resize', adjustEditorHeight);
+        adjustEditorHeight();
+    });
+</script>
+{% endblock %}

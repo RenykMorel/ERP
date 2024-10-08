@@ -233,8 +233,33 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Facturación no reconocido');
         }
-    } else if (moduleName === 'Banco' && submoduleName === 'Bancos') {
-        window.location.href = '/Bancos';
+    } else if (moduleName === 'Banco') {
+        switch (submoduleName) {
+            case 'Bancos':
+                window.location.href = '/Bancos';
+                break;
+            case 'Depósitos':
+                window.location.href = '/depositos';
+                break;
+            case 'Notas de Crédito/Débito':
+                window.location.href = '/notas-credito-debito';
+                break;
+            case 'Transferencias Bancarias':
+                window.location.href = '/transferencias-bancarias';
+                break;
+            case 'Conciliación Bancaria':
+                window.location.href = '/conciliacion-bancaria';
+                break;
+            case 'Gestión de Bancos':
+                window.location.href = '/gestion-bancos';
+                break;
+            case 'Divisas':
+                window.location.href = '/divisas';
+                break;
+            default:
+                console.log('Submódulo de Banco no reconocido');
+        }
+   
     } else if (moduleName === 'Inventario') {
         switch (submoduleName) {
             case 'Items':
@@ -432,6 +457,145 @@ function loadSubmodules(moduleName, submoduleContainer) {
             })
             .catch(error => console.error('Error loading submodules:', error));
     }
+}
+
+function loadSubmoduleContent(moduleName, submoduleName) {
+    // ... código existente ...
+    if (moduleName === 'Banco') {
+        switch (submoduleName) {
+            case 'Bancos':
+                url = '/Bancos';
+                break;
+            case 'Depósitos':
+                url = '/api/depositos';
+                break;
+            case 'Notas de Crédito/Débito':
+                url = '/api/notas-credito-debito';
+                break;
+            case 'Transferencias Bancarias':
+                url = '/api/transferencias';
+                break;
+            case 'Conciliación Bancaria':
+                url = '/api/conciliacion';
+                break;
+            case 'Gestión de Bancos':
+                url = '/api/gestion-bancos';
+                break;
+            case 'Divisas':
+                url = '/api/divisas';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
+    }
+    
+}
+
+function crearNuevoBanco(datos) {
+    fetch('/api/crear-banco', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(datos)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Banco creado:', data);
+        // Actualizar la UI según sea necesario
+    })
+    .catch(error => console.error('Error al crear banco:', error));
+}
+
+function actualizarBanco(id, datos) {
+    fetch(`/api/actualizar-banco/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(datos)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Banco actualizado:', data);
+        // Actualizar la UI según sea necesario
+    })
+    .catch(error => console.error('Error al actualizar banco:', error));
+}
+
+function eliminarBanco(id) {
+    fetch(`/api/eliminar-banco/${id}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Banco eliminado:', data);
+        // Actualizar la UI según sea necesario
+    })
+    .catch(error => console.error('Error al eliminar banco:', error));
+}
+
+function buscarBancos(criterios) {
+    const queryString = new URLSearchParams(criterios).toString();
+    fetch(`/api/buscar-bancos?${queryString}`)
+    .then(response => response.json())
+    .then(data => {
+        console.log('Bancos encontrados:', data);
+        // Actualizar la UI con los resultados de la búsqueda
+    })
+    .catch(error => console.error('Error al buscar bancos:', error));
+}
+
+function loadSubmoduleContent(moduleName, submoduleName) {
+    console.log(`Loading content for ${moduleName} - ${submoduleName}`);
+    
+    let url;
+    if (moduleName === 'Banco') {
+        url = `/api/submodule-content/Banco/${submoduleName}`;
+    } else {
+        // Mantén el manejo existente para otros módulos
+        url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+    }
+
+    console.log('Fetching from URL:', url);
+
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
+        
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
+            });
+        }
+        return response.text();
+    })
+    .then(htmlContent => {
+        console.log("Contenido recibido (primeros 100 caracteres):", htmlContent.substring(0, 100));
+        
+        let contentContainer = document.getElementById('contenido-principal');
+        if (!contentContainer) {
+            console.log('Creando nuevo contenedor de contenido');
+            contentContainer = document.createElement('div');
+            contentContainer.id = 'contenido-principal';
+            document.body.appendChild(contentContainer);
+        }
+        
+        contentContainer.innerHTML = htmlContent;
+    })
+    .catch(error => {
+        console.error('Error loading submodule content:', error);
+        // Manejo de errores existente...
+    });
 }
 
 // Carga el contenido de un submódulo específico

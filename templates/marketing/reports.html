@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes de Campañas - Marketing CalculAI{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">Reportes de Campañas</h1>
+
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">Seleccionar Campaña</h2>
+        <div class="relative">
+            <select id="campaign-select" class="w-full p-2 mb-4 border rounded appearance-none bg-white">
+                <option value="">Seleccione una campaña</option>
+                <!-- Las opciones se cargarán dinámicamente -->
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+        </div>
+
+        <div id="loading-indicator" class="hidden text-center py-4">
+            <i class="fas fa-spinner fa-spin fa-2x text-blue-500"></i>
+            <p class="mt-2 text-gray-600">Cargando datos de la campaña...</p>
+        </div>
+
+        <div id="campaign-metrics" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-blue-100 p-4 rounded-lg shadow">
+                <h3 class="font-semibold text-blue-800">Enviados</h3>
+                <p id="sent-count" class="text-2xl text-blue-600">0</p>
+            </div>
+            <div class="bg-green-100 p-4 rounded-lg shadow">
+                <h3 class="font-semibold text-green-800">Abiertos</h3>
+                <p id="open-count" class="text-2xl text-green-600">0</p>
+            </div>
+            <div class="bg-yellow-100 p-4 rounded-lg shadow">
+                <h3 class="font-semibold text-yellow-800">Clics</h3>
+                <p id="click-count" class="text-2xl text-yellow-600">0</p>
+            </div>
+            <div class="bg-red-100 p-4 rounded-lg shadow">
+                <h3 class="font-semibold text-red-800">Rebotes</h3>
+                <p id="bounce-count" class="text-2xl text-red-600">0</p>
+            </div>
+        </div>
+
+        <div id="chart-container" class="hidden mt-8">
+            <canvas id="performance-chart"></canvas>
+        </div>
+
+        <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mt-4" role="alert">
+            <p class="font-bold">Error</p>
+            <p>No se pudieron cargar los datos de la campaña. Por favor, intente nuevamente más tarde.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const campaignSelect = document.getElementById('campaign-select');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const campaignMetrics = document.getElementById('campaign-metrics');
+    const chartContainer = document.getElementById('chart-container');
+    const errorMessage = document.getElementById('error-message');
+    let performanceChart;
+
+    function loadCampaigns() {
+        fetch('/api/campaigns')
+            .then(response => response.json())
+            .then(campaigns => {
+                campaigns.forEach(campaign => {
+                    const option = document.createElement('option');
+                    option.value = campaign.id;
+                    option.textContent = campaign.name;
+                    campaignSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading campaigns:', error);
+                showError('No se pudieron cargar las campañas.');
+            });
+    }
+
+    function loadCampaignData(campaignId) {
+        showLoading();
+        fetch(`/api/campaign_metrics/${campaignId}`)
+            .then(response => response.json())
+            .then(data => {
+                updateMetrics(data);
+                updateChart(data);
+                hideLoading();
+                showResults();
+            })
+            .catch(error => {
+                console.error('Error loading campaign data:', error);
+                hideLoading();
+                showError('No se pudieron cargar los datos de la campaña.');
+            });
+    }
+
+    function updateMetrics(data) {
+        document.getElementById('sent-count').textContent = data.sent || 0;
+        document.getElementById('open-count').textContent = data.opens || 0;
+        document.getElementById('click-count').textContent = data.clicks || 0;
+        document.getElementById('bounce-count').textContent = data.bounces || 0;
+    }
+
+    function updateChart(data) {
+        const ctx = document.getElementById('performance-chart').getContext('2d');
+        if (performanceChart) {
+            performanceChart.destroy();
+        }
+        performanceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Enviados', 'Abiertos', 'Clics', 'Rebotes'],
+                datasets: [{
+                    label: 'Métricas de la Campaña',
+                    data: [data.sent || 0, data.opens || 0, data.clicks || 0, data.bounces || 0],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(255, 99, 132, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function showLoading() {
+        loadingIndicator.classList.remove('hidden');
+        campaignMetrics.classList.add('hidden');
+        chartContainer.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+    }
+
+    function hideLoading() {
+        loadingIndicator.classList.add('hidden');
+    }
+
+    function showResults() {
+        campaignMetrics.classList.remove('hidden');
+        chartContainer.classList.remove('hidden');
+    }
+
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.classList.remove('hidden');
+    }
+
+    campaignSelect.addEventListener('change', function() {
+        const campaignId = this.value;
+        if (campaignId) {
+            loadCampaignData(campaignId);
+        } else {
+            campaignMetrics.classList.add('hidden');
+            chartContainer.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+        }
+    });
+
+    loadCampaigns();
+});
+</script>
+{% endblock %}
