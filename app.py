@@ -921,7 +921,7 @@ def create_app():
     @app.route("/divisas")
     @login_required
     def divisas():
-        return render_template('banco/divisa.html')
+        return render_template('banco/divisas.html')
 
     @app.route('/api/generar-contenido-email', methods=['POST'])
     @login_required

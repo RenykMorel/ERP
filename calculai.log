@@ -32,3 +32,8 @@
 2024-10-08 12:43:07,571 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:324]
 2024-10-08 12:50:22,522 ERROR: Unhandled exception: Entity namespace for "campaign" has no property "user_id" [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:324]
 2024-10-08 13:12:31,670 ERROR: Unhandled exception: banco/gestion_bancos.html [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:324]
+2024-10-08 14:16:01,826 ERROR: Unhandled exception: banco/divisa.html [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:324]
+2024-10-08 14:17:16,759 ERROR: Unhandled exception: banco/divisa.html [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:324]
+2024-10-08 14:18:42,887 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:265]
+2024-10-08 14:59:17,430 ERROR: Unhandled exception: banco/gestion_bancos.html [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:324]
+2024-10-08 14:59:24,260 ERROR: Unhandled exception: banco/gestion_bancos.html [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:324]
