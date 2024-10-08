@@ -37,3 +37,4 @@
 2024-10-08 14:18:42,887 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:265]
 2024-10-08 14:59:17,430 ERROR: Unhandled exception: banco/gestion_bancos.html [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:324]
 2024-10-08 14:59:24,260 ERROR: Unhandled exception: banco/gestion_bancos.html [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:324]
+2024-10-08 18:04:11,386 ERROR: Unhandled exception: banco/gestion_bancos.html [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:324]

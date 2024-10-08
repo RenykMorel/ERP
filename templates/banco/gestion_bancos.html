@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Bancos - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="bancos-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Bancos</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="nombre-banco" placeholder="Nombre del banco">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="codigo-banco" placeholder="Código del banco">
+            </div>
+            <div>
+                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" id="estatus-banco">
+                    <option value="">Todos los estados</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-nuevo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Banco
+            </button>
+        </div>
+    </div>
+    
+    <div id="bancos-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="bancos-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="bancos-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Los bancos se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para crear/editar banco -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Crear Nuevo Banco</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <form id="banco-form" class="mt-4">
+                <input type="hidden" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
+                        Nombre del Banco
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="nombre" type="text" placeholder="Nombre del banco" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo">
+                        Código del Banco
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="codigo" type="text" placeholder="Código del banco" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
+                        Estatus
+                    </label>
+                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Guardar
+                    </button>
+                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeBancos();
+        buscarBancos(); // Cargar bancos inicialmente
+    });
+
+    function initializeBancos() {
+        const buscarBtn = document.getElementById('buscar-btn');
+        const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
+        const bancoForm = document.getElementById('banco-form');
+        const modal = document.querySelector('.modal');
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const modalCloseButtons = document.querySelectorAll('.modal-close');
+    
+        buscarBtn.addEventListener('click', buscarBancos);
+        crearNuevoBtn.addEventListener('click', mostrarFormularioCrearBanco);
+        bancoForm.addEventListener('submit', guardarBanco);
+    
+        modalOverlay.addEventListener('click', toggleModal);
+        modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+    
+        document.getElementById('bancos-tbody').addEventListener('click', manejarAccionesBanco);
+    }
+
+    function buscarBancos() {
+        const nombreBanco = document.getElementById('nombre-banco').value;
+        const codigoBanco = document.getElementById('codigo-banco').value;
+        const estatusBanco = document.getElementById('estatus-banco').value;
+
+        // Aquí deberías hacer una llamada AJAX a tu backend para obtener los bancos filtrados
+        // Por ahora, simularemos algunos datos
+        const bancos = [
+            { id: 1, nombre: 'Banco A', codigo: 'BA001', estatus: 'activo' },
+            { id: 2, nombre: 'Banco B', codigo: 'BB002', estatus: 'inactivo' },
+            { id: 3, nombre: 'Banco C', codigo: 'BC003', estatus: 'activo' },
+        ];
+
+        mostrarBancos(bancos);
+    }
+
+    function mostrarBancos(bancos) {
+        const tbody = document.getElementById('bancos-tbody');
+        tbody.innerHTML = '';
+
+        bancos.forEach(banco => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">${banco.nombre}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${banco.codigo}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${banco.estatus}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <button class="text-blue-600 hover:text-blue-900 mr-2 editar-banco" data-id="${banco.id}">Editar</button>
+                    <button class="text-red-600 hover:text-red-900 eliminar-banco" data-id="${banco.id}">Eliminar</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function mostrarFormularioCrearBanco() {
+        document.getElementById('modal-title').textContent = 'Crear Nuevo Banco';
+        document.getElementById('banco-form').reset();
+        toggleModal();
+    }
+
+    function guardarBanco(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        // Aquí deberías hacer una llamada AJAX a tu backend para guardar el banco
+        // Por ahora, simularemos el guardado
+        const banco = {
+            id: formData.get('id') || Date.now(),
+            nombre: formData.get('nombre'),
+            codigo: formData.get('codigo'),
+            estatus: formData.get('estatus')
+        };
+
+        console.log('Banco guardado:', banco);
+
+        Swal.fire({
+            title: 'Éxito',
+            text: 'El banco ha sido guardado correctamente',
+            icon: 'success',
+            confirmButtonText: 'Ok'
+        }).then(() => {
+            toggleModal();
+            buscarBancos(); // Recargar la lista de bancos
+        });
+    }
+
+    function manejarAccionesBanco(event) {
+        if (event.target.classList.contains('editar-banco')) {
+            const bancoId = event.target.getAttribute('data-id');
+            editarBanco(bancoId);
+        } else if (event.target.classList.contains('eliminar-banco')) {
+            const bancoId = event.target.getAttribute('data-id');
+            eliminarBanco(bancoId);
+        }
+    }
+
+    function editarBanco(bancoId) {
+        // Aquí deberías hacer una llamada AJAX a tu backend para obtener los datos del banco
+        // Por ahora, simularemos los datos
+        const banco = {
+            id: bancoId,
+            nombre: 'Banco Ejemplo',
+            codigo: 'BE001',
+            estatus: 'activo'
+        };
+
+        document.getElementById('modal-title').textContent = 'Editar Banco';
+        const form = document.getElementById('banco-form');
+        form.elements['id'].value = banco.id;
+        form.elements['nombre'].value = banco.nombre;
+        form.elements['codigo'].value = banco.codigo;
+        form.elements['estatus'].value = banco.estatus;
+
+        toggleModal();
+    }
+
+    function eliminarBanco(bancoId) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "No podrás revertir esta acción",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Aquí deberías hacer una llamada AJAX a tu backend para eliminar el banco
+                console.log('Banco eliminado:', bancoId);
+
+                Swal.fire(
+                    'Eliminado',
+                    'El banco ha sido eliminado.',
+                    'success'
+                ).then(() => {
+                    buscarBancos(); // Recargar la lista de bancos
+                });
+            }
+        });
+    }
+
+    function toggleModal() {
+        const modal = document.querySelector('.modal');
+        modal.classList.toggle('opacity-0');
+        modal.classList.toggle('pointer-events-none');
+        document.body.classList.toggle('modal-active');
+    }
+</script>
+{% endblock %}
