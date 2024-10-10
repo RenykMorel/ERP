@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Compras y Gastos{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Reporte de Compras y Gastos</h1>
+    
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-2">Resumen</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-blue-100 p-4 rounded">
+                <p class="text-lg font-bold">Total Compras: ${{ total_compras | round(2) }}</p>
+            </div>
+            <div class="bg-green-100 p-4 rounded">
+                <p class="text-lg font-bold">Total Gastos: ${{ total_gastos | round(2) }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-2">Compras</h2>
+        <table class="min-w-full bg-white">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b">ID</th>
+                    <th class="py-2 px-4 border-b">Fecha</th>
+                    <th class="py-2 px-4 border-b">Proveedor</th>
+                    <th class="py-2 px-4 border-b">Total</th>
+                    <th class="py-2 px-4 border-b">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compra in compras %}
+                <tr>
+                    <td class="py-2 px-4 border-b">{{ compra.id }}</td>
+                    <td class="py-2 px-4 border-b">{{ compra.fecha }}</td>
+                    <td class="py-2 px-4 border-b">{{ compra.proveedor }}</td>
+                    <td class="py-2 px-4 border-b">${{ compra.total | round(2) }}</td>
+                    <td class="py-2 px-4 border-b">{{ compra.estado }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-2">Gastos</h2>
+        <table class="min-w-full bg-white">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b">ID</th>
+                    <th class="py-2 px-4 border-b">Fecha</th>
+                    <th class="py-2 px-4 border-b">Concepto</th>
+                    <th class="py-2 px-4 border-b">Monto</th>
+                    <th class="py-2 px-4 border-b">Categoría</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gasto in gastos %}
+                <tr>
+                    <td class="py-2 px-4 border-b">{{ gasto.id }}</td>
+                    <td class="py-2 px-4 border-b">{{ gasto.fecha }}</td>
+                    <td class="py-2 px-4 border-b">{{ gasto.concepto }}</td>
+                    <td class="py-2 px-4 border-b">${{ gasto.monto | round(2) }}</td>
+                    <td class="py-2 px-4 border-b">{{ gasto.categoria }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

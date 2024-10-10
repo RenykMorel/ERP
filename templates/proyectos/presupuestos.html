@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Presupuestos de Proyectos{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Presupuestos de Proyectos</h1>
+    <a href="{{ url_for('proyectos.crear_presupuesto') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Presupuesto</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Proyecto</th>
+                <th class="py-2 px-4 border-b">Monto</th>
+                <th class="py-2 px-4 border-b">Fecha Creación</th>
+                <th class="py-2 px-4 border-b">Estado</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for presupuesto in presupuestos %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ presupuesto.proyecto.nombre }}</td>
+                <td class="py-2 px-4 border-b">{{ presupuesto.monto }}</td>
+                <td class="py-2 px-4 border-b">{{ presupuesto.fecha_creacion }}</td>
+                <td class="py-2 px-4 border-b">{{ presupuesto.estado }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="#" class="text-blue-500">Ver</a>
+                    <a href="#" class="text-green-500">Editar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

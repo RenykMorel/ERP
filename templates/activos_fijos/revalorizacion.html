@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Revalorización{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Revalorización de Activos Fijos</h1>
+    <a href="{{ url_for('activos_fijos.registrar_revalorizacion') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Revalorización</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Activo</th>
+                <th class="py-2 px-4 border-b">Fecha</th>
+                <th class="py-2 px-4 border-b">Valor Anterior</th>
+                <th class="py-2 px-4 border-b">Nuevo Valor</th>
+                <th class="py-2 px-4 border-b">Motivo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for revalorizacion in revalorizaciones %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ revalorizacion.activo.nombre }}</td>
+                <td class="py-2 px-4 border-b">{{ revalorizacion.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ revalorizacion.valor_anterior }}</td>
+                <td class="py-2 px-4 border-b">{{ revalorizacion.valor_nuevo }}</td>
+                <td class="py-2 px-4 border-b">{{ revalorizacion.motivo }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

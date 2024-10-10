@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Proyectos{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Gestión de Proyectos</h1>
+    <a href="{{ url_for('proyectos.crear_proyecto') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Proyecto</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Nombre</th>
+                <th class="py-2 px-4 border-b">Fecha Inicio</th>
+                <th class="py-2 px-4 border-b">Estado</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for proyecto in proyectos %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ proyecto.nombre }}</td>
+                <td class="py-2 px-4 border-b">{{ proyecto.fecha_inicio }}</td>
+                <td class="py-2 px-4 border-b">{{ proyecto.estado }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="#" class="text-blue-500">Ver</a>
+                    <a href="#" class="text-green-500">Editar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

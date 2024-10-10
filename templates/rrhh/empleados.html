@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Empleados{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Gestión de Empleados</h1>
+    <a href="{{ url_for('rrhh.crear_empleado') }}" class="bg-green-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Empleado</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Nombre</th>
+                <th class="py-2 px-4 border-b">Apellido</th>
+                <th class="py-2 px-4 border-b">Puesto</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for empleado in empleados %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ empleado.nombre }}</td>
+                <td class="py-2 px-4 border-b">{{ empleado.apellido }}</td>
+                <td class="py-2 px-4 border-b">{{ empleado.puesto }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('rrhh.editar_empleado', id=empleado.id) }}" class="text-blue-500">Editar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

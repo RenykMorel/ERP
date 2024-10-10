@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Reporte CxC{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Reporte de Cuentas por Cobrar</h1>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">ID</th>
+                <th class="py-2 px-4 border-b">Cliente</th>
+                <th class="py-2 px-4 border-b">Monto</th>
+                <th class="py-2 px-4 border-b">Fecha de Emisión</th>
+                <th class="py-2 px-4 border-b">Fecha de Vencimiento</th>
+                <th class="py-2 px-4 border-b">Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cuenta in cuentas %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ cuenta.id }}</td>
+                <td class="py-2 px-4 border-b">{{ cuenta.cliente_id }}</td>
+                <td class="py-2 px-4 border-b">{{ cuenta.monto }}</td>
+                <td class="py-2 px-4 border-b">{{ cuenta.fecha_emision }}</td>
+                <td class="py-2 px-4 border-b">{{ cuenta.fecha_vencimiento }}</td>
+                <td class="py-2 px-4 border-b">{{ cuenta.estado }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

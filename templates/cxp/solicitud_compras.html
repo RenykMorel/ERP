@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Solicitudes de Compra{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Solicitudes de Compra</h1>
+    <a href="{{ url_for('cxp.crear_solicitud_compra') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Solicitud</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Número</th>
+                <th class="py-2 px-4 border-b">Fecha</th>
+                <th class="py-2 px-4 border-b">Descripción</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for solicitud in solicitudes %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ solicitud.numero }}</td>
+                <td class="py-2 px-4 border-b">{{ solicitud.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ solicitud.descripcion[:50] }}...</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('cxp.editar_solicitud_compra', id=solicitud.id) }}" class="text-blue-500">Editar</a>
+                    <a href="{{ url_for('cxp.ver_solicitud_compra', id=solicitud.id) }}" class="text-green-500">Ver</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

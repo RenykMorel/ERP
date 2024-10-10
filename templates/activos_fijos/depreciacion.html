@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Depreciación{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Depreciación de Activos</h1>
+    <a href="{{ url_for('activos_fijos.calcular_depreciacion') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Calcular Depreciación</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Activo</th>
+                <th class="py-2 px-4 border-b">Fecha</th>
+                <th class="py-2 px-4 border-b">Monto</th>
+                <th class="py-2 px-4 border-b">Método</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for depreciacion in depreciaciones %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ depreciacion.activo.nombre }}</td>
+                <td class="py-2 px-4 border-b">{{ depreciacion.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ depreciacion.monto }}</td>
+                <td class="py-2 px-4 border-b">{{ depreciacion.metodo }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

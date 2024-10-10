@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Serie Fiscal{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Series Fiscales</h1>
+    <a href="{{ url_for('impuestos.crear_serie_fiscal') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Serie Fiscal</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Serie</th>
+                <th class="py-2 px-4 border-b">Tipo de Comprobante</th>
+                <th class="py-2 px-4 border-b">Fecha de Vencimiento</th>
+                <th class="py-2 px-4 border-b">Secuencia Desde</th>
+                <th class="py-2 px-4 border-b">Secuencia Hasta</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for serie in series %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ serie.serie }}</td>
+                <td class="py-2 px-4 border-b">{{ serie.tipo_comprobante }}</td>
+                <td class="py-2 px-4 border-b">{{ serie.fecha_vencimiento }}</td>
+                <td class="py-2 px-4 border-b">{{ serie.secuencia_desde }}</td>
+                <td class="py-2 px-4 border-b">{{ serie.secuencia_hasta }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('impuestos.editar_serie_fiscal', id=serie.id) }}" class="text-blue-500">Editar</a>
+                    <a href="{{ url_for('impuestos.eliminar_serie_fiscal', id=serie.id) }}" class="text-red-500 ml-2">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

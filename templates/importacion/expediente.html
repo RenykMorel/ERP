@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Expediente de Importación{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Expedientes de Importación</h1>
+    <a href="{{ url_for('importacion.crear_expediente') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Expediente</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Número</th>
+                <th class="py-2 px-4 border-b">Importador</th>
+                <th class="py-2 px-4 border-b">Fecha Creación</th>
+                <th class="py-2 px-4 border-b">Estado</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expediente in expedientes %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ expediente.numero_expediente }}</td>
+                <td class="py-2 px-4 border-b">{{ expediente.importador.nombre }}</td>
+                <td class="py-2 px-4 border-b">{{ expediente.fecha_creacion.strftime('%Y-%m-%d') }}</td>
+                <td class="py-2 px-4 border-b">{{ expediente.estado }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('importacion.ver_expediente', id=expediente.id) }}" class="text-blue-500">Ver</a>
+                    <a href="{{ url_for('importacion.editar_expediente', id=expediente.id) }}" class="text-green-500">Editar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Nómina{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Nómina</h1>
+    <a href="{{ url_for('rrhh.crear_nomina') }}" class="bg-green-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Nómina</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">ID</th>
+                <th class="py-2 px-4 border-b">Empleado</th>
+                <th class="py-2 px-4 border-b">Fecha</th>
+                <th class="py-2 px-4 border-b">Salario Bruto</th>
+                <th class="py-2 px-4 border-b">Deducciones</th>
+                <th class="py-2 px-4 border-b">Salario Neto</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for nomina in nominas %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ nomina.id }}</td>
+                <td class="py-2 px-4 border-b">{{ nomina.empleado.nombre }} {{ nomina.empleado.apellido }}</td>
+                <td class="py-2 px-4 border-b">{{ nomina.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ nomina.salario_bruto }}</td>
+                <td class="py-2 px-4 border-b">{{ nomina.deducciones }}</td>
+                <td class="py-2 px-4 border-b">{{ nomina.salario_neto }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('rrhh.editar_nomina', id=nomina.id) }}" class="bg-blue-500 text-white px-2 py-1 rounded">Editar</a>
+                    <button onclick="eliminarNomina({{ nomina.id }})" class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

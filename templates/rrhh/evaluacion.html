@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Evaluación de Desempeño{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Evaluación de Desempeño</h1>
+    <a href="{{ url_for('rrhh.crear_evaluacion') }}" class="bg-green-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Evaluación</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">ID</th>
+                <th class="py-2 px-4 border-b">Empleado</th>
+                <th class="py-2 px-4 border-b">Fecha de Evaluación</th>
+                <th class="py-2 px-4 border-b">Puntuación</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for evaluacion in evaluaciones %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ evaluacion.id }}</td>
+                <td class="py-2 px-4 border-b">{{ evaluacion.empleado.nombre }} {{ evaluacion.empleado.apellido }}</td>
+                <td class="py-2 px-4 border-b">{{ evaluacion.fecha_evaluacion }}</td>
+                <td class="py-2 px-4 border-b">{{ evaluacion.puntuacion }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('rrhh.ver_evaluacion', id=evaluacion.id) }}" class="bg-blue-500 text-white px-2 py-1 rounded">Ver</a>
+                    <a href="{{ url_for('rrhh.editar_evaluacion', id=evaluacion.id) }}" class="bg-yellow-500 text-white px-2 py-1 rounded">Editar</a>
+                    <button onclick="eliminarEvaluacion({{ evaluacion.id }})" class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

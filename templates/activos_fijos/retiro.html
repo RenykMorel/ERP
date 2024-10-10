@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Retiro de Activos{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Retiro de Activos Fijos</h1>
+    <a href="{{ url_for('activos_fijos.registrar_retiro') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Registrar Retiro</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Activo</th>
+                <th class="py-2 px-4 border-b">Fecha de Retiro</th>
+                <th class="py-2 px-4 border-b">Motivo</th>
+                <th class="py-2 px-4 border-b">Valor Recuperado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for retiro in retiros %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ retiro.activo.nombre }}</td>
+                <td class="py-2 px-4 border-b">{{ retiro.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ retiro.motivo }}</td>
+                <td class="py-2 px-4 border-b">{{ retiro.valor_recuperado }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

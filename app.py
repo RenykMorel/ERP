@@ -175,7 +175,10 @@ class AsistenteVirtual:
     def __init__(self, api_key, get_context_func):
         self.api_key = api_key
         self.get_context_func = get_context_func
-        self.context = "Eres un asistente virtual para CalculAI. Debes responder preguntas basándote en la información proporcionada en el contexto y la pregunta del usuario. Tienes acceso a la información de la base de datos de CalculAI, incluyendo usuarios, empresas, transacciones, cuentas y bancos. Si la pregunta no está relacionada con CalculAI o la información disponible, responde que no puedes ayudar con eso. si la informacion que te solicitan es de la base de datos, siempre da la informacion en un formato de lista y ordenado"
+        self.context = """Eres un asistente virtual multifuncional para CalculAI. 
+        Puedes responder preguntas sobre información financiera y transacciones, 
+        así como ayudar con tareas de marketing como generar ideas para campañas 
+        y crear contenido para emails. Adapta tu respuesta al tipo de solicitud."""
         self.base_url = "https://api.anthropic.com/v1/messages"
 
     def object_as_dict(self, obj):
@@ -223,7 +226,7 @@ class AsistenteVirtual:
             "messages": [
                 {"role": "user", "content": pregunta}
             ],
-            "max_tokens": 500
+            "max_tokens": 1000  # Aumentado para permitir respuestas más largas
         }
 
         try:
@@ -232,7 +235,7 @@ class AsistenteVirtual:
                 self.base_url,
                 headers=headers,
                 json=data,
-                timeout=15,
+                timeout=30,  # Aumentado el tiempo de espera
             )
             response.raise_for_status()
             logger.info("Respuesta recibida de la API de Claude")
@@ -269,6 +272,8 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
+    
+    
     if not os.getenv('MJ_APIKEY_PUBLIC') or not os.getenv('MJ_APIKEY_PRIVATE'):
         app.logger.error('Mailjet API keys are not set. Please check your .env file.')
     
@@ -283,6 +288,37 @@ def create_app():
     
     from marketing.routes import marketing
     app.register_blueprint(marketing, url_prefix='/marketing')
+    
+    from contabilidad import contabilidad_bp
+    app.register_blueprint(contabilidad_bp, url_prefix='/contabilidad')
+    
+    from compras import compras_bp
+    app.register_blueprint(compras_bp, url_prefix='/compras')
+    
+    from rrhh.routes import rrhh_bp
+    app.register_blueprint(rrhh_bp, url_prefix='/rrhh')
+    
+    from importacion.routes import importacion_bp
+    app.register_blueprint(importacion_bp)
+    
+    from proyectos.routes import proyectos_bp
+    app.register_blueprint(proyectos_bp)
+    
+    from impuestos.routes import impuestos_bp
+    app.register_blueprint(impuestos_bp)
+    
+    from cxc.routes import cxc_bp
+    app.register_blueprint(cxc_bp)
+    
+    from cxp.routes import cxp_bp
+    app.register_blueprint(cxp_bp)
+        
+    from activos_fijos.routes import activos_fijos_bp
+    app.register_blueprint(activos_fijos_bp)  
+    
+    
+
+# ... resto de tus rutas ...
     
     db.init_app(app)
     migrate.init_app(app, db)
@@ -934,11 +970,11 @@ def create_app():
         
         try:
             # Construir el prompt para la IA
-            ai_prompt = f"""Actúa como un experto en diseño de plantillas de email y artes para campañas de marketing. 
+            ai_prompt = f"""Actúa como un experto en marketing digital y diseño de emails. 
             Crea una plantilla de email HTML profesional y atractiva basada en la siguiente descripción: {prompt}. 
             La plantilla debe ser responsive y utilizar estilos en línea para compatibilidad con clientes de email.
-            Incluye al menos una imagen relevante en la plantilla. Para las imágenes, utiliza placeholders de 
-            https://placehold.co con dimensiones y texto descriptivo apropiados. 
+            Incluye contenido relevante y convincente que se ajuste al tema solicitado.
+            Para las imágenes, utiliza placeholders de https://placehold.co con dimensiones y texto descriptivo apropiados. 
             Asegúrate de que el diseño sea moderno, atractivo y optimizado para conversiones.
             IMPORTANTE: Devuelve ÚNICAMENTE el código HTML de la plantilla, sin ningún texto explicativo adicional."""
             
@@ -952,6 +988,16 @@ def create_app():
         except Exception as e:
             logger.error(f"Error al generar contenido de email con IA: {str(e)}")
             return jsonify({"error": "Ocurrió un error al generar el contenido"}), 500
+
+    def extraer_html(contenido):
+        # Buscar el contenido HTML entre las etiquetas <html> y </html>
+        import re
+        match = re.search(r'<html>[\s\S]*?</html>', contenido)
+        if match:
+            return match.group(0)
+        else:
+            # Si no se encuentra la etiqueta HTML, devolver todo el contenido
+            return contenido
 
     def extraer_html(contenido):
         # Buscar el contenido HTML entre las etiquetas <html> y </html>
@@ -983,6 +1029,7 @@ def create_app():
         return response
 
     return app
+
 
 if __name__ == '__main__':
     app = create_app()

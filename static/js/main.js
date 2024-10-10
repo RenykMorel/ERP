@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeSubmoduleHandlers();
     initializeAuthForms();
     initializeMarketingModule();
+    initializeRRHHModule();
     window.addEventListener('resize', resizeCharts);
 
     ['line', 'bar', 'pie'].forEach(type => {
@@ -208,6 +209,16 @@ function initializeSubmoduleHandlers() {
             handleSubmoduleClick(moduleName, submoduleName);
         });
     });
+
+    // Añade este nuevo bloque para manejar los enlaces de contabilidad
+    const contabilidadLinks = document.querySelectorAll('#sidebar a[href^="/contabilidad/"]');
+    contabilidadLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+            cargarContenido(url);
+        });
+    });
 }
 
 // Maneja el clic en submódulos
@@ -233,6 +244,141 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Facturación no reconocido');
         }
+
+    }else if (moduleName === 'Cuentas Por Pagar') {
+        switch (submoduleName) {
+            case 'Factura Suplidor':
+                window.location.href = '/cxp/factura-suplidor';
+                break;
+            case 'Nota de Crédito':
+                window.location.href = '/cxp/nota-credito';
+                break;
+            case 'Nota de Débito':
+                window.location.href = '/cxp/nota-debito';
+                break;
+            case 'Orden de Compras':
+                window.location.href = '/cxp/orden-compras';
+                break;
+            case 'Suplidor':
+                window.location.href = '/cxp/suplidor';
+                break;
+            case 'Anticipo CxP':
+                window.location.href = '/cxp/anticipo-cxp';
+                break;
+            case 'Pago de Contado':
+                window.location.href = '/cxp/pago-contado';
+                break;
+            case 'Reporte CxP':
+                window.location.href = '/cxp/reporte-cxp';
+                break;
+            case 'Requisición Cotización':
+                window.location.href = '/cxp/requisicion-cotizacion';
+                break;
+            case 'Solicitud Compras':
+                window.location.href = '/cxp/solicitud-compras';
+                break;
+            case 'Tipo de Suplidor':
+                window.location.href = '/cxp/tipo-suplidor';
+                break;
+            default:
+                console.log('Submódulo de Cuentas Por Pagar no reconocido');
+        }    
+    }else if (moduleName === 'Activos Fijos') {
+        switch (submoduleName) {
+            case 'Activo Fijo':
+                window.location.href = '/activos_fijos/activo_fijo';
+                break;
+            case 'Depreciación':
+                window.location.href = '/activos_fijos/depreciacion';
+                break;
+            case 'Retiro':
+                window.location.href = '/activos_fijos/retiro';
+                break;
+            case 'Revalorización':
+                window.location.href = '/activos_fijos/revalorizacion';
+                break;
+            case 'Tipo de Activo Fijo':
+                window.location.href = '/activos_fijos/tipo_activo_fijo';
+                break;
+            default:
+                console.log('Submódulo de Activos Fijos no reconocido');
+        }
+            
+    
+            
+        
+    }else if (moduleName === 'Importacion') {
+        switch (submoduleName) {
+            case 'Expediente de Importacion':
+                window.location.href = '/importacion/expediente';
+                break;
+            case 'Importador':
+                window.location.href = '/importacion/importador';
+                break;
+            case 'Reportes Importacion':
+                window.location.href = '/importacion/reportes';
+                break;
+            default:
+                console.log('Submódulo de Importación no reconocido');
+        }
+    
+    }else if (moduleName === 'Cuentas Por Cobrar') {
+        switch (submoduleName) {
+            case 'Cliente':
+                window.location.href = '/cxc/clientes';
+                break;
+            case 'Descuento y devoluciones':
+                window.location.href = '/cxc/descuentos-devoluciones';
+                break;
+            case 'Nota de credito':
+                window.location.href = '/cxc/notas-credito';
+                break;
+            case 'Nota de debito':
+                window.location.href = '/cxc/notas-debito';
+                break;
+            case 'Recibo':
+                window.location.href = '/cxc/recibos';
+                break;
+            case 'Anticipo CxC':
+                window.location.href = '/cxc/anticipos';
+                break;
+            case 'Condicion de pago':
+                window.location.href = '/cxc/condiciones-pago';
+                break;
+            case 'Reporte CxC':
+                window.location.href = '/cxc/reporte';
+                break;
+            case 'Tipo de cliente':
+                window.location.href = '/cxc/tipos-cliente';
+                break;
+            default:
+                console.log('Submódulo de Cuentas Por Cobrar no reconocido');
+        }
+        
+    }else if (moduleName === 'Impuestos') {
+        switch (submoduleName) {
+            case 'Formulario 606':
+                window.location.href = '/impuestos/formulario606';
+                break;
+            case 'Formulario 607':
+                window.location.href = '/impuestos/formulario607';
+                break;
+            case 'Reporte IT1':
+                window.location.href = '/impuestos/reporte-it1';
+                break;
+            case 'Impuesto sobre la Renta (IR17)':
+                window.location.href = '/impuestos/ir17';
+                break;
+            case 'Serie Fiscal':
+                window.location.href = '/impuestos/serie-fiscal';
+                break;
+            case 'Configuraciones':
+                window.location.href = '/impuestos/configuraciones';
+                break;
+            default:
+                console.log('Submódulo de Impuestos no reconocido');
+        }
+    
     } else if (moduleName === 'Banco') {
         switch (submoduleName) {
             case 'Bancos':
@@ -259,7 +405,122 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Banco no reconocido');
         }
-   
+
+    } else if (moduleName === 'Compras') {
+        switch (submoduleName) {
+            case 'Solicitudes de Compra':
+                window.location.href = '/compras/solicitudes';
+                break;
+            case 'Órdenes de Compra':
+                window.location.href = '/compras/ordenes';
+                break;
+            case 'Recepción de Materiales':
+                window.location.href = '/compras/recepcion';
+                break;
+            case 'Gastos':
+                window.location.href = '/compras/gastos';
+                break;
+            case 'Reporte de Compras/Gastos':
+                window.location.href = '/compras/reporte';
+                break;
+            default:
+                console.log('Submódulo de Compras no reconocido');
+        }
+
+    
+    } else if (moduleName === 'Contabilidad') {
+        switch (submoduleName) {
+            case 'Cuentas':
+                window.location.href = '/contabilidad/cuentas';
+                break;
+            case 'Diario':
+                window.location.href = '/contabilidad/diario';
+                break;
+            case 'Mayor General':
+                window.location.href = '/contabilidad/mayor_general';
+                break;
+            case 'Balanza de Comprobación':
+                window.location.href = '/contabilidad/balanza_comprobacion';
+                break;
+            case 'Estado de Resultados':
+                window.location.href = '/contabilidad/estado_resultados';
+                break;
+            case 'Balance General':
+                window.location.href = '/contabilidad/balance_general';
+                break;
+            case 'Configuraciones':
+                window.location.href = '/contabilidad/configuraciones';
+                break;
+            case 'Flujo de caja':
+                window.location.href = '/contabilidad/flujo_caja';
+                break;
+            default:
+                console.log('Submódulo de Contabilidad no reconocido');
+        }
+
+    }else if (moduleName === 'Recursos Humanos') {
+        switch (submoduleName) {
+            case 'Gestión de Empleados':
+                window.location.href = '/rrhh/empleados';
+                break;
+            case 'Nómina':
+                window.location.href = '/rrhh/nomina';
+                break;
+            case 'Evaluación de Desempeño':
+                window.location.href = '/rrhh/evaluacion';
+                break;
+            default:
+                console.log('Submódulo de Recursos Humanos no reconocido');
+        }
+        
+    }else if (moduleName === 'Proyectos') {
+        switch (submoduleName) {
+            case 'Gestión de Proyectos':
+                window.location.href = '/proyectos/gestion';
+                break;
+            case 'Presupuestos':
+                window.location.href = '/proyectos/presupuestos';
+                break;
+            case 'Facturación por Proyecto':
+                window.location.href = '/proyectos/facturacion';
+                break;
+            default:
+                console.log('Submódulo de Proyectos no reconocido');
+        }
+          
+    }else if (moduleName === 'Cuentas Por Cobrar') {
+        switch (submoduleName) {
+            case 'Cliente':
+                loadSubmoduleContent('Cuentas Por Cobrar', 'Cliente');
+                break;
+            case 'Descuento y devoluciones':
+                loadSubmoduleContent('Cuentas Por Cobrar', 'Descuento y devoluciones');
+                break;
+            case 'Nota de credito':
+                loadSubmoduleContent('Cuentas Por Cobrar', 'Nota de credito');
+                break;
+            case 'Nota de debito':
+                loadSubmoduleContent('Cuentas Por Cobrar', 'Nota de debito');
+                break;
+            case 'Recibo':
+                loadSubmoduleContent('Cuentas Por Cobrar', 'Recibo');
+                break;
+            case 'Anticipo CxC':
+                loadSubmoduleContent('Cuentas Por Cobrar', 'Anticipo CxC');
+                break;
+            case 'Condicion de pago':
+                loadSubmoduleContent('Cuentas Por Cobrar', 'Condicion de pago');
+                break;
+            case 'Reporte CxC':
+                loadSubmoduleContent('Cuentas Por Cobrar', 'Reporte CxC');
+                break;
+            case 'Tipo de cliente':
+                loadSubmoduleContent('Cuentas Por Cobrar', 'Tipo de cliente');
+                break;
+            default:
+                console.log('Submódulo de Cuentas Por Cobrar no reconocido');
+        }
+            
     } else if (moduleName === 'Inventario') {
         switch (submoduleName) {
             case 'Items':
@@ -460,146 +721,6 @@ function loadSubmodules(moduleName, submoduleContainer) {
 }
 
 function loadSubmoduleContent(moduleName, submoduleName) {
-    // ... código existente ...
-    if (moduleName === 'Banco') {
-        switch (submoduleName) {
-            case 'Bancos':
-                url = '/Bancos';
-                break;
-            case 'Depósitos':
-                url = '/api/depositos';
-                break;
-            case 'Notas de Crédito/Débito':
-                url = '/api/notas-credito-debito';
-                break;
-            case 'Transferencias Bancarias':
-                url = '/api/transferencias';
-                break;
-            case 'Conciliación Bancaria':
-                url = '/api/conciliacion';
-                break;
-            case 'Gestión de Bancos':
-                url = '/api/gestion-bancos';
-                break;
-            case 'Divisas':
-                url = '/api/divisas';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-    }
-    
-}
-
-function crearNuevoBanco(datos) {
-    fetch('/api/crear-banco', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(datos)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Banco creado:', data);
-        // Actualizar la UI según sea necesario
-    })
-    .catch(error => console.error('Error al crear banco:', error));
-}
-
-function actualizarBanco(id, datos) {
-    fetch(`/api/actualizar-banco/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(datos)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Banco actualizado:', data);
-        // Actualizar la UI según sea necesario
-    })
-    .catch(error => console.error('Error al actualizar banco:', error));
-}
-
-function eliminarBanco(id) {
-    fetch(`/api/eliminar-banco/${id}`, {
-        method: 'DELETE'
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Banco eliminado:', data);
-        // Actualizar la UI según sea necesario
-    })
-    .catch(error => console.error('Error al eliminar banco:', error));
-}
-
-function buscarBancos(criterios) {
-    const queryString = new URLSearchParams(criterios).toString();
-    fetch(`/api/buscar-bancos?${queryString}`)
-    .then(response => response.json())
-    .then(data => {
-        console.log('Bancos encontrados:', data);
-        // Actualizar la UI con los resultados de la búsqueda
-    })
-    .catch(error => console.error('Error al buscar bancos:', error));
-}
-
-function loadSubmoduleContent(moduleName, submoduleName) {
-    console.log(`Loading content for ${moduleName} - ${submoduleName}`);
-    
-    let url;
-    if (moduleName === 'Banco') {
-        url = `/api/submodule-content/Banco/${submoduleName}`;
-    } else {
-        // Mantén el manejo existente para otros módulos
-        url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-    }
-
-    console.log('Fetching from URL:', url);
-
-    fetch(url, {
-        method: 'GET',
-        headers: {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-        },
-        credentials: 'same-origin'
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response headers:', [...response.headers.entries()]);
-        
-        if (!response.ok) {
-            return response.text().then(text => {
-                throw new Error(`HTTP error! status: ${response.status}, message: ${text}`);
-            });
-        }
-        return response.text();
-    })
-    .then(htmlContent => {
-        console.log("Contenido recibido (primeros 100 caracteres):", htmlContent.substring(0, 100));
-        
-        let contentContainer = document.getElementById('contenido-principal');
-        if (!contentContainer) {
-            console.log('Creando nuevo contenedor de contenido');
-            contentContainer = document.createElement('div');
-            contentContainer.id = 'contenido-principal';
-            document.body.appendChild(contentContainer);
-        }
-        
-        contentContainer.innerHTML = htmlContent;
-    })
-    .catch(error => {
-        console.error('Error loading submodule content:', error);
-        // Manejo de errores existente...
-    });
-}
-
-// Carga el contenido de un submódulo específico
-function loadSubmoduleContent(moduleName, submoduleName) {
     console.log(`Loading content for ${moduleName} - ${submoduleName}`);
     
     let url;
@@ -623,6 +744,154 @@ function loadSubmoduleContent(moduleName, submoduleName) {
             default:
                 url = `/api/submodule-content/${moduleName}/${submoduleName}`;
         }
+
+    }else if (moduleName === 'Cuentas Por Pagar') {
+        switch (submoduleName) {
+            case 'Factura Suplidor':
+                url = '/cxp/factura-suplidor';
+                break;
+            case 'Nota de Crédito':
+                url = '/cxp/nota-credito';
+                break;
+            case 'Nota de Débito':
+                url = '/cxp/nota-debito';
+                break;
+            case 'Orden de Compras':
+                url = '/cxp/orden-compras';
+                break;
+            case 'Suplidor':
+                url = '/cxp/suplidor';
+                break;
+            case 'Anticipo CxP':
+                url = '/cxp/anticipo-cxp';
+                break;
+            case 'Pago de Contado':
+                url = '/cxp/pago-contado';
+                break;
+            case 'Reporte CxP':
+                url = '/cxp/reporte-cxp';
+                break;
+            case 'Requisición Cotización':
+                url = '/cxp/requisicion-cotizacion';
+                break;
+            case 'Solicitud Compras':
+                url = '/cxp/solicitud-compras';
+                break;
+            case 'Tipo de Suplidor':
+                url = '/cxp/tipo-suplidor';
+                break;
+            default:
+        }     url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+                
+    }else if (moduleName === 'Activos Fijos') {
+        switch (submoduleName) {
+            case 'Activo Fijo':
+                url = '/activos_fijos/activo_fijo';
+                break;
+            case 'Depreciación':
+                url = '/activos_fijos/depreciacion';
+                break;
+            case 'Retiro':
+                url = '/activos_fijos/retiro';
+                break;
+            case 'Revalorización':
+                url = '/activos_fijos/revalorizacion';
+                break;
+            case 'Tipo de Activo Fijo':
+                url = '/activos_fijos/tipo_activo_fijo';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
+            
+    }else if (moduleName === 'Cuentas Por Cobrar') {
+        switch (submoduleName) {
+            case 'Cliente':
+                url = '/cxc/clientes';
+                break;
+            case 'Descuento y devoluciones':
+                url = '/cxc/descuentos-devoluciones';
+                break;
+            case 'Nota de credito':
+                url = '/cxc/notas-credito';
+                break;
+            case 'Nota de debito':
+                url = '/cxc/notas-debito';
+                break;
+            case 'Recibo':
+                url = '/cxc/recibos';
+                break;
+            case 'Anticipo CxC':
+                url = '/cxc/anticipos';
+                break;
+            case 'Condicion de pago':
+                url = '/cxc/condiciones-pago';
+                break;
+            case 'Reporte CxC':
+                url = '/cxc/reporte';
+                break;
+            case 'Tipo de cliente':
+                url = '/cxc/tipos-cliente';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
+            
+       
+    }else if (moduleName === 'Impuestos') {
+        switch (submoduleName) {
+            case 'Formulario 606':
+                url = '/impuestos/formulario606';
+                break;
+            case 'Formulario 607':
+                url = '/impuestos/formulario607';
+                break;
+            case 'Reporte IT1':
+                url = '/impuestos/reporte-it1';
+                break;
+            case 'Impuesto sobre la Renta (IR17)':
+                url = '/impuestos/ir17';
+                break;
+            case 'Serie Fiscal':
+                url = '/impuestos/serie-fiscal';
+                break;
+            case 'Configuraciones':
+                url = '/impuestos/configuraciones';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
+       
+        
+    }else if (moduleName === 'Proyectos') {
+        switch (submoduleName) {
+            case 'Gestión de Proyectos':
+                url = '/proyectos/gestion';
+                break;
+            case 'Presupuestos':
+                url = '/proyectos/presupuestos';
+                break;
+            case 'Facturación por Proyecto':
+                url = '/proyectos/facturacion';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
+    }else if (moduleName === 'Importacion') {
+        switch (submoduleName) {
+            case 'Expediente de Importacion':
+                url = '/importacion/expediente';
+                break;
+            case 'Importador':
+                url = '/importacion/importador';
+                break;
+            case 'Reportes Importacion':
+                url = '/importacion/reportes';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
+        
     } else if (moduleName === 'Inventario') {
         switch (submoduleName) {
             case 'Items':
@@ -669,9 +938,76 @@ function loadSubmoduleContent(moduleName, submoduleName) {
             default:
                 url = `/api/submodule-content/${moduleName}/${submoduleName}`;
         }
+
+    } else if (moduleName === 'Compras') {
+        switch (submoduleName) {
+            case 'Solicitudes de Compra':
+                url = '/compras/solicitudes';
+                break;
+            case 'Órdenes de Compra':
+                url = '/compras/ordenes';
+                break;
+            case 'Recepción de Materiales':
+                url = '/compras/recepcion';
+                break;
+            case 'Gastos':
+                url = '/compras/gastos';
+                break;
+            case 'Reporte de Compras/Gastos':
+                url = '/compras/reporte';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
+  
+    }else if (moduleName === 'Recursos Humanos') {
+        switch (submoduleName) {
+            case 'Gestión de Empleados':
+                url = '/rrhh/empleados';
+                break;
+            case 'Nómina':
+                url = '/rrhh/nomina';
+                break;
+            case 'Evaluación de Desempeño':
+                url = '/rrhh/evaluacion';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
+    } else if (moduleName === 'Contabilidad') {
+        switch (submoduleName) {
+            case 'Cuentas':
+                url = '/contabilidad/cuentas';
+                break;
+            case 'Diario':
+                url = '/contabilidad/diario';
+                break;
+            case 'Mayor General':
+                url = '/contabilidad/mayor_general';
+                break;
+            case 'Balanza de Comprobación':
+                url = '/contabilidad/balanza_comprobacion';
+                break;
+            case 'Estado de Resultados':
+                url = '/contabilidad/estado_resultados';
+                break;
+            case 'Balance General':
+                url = '/contabilidad/balance_general';
+                break;
+            case 'Configuraciones':
+                url = '/contabilidad/configuraciones';
+                break;
+            case 'Flujo de caja':
+                url = '/contabilidad/flujo_caja';
+                break;
+            default:
+                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
+        }
     } else {
         url = `/api/submodule-content/${moduleName}/${submoduleName}`;
     }
+        
+    
     console.log('Fetching from URL:', url);
 
     fetch(url, {
@@ -728,41 +1064,7 @@ function loadSubmoduleContent(moduleName, submoduleName) {
     });
 }
 
-// Asegúrate de que esta función se llame cuando se haga clic en un submódulo
-document.addEventListener('DOMContentLoaded', function() {
-    const facturacionLink = document.querySelector('.facturacion-link');
-    if (facturacionLink) {
-        facturacionLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            loadSubmoduleContent('Facturacion', 'Facturas');
-        });
-    }
 
-    const inventarioLink = document.querySelector('.inventario-link');
-    if (inventarioLink) {
-        inventarioLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            loadSubmoduleContent('Inventario', 'Items');
-        });
-    }
-
-    const marketingLink = document.querySelector('.marketing-link');
-    if (marketingLink) {
-        marketingLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            loadSubmoduleContent('Marketing', 'Gestión de Contactos');
-        });
-    }
-
-    document.querySelectorAll('.submodule-button').forEach(button => {
-        button.addEventListener('click', function(event) {
-            event.preventDefault();
-            const moduleName = this.closest('.module-wrapper').querySelector('.rectangular-button').textContent;
-            const submoduleName = this.textContent;
-            loadSubmoduleContent(moduleName, submoduleName);
-        });
-    });
-});
 
 // Carga las notificaciones desde la API
 function loadNotifications() {
@@ -1014,6 +1316,8 @@ function loadContacts() {
         .catch(error => console.error('Error loading contacts:', error));
 }
 
+
+
 // Carga las campañas desde la API
 function loadCampaigns() {
     fetch('/marketing/api/campaigns')
@@ -1055,6 +1359,8 @@ function initializeContactForm() {
         });
     }
 }
+
+
 
 // Inicializa el formulario de campañas
 function initializeCampaignForm() {
@@ -1125,6 +1431,571 @@ function initializeMarketingAutomations() {
 function initializeSocialMediaIntegration() {
     // Implementa la lógica para conectar y mostrar las integraciones de redes sociales
 }
+
+// Funciones específicas para el módulo de Compras
+function initializeRRHHModule() {
+    const rrhhContainer = document.getElementById('rrhh-container');
+    if (rrhhContainer) {
+        loadEmpleados();
+        loadNominas();
+        loadEvaluaciones();
+        initializeEmpleadoForm();
+        initializeNominaForm();
+        initializeEvaluacionForm();
+    }
+}
+
+function loadEmpleados() {
+    fetch('/rrhh/api/empleados')
+        .then(response => response.json())
+        .then(empleados => {
+            const empleadosList = document.getElementById('empleados-list');
+            if (empleadosList) {
+                empleadosList.innerHTML = empleados.map(empleado => 
+                    `<li>${empleado.nombre} ${empleado.apellido} - ${empleado.puesto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading empleados:', error));
+}
+
+function loadNominas() {
+    fetch('/rrhh/api/nominas')
+        .then(response => response.json())
+        .then(nominas => {
+            const nominasList = document.getElementById('nominas-list');
+            if (nominasList) {
+                nominasList.innerHTML = nominas.map(nomina => 
+                    `<li>${nomina.empleado} - ${nomina.fecha} - $${nomina.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading nóminas:', error));
+}
+
+function loadEvaluaciones() {
+    fetch('/rrhh/api/evaluaciones')
+        .then(response => response.json())
+        .then(evaluaciones => {
+            const evaluacionesList = document.getElementById('evaluaciones-list');
+            if (evaluacionesList) {
+                evaluacionesList.innerHTML = evaluaciones.map(evaluacion => 
+                    `<li>${evaluacion.empleado} - ${evaluacion.fecha} - Puntuación: ${evaluacion.puntuacion}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading evaluaciones:', error));
+}
+
+function initializeEmpleadoForm() {
+    const empleadoForm = document.getElementById('empleado-form');
+    if (empleadoForm) {
+        empleadoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(empleadoForm);
+            fetch('/rrhh/api/empleados', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Empleado creado:', data);
+                loadEmpleados();
+                empleadoForm.reset();
+            })
+            .catch(error => console.error('Error creando empleado:', error));
+        });
+    }
+}
+
+function initializeNominaForm() {
+    const nominaForm = document.getElementById('nomina-form');
+    if (nominaForm) {
+        nominaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(nominaForm);
+            fetch('/rrhh/api/nominas', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Nómina creada:', data);
+                loadNominas();
+                nominaForm.reset();
+            })
+            .catch(error => console.error('Error creando nómina:', error));
+        });
+    }
+}
+
+function initializeActivosFijosModule() {
+    const activosFijosContainer = document.getElementById('activos-fijos-container');
+    if (activosFijosContainer) {
+        loadActivosFijos();
+        loadDepreciaciones();
+        loadRetiros();
+        loadRevalorizaciones();
+        loadTiposActivoFijo();
+    }
+}
+
+function loadActivosFijos() {
+    // Lógica para cargar activos fijos
+}
+
+function loadDepreciaciones() {
+    // Lógica para cargar depreciaciones
+}
+
+function loadRetiros() {
+    // Lógica para cargar retiros
+}
+
+function loadRevalorizaciones() {
+    // Lógica para cargar revalorizaciones
+}
+
+function loadTiposActivoFijo() {
+    // Lógica para cargar tipos de activo fijo
+}
+
+// Asegúrate de llamar a esta función cuando se cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+    // ... otras inicializaciones ...
+    initializeActivosFijosModule();
+});
+
+function initializeCuentasPorPagarModule() {
+    const cuentasPorPagarContainer = document.getElementById('cuentas-por-pagar-container');
+    if (cuentasPorPagarContainer) {
+        loadFacturasSuplidores();
+        loadNotasCredito();
+        loadNotasDebito();
+        loadOrdenesCompra();
+        loadSuplidores();
+        loadAnticiposCxP();
+        loadPagosContado();
+        loadReportesCxP();
+        loadRequisicionesCotizacion();
+        loadSolicitudesCompra();
+        loadTiposSuplidores();
+    }
+}
+
+function loadFacturasSuplidores() {
+    // Lógica para cargar facturas de suplidores
+}
+
+function loadNotasCredito() {
+    // Lógica para cargar notas de crédito
+}
+
+function loadNotasDebito() {
+    // Lógica para cargar notas de débito
+}
+
+function loadOrdenesCompra() {
+    // Lógica para cargar órdenes de compra
+}
+
+function loadSuplidores() {
+    // Lógica para cargar suplidores
+}
+
+function loadAnticiposCxP() {
+    // Lógica para cargar anticipos CxP
+}
+
+function loadPagosContado() {
+    // Lógica para cargar pagos de contado
+}
+
+function loadReportesCxP() {
+    // Lógica para cargar reportes CxP
+}
+
+function loadRequisicionesCotizacion() {
+    // Lógica para cargar requisiciones de cotización
+}
+
+function loadSolicitudesCompra() {
+    // Lógica para cargar solicitudes de compra
+}
+
+function loadTiposSuplidores() {
+    // Lógica para cargar tipos de suplidores
+}
+
+// Asegúrate de llamar a esta función cuando se cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+    // ... otras inicializaciones ...
+    initializeCuentasPorPagarModule();
+});
+
+function initializeImportacionModule() {
+    const importacionContainer = document.getElementById('importacion-container');
+    if (importacionContainer) {
+        loadExpedientes();
+        loadImportadores();
+        loadReportesImportacion();
+    }
+}
+
+function loadExpedientes() {
+    // Lógica para cargar expedientes
+}
+
+function loadImportadores() {
+    // Lógica para cargar importadores
+}
+
+function loadReportesImportacion() {
+    // Lógica para cargar reportes de importación
+}
+
+// Asegúrate de llamar a esta función cuando se cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+    // ... otras inicializaciones ...
+    initializeImportacionModule();
+});
+
+function initializeEvaluacionForm() {
+    const evaluacionForm = document.getElementById('evaluacion-form');
+    if (evaluacionForm) {
+        evaluacionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(evaluacionForm);
+            fetch('/rrhh/api/evaluaciones', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Evaluación creada:', data);
+                loadEvaluaciones();
+                evaluacionForm.reset();
+            })
+            .catch(error => console.error('Error creando evaluación:', error));
+        });
+    }
+}
+
+function initializeComprasModule() {
+    const comprasContainer = document.getElementById('compras-container');
+    if (comprasContainer) {
+        loadSolicitudesCompra();
+        loadOrdenesCompra();
+        initializeSolicitudCompraForm();
+        initializeOrdenCompraForm();
+    }
+}
+
+function loadSolicitudesCompra() {
+    fetch('/compras/api/solicitudes')
+        .then(response => response.json())
+        .then(solicitudes => {
+            const solicitudesList = document.getElementById('solicitudes-list');
+            if (solicitudesList) {
+                solicitudesList.innerHTML = solicitudes.map(solicitud => 
+                    `<li>${solicitud.numero} - ${solicitud.descripcion} - ${solicitud.estado}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading solicitudes de compra:', error));
+}
+
+function loadOrdenesCompra() {
+    fetch('/compras/api/ordenes')
+        .then(response => response.json())
+        .then(ordenes => {
+            const ordenesList = document.getElementById('ordenes-list');
+            if (ordenesList) {
+                ordenesList.innerHTML = ordenes.map(orden => 
+                    `<li>${orden.numero} - ${orden.proveedor} - $${orden.total}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading órdenes de compra:', error));
+}
+
+function initializeSolicitudCompraForm() {
+    const solicitudForm = document.getElementById('solicitud-compra-form');
+    if (solicitudForm) {
+        solicitudForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(solicitudForm);
+            fetch('/compras/api/solicitudes', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Solicitud de compra creada:', data);
+                loadSolicitudesCompra();
+                solicitudForm.reset();
+            })
+            .catch(error => console.error('Error creando solicitud de compra:', error));
+        });
+    }
+}
+
+function initializeProyectosModule() {
+    const proyectosContainer = document.getElementById('proyectos-container');
+    if (proyectosContainer) {
+        loadProyectos();
+        loadPresupuestos();
+        loadFacturacion();
+    }
+}
+
+function loadProyectos() {
+    fetch('/proyectos/api/proyectos')
+        .then(response => response.json())
+        .then(proyectos => {
+            const proyectosList = document.getElementById('proyectos-list');
+            if (proyectosList) {
+                proyectosList.innerHTML = proyectos.map(proyecto => 
+                    `<li>${proyecto.nombre} - ${proyecto.estado}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading proyectos:', error));
+}
+
+function loadPresupuestos() {
+    fetch('/proyectos/api/presupuestos')
+        .then(response => response.json())
+        .then(presupuestos => {
+            const presupuestosList = document.getElementById('presupuestos-list');
+            if (presupuestosList) {
+                presupuestosList.innerHTML = presupuestos.map(presupuesto => 
+                    `<li>Proyecto: ${presupuesto.proyecto_nombre} - Monto: ${presupuesto.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading presupuestos:', error));
+}
+
+function loadFacturacion() {
+    fetch('/proyectos/api/facturacion')
+        .then(response => response.json())
+        .then(facturas => {
+            const facturasList = document.getElementById('facturas-list');
+            if (facturasList) {
+                facturasList.innerHTML = facturas.map(factura => 
+                    `<li>Factura: ${factura.numero_factura} - Monto: ${factura.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading facturación:', error));
+}
+
+// Asegúrate de llamar a esta función cuando se cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+    // ... otras inicializaciones ...
+    initializeProyectosModule();
+});
+
+function initializeOrdenCompraForm() {
+    const ordenForm = document.getElementById('orden-compra-form');
+    if (ordenForm) {
+        ordenForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(ordenForm);
+            fetch('/compras/api/ordenes', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Orden de compra creada:', data);
+                loadOrdenesCompra();
+                ordenForm.reset();
+            })
+            .catch(error => console.error('Error creando orden de compra:', error));
+        });
+    }
+}
+
+function initializeCuentasPorCobrarModule() {
+    const cxcContainer = document.getElementById('cxc-container');
+    if (cxcContainer) {
+        loadClientes();
+        loadDescuentosDevoluciones();
+        loadNotasCredito();
+        loadNotasDebito();
+        loadRecibos();
+        loadAnticipos();
+        loadCondicionesPago();
+        loadReporteCxC();
+        loadTiposCliente();
+    }
+}
+
+function loadClientes() {
+    fetch('/cxc/api/clientes')
+        .then(response => response.json())
+        .then(clientes => {
+            const clientesList = document.getElementById('clientes-list');
+            if (clientesList) {
+                clientesList.innerHTML = clientes.map(cliente => 
+                    `<li>${cliente.nombre} - ${cliente.email}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading clientes:', error));
+}
+
+function loadDescuentosDevoluciones() {
+    fetch('/cxc/api/descuentos-devoluciones')
+        .then(response => response.json())
+        .then(descuentosDevoluciones => {
+            const descuentosDevolucionesList = document.getElementById('descuentos-devoluciones-list');
+            if (descuentosDevolucionesList) {
+                descuentosDevolucionesList.innerHTML = descuentosDevoluciones.map(dd => 
+                    `<li>${dd.tipo} - $${dd.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading descuentos y devoluciones:', error));
+}
+
+function loadNotasCredito() {
+    fetch('/cxc/api/notas-credito')
+        .then(response => response.json())
+        .then(notasCredito => {
+            const notasCreditoList = document.getElementById('notas-credito-list');
+            if (notasCreditoList) {
+                notasCreditoList.innerHTML = notasCredito.map(nota => 
+                    `<li>Nota de Crédito #${nota.id} - $${nota.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading notas de crédito:', error));
+}
+
+function loadNotasDebito() {
+    fetch('/cxc/api/notas-debito')
+        .then(response => response.json())
+        .then(notasDebito => {
+            const notasDebitoList = document.getElementById('notas-debito-list');
+            if (notasDebitoList) {
+                notasDebitoList.innerHTML = notasDebito.map(nota => 
+                    `<li>Nota de Débito #${nota.id} - $${nota.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading notas de débito:', error));
+}
+
+function loadRecibos() {
+    fetch('/cxc/api/recibos')
+        .then(response => response.json())
+        .then(recibos => {
+            const recibosList = document.getElementById('recibos-list');
+            if (recibosList) {
+                recibosList.innerHTML = recibos.map(recibo => 
+                    `<li>Recibo #${recibo.id} - $${recibo.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading recibos:', error));
+}
+
+function loadAnticipos() {
+    fetch('/cxc/api/anticipos')
+        .then(response => response.json())
+        .then(anticipos => {
+            const anticiposList = document.getElementById('anticipos-list');
+            if (anticiposList) {
+                anticiposList.innerHTML = anticipos.map(anticipo => 
+                    `<li>Anticipo para ${anticipo.cliente} - $${anticipo.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading anticipos:', error));
+}
+
+function loadCondicionesPago() {
+    fetch('/cxc/api/condiciones-pago')
+        .then(response => response.json())
+        .then(condiciones => {
+            const condicionesList = document.getElementById('condiciones-pago-list');
+            if (condicionesList) {
+                condicionesList.innerHTML = condiciones.map(condicion => 
+                    `<li>${condicion.nombre} - ${condicion.dias} días</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading condiciones de pago:', error));
+}
+
+function loadReporteCxC() {
+    fetch('/cxc/api/reporte')
+        .then(response => response.json())
+        .then(reporte => {
+            const reporteContainer = document.getElementById('reporte-cxc-container');
+            if (reporteContainer) {
+                reporteContainer.innerHTML = `
+                    <h2>Resumen de Cuentas por Cobrar</h2>
+                    <p>Total por cobrar: $${reporte.total_por_cobrar}</p>
+                    <p>Cuentas vencidas: $${reporte.cuentas_vencidas}</p>
+                    <p>Cuentas por vencer: $${reporte.cuentas_por_vencer}</p>
+                `;
+            }
+        })
+        .catch(error => console.error('Error loading reporte CxC:', error));
+}
+
+function loadTiposCliente() {
+    fetch('/cxc/api/tipos-cliente')
+        .then(response => response.json())
+        .then(tipos => {
+            const tiposClienteList = document.getElementById('tipos-cliente-list');
+            if (tiposClienteList) {
+                tiposClienteList.innerHTML = tipos.map(tipo => 
+                    `<li>${tipo.nombre}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading tipos de cliente:', error));
+}
+
+
+
+
+
+// Asegúrate de llamar a initializeSubmoduleHandlers cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSubmoduleHandlers();
+    // Otras inicializaciones...
+});
+// Asegúrate de llamar a esta función cuando se cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+    // ... otras inicializaciones ...
+    initializeCuentasPorCobrarModule();
+});
+// Asegúrate de llamar a esta función cuando se cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+    // ... otras inicializaciones ...
+    initializeComprasModule();
+});
 
 // Asegúrate de llamar a estas nuevas funciones cuando sea necesario
 document.addEventListener('DOMContentLoaded', function() {

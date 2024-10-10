@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Documentos - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="documentos-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">CAMBIAR EL CODIGO</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="id-documento" placeholder="ID">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="tipo-documento" placeholder="Tipo">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="fecha-documento" placeholder="Fecha">
+            </div>
+            <div>
+                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" id="estatus-documento">
+                    <option value="">Todos</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-nuevo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Documento
+            </button>
+        </div>
+    </div>
+    
+    <div id="documentos-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="documentos-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">ID</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Tipo</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Fecha</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estatus</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="documentos-tbody" class="bg-white divide-y divide-gray-200">
+                {% for documento in documentos %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ documento.id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ documento.tipo }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ documento.fecha }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ 'bg-green-100 text-green-800' if documento.estatus == 'activo' else 'bg-red-100 text-red-800' }}">
+                            {{ documento.estatus }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="editar-documento text-blue-600 hover:text-blue-900 mr-2" data-id="{{ documento.id }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="eliminar-documento text-red-600 hover:text-red-900 mr-2" data-id="{{ documento.id }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="cambiar-estatus-documento {{ 'text-yellow-600 hover:text-yellow-900' if documento.estatus == 'activo' else 'text-green-600 hover:text-green-900' }}" data-id="{{ documento.id }}" data-estatus="{{ documento.estatus }}">
+                            <i class="fas {{ 'fa-toggle-off' if documento.estatus == 'activo' else 'fa-toggle-on' }}"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-xl font-bold" id="modal-title">Crear Nuevo Documento</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <form id="documento-form" class="mt-4">
+                <input type="hidden" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo">
+                        Tipo
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="tipo" type="text" placeholder="Tipo de documento" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
+                        Fecha
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="fecha" type="date" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
+                        Estatus
+                    </label>
+                    <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Guardar
+                    </button>
+                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
+        const modal = document.querySelector('.modal');
+        const modalClose = document.querySelector('.modal-close');
+        const modalTitle = document.getElementById('modal-title');
+
+        crearNuevoBtn.addEventListener('click', () => {
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100', 'pointer-events-auto');
+            modalTitle.innerText = 'Crear Nuevo Documento';
+            resetForm();
+        });
+
+        modalClose.addEventListener('click', () => {
+            closeModal();
+        });
+
+        document.getElementById('documento-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const id = formData.get('id');
+            const tipo = formData.get('tipo');
+            const fecha = formData.get('fecha');
+            const estatus = formData.get('estatus');
+
+            if (id) {
+                // Lógica para actualizar un documento existente
+                updateDocumento(id, { tipo, fecha, estatus });
+            } else {
+                // Lógica para crear un nuevo documento
+                crearDocumento({ tipo, fecha, estatus });
+            }
+        });
+
+        // Función para cerrar el modal
+        function closeModal() {
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            resetForm();
+        }
+
+        // Función para resetear el formulario
+        function resetForm() {
+            document.getElementById('documento-form').reset();
+        }
+
+        // Funciones para manejar la creación y actualización de documentos
+        function crearDocumento(data) {
+            // Lógica para crear documento (llamada AJAX)
+            Swal.fire({
+                title: 'Éxito',
+                text: 'Documento creado con éxito',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            });
+            closeModal();
+        }
+
+        function updateDocumento(id, data) {
+            // Lógica para actualizar documento (llamada AJAX)
+            Swal.fire({
+                title: 'Éxito',
+                text: 'Documento actualizado con éxito',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            });
+            closeModal();
+        }
+
+        // Manejo de eventos para eliminar y cambiar estatus
+        document.getElementById('documentos-tbody').addEventListener('click', function (e) {
+            if (e.target.classList.contains('eliminar-documento')) {
+                const id = e.target.getAttribute('data-id');
+                eliminarDocumento(id);
+            } else if (e.target.classList.contains('cambiar-estatus-documento')) {
+                const id = e.target.getAttribute('data-id');
+                const estatus = e.target.getAttribute('data-estatus');
+                cambiarEstatusDocumento(id, estatus === 'activo' ? 'inactivo' : 'activo');
+            } else if (e.target.classList.contains('editar-documento')) {
+                const id = e.target.getAttribute('data-id');
+                editarDocumento(id);
+            }
+        });
+
+        function eliminarDocumento(id) {
+            // Lógica para eliminar documento (llamada AJAX)
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'No podrás revertir esto',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Lógica para eliminar el documento
+                    Swal.fire('Eliminado!', 'El documento ha sido eliminado.', 'success');
+                }
+            });
+        }
+
+        function cambiarEstatusDocumento(id, nuevoEstatus) {
+            // Lógica para cambiar el estatus del documento (llamada AJAX)
+            Swal.fire({
+                title: 'Éxito',
+                text: `El estatus del documento ha sido cambiado a ${nuevoEstatus}`,
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            });
+        }
+
+        function editarDocumento(id) {
+            // Lógica para editar el documento (llamada AJAX para obtener datos y llenar el formulario)
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100', 'pointer-events-auto');
+            modalTitle.innerText = 'Editar Documento';
+            // Suponiendo que se obtienen los datos del documento
+            document.querySelector('input[name="id"]').value = id;
+            document.querySelector('input[name="tipo"]').value = 'Ejemplo Tipo'; // Cambiar por el valor real
+            document.querySelector('input[name="fecha"]').value = '2024-01-01'; // Cambiar por el valor real
+            document.querySelector('select[name="estatus"]').value = 'activo'; // Cambiar por el valor real
+        }
+    });
+</script>
+{% endblock %}

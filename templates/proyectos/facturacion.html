@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Facturación por Proyecto{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Facturación por Proyecto</h1>
+    <a href="{{ url_for('proyectos.crear_factura') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Factura</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Proyecto</th>
+                <th class="py-2 px-4 border-b">Número Factura</th>
+                <th class="py-2 px-4 border-b">Fecha Emisión</th>
+                <th class="py-2 px-4 border-b">Monto</th>
+                <th class="py-2 px-4 border-b">Estado</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for factura in facturas %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ factura.proyecto.nombre }}</td>
+                <td class="py-2 px-4 border-b">{{ factura.numero_factura }}</td>
+                <td class="py-2 px-4 border-b">{{ factura.fecha_emision }}</td>
+                <td class="py-2 px-4 border-b">{{ factura.monto }}</td>
+                <td class="py-2 px-4 border-b">{{ factura.estado }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="#" class="text-blue-500">Ver</a>
+                    <a href="#" class="text-green-500">Editar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

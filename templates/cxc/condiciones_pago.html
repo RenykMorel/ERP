@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Condiciones de Pago{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Condiciones de Pago</h1>
+    <a href="{{ url_for('cxc.crear_condicion_pago') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Condición de Pago</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">ID</th>
+                <th class="py-2 px-4 border-b">Nombre</th>
+                <th class="py-2 px-4 border-b">Días</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for condicion in condiciones %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ condicion.id }}</td>
+                <td class="py-2 px-4 border-b">{{ condicion.nombre }}</td>
+                <td class="py-2 px-4 border-b">{{ condicion.dias }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('cxc.editar_condicion_pago', id=condicion.id) }}" class="text-blue-500">Editar<a href="{{ url_for('cxc.editar_condicion_pago', id=condicion.id) }}" class="text-blue-500">Editar</a>
+                    <a href="{{ url_for('cxc.eliminar_condicion_pago', id=condicion.id) }}" class="text-red-500 ml-2">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

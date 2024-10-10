@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Balance General{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Balance General</h1>
+
+    <div class="mb-4">
+        <label for="fecha-balance" class="block text-sm font-medium text-gray-700">Fecha del Balance:</label>
+        <input type="date" id="fecha-balance" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+    </div>
+
+    <button id="generar-balance" class="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Generar Balance General
+    </button>
+
+    <div id="balance-general-content" class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+        <!-- El contenido del balance general se cargará aquí dinámicamente -->
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaBalanceInput = document.getElementById('fecha-balance');
+    const generarBalanceBtn = document.getElementById('generar-balance');
+    const balanceGeneralContent = document.getElementById('balance-general-content');
+
+    generarBalanceBtn.addEventListener('click', function() {
+        const fechaBalance = fechaBalanceInput.value;
+
+        if (!fechaBalance) {
+            alert('Por favor, seleccione una fecha para el balance.');
+            return;
+        }
+
+        fetch('/contabilidad/balance_general/generar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ fecha_balance: fechaBalance })
+        })
+        .then(response => response.json())
+        .then(data => {
+            let html = `
+                <h2 class="text-2xl font-bold mb-4">Balance General</h2>
+                <p class="mb-2">Fecha: ${fechaBalance}</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2">Activos</h3>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Circulante</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${data.activos.circulante.toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Fijo</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${data.activos.fijo.toFixed(2)}</td>
+                                </tr>
+                                <tr class="bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Total Activos</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">$${(data.activos.circulante + data.activos.fijo).toFixed(2)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2">Pasivos y Capital</h3>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Pasivos Corto Plazo</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${data.pasivos.corto_plazo.toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Pasivos Largo Plazo</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${data.pasivos.largo_plazo.toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Capital</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${data.capital.toFixed(2)}</td>
+                                </tr>
+                                <tr class="bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Total Pasivos y Capital</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">$${(data.pasivos.corto_plazo + data.pasivos.largo_plazo + data.capital).toFixed(2)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            balanceGeneralContent.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            balanceGeneralContent.innerHTML = '<p class="text-red-500">Error al generar el balance general.</p>';
+        });
+    });
+});
+</script>
+{% endblock %}

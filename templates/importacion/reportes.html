@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Reportes de Importación{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Reportes de Importación</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white p-4 rounded shadow">
+            <h2 class="text-xl font-semibold mb-2">Generar Nuevo Reporte</h2>
+            <form action="{{ url_for('importacion.generar_reporte') }}" method="post">
+                <div class="mb-4">
+                    <label for="tipo_reporte" class="block mb-2">Tipo de Reporte:</label>
+                    <select name="tipo_reporte" id="tipo_reporte" class="w-full p-2 border rounded">
+                        <option value="mensual">Reporte Mensual</option>
+                        <option value="anual">Reporte Anual</option>
+                        <option value="por_importador">Reporte por Importador</option>
+                    </select>
+                </div>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Generar Reporte</button>
+            </form>
+        </div>
+        <div class="bg-white p-4 rounded shadow">
+            <h2 class="text-xl font-semibold mb-2">Reportes Recientes</h2>
+            <ul>
+                {% for reporte in reportes_recientes %}
+                <li class="mb-2">
+                    <a href="{{ url_for('importacion.descargar_reporte', id=reporte.id) }}" class="text-blue-500">
+                        {{ reporte.titulo }} - {{ reporte.fecha_generacion.strftime('%Y-%m-%d') }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Cuentas Contables{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Cuentas Contables</h1>
+    
+    <div class="mb-4">
+        <button id="nueva-cuenta-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Nueva Cuenta
+        </button>
+    </div>
+
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Código</th>
+                <th class="py-2 px-4 border-b">Nombre</th>
+                <th class="py-2 px-4 border-b">Tipo</th>
+                <th class="py-2 px-4 border-b">Saldo</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="cuentas-list">
+            <!-- Las cuentas se cargarán aquí dinámicamente -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para crear/editar cuenta -->
+<div id="cuenta-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <h3 class="text-lg font-bold mb-4" id="modal-title">Nueva Cuenta</h3>
+        <form id="cuenta-form">
+            <input type="hidden" id="cuenta-id">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo">
+                    Código
+                </label>
+                <input type="text" id="codigo" name="codigo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
+                    Nombre
+                </label>
+                <input type="text" id="nombre" name="nombre" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo">
+                    Tipo
+                </label>
+                <select id="tipo" name="tipo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="Activo">Activo</option>
+                    <option value="Pasivo">Pasivo</option>
+                    <option value="Patrimonio">Patrimonio</option>
+                    <option value="Ingreso">Ingreso</option>
+                    <option value="Gasto">Gasto</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="saldo">
+                    Saldo
+                </label>
+                <input type="number" id="saldo" name="saldo" step="0.01" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Guardar
+                </button>
+                <button type="button" id="cerrar-modal" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    cargarCuentas();
+    
+    document.getElementById('nueva-cuenta-btn').addEventListener('click', () => {
+        document.getElementById('modal-title').textContent = 'Nueva Cuenta';
+        document.getElementById('cuenta-id').value = '';
+        document.getElementById('cuenta-form').reset();
+        document.getElementById('cuenta-modal').classList.remove('hidden');
+    });
+
+    document.getElementById('cerrar-modal').addEventListener('click', () => {
+        document.getElementById('cuenta-modal').classList.add('hidden');
+    });
+
+    document.getElementById('cuenta-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const cuentaId = document.getElementById('cuenta-id').value;
+        const formData = new FormData(this);
+        const url = cuentaId ? `/contabilidad/cuentas/${cuentaId}` : '/contabilidad/cuentas';
+        const method = cuentaId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            body: JSON.stringify(Object.fromEntries(formData)),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('cuenta-modal').classList.add('hidden');
+                cargarCuentas();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+});
+
+function cargarCuentas() {
+    fetch('/contabilidad/api/cuentas')
+        .then(response => response.json())
+        .then(cuentas => {
+            const cuentasList = document.getElementById('cuentas-list');
+            cuentasList.innerHTML = '';
+            cuentas.forEach(cuenta => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="py-2 px-4 border-b">${cuenta.codigo}</td>
+                    <td class="py-2 px-4 border-b">${cuenta.nombre}</td>
+                    <td class="py-2 px-4 border-b">${cuenta.tipo}</td>
+                    <td class="py-2 px-4 border-b">${cuenta.saldo}</td>
+                    <td class="py-2 px-4 border-b">
+                        <button onclick="editarCuenta(${cuenta.id})" class="text-blue-500 hover:text-blue-700 mr-2">Editar</button>
+                        <button onclick="eliminarCuenta(${cuenta.id})" class="text-red-500 hover:text-red-700">Eliminar</button>
+                    </td>
+                `;
+                cuentasList.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function editarCuenta(id) {
+    fetch(`/contabilidad/cuentas/${id}`)
+        .then(response => response.json())
+        .then(cuenta => {
+            document.getElementById('modal-title').textContent = 'Editar Cuenta';
+            document.getElementById('cuenta-id').value = cuenta.id;
+            document.getElementById('codigo').value = cuenta.codigo;
+            document.getElementById('nombre').value = cuenta.nombre;
+            document.getElementById('tipo').value = cuenta.tipo;
+            document.getElementById('saldo').value = cuenta.saldo;
+            document.getElementById('cuenta-modal').classList.remove('hidden');
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function eliminarCuenta(id) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta cuenta?')) {
+        fetch(`/contabilidad/cuentas/${id}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    cargarCuentas();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+}
+</script>
+{% endblock %}

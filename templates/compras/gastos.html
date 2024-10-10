@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Gastos{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Gestión de Gastos</h1>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">ID</th>
+                <th class="py-2 px-4 border-b">Concepto</th>
+                <th class="py-2 px-4 border-b">Monto</th>
+                <th class="py-2 px-4 border-b">Fecha</th>
+                <th class="py-2 px-4 border-b">Categoría</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for gasto in gastos %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ gasto.id }}</td>
+                <td class="py-2 px-4 border-b">{{ gasto.concepto }}</td>
+                <td class="py-2 px-4 border-b">{{ gasto.monto | round(2) }}</td>
+                <td class="py-2 px-4 border-b">{{ gasto.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ gasto.categoria }}</td>
+                <td class="py-2 px-4 border-b">
+                    <form method="POST" action="{{ url_for('compras.editar_gasto', id=gasto.id) }}" style="display:inline;">
+                        <button class="bg-blue-500 text-white px-2 py-1 rounded">Editar</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('compras.eliminar_gasto', id=gasto.id) }}" style="display:inline;">
+                        <button class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

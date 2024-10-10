@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Notas de Débito{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Notas de Débito</h1>
+    <a href="{{ url_for('cxc.crear_nota_debito') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Nota de Débito</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Número</th>
+                <th class="py-2 px-4 border-b">Monto</th>
+                <th class="py-2 px-4 border-b">Fecha</th>
+                <th class="py-2 px-4 border-b">Motivo</th>
+                <th class="py-2 px-4 border-b">Cuenta por Cobrar</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for nota in notas_debito %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ nota.id }}</td>
+                <td class="py-2 px-4 border-b">{{ nota.monto }}</td>
+                <td class="py-2 px-4 border-b">{{ nota.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ nota.motivo }}</td>
+                <td class="py-2 px-4 border-b">{{ nota.cuenta_por_cobrar_id }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('cxc.editar_nota_debito', id=nota.id) }}" class="text-blue-500">Editar</a>
+                    <a href="{{ url_for('cxc.eliminar_nota_debito', id=nota.id) }}" class="text-red-500 ml-2">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

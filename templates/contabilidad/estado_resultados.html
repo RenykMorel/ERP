@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Estado de Resultados{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Estado de Resultados</h1>
+
+    <div class="mb-4">
+        <label for="fecha-inicio" class="block text-sm font-medium text-gray-700">Fecha de Inicio:</label>
+        <input type="date" id="fecha-inicio" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+    </div>
+
+    <div class="mb-4">
+        <label for="fecha-fin" class="block text-sm font-medium text-gray-700">Fecha de Fin:</label>
+        <input type="date" id="fecha-fin" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+    </div>
+
+    <button id="generar-estado" class="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Generar Estado de Resultados
+    </button>
+
+    <div id="estado-resultados-content" class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+        <!-- El contenido del estado de resultados se cargará aquí dinámicamente -->
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaInicioInput = document.getElementById('fecha-inicio');
+    const fechaFinInput = document.getElementById('fecha-fin');
+    const generarEstadoBtn = document.getElementById('generar-estado');
+    const estadoResultadosContent = document.getElementById('estado-resultados-content');
+
+    generarEstadoBtn.addEventListener('click', function() {
+        const fechaInicio = fechaInicioInput.value;
+        const fechaFin = fechaFinInput.value;
+
+        if (!fechaInicio || !fechaFin) {
+            alert('Por favor, seleccione ambas fechas.');
+            return;
+        }
+
+        fetch('/contabilidad/estado_resultados/generar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ fecha_inicio: fechaInicio, fecha_fin: fechaFin })
+        })
+        .then(response => response.json())
+        .then(data => {
+            let html = `
+                <h2 class="text-2xl font-bold mb-4">Estado de Resultados</h2>
+                <p class="mb-2">Período: ${fechaInicio} al ${fechaFin}</p>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Ingresos</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${data.ingresos.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Gastos</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${data.gastos.toFixed(2)}</td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Utilidad</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">$${data.utilidad.toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+
+            estadoResultadosContent.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            estadoResultadosContent.innerHTML = '<p class="text-red-500">Error al generar el estado de resultados.</p>';
+        });
+    });
+});
+</script>
+{% endblock %}

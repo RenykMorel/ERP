@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Formulario 606{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Formulario 606 - Compras de Bienes y Servicios</h1>
+    <a href="{{ url_for('impuestos.crear_formulario606') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Registro</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Fecha</th>
+                <th class="py-2 px-4 border-b">RNC/Cédula</th>
+                <th class="py-2 px-4 border-b">Tipo de Bienes/Servicios</th>
+                <th class="py-2 px-4 border-b">NCF</th>
+                <th class="py-2 px-4 border-b">Monto</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in registros %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ registro.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ registro.rnc_cedula }}</td>
+                <td class="py-2 px-4 border-b">{{ registro.tipo_bienes_servicios }}</td>
+                <td class="py-2 px-4 border-b">{{ registro.ncf }}</td>
+                <td class="py-2 px-4 border-b">{{ registro.monto }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('impuestos.editar_formulario606', id=registro.id) }}" class="text-blue-500">Editar</a>
+                    <a href="{{ url_for('impuestos.eliminar_formulario606', id=registro.id) }}" class="text-red-500 ml-2">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

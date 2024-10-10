@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Tipos de Cliente{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Tipos de Cliente</h1>
+    <a href="{{ url_for('cxc.crear_tipo_cliente') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Tipo de Cliente</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">ID</th>
+                <th class="py-2 px-4 border-b">Nombre</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tipo in tipos %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ tipo.id }}</td>
+                <td class="py-2 px-4 border-b">{{ tipo.nombre }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('cxc.editar_tipo_cliente', id=tipo.id) }}" class="text-blue-500">Editar</a>
+                    <a href="{{ url_for('cxc.eliminar_tipo_cliente', id=tipo.id) }}" class="text-red-500 ml-2">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

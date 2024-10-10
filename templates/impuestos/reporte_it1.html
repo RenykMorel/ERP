@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Reporte IT1{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Reporte IT1 - Impuesto sobre Transferencias de Bienes Industrializados y Servicios</h1>
+    <a href="{{ url_for('impuestos.crear_reporte_it1') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Reporte</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Periodo</th>
+                <th class="py-2 px-4 border-b">Total Ingresos</th>
+                <th class="py-2 px-4 border-b">Total Gastos</th>
+                <th class="py-2 px-4 border-b">Impuesto Pagado</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reporte in reportes %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ reporte.periodo }}</td>
+                <td class="py-2 px-4 border-b">{{ reporte.total_ingresos }}</td>
+                <td class="py-2 px-4 border-b">{{ reporte.total_gastos }}</td>
+                <td class="py-2 px-4 border-b">{{ reporte.impuesto_pagado }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('impuestos.editar_reporte_it1', id=reporte.id) }}" class="text-blue-500">Editar</a>
+                    <a href="{{ url_for('impuestos.eliminar_reporte_it1', id=reporte.id) }}" class="text-red-500 ml-2">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

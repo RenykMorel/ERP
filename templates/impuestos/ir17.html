@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}IR17 - Impuesto sobre la Renta{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">IR17 - Declaración Jurada y Pago del Impuesto sobre la Renta</h1>
+    <a href="{{ url_for('impuestos.crear_ir17') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Declaración</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Año Fiscal</th>
+                <th class="py-2 px-4 border-b">Ingresos Totales</th>
+                <th class="py-2 px-4 border-b">Gastos Deducibles</th>
+                <th class="py-2 px-4 border-b">Renta Neta Imponible</th>
+                <th class="py-2 px-4 border-b">Impuesto Liquidado</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for declaracion in declaraciones %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ declaracion.ano_fiscal }}</td>
+                <td class="py-2 px-4 border-b">{{ declaracion.ingresos_totales }}</td>
+                <td class="py-2 px-4 border-b">{{ declaracion.gastos_deducibles }}</td>
+                <td class="py-2 px-4 border-b">{{ declaracion.renta_neta_imponible }}</td>
+                <td class="py-2 px-4 border-b">{{ declaracion.impuesto_liquidado }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('impuestos.editar_ir17', id=declaracion.id) }}" class="text-blue-500">Editar</a>
+                    <a href="{{ url_for('impuestos.eliminar_ir17', id=declaracion.id) }}" class="text-red-500 ml-2">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

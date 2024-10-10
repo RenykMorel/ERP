@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Flujo de Caja{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Flujo de Caja</h1>
+
+    <div class="mb-4">
+        <label for="fecha-inicio" class="block text-sm font-medium text-gray-700">Fecha de Inicio:</label>
+        <input type="date" id="fecha-inicio" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+    </div>
+
+    <div class="mb-4">
+        <label for="fecha-fin" class="block text-sm font-medium text-gray-700">Fecha de Fin:</label>
+        <input type="date" id="fecha-fin" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+    </div>
+
+    <button id="generar-flujo" class="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Generar Flujo de Caja
+    </button>
+
+    <div id="flujo-caja-content" class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+        <!-- El contenido del flujo de caja se cargará aquí dinámicamente -->
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaInicioInput = document.getElementById('fecha-inicio');
+    const fechaFinInput = document.getElementById('fecha-fin');
+    const generarFlujoBtn = document.getElementById('generar-flujo');
+    const flujoCajaContent = document.getElementById('flujo-caja-content');
+
+    generarFlujoBtn.addEventListener('click', function() {
+        const fechaInicio = fechaInicioInput.value;
+        const fechaFin = fechaFinInput.value;
+
+        if (!fechaInicio || !fechaFin) {
+            alert('Por favor, seleccione ambas fechas.');
+            return;
+        }
+
+        fetch('/contabilidad/flujo_caja/generar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ fecha_inicio: fechaInicio, fecha_fin: fechaFin })
+        })
+        .then(response => response.json())
+        .then(data => {
+            let html = `
+                <h2 class="text-2xl font-bold mb-4">Flujo de Caja</h2>
+                <p class="mb-2">Período: ${fechaInicio} al ${fechaFin}</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2">Ingresos</h3>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${data.ingresos.map(i => `
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${i.concepto}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${i.monto.toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-2">Egresos</h3>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${data.egresos.map(e => `
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${e.concepto}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${e.monto.toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-lg"><strong>Saldo Inicial:</strong> $${data.saldo_inicial.toFixed(2)}</p>
+                    <p class="text-lg"><strong>Saldo Final:</strong> $${data.saldo_final.toFixed(2)}</p>
+                </div>
+            `;
+
+            flujoCajaContent.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            flujoCajaContent.innerHTML = '<p class="text-red-500">Error al generar el flujo de caja.</p>';
+        });
+    });
+});
+</script>
+{% endblock %}

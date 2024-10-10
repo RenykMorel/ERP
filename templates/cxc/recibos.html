@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Recibos{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Recibos</h1>
+    <a href="{{ url_for('cxc.crear_recibo') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Recibo</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Número</th>
+                <th class="py-2 px-4 border-b">Monto</th>
+                <th class="py-2 px-4 border-b">Fecha</th>
+                <th class="py-2 px-4 border-b">Cuenta por Cobrar</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recibo in recibos %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ recibo.id }}</td>
+                <td class="py-2 px-4 border-b">{{ recibo.monto }}</td>
+                <td class="py-2 px-4 border-b">{{ recibo.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ recibo.cuenta_por_cobrar_id }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('cxc.editar_recibo', id=recibo.id) }}" class="text-blue-500">Editar</a>
+                    <a href="{{ url_for('cxc.eliminar_recibo', id=recibo.id) }}" class="text-red-500 ml-2">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Crear Nota de Crédito{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Crear Nueva Nota de Crédito</h1>
+    <form method="POST">
+        <div class="mb-4">
+            <label for="monto" class="block">Monto:</label>
+            <input type="text" id="monto" name="monto" class="border rounded w-full py-2 px-3" required>
+        </div>
+        <div class="mb-4">
+            <label for="fecha" class="block">Fecha:</label>
+            <input type="date" id="fecha" name="fecha" class="border rounded w-full py-2 px-3" required>
+        </div>
+        <div class="mb-4">
+            <label for="motivo" class="block">Motivo:</label>
+            <input type="text" id="motivo" name="motivo" class="border rounded w-full py-2 px-3" required>
+        </div>
+        <div class="mb-4">
+            <label for="cuenta_por_cobrar_id" class="block">Cuenta por Cobrar ID:</label>
+            <input type="text" id="cuenta_por_cobrar_id" name="cuenta_por_cobrar_id" class="border rounded w-full py-2 px-3" required>
+        </div>
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar Nota</button>
+    </form>
+    <a href="{{ url_for('cxc.notas_credito') }}" class="text-blue-500 mt-4 inline-block">Volver a Notas de Crédito</a>
+</div>
+{% endblock %}

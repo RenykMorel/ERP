@@ -264,6 +264,33 @@ class Conciliacion(db.Model):
     def __repr__(self):
         return f'<Conciliacion {self.id} - NuevoBanco {self.banco_id}>'
 
+class Banco(db.Model):
+    __tablename__ = 'bancos'
+    __table_args__ = {'extend_existing': True}
+    
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    codigo = db.Column(db.String(20), unique=True)
+
+    def __repr__(self):
+        return f'<Banco {self.nombre}>'
+    
+    
+class BancoCuenta(db.Model):
+    __tablename__ = 'banco_cuentas'
+    __table_args__ = {'extend_existing': True}
+    
+    id = db.Column(db.Integer, primary_key=True)
+    banco_id = db.Column(db.Integer, db.ForeignKey('bancos.id'), nullable=False)
+    numero_cuenta = db.Column(db.String(50), nullable=False)
+    tipo_cuenta = db.Column(db.String(50))
+    saldo = db.Column(db.Numeric(precision=10, scale=2), default=0)
+    
+    banco = db.relationship('Banco', backref=db.backref('cuentas', lazy=True))
+
+    def __repr__(self):
+        return f'<BancoCuenta {self.numero_cuenta}>'
+
 class Deposito(db.Model):
     __tablename__ = 'depositos'
     __table_args__ = {'extend_existing': True}

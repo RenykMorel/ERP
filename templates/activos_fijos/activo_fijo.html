@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Activo Fijo{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Gestión de Activos Fijos</h1>
+    <a href="{{ url_for('activos_fijos.crear_activo_fijo') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Activo Fijo</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">Código</th>
+                <th class="py-2 px-4 border-b">Nombre</th>
+                <th class="py-2 px-4 border-b">Fecha Adquisición</th>
+                <th class="py-2 px-4 border-b">Valor</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for activo in activos %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ activo.codigo }}</td>
+                <td class="py-2 px-4 border-b">{{ activo.nombre }}</td>
+                <td class="py-2 px-4 border-b">{{ activo.fecha_adquisicion }}</td>
+                <td class="py-2 px-4 border-b">{{ activo.valor_adquisicion }}</td>
+                <td class="py-2 px-4 border-b">
+                    <a href="{{ url_for('activos_fijos.editar_activo_fijo', id=activo.id) }}" class="text-blue-500">Editar</a>
+                    <a href="{{ url_for('activos_fijos.ver_activo_fijo', id=activo.id) }}" class="text-green-500">Ver</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

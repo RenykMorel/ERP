@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Mayor General{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Mayor General</h1>
+
+    <div class="mb-4">
+        <label for="cuenta-select" class="block text-sm font-medium text-gray-700">Seleccionar Cuenta:</label>
+        <select id="cuenta-select" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <option value="">Todas las cuentas</option>
+            <!-- Las opciones se cargarán dinámicamente -->
+        </select>
+    </div>
+
+    <div id="mayor-general-content" class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <!-- El contenido del mayor general se cargará aquí dinámicamente -->
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cuentaSelect = document.getElementById('cuenta-select');
+    const mayorGeneralContent = document.getElementById('mayor-general-content');
+
+    function cargarCuentas() {
+        fetch('/contabilidad/api/cuentas')
+            .then(response => response.json())
+            .then(cuentas => {
+                cuentas.forEach(cuenta => {
+                    const option = document.createElement('option');
+                    option.value = cuenta.id;
+                    option.textContent = cuenta.nombre;
+                    cuentaSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function cargarMayorGeneral(cuentaId = null) {
+        let url = cuentaId 
+            ? `/contabilidad/mayor_general/cuenta/${cuentaId}`
+            : '/contabilidad/mayor_general/listar';
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                let html = '';
+                if (Array.isArray(data)) {
+                    // Todas las cuentas
+                    data.forEach(cuenta => {
+                        html += generarTablaCuenta(cuenta);
+                    });
+                } else {
+                    // Una sola cuenta
+                    html = generarTablaCuenta(data);
+                }
+                mayorGeneralContent.innerHTML = html;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function generarTablaCuenta(cuenta) {
+        return `
+            <div class="px-4 py-5 sm:px-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">${cuenta.cuenta}</h3>
+            </div>
+            <div class="border-t border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Debe</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Haber</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${cuenta.movimientos.map(m => `
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${m.fecha}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${m.descripcion}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${m.debe}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${m.haber}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${m.saldo}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    cuentaSelect.addEventListener('change', function() {
+        cargarMayorGeneral(this.value);
+    });
+
+    cargarCuentas();
+    cargarMayorGeneral();
+});
+</script>
+{% endblock %}

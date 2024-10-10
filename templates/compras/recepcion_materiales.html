@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Recepción de Materiales{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Recepción de Materiales</h1>
+    <a href="{{ url_for('compras.crear_recepcion') }}" class="bg-green-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Recepción</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">ID</th>
+                <th class="py-2 px-4 border-b">Fecha</th>
+                <th class="py-2 px-4 border-b">Orden de Compra</th>
+                <th class="py-2 px-4 border-b">Proveedor</th>
+                <th class="py-2 px-4 border-b">Estado</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recepcion in recepciones %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ recepcion.id }}</td>
+                <td class="py-2 px-4 border-b">{{ recepcion.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ recepcion.orden_compra.numero }}</td>
+                <td class="py-2 px-4 border-b">{{ recepcion.orden_compra.proveedor }}</td>
+                <td class="py-2 px-4 border-b">{{ recepcion.estado }}</td>
+                <td class="py-2 px-4 border-b">
+                    <form method="POST" action="{{ url_for('compras.editar_recepcion', id=recepcion.id) }}" style="display:inline;">
+                        <button class="bg-blue-500 text-white px-2 py-1 rounded">Editar</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('compras.eliminar_recepcion', id=recepcion.id) }}" style="display:inline;">
+                        <button class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
+                    </form>
+                    <a href="{{ url_for('compras.detalles_recepcion', id=recepcion.id) }}" class="bg-yellow-500 text-white px-2 py-1 rounded inline-block">Detalles</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

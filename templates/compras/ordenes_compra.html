@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Órdenes de Compra{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Órdenes de Compra</h1>
+    <a href="{{ url_for('compras.crear_orden') }}" class="bg-green-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Orden de Compra</a>
+    <table class="min-w-full bg-white">
+        <thead>
+            <tr>
+                <th class="py-2 px-4 border-b">ID</th>
+                <th class="py-2 px-4 border-b">Fecha</th>
+                <th class="py-2 px-4 border-b">Proveedor</th>
+                <th class="py-2 px-4 border-b">Total</th>
+                <th class="py-2 px-4 border-b">Estado</th>
+                <th class="py-2 px-4 border-b">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for orden in ordenes %}
+            <tr>
+                <td class="py-2 px-4 border-b">{{ orden.id }}</td>
+                <td class="py-2 px-4 border-b">{{ orden.fecha }}</td>
+                <td class="py-2 px-4 border-b">{{ orden.proveedor }}</td>
+                <td class="py-2 px-4 border-b">{{ orden.total | round(2) }}</td>
+                <td class="py-2 px-4 border-b">{{ orden.estado }}</td>
+                <td class="py-2 px-4 border-b">
+                    <form method="POST" action="{{ url_for('compras.editar_orden', id=orden.id) }}" style="display:inline;">
+                        <button class="bg-blue-500 text-white px-2 py-1 rounded">Editar</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('compras.eliminar_orden', id=orden.id) }}" style="display:inline;">
+                        <button class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
