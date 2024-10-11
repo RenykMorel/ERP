@@ -3,6 +3,7 @@
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     .modal {
@@ -12,6 +13,23 @@
         overflow-x: hidden;
         overflow-y: visible !important;
     }
+    .compact-form label {
+        font-size: 0.75rem;
+    }
+    .compact-form input, .compact-form select, .compact-form textarea {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .compact-table th, .compact-table td {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    @media (max-width: 640px) {
+        .compact-table th, .compact-table td {
+            padding: 0.25rem;
+            font-size: 0.7rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -19,8 +37,8 @@
 <div id="pre-facturas-module" class="container mx-auto px-4 py-6">
     <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Pre-Facturas</h1>
     
-    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-4 sm:px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
                 <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="numero-prefactura" placeholder="Número de pre-factura">
             </div>
@@ -39,11 +57,11 @@
                 </select>
             </div>
         </div>
-        <div class="flex justify-between mt-4">
-            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <div class="flex flex-col sm:flex-row justify-between mt-4">
+            <button id="buscar-btn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mb-2 sm:mb-0">
                 <i class="fas fa-search mr-2"></i>Buscar
             </button>
-            <button id="crear-nuevo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            <button id="crear-nuevo-btn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                 <i class="fas fa-plus mr-2"></i>Crear Nueva Pre-Factura
             </button>
         </div>
@@ -72,59 +90,186 @@
 <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
     <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
     
-    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+    <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded shadow-lg z-50 overflow-y-auto">
         <div class="modal-content py-4 text-left px-6">
             <div class="flex justify-between items-center pb-3">
                 <p class="text-xl font-bold" id="modal-title">Crear Nueva Pre-Factura</p>
                 <div class="modal-close cursor-pointer z-50">
-                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
-                    </svg>
+                    <i class="fas fa-times"></i>
                 </div>
             </div>
 
-            <form id="prefactura-form" class="mt-4">
+            <form id="prefactura-form" class="mt-4 compact-form">
                 <input type="hidden" name="id">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="numero">
-                        Número de Pre-Factura
-                    </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="numero" type="text" placeholder="Número de pre-factura" required>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="col-span-1 sm:col-span-2">
+                        <label class="block text-gray-700 text-xs font-bold mb-1">Tipo</label>
+                        <div class="flex items-center space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" class="form-radio" name="tipo" value="contado" checked>
+                                <span class="ml-2 text-sm">Contado</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" class="form-radio" name="tipo" value="credito">
+                                <span class="ml-2 text-sm">Crédito</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="fecha">Fecha</label>
+                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="fecha" name="fecha" type="text" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="cliente">Cliente</label>
+                        <div class="relative">
+                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline pr-8" id="cliente" name="cliente" type="text" required>
+                            <button type="button" class="absolute inset-y-0 right-0 px-2 flex items-center bg-gray-200 rounded-r">
+                                <i class="fas fa-search text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="documento">Documento</label>
+                        <div class="relative">
+                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline pr-8" id="documento" name="documento" type="text">
+                            <button type="button" class="absolute inset-y-0 right-0 px-2 flex items-center bg-gray-200 rounded-r">
+                                <i class="fas fa-search text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="nombre_completo">Nombre Completo</label>
+                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nombre_completo" name="nombre_completo" type="text">
+                    </div>
+                    <div class="col-span-1 sm:col-span-2">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="direccion">Dirección</label>
+                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="direccion" name="direccion" type="text">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="tienda">Tienda *</label>
+                        <div class="relative">
+                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline pr-8" id="tienda" name="tienda" type="text" required>
+                            <button type="button" class="absolute inset-y-0 right-0 px-2 flex items-center bg-gray-200 rounded-r">
+                                <i class="fas fa-search text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="vendedor">Vendedor</label>
+                        <div class="relative">
+                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline pr-8" id="vendedor" name="vendedor" type="text">
+                            <button type="button" class="absolute inset-y-0 right-0 px-2 flex items-center bg-gray-200 rounded-r">
+                                <i class="fas fa-search text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-span-1 sm:col-span-2">
+                        <label class="block text-gray-700 text-xs font-bold mb-1">Descuento</label>
+                        <div class="flex flex-wrap items-center space-x-2">
+                            <select class="shadow-sm appearance-none border rounded py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 sm:mb-0" name="tipo_descuento">
+                                <option value="general">General</option>
+                            </select>
+                            <label class="inline-flex items-center mb-2 sm:mb-0">
+                                <input type="radio" class="form-radio" name="tipo_descuento_valor" value="porcentaje" checked>
+                                <span class="ml-1 text-xs">%</span>
+                            </label>
+                            <label class="inline-flex items-center mb-2 sm:mb-0">
+                                <input type="radio" class="form-radio" name="tipo_descuento_valor" value="monto">
+                                <span class="ml-1 text-xs">Monto</span>
+                            </label>
+                            <input class="shadow-sm appearance-none border rounded w-20 py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="descuento_valor" type="number" step="0.01">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="estatus">Estatus</label>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="estatus" name="estatus">
+                            <option value="nueva">Nueva</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="aprobada">Aprobada</option>
+                            <option value="rechazada">Rechazada</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="moneda">Moneda</label>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="moneda" name="moneda">
+                            <option value="peso_dominicano">Peso Dominicano</option>
+                        </select>
+                
+                    </div>
+                    <div class="col-span-1 sm:col-span-2">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="notas">Notas</label>
+                        <textarea class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="notas" name="notas" rows="2"></textarea>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cliente">
-                        Cliente
-                    </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="cliente" type="text" placeholder="Nombre del cliente" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
-                        Fecha
-                    </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="fecha" type="date" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="total">
-                        Total
-                    </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="total" type="number" step="0.01" placeholder="0.00" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
-                        Estatus
-                    </label>
-                    <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
-                        <option value="pendiente">Pendiente</option>
-                        <option value="aprobada">Aprobada</option>
-                        <option value="rechazada">Rechazada</option>
-                    </select>
-                </div>
-                <div class="flex items-center justify-between">
-                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
-                        Guardar
+
+                <div class="mt-4">
+                    <h3 class="text-sm font-semibold mb-2">Productos y Servicios</h3>
+                    <button type="button" class="bg-blue-500 hover:bg-blue-700 text-white text-xs font-bold py-1 px-2 rounded mb-2">
+                        Cargar Excel
                     </button>
-                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                        <div>
+                            <label class="block text-gray-700 text-xs font-bold mb-1" for="item">Item</label>
+                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="item" name="item" type="text">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-xs font-bold mb-1" for="cantidad">Cantidad</label>
+                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="cantidad" name="cantidad" type="number" step="1">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-xs font-bold mb-1" for="precio">Precio</label>
+                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="precio" name="precio" type="number" step="0.01">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-xs font-bold mb-1" for="itbis">ITBIS</label>
+                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="itbis" name="itbis" type="number" step="0.01">
+                        </div>
+                    </div>
+                    <button type="button" id="agregar-item" class="mt-2 bg-green-500 hover:bg-green-700 text-white text-xs font-bold py-1 px-2 rounded">
+                        Agregar
+                    </button>
+                </div>
+
+                <div class="mt-4 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 compact-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sec.</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ITBIS</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-table-body">
+                            <!-- Los items se agregarán aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between mt-4 space-y-2 sm:space-y-0">
+                    <button type="submit" class="w-full sm:w-auto bg-blue-500 hover:bg-blue-700 text-white text-xs font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline mb-2 sm:mb-0">
+                        Grabar
+                    </button>
+                    <button type="button" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-700 text-white text-xs font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline mb-2 sm:mb-0">
+                        Limpiar
+                    </button>
+                    <button type="button" class="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-700 text-white text-xs font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline mb-2 sm:mb-0">
+                        Volver
+                    </button>
+                    <button type="button" class="w-full sm:w-auto bg-purple-500 hover:bg-purple-700 text-white text-xs font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline mb-2 sm:mb-0">
+                        Clonar
+                    </button>
+                    <button type="button" class="w-full sm:w-auto bg-red-500 hover:bg-red-700 text-white text-xs font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline modal-close mb-2 sm:mb-0">
                         Cancelar
+                    </button>
+                    <button type="button" class="w-full sm:w-auto bg-green-500 hover:bg-green-700 text-white text-xs font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline mb-2 sm:mb-0">
+                        Reporte
+                    </button>
+                    <button type="button" class="w-full sm:w-auto bg-indigo-500 hover:bg-indigo-700 text-white text-xs font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">
+                        E-mail
                     </button>
                 </div>
             </form>
@@ -134,199 +279,221 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof initializeAsistente === 'function') {
-            initializeAsistente();
-        }
-        
-        initializePreFacturas();
-        buscarPreFacturas(); // Cargar pre-facturas inicialmente
+document.addEventListener('DOMContentLoaded', function() {
+    initializePreFacturas();
+    buscarPreFacturas(); // Cargar pre-facturas inicialmente
+});
+
+function initializePreFacturas() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
+    const prefacturaForm = document.getElementById('prefactura-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const agregarItemBtn = document.getElementById('agregar-item');
+
+    buscarBtn.addEventListener('click', buscarPreFacturas);
+    crearNuevoBtn.addEventListener('click', mostrarFormularioCrearPreFactura);
+    prefacturaForm.addEventListener('submit', guardarPreFactura);
+    agregarItemBtn.addEventListener('click', agregarItem);
+
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+
+    document.getElementById('prefacturas-tbody').addEventListener('click', manejarAccionesPreFactura);
+
+    flatpickr("#fecha", {
+        dateFormat: "Y-m-d",
     });
+}
 
-    function initializePreFacturas() {
-        const buscarBtn = document.getElementById('buscar-btn');
-        const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
-        const prefacturaForm = document.getElementById('prefactura-form');
-        const modal = document.querySelector('.modal');
-        const modalOverlay = document.querySelector('.modal-overlay');
-        const modalCloseButtons = document.querySelectorAll('.modal-close');
-    
-        buscarBtn.addEventListener('click', buscarPreFacturas);
-        crearNuevoBtn.addEventListener('click', mostrarFormularioCrearPreFactura);
-        prefacturaForm.addEventListener('submit', guardarPreFactura);
-    
-        modalOverlay.addEventListener('click', toggleModal);
-        modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
-    
-        document.getElementById('prefacturas-tbody').addEventListener('click', manejarAccionesPreFactura);
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function buscarPreFacturas() {
+    const numero = document.getElementById('numero-prefactura').value;
+    const cliente = document.getElementById('cliente-prefactura').value;
+    const fecha = document.getElementById('fecha-prefactura').value;
+    const estatus = document.getElementById('estatus-prefactura').value;
+
+    // Aquí deberías hacer una llamada a tu API para buscar las pre-facturas
+    // Por ahora, simularemos algunos datos
+    const prefacturas = [
+        { id: 1, numero: 'PF001', cliente: 'Cliente A', fecha: '2023-05-01', total: 1000, estatus: 'pendiente' },
+        { id: 2, numero: 'PF002', cliente: 'Cliente B', fecha: '2023-05-02', total: 1500, estatus: 'aprobada' },
+    ];
+
+    actualizarTablaPreFacturas(prefacturas);
+}
+
+function actualizarTablaPreFacturas(prefacturas) {
+    const tbody = document.getElementById('prefacturas-tbody');
+    tbody.innerHTML = '';
+    prefacturas.forEach(prefactura => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${prefactura.numero}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${prefactura.cliente}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${prefactura.fecha}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${prefactura.total.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(prefactura.estatus)}">
+                    ${prefactura.estatus}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="editar-prefactura text-blue-600 hover:text-blue-900 mr-2" data-id="${prefactura.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-prefactura text-red-600 hover:text-red-900" data-id="${prefactura.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function getStatusColor(estatus) {
+    switch (estatus) {
+        case 'pendiente':
+            return 'bg-yellow-100 text-yellow-800';
+        case 'aprobada':
+            return 'bg-green-100 text-green-800';
+        case 'rechazada':
+            return 'bg-red-100 text-red-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
     }
+}
 
-    function toggleModal() {
-        const modal = document.querySelector('.modal');
-        modal.classList.toggle('opacity-0');
-        modal.classList.toggle('pointer-events-none');
-        document.body.classList.toggle('modal-active');
+function mostrarFormularioCrearPreFactura() {
+    document.getElementById('modal-title').textContent = 'Crear Nueva Pre-Factura';
+    document.getElementById('prefactura-form').reset();
+    toggleModal();
+}
+
+function guardarPreFactura(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const prefacturaData = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar la pre-factura
+    console.log('Datos de la pre-factura:', prefacturaData);
+
+    Swal.fire('Éxito', 'Pre-factura guardada correctamente', 'success');
+    toggleModal();
+    buscarPreFacturas();
+}
+
+function manejarAccionesPreFactura(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const prefacturaId = target.dataset.id;
+
+    if (target.classList.contains('editar-prefactura')) {
+        editarPreFactura(prefacturaId);
+    } else if (target.classList.contains('eliminar-prefactura')) {
+        eliminarPreFactura(prefacturaId);
     }
+}
 
-    function buscarPreFacturas() {
-        const numero = document.getElementById('numero-prefactura').value;
-        const cliente = document.getElementById('cliente-prefactura').value;
-        const fecha = document.getElementById('fecha-prefactura').value;
-        const estatus = document.getElementById('estatus-prefactura').value;
-    
-        fetch(`/facturacion/api/buscar-prefacturas?numero=${numero}&cliente=${cliente}&fecha=${fecha}&estatus=${estatus}`)
-            .then(response => response.json())
-            .then(data => actualizarTablaPreFacturas(data))
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Error', 'Ocurrió un error al buscar pre-facturas', 'error');
-            });
-    }
+function editarPreFactura(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los datos de la pre-factura
+    // Por ahora, simularemos algunos datos
+    const prefactura = {
+        id: id,
+        numero: 'PF001',
+        cliente: 'Cliente A',
+        fecha: '2023-05-01',
+        total: 1000,
+        estatus: 'pendiente'
+    };
 
-    function actualizarTablaPreFacturas(prefacturas) {
-        const tbody = document.getElementById('prefacturas-tbody');
-        tbody.innerHTML = '';
-        prefacturas.forEach(prefactura => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${prefactura.numero}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${prefactura.cliente}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${prefactura.fecha}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${prefactura.total.toFixed(2)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(prefactura.estatus)}">
-                        ${prefactura.estatus}
-                    </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button class="editar-prefactura text-blue-600 hover:text-blue-900 mr-2" data-id="${prefactura.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="eliminar-prefactura text-red-600 hover:text-red-900" data-id="${prefactura.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+    const form = document.getElementById('prefactura-form');
+    form.id.value = prefactura.id;
+    form.cliente.value = prefactura.cliente;
+    form.fecha.value = prefactura.fecha;
+    form.estatus.value = prefactura.estatus;
 
-    function getStatusColor(estatus) {
-        switch (estatus) {
-            case 'pendiente':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'aprobada':
-                return 'bg-green-100 text-green-800';
-            case 'rechazada':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
+    document.getElementById('modal-title').textContent = 'Editar Pre-Factura';
+    toggleModal();
+}
+
+function eliminarPreFactura(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para eliminar la pre-factura
+            console.log('Eliminando pre-factura con ID:', id);
+
+            Swal.fire(
+                'Eliminado',
+                'La pre-factura ha sido eliminada.',
+                'success'
+            );
+            buscarPreFacturas();
         }
+    });
+}
+
+function agregarItem() {
+    const item = document.getElementById('item').value;
+    const cantidad = document.getElementById('cantidad').value;
+    const precio = document.getElementById('precio').value;
+    const itbis = document.getElementById('itbis').value;
+
+    if (!item || !cantidad || !precio) {
+        Swal.fire('Error', 'Por favor, complete todos los campos del item', 'error');
+        return;
     }
 
-    function mostrarFormularioCrearPreFactura() {
-        document.getElementById('modal-title').textContent = 'Crear Nueva Pre-Factura';
-        document.getElementById('prefactura-form').reset();
-        toggleModal();
+    const tbody = document.getElementById('items-table-body');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">${tbody.children.length + 1}</td>
+        <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">${item}</td>
+        <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">${parseFloat(precio).toFixed(2)}</td>
+        <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">${parseFloat(itbis).toFixed(2)}</td>
+        <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">${cantidad}</td>
+        <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">${(parseFloat(precio) * parseFloat(cantidad)).toFixed(2)}</td>
+        <td class="px-3 py-2 whitespace-nowrap text-xs font-medium">
+            <button class="eliminar-item text-red-600 hover:text-red-900">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+
+    // Limpiar los campos del formulario de items
+    document.getElementById('item').value = '';
+    document.getElementById('cantidad').value = '';
+    document.getElementById('precio').value = '';
+    document.getElementById('itbis').value = '';
+}
+
+// Agregar evento para eliminar items
+document.getElementById('items-table-body').addEventListener('click', function(e) {
+    if (e.target.closest('.eliminar-item')) {
+        e.target.closest('tr').remove();
     }
-
-    function guardarPreFactura(event) {
-        event.preventDefault();
-        const formData = new FormData(event.target);
-        const prefacturaData = Object.fromEntries(formData);
-        const prefacturaId = prefacturaData.id;
-        const url = prefacturaId ? `/facturacion/api/prefacturas/${prefacturaId}` : '/facturacion/api/prefacturas';
-        const method = prefacturaId ? 'PUT' : 'POST';
-
-        fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(prefacturaData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire('Éxito', 'Pre-factura guardada correctamente', 'success');
-                toggleModal();
-                buscarPreFacturas();
-            } else {
-                Swal.fire('Error', data.message || 'Ocurrió un error al guardar la pre-factura', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire('Error', 'Ocurrió un error al guardar la pre-factura', 'error');
-        });
-    }
-
-    function manejarAccionesPreFactura(event) {
-        const target = event.target.closest('button');
-        if (!target) return;
-
-        const prefacturaId = target.dataset.id;
-
-        if (target.classList.contains('editar-prefactura')) {
-            editarPreFactura(prefacturaId);
-        } else if (target.classList.contains('eliminar-prefactura')) {
-            eliminarPreFactura(prefacturaId);
-        }
-    }
-
-    function editarPreFactura(id) {
-        fetch(`/facturacion/api/prefacturas/${id}`)
-            .then(response => response.json())
-            .then(data => {
-                const form = document.getElementById('prefactura-form');
-                form.id.value = data.id;
-                form.numero.value = data.numero;
-                form.cliente.value = data.cliente;
-                form.fecha.value = data.fecha;
-                form.total.value = data.total;
-                form.estatus.value = data.estatus;
-
-                document.getElementById('modal-title').textContent = 'Editar Pre-Factura';
-                toggleModal();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Error', 'Ocurrió un error al cargar los datos de la pre-factura', 'error');
-            });
-    }
-
-    function eliminarPreFactura(id) {
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "No podrás revertir esta acción",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/facturacion/api/prefacturas/${id}`, {
-                    method: 'DELETE',
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire('Eliminado', 'La pre-factura ha sido eliminada', 'success');
-                        buscarPreFacturas();
-                    } else {
-                        Swal.fire('Error', data.message || 'Ocurrió un error al eliminar la pre-factura', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire('Error', 'Ocurrió un error al eliminar la pre-factura', 'error');
-                });
-            }
-        });
-    }
+});
 </script>
 {% endblock %}

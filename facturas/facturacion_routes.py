@@ -14,11 +14,44 @@ def facturas():
     facturas = Facturacion.query.all()
     return render_template('facturacion/facturacion_index.html', facturas=facturas)
 
-@facturacion_bp.route('/pre-facturas')
-@login_required
+from flask import Flask, render_template, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/pre-facturas')
 def pre_facturas():
-    pre_facturas = PreFactura.query.all()
-    return render_template('facturacion/pre_facturas.html', pre_facturas=pre_facturas)
+    return render_template('pre_facturas.html')
+
+@app.route('/api/pre-facturas', methods=['GET'])
+def get_pre_facturas():
+    # Here you would typically query your database
+    # For now, we'll return dummy data
+    pre_facturas = [
+        {"id": 1, "numero": "PF001", "cliente": "Cliente A", "fecha": "2023-05-01", "total": 1000, "estatus": "pendiente"},
+        {"id": 2, "numero": "PF002", "cliente": "Cliente B", "fecha": "2023-05-02", "total": 1500, "estatus": "aprobada"}
+    ]
+    return jsonify(pre_facturas)
+
+@app.route('/api/pre-facturas', methods=['POST'])
+def create_pre_factura():
+    # Here you would typically save the new pre-factura to your database
+    # For now, we'll just return a success message
+    return jsonify({"message": "Pre-factura creada exitosamente"}), 201
+
+@app.route('/api/pre-facturas/<int:id>', methods=['PUT'])
+def update_pre_factura(id):
+    # Here you would typically update the pre-factura in your database
+    # For now, we'll just return a success message
+    return jsonify({"message": f"Pre-factura {id} actualizada exitosamente"})
+
+@app.route('/api/pre-facturas/<int:id>', methods=['DELETE'])
+def delete_pre_factura(id):
+    # Here you would typically delete the pre-factura from your database
+    # For now, we'll just return a success message
+    return jsonify({"message": f"Pre-factura {id} eliminada exitosamente"})
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 @facturacion_bp.route('/notas-credito-debito')
 @login_required

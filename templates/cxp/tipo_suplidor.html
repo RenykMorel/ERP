@@ -3,22 +3,22 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold mb-4">Tipos de Suplidor</h1>
-    <a href="{{ url_for('cxp.crear_tipo_suplidor') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Tipo de Suplidor</a>
     <table class="min-w-full bg-white">
         <thead>
             <tr>
-                <th class="py-2 px-4 border-b">Nombre</th><th class="py-2 px-4 border-b">Descripción</th>
+                <th class="py-2 px-4 border-b">Nombre</th>
+                <th class="py-2 px-4 border-b">Descripción</th>
                 <th class="py-2 px-4 border-b">Acciones</th>
             </tr>
         </thead>
         <tbody>
-            {% for tipo in tipos_suplidor %}
+            {% for tipo in tipos %}
             <tr>
                 <td class="py-2 px-4 border-b">{{ tipo.nombre }}</td>
                 <td class="py-2 px-4 border-b">{{ tipo.descripcion[:50] }}...</td>
                 <td class="py-2 px-4 border-b">
-                    <a href="{{ url_for('cxp.editar_tipo_suplidor', id=tipo.id) }}" class="text-blue-500">Editar</a>
-                    <a href="{{ url_for('cxp.ver_tipo_suplidor', id=tipo.id) }}" class="text-green-500">Ver</a>
+                    <a href="#" class="text-blue-500">Ver</a>
+                    <a href="#" class="text-green-500">Editar</a>
                 </td>
             </tr>
             {% endfor %}
