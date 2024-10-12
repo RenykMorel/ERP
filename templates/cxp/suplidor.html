@@ -1,32 +1,435 @@
 {% extends "base.html" %}
-{% block title %}Suplidores{% endblock %}
+{% block title %}Suplidores - CxP - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Suplidores</h1>
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Nombre</th>
-                <th class="py-2 px-4 border-b">RUC</th>
-                <th class="py-2 px-4 border-b">Teléfono</th>
-                <th class="py-2 px-4 border-b">Email</th>
-                <th class="py-2 px-4 border-b">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for suplidor in suplidores %}
-            <tr>
-                <td class="py-2 px-4 border-b">{{ suplidor.nombre }}</td>
-                <td class="py-2 px-4 border-b">{{ suplidor.ruc }}</td>
-                <td class="py-2 px-4 border-b">{{ suplidor.telefono }}</td>
-                <td class="py-2 px-4 border-b">{{ suplidor.email }}</td>
-                <td class="py-2 px-4 border-b">
-                    <a href="#" class="text-blue-500">Ver</a>
-                    <a href="#" class="text-green-500">Editar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div id="suplidores-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Suplidores - CxP</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="nombre-suplidor" placeholder="Nombre">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="ruc-suplidor" placeholder="RUC">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="telefono-suplidor" placeholder="Teléfono">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="email-suplidor" placeholder="Email">
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-suplidor-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Suplidor
+            </button>
+        </div>
+    </div>
+    
+    <div id="suplidores-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="suplidores-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Nombre</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">RUC</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Teléfono</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Email</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estado</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="suplidores-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Los suplidores se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> suplidores
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para crear/editar suplidor -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Crear Nuevo Suplidor</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+
+            <form id="suplidor-form" class="mt-4">
+                <input type="hidden" id="suplidor-id" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
+                        Nombre
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nombre" name="nombre" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="ruc">
+                        RUC
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="ruc" name="ruc" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono">
+                        Teléfono
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="telefono" name="telefono" type="tel" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
+                        Email
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="email" name="email" type="email" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">
+                        Dirección
+                    </label>
+                    <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="direccion" name="direccion" rows="3"></textarea>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Guardar
+                    </button>
+                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSuplidoresModule();
+});
+
+function initializeSuplidoresModule() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearSuplidorBtn = document.getElementById('crear-suplidor-btn');
+    const suplidorForm = document.getElementById('suplidor-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    buscarBtn.addEventListener('click', buscarSuplidores);
+    crearSuplidorBtn.addEventListener('click', mostrarFormularioCrearSuplidor);
+    suplidorForm.addEventListener('submit', guardarSuplidor);
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+
+    document.getElementById('suplidores-tbody').addEventListener('click', manejarAccionesSuplidor);
+
+    buscarSuplidores();
+}
+
+let paginaActual = 1;
+const itemsPorPagina = 10;
+
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function buscarSuplidores() {
+    const nombre = document.getElementById('nombre-suplidor').value;
+    const ruc = document.getElementById('ruc-suplidor').value;
+    const telefono = document.getElementById('telefono-suplidor').value;
+    const email = document.getElementById('email-suplidor').value;
+
+    // Aquí deberías hacer una llamada a tu API para buscar los suplidores
+    // Por ahora, usaremos datos simulados
+    const suplidores = [
+        { id: 1, nombre: 'Suplidor A', ruc: '1234567890', telefono: '123-456-7890', email: 'suplidora@example.com', estado: 'activo' },
+        { id: 2, nombre: 'Suplidor B', ruc: '0987654321', telefono: '098-765-4321', email: 'suplidorb@example.com', estado: 'inactivo' },
+    ];
+
+    actualizarTablaSuplidores(suplidores);
+}
+
+function actualizarTablaSuplidores(suplidores) {
+    const tbody = document.getElementById('suplidores-tbody');
+    tbody.innerHTML = '';
+    suplidores.forEach(suplidor => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${suplidor.nombre}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suplidor.ruc}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suplidor.telefono}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${suplidor.email}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstadoClass(suplidor.estado)}">
+                    ${suplidor.estado}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="ver-suplidor text-blue-600 hover:text-blue-900 mr-2" data-id="${suplidor.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="editar-suplidor text-green-600 hover:text-green-900 mr-2" data-id="${suplidor.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-suplidor text-red-600 hover:text-red-900" data-id="${suplidor.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    actualizarPaginacion(suplidores.length);
+}
+
+function getEstadoClass(estado) {
+    return estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    document.getElementById('items-showing').textContent = `${(paginaActual - 1) * itemsPorPagina + 1}-${Math.min(paginaActual * itemsPorPagina, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = paginaActual === 1;
+    document.getElementById('next-page').disabled = paginaActual === totalPaginas;
+}
+
+function cambiarPagina(direccion) {
+    paginaActual += direccion;
+    buscarSuplidores();
+}
+
+function mostrarFormularioCrearSuplidor() {
+    document.getElementById('modal-title').textContent = 'Crear Nuevo Suplidor';
+    document.getElementById('suplidor-form').reset();
+    document.getElementById('suplidor-id').value = '';
+    toggleModal();
+}
+
+function guardarSuplidor(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const suplidorData = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar el suplidor
+    console.log('Datos del suplidor:', suplidorData);
+
+    Swal.fire({
+        title: 'Éxito',
+        text: 'Suplidor guardado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+    }).then(() => {
+        toggleModal();
+        buscarSuplidores();
+    });
+}
+
+function manejarAccionesSuplidor(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const suplidorId = target.dataset.id;
+
+    if (target.classList.contains('ver-suplidor')) {
+        verSuplidor(suplidorId);
+    } else if (target.classList.contains('editar-suplidor')) {
+        editarSuplidor(suplidorId);
+    } else if (target.classList.contains('eliminar-suplidor')) {
+        eliminarSuplidor(suplidorId);
+    }
+}
+
+function verSuplidor(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los detalles del suplidor
+    // Por ahora, simularemos algunos datos
+    const suplidor = {
+        id: id,
+        nombre: 'Suplidor A',
+        ruc: '1234567890',
+        telefono: '123-456-7890',
+        email: 'suplidora@example.com',
+        direccion: 'Calle Principal 123, Ciudad',
+        estado: 'activo',
+        fecha_registro: '2023-01-01',
+        ultimo_pedido: '2023-05-15'
+    };
+
+    Swal.fire({
+        title: 'Detalles del Suplidor',
+        html: `
+            <p><strong>Nombre:</strong> ${suplidor.nombre}</p>
+            <p><strong>RUC:</strong> ${suplidor.ruc}</p>
+            <p><strong>Teléfono:</strong> ${suplidor.telefono}</p>
+            <p><strong>Email:</strong> ${suplidor.email}</p>
+            <p><strong>Dirección:</strong> ${suplidor.direccion}</p>
+            <p><strong>Estado:</strong> ${suplidor.estado}</p>
+            <p><strong>Fecha de Registro:</strong> ${suplidor.fecha_registro}</p>
+            <p><strong>Último Pedido:</strong> ${suplidor.ultimo_pedido}</p>
+        `,
+        confirmButtonText: 'Cerrar'
+    });
+}
+
+function editarSuplidor(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los datos del suplidor
+    // Por ahora, simularemos algunos datos
+    const suplidor = {
+        id: id,
+        nombre: 'Suplidor A',
+        ruc: '1234567890',
+        telefono: '123-456-7890',
+        email: 'suplidora@example.com',
+        direccion: 'Calle Principal 123, Ciudad'
+    };
+
+    document.getElementById('modal-title').textContent = 'Editar Suplidor';
+    document.getElementById('suplidor-id').value = suplidor.id;
+    document.getElementById('nombre').value = suplidor.nombre;
+    document.getElementById('ruc').value = suplidor.ruc;
+    document.getElementById('telefono').value = suplidor.telefono;
+    document.getElementById('email').value = suplidor.email;
+    document.getElementById('direccion').value = suplidor.direccion;
+
+    toggleModal();
+}
+
+function eliminarSuplidor(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para eliminar el suplidor
+            console.log('Eliminando suplidor con ID:', id);
+
+            Swal.fire(
+                'Eliminado',
+                'El suplidor ha sido eliminado.',
+                'success'
+            ).then(() => {
+                buscarSuplidores();
+            });
+        }
+    });
+}
+
+function validarFormulario() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const ruc = document.getElementById('ruc').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const email = document.getElementById('email').value.trim();
+
+    if (!nombre) {
+        Swal.fire('Error', 'El nombre del suplidor es obligatorio', 'error');
+        return false;
+    }
+
+    if (!ruc) {
+        Swal.fire('Error', 'El RUC del suplidor es obligatorio', 'error');
+        return false;
+    }
+
+    if (!telefono) {
+        Swal.fire('Error', 'El teléfono del suplidor es obligatorio', 'error');
+        return false;
+    }
+
+    if (!email || !isValidEmail(email)) {
+        Swal.fire('Error', 'Por favor, ingrese un email válido', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+function isValidEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+// Agregar validación al formulario antes de enviar
+document.getElementById('suplidor-form').addEventListener('submit', function(e) {
+    if (!validarFormulario()) {
+        e.preventDefault();
+    }
+});
+
+// Función para generar reporte de suplidores
+function generarReporteSuplidores() {
+    // Aquí deberías hacer una llamada a tu API para generar el reporte
+    console.log('Generando reporte de suplidores');
+
+    Swal.fire({
+        title: 'Reporte Generado',
+        text: 'El reporte de suplidores ha sido generado exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'Descargar Reporte'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías proporcionar un enlace para descargar el reporte
+            console.log('Descargando reporte de suplidores...');
+        }
+    });
+}
+
+// Agregar botón para generar reporte
+const busquedaForm = document.getElementById('busqueda-form');
+const generarReporteBtn = document.createElement('button');
+generarReporteBtn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>Generar Reporte';
+generarReporteBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500';
+generarReporteBtn.addEventListener('click', generarReporteSuplidores);
+busquedaForm.querySelector('.flex.justify-between').appendChild(generarReporteBtn);
+
+// Inicializar la búsqueda de suplidores al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    buscarSuplidores();
+});
+</script>
 {% endblock %}

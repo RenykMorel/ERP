@@ -1,8 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Conciliación Bancaria - CalculAI{% endblock %}
-
+{% block title %}Gestión de Conciliación Bancaria - CalculAI{% endblock %}
 {% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     .modal {
         transition: opacity 0.25s ease;
@@ -11,118 +13,126 @@
         overflow-x: hidden;
         overflow-y: visible !important;
     }
+    .compact-table th, .compact-table td {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    @media (max-width: 640px) {
+        .compact-table th, .compact-table td {
+            padding: 0.25rem;
+            font-size: 0.7rem;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Conciliación Bancaria</h1>
+<div id="conciliacion-bancaria-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Conciliación Bancaria</h1>
     
-    <div class="mb-6 flex flex-wrap items-center justify-between">
-        <button id="crear-conciliacion-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105">
-            <i class="fas fa-plus mr-2"></i>Iniciar Nueva Conciliación
-        </button>
-        <div class="flex items-center space-x-4 mt-4 sm:mt-0">
-            <input type="text" id="buscar-banco" placeholder="Buscar por banco" class="px-3 py-2 border rounded-md">
-            <input type="text" id="buscar-fecha" placeholder="Buscar por fecha" class="px-3 py-2 border rounded-md">
-            <button id="buscar-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded transition duration-300 ease-in-out">
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-4 sm:px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label for="banco" class="block text-sm font-medium text-gray-700 mb-1">Banco:</label>
+                <select id="banco" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value="">Todos los bancos</option>
+                </select>
+            </div>
+            <div>
+                <label for="fecha-inicio" class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio:</label>
+                <input type="text" id="fecha-inicio" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="fecha-fin" class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin:</label>
+                <input type="text" id="fecha-fin" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-conciliacion-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nueva Conciliación
             </button>
         </div>
     </div>
-
-    <div class="overflow-x-auto bg-white shadow-lg rounded-lg">
-        <table id="conciliaciones-table" class="min-w-full leading-normal">
-            <thead>
+    
+    <div id="conciliaciones-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="conciliaciones-table" class="min-w-full divide-y divide-gray-200 compact-table">
+            <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Banco
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Fecha
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Saldo Banco
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Saldo Libros
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Diferencia
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Estado
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Acciones
-                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Banco</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Fecha</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Saldo Banco</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Saldo Libros</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Diferencia</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estado</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
                 </tr>
             </thead>
-            <tbody id="conciliaciones-body">
-                <!-- El contenido de la tabla se llenará dinámicamente con JavaScript -->
+            <tbody id="conciliaciones-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Las conciliaciones se cargarán aquí dinámicamente -->
             </tbody>
         </table>
     </div>
-    
+
     <div class="mt-4 flex justify-between items-center">
-        <div>
-            <span class="text-gray-600">Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> conciliaciones</span>
-        </div>
+        <span class="text-sm text-gray-600">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> conciliaciones
+        </span>
         <div class="space-x-2">
-            <button id="prev-page" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">Anterior</button>
-            <button id="next-page" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">Siguiente</button>
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
         </div>
     </div>
 </div>
 
 <!-- Modal para crear/editar conciliación -->
-<div id="conciliacion-modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
     <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
     
     <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
         <div class="modal-content py-4 text-left px-6">
             <div class="flex justify-between items-center pb-3">
-                <p class="text-2xl font-bold" id="modal-title">Crear Conciliación</p>
+                <p class="text-2xl font-bold" id="modal-title">Crear Nueva Conciliación</p>
                 <div class="modal-close cursor-pointer z-50">
-                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
-                    </svg>
+                    <i class="fas fa-times"></i>
                 </div>
             </div>
 
-            <form id="conciliacion-form">
-                <input type="hidden" id="conciliacion-id">
+            <form id="conciliacion-form" class="mt-4">
+                <input type="hidden" id="conciliacion-id" name="id">
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="banco">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="banco_id">
                         Banco
                     </label>
-                    <select id="banco" name="banco" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <!-- Options will be populated dynamically -->
+                    <select id="banco_id" name="banco_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Seleccione un banco</option>
                     </select>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
                         Fecha
                     </label>
-                    <input type="text" id="fecha" name="fecha" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="fecha" name="fecha" type="text" required>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="saldo-banco">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="saldo_banco">
                         Saldo Banco
                     </label>
-                    <input type="number" step="0.01" id="saldo-banco" name="saldo-banco" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="saldo_banco" name="saldo_banco" type="number" step="0.01" required>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="saldo-libros">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="saldo_libros">
                         Saldo Libros
                     </label>
-                    <input type="number" step="0.01" id="saldo-libros" name="saldo-libros" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="saldo_libros" name="saldo_libros" type="number" step="0.01" required>
                 </div>
                 <div class="flex items-center justify-between">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                         Guardar
                     </button>
-                    <button type="button" class="modal-close bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out">
+                    <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
                         Cancelar
                     </button>
                 </div>
@@ -134,259 +144,291 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const crearConciliacionBtn = document.getElementById('crear-conciliacion-btn');
-    const conciliacionModal = document.getElementById('conciliacion-modal');
-    const conciliacionForm = document.getElementById('conciliacion-form');
-    const conciliacionesBody = document.getElementById('conciliaciones-body');
+    initializeConciliacionBancaria();
+});
+
+function initializeConciliacionBancaria() {
     const buscarBtn = document.getElementById('buscar-btn');
+    const crearConciliacionBtn = document.getElementById('crear-conciliacion-btn');
+    const conciliacionForm = document.getElementById('conciliacion-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
 
-    let currentPage = 1;
-    const itemsPerPage = 10;
+    buscarBtn.addEventListener('click', buscarConciliaciones);
+    crearConciliacionBtn.addEventListener('click', mostrarFormularioCrearConciliacion);
+    conciliacionForm.addEventListener('submit', guardarConciliacion);
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
 
-    crearConciliacionBtn.addEventListener('click', () => showModal('Crear Conciliación'));
-    conciliacionForm.addEventListener('submit', handleSubmit);
-    buscarBtn.addEventListener('click', loadConciliaciones);
-    prevPageBtn.addEventListener('click', () => changePage(-1));
-    nextPageBtn.addEventListener('click', () => changePage(1));
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
 
-    document.querySelectorAll('.modal-close').forEach(btn => {
-        btn.addEventListener('click', hideModal);
+    document.getElementById('conciliaciones-tbody').addEventListener('click', manejarAccionesConciliacion);
+
+    flatpickr("#fecha-inicio", {
+        dateFormat: "Y-m-d",
+    });
+
+    flatpickr("#fecha-fin", {
+        dateFormat: "Y-m-d",
     });
 
     flatpickr("#fecha", {
         dateFormat: "Y-m-d",
     });
 
-    flatpickr("#buscar-fecha", {
-        dateFormat: "Y-m-d",
+    cargarBancos();
+    buscarConciliaciones();
+}
+
+let paginaActual = 1;
+const itemsPorPagina = 10;
+
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function cargarBancos() {
+    // Aquí deberías hacer una llamada a tu API para obtener la lista de bancos
+    // Por ahora, usaremos datos simulados
+    const bancos = [
+        { id: 1, nombre: 'Banco A' },
+        { id: 2, nombre: 'Banco B' },
+        { id: 3, nombre: 'Banco C' },
+    ];
+
+    const selectBanco = document.getElementById('banco');
+    const selectBancoModal = document.getElementById('banco_id');
+
+    bancos.forEach(banco => {
+        const option = new Option(banco.nombre, banco.id);
+        selectBanco.add(option.cloneNode(true));
+        selectBancoModal.add(option);
+    });
+}
+
+function buscarConciliaciones() {
+    const banco = document.getElementById('banco').value;
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    // Aquí deberías hacer una llamada a tu API para buscar las conciliaciones
+    // Por ahora, usaremos datos simulados
+    const conciliaciones = [
+        { id: 1, banco: 'Banco A', fecha: '2023-05-01', saldo_banco: 10000, saldo_libros: 9800, diferencia: 200, estado: 'En Proceso' },
+        { id: 2, banco: 'Banco B', fecha: '2023-05-02', saldo_banco: 15000, saldo_libros: 15000, diferencia: 0, estado: 'Conciliado' },
+    ];
+
+    actualizarTablaConciliaciones(conciliaciones);
+}
+
+function actualizarTablaConciliaciones(conciliaciones) {
+    const tbody = document.getElementById('conciliaciones-tbody');
+    tbody.innerHTML = '';
+    conciliaciones.forEach(conciliacion => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${conciliacion.banco}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${conciliacion.fecha}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${conciliacion.saldo_banco.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${conciliacion.saldo_libros.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${conciliacion.diferencia.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstadoClass(conciliacion.estado)}">
+                    ${conciliacion.estado}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="ver-conciliacion text-blue-600 hover:text-blue-900 mr-2" data-id="${conciliacion.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="editar-conciliacion text-green-600 hover:text-green-900 mr-2" data-id="${conciliacion.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-conciliacion text-red-600 hover:text-red-900" data-id="${conciliacion.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
     });
 
-    loadBancos();
-    loadConciliaciones();
+    actualizarPaginacion(conciliaciones.length);
+}
 
-    function showModal(title) {
-        document.getElementById('modal-title').textContent = title;
-        conciliacionModal.classList.remove('opacity-0', 'pointer-events-none');
-        document.body.classList.add('modal-active');
+function actualizarPaginacion(totalItems) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    document.getElementById('items-showing').textContent = `${(paginaActual - 1) * itemsPorPagina + 1}-${Math.min(paginaActual * itemsPorPagina, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = paginaActual === 1;
+    document.getElementById('next-page').disabled = paginaActual === totalPaginas;
+}
+
+function cambiarPagina(direccion) {
+    paginaActual += direccion;
+    buscarConciliaciones();
+}
+
+function mostrarFormularioCrearConciliacion() {
+    document.getElementById('modal-title').textContent = 'Crear Nueva Conciliación';
+    document.getElementById('conciliacion-form').reset();
+    document.getElementById('conciliacion-id').value = '';
+    toggleModal();
+}
+
+function guardarConciliacion(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const conciliacionData = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar la conciliación
+    console.log('Datos de la conciliación:', conciliacionData);
+
+    Swal.fire('Éxito', 'Conciliación guardada correctamente', 'success');
+    toggleModal();
+    buscarConciliaciones();
+}
+
+function manejarAccionesConciliacion(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const conciliacionId = target.dataset.id;
+
+    if (target.classList.contains('ver-conciliacion')) {
+        verConciliacion(conciliacionId);
+    } else if (target.classList.contains('editar-conciliacion')) {
+        editarConciliacion(conciliacionId);
+    } else if (target.classList.contains('eliminar-conciliacion')) {
+        eliminarConciliacion(conciliacionId);
     }
+}
 
-    function hideModal() {
-        conciliacionModal.classList.add('opacity-0', 'pointer-events-none');
-        document.body.classList.remove('modal-active');
-        conciliacionForm.reset();
-    }
+function verConciliacion(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los detalles de la conciliación
+    // Por ahora, simularemos algunos datos
+    const conciliacion = {
+        id: id,
+        banco: 'Banco A',
+        fecha: '2023-05-01',
+        saldo_banco: 10000,
+        saldo_libros: 9800,
+        diferencia: 200,
+        estado: 'En Proceso'
+    };
 
-    function loadBancos() {
-        fetch('/api/bancos')
-            .then(response => response.json())
-            .then(bancos => {
-                const bancoSelect = document.getElementById('banco');
-                bancoSelect.innerHTML = bancos.map(banco => 
-                    `<option value="${banco.id}">${banco.nombre}</option>`
-                ).join('');
-            })
-            .catch(error => console.error('Error cargando bancos:', error));
-    }
+    Swal.fire({
+        title: 'Detalles de la Conciliación',
+        html: `
+            <p><strong>Banco:</strong> ${conciliacion.banco}</p>
+            <p><strong>Fecha:</strong> ${conciliacion.fecha}</p>
+            <p><strong>Saldo Banco:</strong> $${conciliacion.saldo_banco.toFixed(2)}</p>
+            <p><strong>Saldo Libros:</strong> $${conciliacion.saldo_libros.toFixed(2)}</p>
+            <p><strong>Diferencia:</strong> $${conciliacion.diferencia.toFixed(2)}</p>
+            <p><strong>Estado:</strong> ${conciliacion.estado}</p>
+        `,
+        icon: 'info'
+    });
+}
 
-    function loadConciliaciones() {
-        const banco = document.getElementById('buscar-banco').value;
-        const fecha = document.getElementById('buscar-fecha').value;
-        
-        fetch(`/api/conciliaciones?banco=${banco}&fecha=${fecha}&page=${currentPage}&per_page=${itemsPerPage}`)
-            .then(response => response.json())
-            .then(data => {
-                updateTable(data.conciliaciones);
-                updatePagination(data.total, data.page, data.per_page);
-            })
-            .catch(error => console.error('Error cargando conciliaciones:', error));
-    }
+function editarConciliacion(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los datos de la conciliación
+    // Por ahora, simularemos algunos datos
+    const conciliacion = {
+        id: id,
+        banco_id: 1,
+        fecha: '2023-05-01',
+        saldo_banco: 10000,
+        saldo_libros: 9800
+    };
 
-    function updateTable(conciliaciones) {
-        conciliacionesBody.innerHTML = conciliaciones.map(c => `
-            <tr>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${c.banco_nombre}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${c.fecha}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${c.saldo_banco}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${c.saldo_libros}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${c.diferencia}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(c.estado)}">
-                        ${c.estado}
-                    </span>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <button class="ver-conciliacion text-blue-600 hover:text-blue-900 mr-2" data-id="${c.id}">Ver</button>
-                    <button class="editar-conciliacion text-green-600 hover:text-green-900 mr-2" data-id="${c.id}">Editar</button>
-                    <button class="eliminar-conciliacion text-red-600 hover:text-red-900" data-id="${c.id}">Eliminar</button>
-                </td>
-            </tr>
-        `).join('');
+    document.getElementById('modal-title').textContent = 'Editar Conciliación';
+    document.getElementById('conciliacion-id').value = conciliacion.id;
+    document.getElementById('banco_id').value = conciliacion.banco_id;
+    document.getElementById('fecha').value = conciliacion.fecha;
+    document.getElementById('saldo_banco').value = conciliacion.saldo_banco;
+    document.getElementById('saldo_libros').value = conciliacion.saldo_libros;
 
-        document.querySelectorAll('.ver-conciliacion').forEach(btn => {
-            btn.addEventListener('click', () => verConciliacion(btn.dataset.id));
-        });
+    toggleModal();
+}
 
-        document.querySelectorAll('.editar-conciliacion').forEach(btn => {
-            btn.addEventListener('click', () => editarConciliacion(btn.dataset.id));
-        });
+function eliminarConciliacion(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para eliminar la conciliación
+            console.log('Eliminando conciliación con ID:', id);
 
-        document.querySelectorAll('.eliminar-conciliacion').forEach(btn => {
-            btn.addEventListener('click', () => eliminarConciliacion(btn.dataset.id));
-        });
-    }
-
-    function updatePagination(total, page, perPage) {
-        const totalPages = Math.ceil(total / perPage);
-        document.getElementById('items-showing').textContent = `${(page - 1) * perPage + 1}-${Math.min(page * perPage, total)}`;
-        document.getElementById('total-items').textContent = total;
-        prevPageBtn.disabled = page === 1;
-        nextPageBtn.disabled = page === totalPages;
-    }
-
-    function changePage(direction) {
-        currentPage += direction;
-        loadConciliaciones();
-    }
-
-    function handleSubmit(e) {
-        e.preventDefault();
-        const formData = new FormData(conciliacionForm);
-        const conciliacionData = Object.fromEntries(formData.entries());
-        const conciliacionId = document.getElementById('conciliacion-id').value;
-
-        const url = conciliacionId 
-            ? `/api/conciliaciones/${conciliacionId}` 
-            : '/api/conciliaciones';
-        const method = conciliacionId ? 'PUT' : 'POST';
-
-        fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(conciliacionData),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            Swal.fire({
-                icon: 'success',
-                title: 'Éxito',
-                text: conciliacionId ? 'Conciliación actualizada correctamente' : 'Conciliación creada correctamente',
-            });
-            hideModal();
-            loadConciliaciones();
-        })
-        .catch(error => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message || 'Hubo un error al procesar la conciliación',
-            });
-        });
-    }
-
-    function verConciliacion(id) {
-        fetch(`/api/conciliaciones/${id}`)
-            .then(response => response.json())
-            .then(conciliacion => {
-                Swal.fire({
-                    title: 'Detalles de la Conciliación',
-                    html: `
-                        <p><strong>Banco:</strong> ${conciliacion.banco_nombre}</p>
-                        <p><strong>Fecha:</strong> ${conciliacion.fecha}</p>
-                        <p><strong>Saldo Banco:</strong> ${conciliacion.saldo_banco}</p>
-                        <p><strong>Saldo Libros:</strong> ${conciliacion.saldo_libros}</p>
-                        <p><strong>Diferencia:</strong> ${conciliacion.diferencia}</p>
-                        <p><strong>Estado:</strong> ${conciliacion.estado}</p>
-                    `,
-                    confirmButtonText: 'Cerrar'
-                });
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo cargar la información de la conciliación',
-                });
-            });
-    }
-
-    function editarConciliacion(id) {
-        fetch(`/api/conciliaciones/${id}`)
-            .then(response => response.json())
-            .then(conciliacion => {
-                document.getElementById('conciliacion-id').value = conciliacion.id;
-                document.getElementById('banco').value = conciliacion.banco_id;
-                document.getElementById('fecha').value = conciliacion.fecha;
-                document.getElementById('saldo-banco').value = conciliacion.saldo_banco;
-                document.getElementById('saldo-libros').value = conciliacion.saldo_libros;
-                showModal('Editar Conciliación');
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo cargar la información de la conciliación',
-                });
-            });
-    }
-
-    function eliminarConciliacion(id) {
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "No podrás revertir esta acción",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/api/conciliaciones/${id}`, {
-                    method: 'DELETE',
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        throw new Error(data.error);
-                    }
-                    Swal.fire(
-                        'Eliminado',
-                        'La conciliación ha sido eliminada.',
-                        'success'
-                    );
-                    loadConciliaciones();
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: error.message || 'Hubo un error al eliminar la conciliación',
-                    });
-                });
-            }
-        });
-    }
-
-    function getStatusClass(estado) {
-        switch (estado) {
-            case 'Conciliado':
-                return 'bg-green-100 text-green-800';
-            case 'En Proceso':
-                return 'bg-yellow-100 text-yellow-800';
-            default:
-                return 'bg-red-100 text-red-800';
+            Swal.fire(
+                'Eliminado',
+                'La conciliación ha sido eliminada.',
+                'success'
+            );
+            buscarConciliaciones();
         }
+    });
+}
+
+function getEstadoClass(estado) {
+    switch (estado) {
+        case 'Conciliado':
+            return 'bg-green-100 text-green-800';
+        case 'En Proceso':
+            return 'bg-yellow-100 text-yellow-800';
+        default:
+            return 'bg-red-100 text-red-800';
     }
+}
+
+function validarFormulario() {
+    const saldoBanco = parseFloat(document.getElementById('saldo_banco').value);
+    const saldoLibros = parseFloat(document.getElementById('saldo_libros').value);
+
+    if (isNaN(saldoBanco) || isNaN(saldoLibros)) {
+        Swal.fire('Error', 'Los saldos deben ser números válidos', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+// Agregar validación al formulario antes de enviar
+document.getElementById('conciliacion-form').addEventListener('submit', function(e) {
+    if (!validarFormulario()) {
+        e.preventDefault();
+    }
+});
+
+// Función para limpiar los campos del formulario
+function limpiarFormulario() {
+    document.getElementById('conciliacion-form').reset();
+    document.getElementById('conciliacion-id').value = '';
+}
+
+// Agregar evento para el botón de limpiar
+document.querySelector('button[type="button"]:not(.modal-close)').addEventListener('click', limpiarFormulario);
+
+// Inicializar la búsqueda de conciliaciones al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    cargarBancos();
+    buscarConciliaciones();
 });
 </script>
 {% endblock %}

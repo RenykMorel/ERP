@@ -1,29 +1,432 @@
 {% extends "base.html" %}
-{% block title %}Tipos de Activo Fijo{% endblock %}
+{% block title %}Gestión de Tipos de Activo Fijo - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+    .compact-table th, .compact-table td {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    @media (max-width: 640px) {
+        .compact-table th, .compact-table td {
+            padding: 0.25rem;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Tipos de Activo Fijo</h1>
-    <a href="{{ url_for('activos_fijos.crear_tipo_activo_fijo') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Tipo</a>
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Nombre</th>
-                <th class="py-2 px-4 border-b">Descripción</th>
-                <th class="py-2 px-4 border-b">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for tipo in tipos_activo_fijo %}
-            <tr>
-                <td class="py-2 px-4 border-b">{{ tipo.nombre }}</td>
-                <td class="py-2 px-4 border-b">{{ tipo.descripcion }}</td>
-                <td class="py-2 px-4 border-b">
-                    <a href="{{ url_for('activos_fijos.editar_tipo_activo_fijo', id=tipo.id) }}" class="text-blue-500">Editar</a>
-                    <a href="{{ url_for('activos_fijos.ver_tipo_activo_fijo', id=tipo.id) }}" class="text-green-500">Ver</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div id="tipos-activo-fijo-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Tipos de Activo Fijo</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-4 sm:px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label for="nombre-tipo" class="block text-sm font-medium text-gray-700 mb-1">Nombre:</label>
+                <input type="text" id="nombre-tipo" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="estado-tipo" class="block text-sm font-medium text-gray-700 mb-1">Estado:</label>
+                <select id="estado-tipo" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value="">Todos</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-tipo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Tipo
+            </button>
+        </div>
+    </div>
+    
+    <div id="tipos-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="tipos-table" class="min-w-full divide-y divide-gray-200 compact-table">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Nombre</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Descripción</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estado</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tipos-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Los tipos de activo fijo se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> tipos
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para crear/editar tipo de activo fijo -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Crear Nuevo Tipo de Activo Fijo</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+
+            <form id="tipo-form" class="mt-4">
+                <input type="hidden" id="tipo-id" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
+                        Nombre
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nombre" name="nombre" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="descripcion">
+                        Descripción
+                    </label>
+                    <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="descripcion" name="descripcion" rows="3"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estado">
+                        Estado
+                    </label>
+                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="estado" name="estado">
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Guardar
+                    </button>
+                    <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTiposActivoFijo();
+});
+
+function initializeTiposActivoFijo() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearTipoBtn = document.getElementById('crear-tipo-btn');
+    const tipoForm = document.getElementById('tipo-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    buscarBtn.addEventListener('click', buscarTipos);
+    crearTipoBtn.addEventListener('click', mostrarFormularioCrearTipo);
+    tipoForm.addEventListener('submit', guardarTipo);
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+
+    document.getElementById('tipos-tbody').addEventListener('click', manejarAccionesTipo);
+
+    buscarTipos();
+}
+
+let paginaActual = 1;
+const itemsPorPagina = 10;
+
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function buscarTipos() {
+    const nombre = document.getElementById('nombre-tipo').value;
+    const estado = document.getElementById('estado-tipo').value;
+
+    // Aquí deberías hacer una llamada a tu API para buscar los tipos de activo fijo
+    // Por ahora, usaremos datos simulados
+    const tipos = [
+        { id: 1, nombre: 'Maquinaria', descripcion: 'Equipos y maquinaria industrial', estado: 'activo' },
+        { id: 2, nombre: 'Vehículos', descripcion: 'Vehículos de la empresa', estado: 'activo' },
+        { id: 3, nombre: 'Mobiliario', descripcion: 'Muebles y enseres', estado: 'inactivo' },
+    ];
+
+    actualizarTablaTipos(tipos);
+}
+
+function actualizarTablaTipos(tipos) {
+    const tbody = document.getElementById('tipos-tbody');
+    tbody.innerHTML = '';
+    tipos.forEach(tipo => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tipo.nombre}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tipo.descripcion}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${tipo.estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                    ${tipo.estado}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="ver-tipo text-blue-600 hover:text-blue-900 mr-2" data-id="${tipo.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="editar-tipo text-green-600 hover:text-green-900 mr-2" data-id="${tipo.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-tipo text-red-600 hover:text-red-900" data-id="${tipo.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    actualizarPaginacion(tipos.length);
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    document.getElementById('items-showing').textContent = `${(paginaActual - 1) * itemsPorPagina + 1}-${Math.min(paginaActual * itemsPorPagina, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = paginaActual === 1;
+    document.getElementById('next-page').disabled = paginaActual === totalPaginas;
+}
+
+function cambiarPagina(direccion) {
+    paginaActual += direccion;
+    buscarTipos();
+}
+
+function mostrarFormularioCrearTipo() {
+    document.getElementById('modal-title').textContent = 'Crear Nuevo Tipo de Activo Fijo';
+    document.getElementById('tipo-form').reset();
+    document.getElementById('tipo-id').value = '';
+    toggleModal();
+}
+
+function guardarTipo(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const tipoData = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar el tipo de activo fijo
+    console.log('Datos del tipo de activo fijo:', tipoData);
+
+    Swal.fire({
+        title: 'Éxito',
+        text: 'Tipo de activo fijo guardado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+    }).then(() => {
+        toggleModal();
+        buscarTipos();
+    });
+}
+
+function manejarAccionesTipo(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const tipoId = target.dataset.id;
+
+    if (target.classList.contains('ver-tipo')) {
+        verTipo(tipoId);
+    } else if (target.classList.contains('editar-tipo')) {
+        editarTipo(tipoId);
+    } else if (target.classList.contains('eliminar-tipo')) {
+        eliminarTipo(tipoId);
+    }
+}
+
+function verTipo(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los detalles del tipo de activo fijo
+    // Por ahora, simularemos algunos datos
+    const tipo = {
+        id: id,
+        nombre: 'Maquinaria',
+        descripcion: 'Equipos y maquinaria industrial',
+        estado: 'activo',
+        fecha_creacion: '2023-01-15',
+        ultima_modificacion: '2023-05-01',
+        cantidad_activos: 25
+    };
+
+    Swal.fire({
+        title: 'Detalles del Tipo de Activo Fijo',
+        html: `
+            <p><strong>Nombre:</strong> ${tipo.nombre}</p>
+            <p><strong>Descripción:</strong> ${tipo.descripcion}</p>
+            <p><strong>Estado:</strong> ${tipo.estado}</p>
+            <p><strong>Fecha de Creación:</strong> ${tipo.fecha_creacion}</p>
+            <p><strong>Última Modificación:</strong> ${tipo.ultima_modificacion}</p>
+            <p><strong>Cantidad de Activos Asociados:</strong> ${tipo.cantidad_activos}</p>
+        `,
+        icon: 'info'
+    });
+}
+
+function editarTipo(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los datos del tipo de activo fijo
+    // Por ahora, simularemos algunos datos
+    const tipo = {
+        id: id,
+        nombre: 'Maquinaria',
+        descripcion: 'Equipos y maquinaria industrial',
+        estado: 'activo'
+    };
+
+    document.getElementById('modal-title').textContent = 'Editar Tipo de Activo Fijo';
+    document.getElementById('tipo-id').value = tipo.id;
+    document.getElementById('nombre').value = tipo.nombre;
+    document.getElementById('descripcion').value = tipo.descripcion;
+    document.getElementById('estado').value = tipo.estado;
+
+    toggleModal();
+}
+
+function eliminarTipo(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer. Los activos asociados a este tipo quedarán sin clasificar.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para eliminar el tipo de activo fijo
+            console.log('Eliminando tipo de activo fijo con ID:', id);
+
+            Swal.fire(
+                'Eliminado',
+                'El tipo de activo fijo ha sido eliminado.',
+                'success'
+            ).then(() => {
+                buscarTipos();
+            });
+        }
+    });
+}
+
+function validarFormulario() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const descripcion = document.getElementById('descripcion').value.trim();
+
+    if (!nombre) {
+        Swal.fire('Error', 'El nombre del tipo de activo fijo es obligatorio', 'error');
+        return false;
+    }
+
+    if (nombre.length > 50) {
+        Swal.fire('Error', 'El nombre del tipo de activo fijo no puede tener más de 50 caracteres', 'error');
+        return false;
+    }
+
+    if (descripcion.length > 200) {
+        Swal.fire('Error', 'La descripción no puede tener más de 200 caracteres', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+// Agregar validación al formulario antes de enviar
+document.getElementById('tipo-form').addEventListener('submit', function(e) {
+    if (!validarFormulario()) {
+        e.preventDefault();
+    }
+});
+
+// Función para generar reporte de tipos de activo fijo
+function generarReporteTipos() {
+    // Aquí deberías hacer una llamada a tu API para generar el reporte
+    console.log('Generando reporte de tipos de activo fijo');
+
+    Swal.fire({
+        title: 'Reporte Generado',
+        text: 'El reporte de tipos de activo fijo ha sido generado exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'Descargar Reporte'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías proporcionar un enlace para descargar el reporte
+            console.log('Descargando reporte...');
+        }
+    });
+}
+
+// Agregar botón para generar reporte
+const busquedaForm = document.getElementById('busqueda-form');
+const generarReporteBtn = document.createElement('button');
+generarReporteBtn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>Generar Reporte';
+generarReporteBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500';
+generarReporteBtn.addEventListener('click', generarReporteTipos);
+busquedaForm.querySelector('.flex.justify-between').appendChild(generarReporteBtn);
+
+// Función para exportar tipos de activo fijo a Excel
+function exportarTiposExcel() {
+    // Aquí deberías hacer una llamada a tu API para generar el archivo Excel
+    console.log('Exportando tipos de activo fijo a Excel');
+
+    Swal.fire({
+        title: 'Exportación Exitosa',
+        text: 'Los tipos de activo fijo han sido exportados a Excel.',
+        icon: 'success',
+        confirmButtonText: 'Descargar Excel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías proporcionar un enlace para descargar el archivo Excel
+            console.log('Descargando archivo Excel...');
+        }
+    });
+}
+
+// Agregar botón para exportar a Excel
+const exportarExcelBtn = document.createElement('button');
+exportarExcelBtn.innerHTML = '<i class="fas fa-file-excel mr-2"></i>Exportar a Excel';
+exportarExcelBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ml-2';
+exportarExcelBtn.addEventListener('click', exportarTiposExcel);
+busquedaForm.querySelector('.flex.justify-between').appendChild(exportarExcelBtn);
+
+// Inicializar la búsqueda de tipos de activo fijo al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    buscarTipos();
+});
+</script>
 {% endblock %}

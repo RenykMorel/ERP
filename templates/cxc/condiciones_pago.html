@@ -1,31 +1,395 @@
 {% extends "base.html" %}
-{% block title %}Condiciones de Pago{% endblock %}
+{% block title %}Gestión de Condiciones de Pago - CxC - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+    .compact-table th, .compact-table td {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    @media (max-width: 640px) {
+        .compact-table th, .compact-table td {
+            padding: 0.25rem;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Condiciones de Pago</h1>
-    <a href="{{ url_for('cxc.crear_condicion_pago') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Condición de Pago</a>
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">ID</th>
-                <th class="py-2 px-4 border-b">Nombre</th>
-                <th class="py-2 px-4 border-b">Días</th>
-                <th class="py-2 px-4 border-b">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for condicion in condiciones %}
-            <tr>
-                <td class="py-2 px-4 border-b">{{ condicion.id }}</td>
-                <td class="py-2 px-4 border-b">{{ condicion.nombre }}</td>
-                <td class="py-2 px-4 border-b">{{ condicion.dias }}</td>
-                <td class="py-2 px-4 border-b">
-                    <a href="{{ url_for('cxc.editar_condicion_pago', id=condicion.id) }}" class="text-blue-500">Editar<a href="{{ url_for('cxc.editar_condicion_pago', id=condicion.id) }}" class="text-blue-500">Editar</a>
-                    <a href="{{ url_for('cxc.eliminar_condicion_pago', id=condicion.id) }}" class="text-red-500 ml-2">Eliminar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div id="condiciones-pago-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Condiciones de Pago - CxC</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-4 sm:px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre:</label>
+                <input type="text" id="nombre" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="dias" class="block text-sm font-medium text-gray-700 mb-1">Días:</label>
+                <input type="number" id="dias" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-condicion-pago-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nueva Condición de Pago
+            </button>
+        </div>
+    </div>
+    
+    <div id="condiciones-pago-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="condiciones-pago-table" class="min-w-full divide-y divide-gray-200 compact-table">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Nombre</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Días</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estado</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="condiciones-pago-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Las condiciones de pago se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> condiciones de pago
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para crear/editar condición de pago -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Crear Nueva Condición de Pago</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+
+            <form id="condicion-pago-form" class="mt-4">
+                <input type="hidden" id="condicion-pago-id" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
+                        Nombre
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nombre" name="nombre" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="dias">
+                        Días
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="dias" name="dias" type="number" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estado">
+                        Estado
+                    </label>
+                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="estado" name="estado">
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Guardar
+                    </button>
+                    <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCondicionesPago();
+});
+
+function initializeCondicionesPago() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearCondicionPagoBtn = document.getElementById('crear-condicion-pago-btn');
+    const condicionPagoForm = document.getElementById('condicion-pago-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    buscarBtn.addEventListener('click', buscarCondicionesPago);
+    crearCondicionPagoBtn.addEventListener('click', mostrarFormularioCrearCondicionPago);
+    condicionPagoForm.addEventListener('submit', guardarCondicionPago);
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+
+    document.getElementById('condiciones-pago-tbody').addEventListener('click', manejarAccionesCondicionPago);
+
+    buscarCondicionesPago();
+}
+
+let paginaActual = 1;
+const itemsPorPagina = 10;
+
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function buscarCondicionesPago() {
+    const nombre = document.getElementById('nombre').value;
+    const dias = document.getElementById('dias').value;
+
+    // Aquí deberías hacer una llamada a tu API para buscar las condiciones de pago
+    // Por ahora, usaremos datos simulados
+    const condicionesPago = [
+        { id: 1, nombre: 'Contado', dias: 0, estado: 'activo' },
+        { id: 2, nombre: '30 días', dias: 30, estado: 'activo' },
+        { id: 3, nombre: '60 días', dias: 60, estado: 'inactivo' },
+    ];
+
+    actualizarTablaCondicionesPago(condicionesPago);
+}
+
+function actualizarTablaCondicionesPago(condicionesPago) {
+    const tbody = document.getElementById('condiciones-pago-tbody');
+    tbody.innerHTML = '';
+    condicionesPago.forEach(condicion => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${condicion.nombre}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${condicion.dias}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstadoClass(condicion.estado)}">
+                    ${condicion.estado}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="editar-condicion-pago text-blue-600 hover:text-blue-900 mr-2" data-id="${condicion.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-condicion-pago text-red-600 hover:text-red-900" data-id="${condicion.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    actualizarPaginacion(condicionesPago.length);
+}
+
+function getEstadoClass(estado) {
+    return estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    document.getElementById('items-showing').textContent = `${(paginaActual - 1) * itemsPorPagina + 1}-${Math.min(paginaActual * itemsPorPagina, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = paginaActual === 1;
+    document.getElementById('next-page').disabled = paginaActual === totalPaginas;
+}
+
+function cambiarPagina(direccion) {
+    paginaActual += direccion;
+    buscarCondicionesPago();
+}
+
+function mostrarFormularioCrearCondicionPago() {
+    document.getElementById('modal-title').textContent = 'Crear Nueva Condición de Pago';
+    document.getElementById('condicion-pago-form').reset();
+    document.getElementById('condicion-pago-id').value = '';
+    toggleModal();
+}
+
+function guardarCondicionPago(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const condicionPagoData = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar la condición de pago
+    console.log('Datos de la condición de pago:', condicionPagoData);
+
+    Swal.fire({
+        title: 'Éxito',
+        text: 'Condición de pago guardada correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+    }).then(() => {
+        toggleModal();
+        buscarCondicionesPago();
+    });
+}
+
+function manejarAccionesCondicionPago(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const condicionPagoId = target.dataset.id;
+
+    if (target.classList.contains('editar-condicion-pago')) {
+        editarCondicionPago(condicionPagoId);
+    } else if (target.classList.contains('eliminar-condicion-pago')) {
+        eliminarCondicionPago(condicionPagoId);
+    }
+}
+
+function editarCondicionPago(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los datos de la condición de pago
+    // Por ahora, simularemos algunos datos
+    const condicionPago = {
+        id: id,
+        nombre: '30 días',
+        dias: 30,
+        estado: 'activo'
+    };
+
+    document.getElementById('modal-title').textContent = 'Editar Condición de Pago';
+    document.getElementById('condicion-pago-id').value = condicionPago.id;
+    document.getElementById('nombre').value = condicionPago.nombre;
+    document.getElementById('dias').value = condicionPago.dias;
+    document.getElementById('estado').value = condicionPago.estado;
+
+    toggleModal();
+}
+
+function eliminarCondicionPago(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para eliminar la condición de pago
+            console.log('Eliminando condición de pago con ID:', id);
+
+            Swal.fire(
+                'Eliminada',
+                'La condición de pago ha sido eliminada.',
+                'success'
+            ).then(() => {
+                buscarCondicionesPago();
+            });
+        }
+    });
+}
+
+function validarFormulario() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const dias = parseInt(document.getElementById('dias').value);
+
+    if (nombre === '') {
+        Swal.fire('Error', 'El nombre de la condición de pago es obligatorio', 'error');
+        return false;
+    }
+
+    if (isNaN(dias) || dias < 0) {
+        Swal.fire('Error', 'Los días deben ser un número no negativo', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+// Agregar validación al formulario antes de enviar
+document.getElementById('condicion-pago-form').addEventListener('submit', function(e) {
+    if (!validarFormulario()) {
+        e.preventDefault();
+    }
+});
+
+// Función para generar reporte de condiciones de pago
+function generarReporteCondicionesPago() {
+    // Aquí deberías hacer una llamada a tu API para generar el reporte
+    console.log('Generando reporte de condiciones de pago');
+
+    Swal.fire({
+        title: 'Reporte Generado',
+        text: 'El reporte de condiciones de pago ha sido generado exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'Descargar Reporte'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías proporcionar un enlace para descargar el reporte
+            console.log('Descargando reporte...');
+        }
+    });
+}
+
+// Agregar botón para generar reporte
+const busquedaForm = document.getElementById('busqueda-form');
+const generarReporteBtn = document.createElement('button');
+generarReporteBtn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>Generar Reporte';
+generarReporteBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500';
+generarReporteBtn.addEventListener('click', generarReporteCondicionesPago);
+busquedaForm.querySelector('.flex.justify-between').appendChild(generarReporteBtn);
+
+// Función para exportar condiciones de pago a Excel
+function exportarCondicionesPagoExcel() {
+    // Aquí deberías hacer una llamada a tu API para generar el archivo Excel
+    console.log('Exportando condiciones de pago a Excel');
+
+    Swal.fire({
+        title: 'Exportación Exitosa',
+        text: 'Las condiciones de pago han sido exportadas a Excel.',
+        icon: 'success',
+        confirmButtonText: 'Descargar Excel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías proporcionar un enlace para descargar el archivo Excel
+            console.log('Descargando archivo Excel...');
+        }
+    });
+}
+
+// Agregar botón para exportar a Excel
+const exportarExcelBtn = document.createElement('button');
+exportarExcelBtn.innerHTML = '<i class="fas fa-file-excel mr-2"></i>Exportar a Excel';
+exportarExcelBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ml-2';
+exportarExcelBtn.addEventListener('click', exportarCondicionesPagoExcel);
+busquedaForm.querySelector('.flex.justify-between').appendChild(exportarExcelBtn);
+
+// Inicializar la búsqueda de condiciones de pago al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    buscarCondicionesPago();
+});
+</script>
 {% endblock %}

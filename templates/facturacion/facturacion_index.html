@@ -12,6 +12,23 @@
         overflow-x: hidden;
         overflow-y: visible !important;
     }
+    .compact-form label {
+        font-size: 0.75rem;
+    }
+    .compact-form input, .compact-form select, .compact-form textarea {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .compact-table th, .compact-table td {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    @media (max-width: 640px) {
+        .compact-table th, .compact-table td {
+            padding: 0.25rem;
+            font-size: 0.7rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -73,164 +90,111 @@
 <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
     <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
     
-    <div class="modal-container bg-white w-11/12 md:max-w-4xl mx-auto rounded shadow-lg z-50 overflow-y-auto">
+    <div class="modal-container bg-white w-11/12 md:w-4/5 lg:w-3/4 xl:w-2/3 mx-auto rounded shadow-lg z-50 overflow-y-auto" style="max-width: 800px; max-height: 800px;">
         <div class="modal-content py-4 text-left px-6">
             <div class="flex justify-between items-center pb-3">
-                <p class="text-2xl font-bold" id="modal-title">Crear Nueva Factura</p>
+                <p class="text-xl font-bold" id="modal-title">Crear Nueva Factura</p>
                 <div class="modal-close cursor-pointer z-50">
-                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
-                    </svg>
+                    <i class="fas fa-times"></i>
                 </div>
             </div>
 
-            <form id="factura-form" class="mt-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <form id="factura-form" class="mt-4 compact-form">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="hidden" name="id">
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="id">
-                            ID
-                        </label>
-                        <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="id" type="text" readonly>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="fecha">Fecha</label>
+                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="fecha" type="datetime-local" readonly>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
-                            Fecha
-                        </label>
-                        <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="fecha" type="datetime-local" readonly>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo_venta">
-                            Tipo de Venta
-                        </label>
-                        <div class="mt-2">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="tipo_venta">Tipo de Venta</label>
+                        <div class="mt-1">
                             <label class="inline-flex items-center">
                                 <input type="radio" class="form-radio" name="tipo_venta" value="contado" checked>
-                                <span class="ml-2">Contado</span>
+                                <span class="ml-2 text-sm">Contado</span>
                             </label>
-                            <label class="inline-flex items-center ml-6">
+                            <label class="inline-flex items-center ml-4">
                                 <input type="radio" class="form-radio" name="tipo_venta" value="credito">
-                                <span class="ml-2">Crédito</span>
+                                <span class="ml-2 text-sm">Crédito</span>
                             </label>
                         </div>
                     </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="cliente">
-                            Cliente
-                        </label>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="cliente">Cliente</label>
                         <div class="relative">
-                            <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline pr-10" name="cliente" type="text" placeholder="Buscar cliente...">
-                            <button type="button" class="absolute inset-y-0 right-0 px-3 flex items-center bg-gray-100 rounded-r border-l">
+                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline pr-8" name="cliente" type="text" placeholder="Buscar cliente...">
+                            <button type="button" class="absolute inset-y-0 right-0 px-2 flex items-center bg-gray-100 rounded-r border-l">
                                 <i class="fas fa-search text-gray-600"></i>
                             </button>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="condicion">
-                            Condición
-                        </label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="condicion">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="condicion">Condición</label>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="condicion">
                             <option value="contado">Contado</option>
                             <option value="credito_30">Crédito 30 días</option>
                             <option value="credito_60">Crédito 60 días</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="documento">
-                            Documento / Nombre Completo
-                        </label>
-                        <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="documento" type="text" placeholder="Número de identificación / Nombre">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">
-                            Dirección
-                        </label>
-                        <textarea class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="direccion" rows="3"></textarea>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="documento">Documento / Nombre Completo</label>
+                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="documento" type="text" placeholder="Número de identificación / Nombre">
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="tienda">
-                            Tienda
-                        </label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="tienda">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="direccion">Dirección</label>
+                        <textarea class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="direccion" rows="2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="tienda">Tienda</label>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="tienda">
                             <option value="sucursal1">Sucursal 1</option>
                             <option value="sucursal2">Sucursal 2</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="vendedor">
-                            Vendedor
-                        </label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="vendedor">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="vendedor">Vendedor</label>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="vendedor">
                             <option value="vendedor1">Vendedor 1</option>
                             <option value="vendedor2">Vendedor 2</option>
                         </select>
                     </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="descuento">
-                            Descuento
-                        </label>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="descuento">Descuento</label>
                         <div class="flex">
-                            <input class="shadow-sm appearance-none border rounded-l w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="descuento" type="number" step="0.01" min="0">
-                            <select class="shadow-sm appearance-none border-t border-b border-r rounded-r bg-gray-100 text-gray-700 py-2 px-3 leading-tight focus:outline-none focus:shadow-outline" name="tipo_descuento">
+                            <input class="shadow-sm appearance-none border rounded-l w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="descuento" type="number" step="0.01" min="0">
+                            <select class="shadow-sm appearance-none border-t border-b border-r rounded-r bg-gray-100 text-gray-700 py-1 px-2 leading-tight focus:outline-none focus:shadow-outline" name="tipo_descuento">
                                 <option value="porcentaje">%</option>
                                 <option value="monto">$</option>
                             </select>
                         </div>
                     </div>
-                    <div class="flex items-end">
-                        <button type="button" id="aplicar-descuento" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                            Aplicar Descuento
-                        </button>
-                    </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
-                            Estatus
-                        </label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="estatus">Estatus</label>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
                             <option value="facturada">Facturada</option>
                             <option value="pendiente">Pendiente</option>
                             <option value="cancelada">Cancelada</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="moneda">
-                            Moneda
-                        </label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="moneda">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="moneda">Moneda</label>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="moneda">
                             <option value="dop">DOP</option>
                             <option value="usd">USD</option>
                             <option value="eur">EUR</option>
                         </select>
                     </div>
-                </div>
-
-                <div class="mt-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="notas">
-                        Notas
-                    </label>
-                    <textarea class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="notas" rows="3"></textarea>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="ncf">
-                            NCF
-                        </label>
-                        <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="ncf" type="text" placeholder="Número de Comprobante Fiscal">
+                    <div class="col-span-2">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="notas">Notas</label>
+                        <textarea class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="notas" rows="2"></textarea>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="documento_relacionado">
-                            Documento Relacionado
-                        </label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="documento_relacionado">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="ncf">NCF</label>
+                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="ncf" type="text" placeholder="Número de Comprobante Fiscal">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold  mb-1" for="documento_relacionado">Documento Relacionado</label>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="documento_relacionado">
                             <option value="">Seleccionar...</option>
                             <option value="pre_factura">Pre-Factura</option>
                             <option value="cotizacion">Cotización</option>
@@ -238,37 +202,31 @@
                             <option value="orden_venta">Orden de Venta</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="numero_documento_relacionado">
-                            Número de Documento Relacionado
-                        </label>
-                        <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="numero_documento_relacionado" type="text" placeholder="Número de documento">
-                    </div>
                 </div>
 
-                <div class="mt-6">
-                    <h3 class="text-lg font-semibold mb-2">Productos y Servicios</h3>
+                <div class="mt-4">
+                    <h3 class="text-sm font-semibold mb-2">Productos y Servicios</h3>
                     <div class="bg-gray-100 p-4 rounded-lg">
-                        <div class="flex space-x-4 mb-4">
-                            <button type="button" id="agregar-producto" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        <div class="flex space-x-2 mb-2">
+                            <button type="button" id="agregar-producto" class="bg-blue-500 hover:bg-blue-700 text-white text-xs font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">
                                 Agregar Producto
                             </button>
-                            <button type="button" id="agregar-nota-credito" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            <button type="button" id="agregar-nota-credito" class="bg-green-500 hover:bg-green-700 text-white text-xs font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">
                                 Nota de Crédito / Anticipo
                             </button>
-                            <button type="button" id="cargar-excel" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            <button type="button" id="cargar-excel" class="bg-yellow-500 hover:bg-yellow-700 text-white text-xs font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">
                                 Cargar Excel
                             </button>
                         </div>
-                        <table class="min-w-full divide-y divide-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200 compact-table">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ITBIS</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ITBIS</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+                                    <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="items-factura" class="bg-white divide-y divide-gray-200">
@@ -278,29 +236,29 @@
                     </div>
                 </div>
 
-                <div class="mt-6 flex justify-between">
-                    <div>
-                        <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2">
+                <div class="mt-4 flex flex-wrap justify-between">
+                    <div class="space-x-2">
+                        <button type="submit" class="bg-green-500 hover:bg-green-700 text-white text-xs font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                             Grabar
                         </button>
-                        <button type="button" id="limpiar-form" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2">
+                        <button type="button" id="limpiar-form" class="bg-yellow-500 hover:bg-yellow-700 text-white text-xs font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                             Limpiar
                         </button>
-                        <button type="button" class="modal-close bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2">
+                        <button type="button" class="modal-close bg-gray-500 hover:bg-gray-700 text-white text-xs font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                             Volver
                         </button>
                     </div>
-                    <div>
-                        <button type="button" id="clonar-factura" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2">
+                    <div class="space-x-2 mt-2 sm:mt-0">
+                        <button type="button" id="clonar-factura" class="bg-blue-500 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                             Clonar
                         </button>
-                        <button type="button" id="cancelar-factura" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2">
+                        <button type="button" id="cancelar-factura" class="bg-red-500 hover:bg-red-700 text-white text-xs font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                             Cancelar
                         </button>
-                        <button type="button" id="generar-reporte" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2">
+                        <button type="button" id="generar-reporte" class="bg-purple-500 hover:bg-purple-700 text-white text-xs font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                             Reporte
                         </button>
-                        <button type="button" id="enviar-email" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        <button type="button" id="enviar-email" class="bg-indigo-500 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                             E-mail
                         </button>
                     </div>
@@ -309,46 +267,149 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para crear/editar item -->
+<div id="itemModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                    Crear/Editar Item
+                </h3>
+                <form id="item-form" class="space-y-6">
+                    <input type="hidden" id="item-id" name="id">
+                    
+                    <!-- Información Básica del Ítem -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-md font-medium text-gray-700 mb-3">Información Básica</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="item-tipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Ítem</label>
+                                <select id="item-tipo" name="tipo" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="">Seleccione un tipo</option>
+                                    <option value="producto">Producto</option>
+                                    <option value="servicio">Servicio</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="item-codigo" class="block text-sm font-medium text-gray-700 mb-1">Código o SKU</label>
+                                <input type="text" id="item-codigo" name="codigo" required class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label for="item-nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Ítem</label>
+                                <input type="text" id="item-nombre" name="nombre" required class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label for="item-descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                                <textarea id="item-descripcion" name="descripcion" rows="3" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Precios y Fiscalidad -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-md font-medium text-gray-700 mb-3">Precios y Fiscalidad</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="item-precio-con-impuesto" class="block text-sm font-medium text-gray-700 mb-1">Precio con Impuesto</label>
+                                <input type="number" step="0.01" id="item-precio-con-impuesto" name="precio_con_impuesto" required class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label for="item-precio-sin-impuesto" class="block text-sm font-medium text-gray-700 mb-1">Precio sin Impuesto</label>
+                                <input type="number" step="0.01" id="item-precio-sin-impuesto" name="precio_sin_impuesto" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label for="item-tasa-impuesto" class="block text-sm font-medium text-gray-700 mb-1">Tasa de Impuesto</label>
+                                <select id="item-tasa-impuesto" name="tasa_impuesto" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="">Seleccione una tasa</option>
+                                    <option value="18">ITBIS 18%</option>
+                                    <option value="16">16%</option>
+                                    <option value="0">Exento</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="item-moneda" class="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+                                <select id="item-moneda" name="moneda" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="DOP">DOP</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inventario (para productos) -->
+                    <div id="inventario-section" class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-md font-medium text-gray-700 mb-3">Inventario</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="item-stock-inicial" class="block text-sm font-medium text-gray-700 mb-1">Stock Inicial</label>
+                                <input type="number" id="item-stock-inicial" name="stock_inicial" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label for="item-stock-minimo" class="block text-sm font-medium text-gray-700 mb-1">Stock Mínimo</label>
+                                <input type="number" id="item-stock-minimo" name="stock_minimo" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-item-btn">
+                    Guardar
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cerrar-modal-btn">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
     let lastFacturaId = 0;
+    let lastItemId = 0;
 
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeFacturas();
-        buscarFacturas();
-    });
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
+    const facturaForm = document.getElementById('factura-form');
+    const modal = document.querySelector('.modal');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const tipo_venta = document.querySelectorAll('input[name="tipo_venta"]');
+    const agregarProductoBtn = document.getElementById('agregar-producto');
+    const limpiarFormBtn = document.getElementById('limpiar-form');
+    const clonarFacturaBtn = document.getElementById('clonar-factura');
+    const cancelarFacturaBtn = document.getElementById('cancelar-factura');
+    const generarReporteBtn = document.getElementById('generar-reporte');
+    const enviarEmailBtn = document.getElementById('enviar-email');
+    const itemModal = document.getElementById('itemModal');
+    const itemForm = document.getElementById('item-form');
+    const guardarItemBtn = document.getElementById('guardar-item-btn');
+    const cerrarModalBtn = document.getElementById('cerrar-modal-btn');
+    const itemTipo = document.getElementById('item-tipo');
 
-    function initializeFacturas() {
-        const buscarBtn = document.getElementById('buscar-btn');
-        const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
-        const facturaForm = document.getElementById('factura-form');
-        const modal = document.querySelector('.modal');
-        const modalCloseButtons = document.querySelectorAll('.modal-close');
-        const tipoVenta = document.querySelectorAll('input[name="tipo_venta"]');
-        const agregarProductoBtn = document.getElementById('agregar-producto');
-        const limpiarFormBtn = document.getElementById('limpiar-form');
-        const clonarFacturaBtn = document.getElementById('clonar-factura');
-        const cancelarFacturaBtn = document.getElementById('cancelar-factura');
-        const generarReporteBtn = document.getElementById('generar-reporte');
-        const enviarEmailBtn = document.getElementById('enviar-email');
+    buscarBtn.addEventListener('click', buscarFacturas);
+    crearNuevoBtn.addEventListener('click', mostrarFormularioCrearFactura);
+    facturaForm.addEventListener('submit', guardarFactura);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+    tipo_venta.forEach(radio => radio.addEventListener('change', toggleCamposCredito));
+    agregarProductoBtn.addEventListener('click', mostrarFormularioCrearItem);
+    limpiarFormBtn.addEventListener('click', limpiarFormulario);
+    clonarFacturaBtn.addEventListener('click', clonarFactura);
+    cancelarFacturaBtn.addEventListener('click', cancelarFactura);
+    generarReporteBtn.addEventListener('click', generarReporte);
+    enviarEmailBtn.addEventListener('click', enviarEmail);
+    guardarItemBtn.addEventListener('click', guardarItem);
+    cerrarModalBtn.addEventListener('click', cerrarModalItem);
+    itemTipo.addEventListener('change', toggleInventarioSection);
 
-        buscarBtn.addEventListener('click', buscarFacturas);
-        crearNuevoBtn.addEventListener('click', mostrarFormularioCrearFactura);
-        facturaForm.addEventListener('submit', guardarFactura);
-        modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
-        tipoVenta.forEach(radio => radio.addEventListener('change', toggleCamposCredito));
-        agregarProductoBtn.addEventListener('click', agregarProducto);
-        limpiarFormBtn.addEventListener('click', limpiarFormulario);
-        clonarFacturaBtn.addEventListener('click', clonarFactura);
-        cancelarFacturaBtn.addEventListener('click', cancelarFactura);
-        generarReporteBtn.addEventListener('click', generarReporte);
-        enviarEmailBtn.addEventListener('click', enviarEmail);
-
-        document.getElementById('facturas-tbody').addEventListener('click', manejarAccionesFactura);
-    }
+    document.getElementById('facturas-tbody').addEventListener('click', manejarAccionesFactura);
 
     function buscarFacturas() {
         // Implementación de búsqueda (simulada por ahora)
@@ -470,7 +531,6 @@
     }
 
     function toggleModal() {
-        const modal = document.querySelector('.modal');
         modal.classList.toggle('opacity-0');
         modal.classList.toggle('pointer-events-none');
         document.body.classList.toggle('modal-active');
@@ -487,95 +547,88 @@
         }
     }
 
-    function agregarProducto() {
+    function mostrarFormularioCrearItem() {
+        itemForm.reset();
+        document.getElementById('item-id').value = '';
+        itemModal.classList.remove('hidden');
+    }
+
+    function guardarItem() {
+        const formData = new FormData(itemForm);
+        const itemData = Object.fromEntries(formData);
+        
+        // Aquí iría la lógica para guardar el item en el backend
+        console.log('Item guardado:', itemData);
+
+        // Agregar el item a la tabla de items de la factura
+        agregarItemATabla(itemData);
+
+        cerrarModalItem();
+    }
+
+    function agregarItemATabla(item) {
         const itemsFactura = document.getElementById('items-factura');
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap">
-                <input type="text" class="w-full border-gray-300 rounded-md" name="item[]" required>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <input type="number" class="w-full border-gray-300 rounded-md" name="cantidad[]" min="1" required>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <input type="number" class="w-full border-gray-300 rounded-md" name="precio[]" min="0" step="0.01" required>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <input type="number" class="w-full border-gray-300 rounded-md" name="itbis[]" min="0" step="0.01" required>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap subtotal">0.00</td>
+            <td class="px-6 py-4 whitespace-nowrap">${item.nombre}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${item.stock_inicial || 1}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${item.precio_con_impuesto}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${item.tasa_impuesto}%</td>
+            <td class="px-6 py-4 whitespace-nowrap subtotal">${item.precio_con_impuesto}</td>
             <td class="px-6 py-4 whitespace-nowrap">
                 <button type="button" class="text-red-600 hover:text-red-900 eliminar-item">Eliminar</button>
             </td>
         `;
         itemsFactura.appendChild(newRow);
 
-        // Agregar event listeners para calcular subtotal
-        const cantidadInput = newRow.querySelector('input[name="cantidad[]"]');
-        const precioInput = newRow.querySelector('input[name="precio[]"]');
-        const itbisInput = newRow.querySelector('input[name="itbis[]"]');
-        [cantidadInput, precioInput, itbisInput].forEach(input => {
-            input.addEventListener('input', () => calcularSubtotal(newRow));
-        });
-
         // Agregar event listener para eliminar item
         newRow.querySelector('.eliminar-item').addEventListener('click', () => eliminarItem(newRow));
     }
 
-    function calcularSubtotal(row) {
-        const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
-        const precio = parseFloat(row.querySelector('input[name="precio[]"]').value) || 0;
-        const itbis = parseFloat(row.querySelector('input[name="itbis[]"]').value) || 0;
-        const subtotal = (cantidad * precio) + itbis;
-        row.querySelector('.subtotal').textContent = subtotal.toFixed(2);
-        calcularTotalFactura();
-    }
-
     function eliminarItem(row) {
         row.remove();
-        calcularTotalFactura();
     }
 
-    function calcularTotalFactura() {
-        const subtotales = Array.from(document.querySelectorAll('.subtotal')).map(el => parseFloat(el.textContent));
-        const total = subtotales.reduce((acc, curr) => acc + curr, 0);
-        document.getElementById('total-factura').textContent = total.toFixed(2);
+    function cerrarModalItem() {
+        itemModal.classList.add('hidden');
+    }
+
+    function toggleInventarioSection() {
+        const inventarioSection = document.getElementById('inventario-section');
+        if (itemTipo.value === 'producto') {
+            inventarioSection.classList.remove('hidden');
+        } else {
+            inventarioSection.classList.add('hidden');
+        }
     }
 
     function limpiarFormulario() {
         document.getElementById('factura-form').reset();
         limpiarItemsFactura();
-        const fechaActual = new Date().toISOString().slice(0, 16);
-        document.querySelector('input[name="fecha"]').value = fechaActual;
-        document.querySelector('input[name="id"]').value = lastFacturaId + 1;
     }
 
     function limpiarItemsFactura() {
         document.getElementById('items-factura').innerHTML = '';
-        calcularTotalFactura();
     }
 
     function clonarFactura() {
-        // Clonar los valores del formulario actual
         const form = document.getElementById('factura-form');
         const formData = new FormData(form);
-        
-        // Incrementar el ID y actualizar la fecha
         formData.set('id', lastFacturaId + 1);
         formData.set('fecha', new Date().toISOString().slice(0, 16));
-        
-        // Actualizar el formulario con los datos clonados
-        for (let [key, value] of formData.entries()) {
-            if (form.elements[key]) {
-                form.elements[key].value = value;
-            }
-        }
-        
-        // Actualizar el título del modal
-        document.getElementById('modal-title').textContent = 'Crear Nueva Factura (Clonada)';
-        
-        // Recalcular totales
-        calcularTotalFactura();
+
+        // Aquí iría la lógica para clonar la factura en el backend
+        console.log('Factura clonada:', Object.fromEntries(formData));
+
+        Swal.fire({
+            title: 'Éxito',
+            text: 'La factura ha sido clonada correctamente',
+            icon: 'success',
+            confirmButtonText: 'Ok'
+        }).then(() => {
+            toggleModal();
+            buscarFacturas();
+        });
     }
 
     function cancelarFactura() {
@@ -590,93 +643,45 @@
             cancelButtonText: 'No, mantener'
         }).then((result) => {
             if (result.isConfirmed) {
-                document.querySelector('select[name="estatus"]').value = 'cancelada';
+                // Aquí iría la lógica para cancelar la factura en el backend
+                console.log('Factura cancelada');
+
                 Swal.fire(
                     'Cancelada',
                     'La factura ha sido cancelada.',
                     'success'
-                );
+                ).then(() => {
+                    toggleModal();
+                    buscarFacturas();
+                });
             }
         });
     }
 
     function generarReporte() {
-        // Aquí iría la lógica para generar el reporte de la factura
+        // Aquí iría la lógica para generar el reporte
+        console.log('Generando reporte...');
         Swal.fire({
-            title: 'Generando reporte',
-            text: 'El reporte de la factura se está generando...',
-            icon: 'info',
-            showConfirmButton: false,
-            timer: 2000
-        }).then(() => {
-            console.log('Reporte generado para la factura');
-            Swal.fire(
-                'Reporte generado',
-                'El reporte de la factura ha sido generado exitosamente.',
-                'success'
-            );
+            title: 'Reporte generado',
+            text: 'El reporte ha sido generado exitosamente',
+            icon: 'success',
+            confirmButtonText: 'Ok'
         });
     }
 
     function enviarEmail() {
-        // Aquí iría la lógica para enviar la factura por email
+        // Aquí iría la lógica para enviar el email
+        console.log('Enviando email...');
         Swal.fire({
-            title: 'Enviando email',
-            text: 'La factura se está enviando por email...',
-            icon: 'info',
-            showConfirmButton: false,
-            timer: 2000
-        }).then(() => {
-            console.log('Email enviado con la factura');
-            Swal.fire(
-                'Email enviado',
-                'La factura ha sido enviada por email exitosamente.',
-                'success'
-            );
-        });
-    }
-
-    document.getElementById('aplicar-descuento').addEventListener('click', function() {
-        const descuento = parseFloat(document.querySelector('input[name="descuento"]').value) || 0;
-        const tipoDescuento = document.querySelector('select[name="tipo_descuento"]').value;
-        const total = parseFloat(document.getElementById('total-factura').textContent);
-
-        let descuentoAplicado;
-        if (tipoDescuento === 'porcentaje') {
-            descuentoAplicado = total * (descuento / 100);
-        } else {
-            descuentoAplicado = descuento;
-        }
-
-        const nuevoTotal = total - descuentoAplicado;
-        document.getElementById('total-factura').textContent = nuevoTotal.toFixed(2);
-
-        Swal.fire({
-            title: 'Descuento aplicado',
-            text: `Se ha aplicado un descuento de ${descuentoAplicado.toFixed(2)}`,
+            title: 'Email enviado',
+            text: 'El email ha sido enviado exitosamente',
             icon: 'success',
             confirmButtonText: 'Ok'
         });
-    });
+    }
 
-    document.getElementById('cargar-excel').addEventListener('click', function() {
-        // Aquí iría la lógica para cargar productos desde un archivo Excel
-        Swal.fire({
-            title: 'Cargar Excel',
-            text: 'Esta función permitiría cargar productos desde un archivo Excel.',
-            icon: 'info',
-            confirmButtonText: 'Entendido'
-        });
-    });
-
-    document.getElementById('agregar-nota-credito').addEventListener('click', function() {
-        // Aquí iría la lógica para agregar una nota de crédito o anticipo
-        Swal.fire({
-            title: 'Agregar Nota de Crédito / Anticipo',
-            text: 'Esta función permitiría agregar una nota de crédito o anticipo a la factura.',
-            icon: 'info',
-            confirmButtonText: 'Entendido'
-        });
-    });
+    // Inicializar la búsqueda de facturas al cargar la página
+    buscarFacturas();
+});
 </script>
-{% endblock %}                    
+{% endblock %}

@@ -1,33 +1,489 @@
 {% extends "base.html" %}
-{% block title %}Recibos{% endblock %}
+{% block title %}Gestión de Recibos - CxC - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+    .compact-table th, .compact-table td {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    @media (max-width: 640px) {
+        .compact-table th, .compact-table td {
+            padding: 0.25rem;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Recibos</h1>
-    <a href="{{ url_for('cxc.crear_recibo') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Recibo</a>
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Número</th>
-                <th class="py-2 px-4 border-b">Monto</th>
-                <th class="py-2 px-4 border-b">Fecha</th>
-                <th class="py-2 px-4 border-b">Cuenta por Cobrar</th>
-                <th class="py-2 px-4 border-b">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for recibo in recibos %}
-            <tr>
-                <td class="py-2 px-4 border-b">{{ recibo.id }}</td>
-                <td class="py-2 px-4 border-b">{{ recibo.monto }}</td>
-                <td class="py-2 px-4 border-b">{{ recibo.fecha }}</td>
-                <td class="py-2 px-4 border-b">{{ recibo.cuenta_por_cobrar_id }}</td>
-                <td class="py-2 px-4 border-b">
-                    <a href="{{ url_for('cxc.editar_recibo', id=recibo.id) }}" class="text-blue-500">Editar</a>
-                    <a href="{{ url_for('cxc.eliminar_recibo', id=recibo.id) }}" class="text-red-500 ml-2">Eliminar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div id="recibos-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Recibos - CxC</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-4 sm:px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label for="numero-recibo" class="block text-sm font-medium text-gray-700 mb-1">Número de Recibo:</label>
+                <input type="text" id="numero-recibo" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="fecha-inicio" class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio:</label>
+                <input type="text" id="fecha-inicio" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="fecha-fin" class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin:</label>
+                <input type="text" id="fecha-fin" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-recibo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Recibo
+            </button>
+        </div>
+    </div>
+    
+    <div id="recibos-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="recibos-table" class="min-w-full divide-y divide-gray-200 compact-table">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Número</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Fecha</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Monto</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Cuenta por Cobrar</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estado</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="recibos-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Los recibos se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> recibos
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para crear/editar recibo -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Crear Nuevo Recibo</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+
+            <form id="recibo-form" class="mt-4">
+                <input type="hidden" id="recibo-id" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="monto">
+                        Monto
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="monto" name="monto" type="number" step="0.01" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
+                        Fecha
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="fecha" name="fecha" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cuenta_por_cobrar_id">
+                        Cuenta por Cobrar
+                    </label>
+                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="cuenta_por_cobrar_id" name="cuenta_por_cobrar_id" required>
+                        <!-- Las opciones se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="metodo_pago">
+                        Método de Pago
+                    </label>
+                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="metodo_pago" name="metodo_pago" required>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="transferencia">Transferencia</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="tarjeta">Tarjeta de Crédito/Débito</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Guardar
+                    </button>
+                    <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeRecibos();
+});
+
+function initializeRecibos() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearReciboBtn = document.getElementById('crear-recibo-btn');
+    const reciboForm = document.getElementById('recibo-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    buscarBtn.addEventListener('click', buscarRecibos);
+    crearReciboBtn.addEventListener('click', mostrarFormularioCrearRecibo);
+    reciboForm.addEventListener('submit', guardarRecibo);
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+
+    document.getElementById('recibos-tbody').addEventListener('click', manejarAccionesRecibo);
+
+    flatpickr("#fecha-inicio", {
+        dateFormat: "Y-m-d",
+    });
+
+    flatpickr("#fecha-fin", {
+        dateFormat: "Y-m-d",
+    });
+
+    flatpickr("#fecha", {
+        dateFormat: "Y-m-d",
+    });
+
+    cargarCuentasPorCobrar();
+    buscarRecibos();
+}
+
+let paginaActual = 1;
+const itemsPorPagina = 10;
+
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function cargarCuentasPorCobrar() {
+    // Aquí deberías hacer una llamada a tu API para obtener la lista de cuentas por cobrar
+    // Por ahora, usaremos datos simulados
+    const cuentasPorCobrar = [
+        { id: 1, numero: 'CXC001', cliente: 'Cliente A' },
+        { id: 2, numero: 'CXC002', cliente: 'Cliente B' },
+        { id: 3, numero: 'CXC003', cliente: 'Cliente C' },
+    ];
+
+    const selectCuentaPorCobrar = document.getElementById('cuenta_por_cobrar_id');
+    selectCuentaPorCobrar.innerHTML = '<option value="">Seleccione una cuenta por cobrar</option>';
+
+    cuentasPorCobrar.forEach(cuenta => {
+        const option = new Option(`${cuenta.numero} - ${cuenta.cliente}`, cuenta.id);
+        selectCuentaPorCobrar.add(option);
+    });
+}
+
+function buscarRecibos() {
+    const numeroRecibo = document.getElementById('numero-recibo').value;
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    // Aquí deberías hacer una llamada a tu API para buscar los recibos
+    // Por ahora, usaremos datos simulados
+    const recibos = [
+        { id: 1, numero: 'REC001', fecha: '2023-05-01', monto: 1000, cuenta_por_cobrar: 'CXC001 - Cliente A', estado: 'emitido' },
+        { id: 2, numero: 'REC002', fecha: '2023-05-02', monto: 1500, cuenta_por_cobrar: 'CXC002 - Cliente B', estado: 'pagado' },
+    ];
+
+    actualizarTablaRecibos(recibos);
+}
+
+function actualizarTablaRecibos(recibos) {
+    const tbody = document.getElementById('recibos-tbody');
+    tbody.innerHTML = '';
+    recibos.forEach(recibo => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${recibo.numero}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${recibo.fecha}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${recibo.monto.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${recibo.cuenta_por_cobrar}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstadoClass(recibo.estado)}">
+                    ${recibo.estado}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="ver-recibo text-blue-600 hover:text-blue-900 mr-2" data-id="${recibo.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="editar-recibo text-green-600 hover:text-green-900 mr-2" data-id="${recibo.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-recibo text-red-600 hover:text-red-900" data-id="${recibo.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    actualizarPaginacion(recibos.length);
+}
+
+function getEstadoClass(estado) {
+    switch (estado) {
+        case 'emitido':
+            return 'bg-yellow-100 text-yellow-800';
+        case 'pagado':
+            return 'bg-green-100 text-green-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    document.getElementById('items-showing').textContent = `${(paginaActual - 1) * itemsPorPagina + 1}-${Math.min(paginaActual * itemsPorPagina, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = paginaActual === 1;
+    document.getElementById('next-page').disabled = paginaActual === totalPaginas;
+}
+
+function cambiarPagina(direccion) {
+    paginaActual += direccion;
+    buscarRecibos();
+}
+
+function mostrarFormularioCrearRecibo() {
+    document.getElementById('modal-title').textContent = 'Crear Nuevo Recibo';
+    document.getElementById('recibo-form').reset();
+    document.getElementById('recibo-id').value = '';
+    toggleModal();
+}
+
+function guardarRecibo(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const reciboData = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar el recibo
+    console.log('Datos del recibo:', reciboData);
+
+    Swal.fire({
+        title: 'Éxito',
+        text: 'Recibo guardado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+    }).then(() => {
+        toggleModal();
+        buscarRecibos();
+    });
+}
+
+function manejarAccionesRecibo(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const reciboId = target.dataset.id;
+
+    if (target.classList.contains('ver-recibo')) {
+        verRecibo(reciboId);
+    } else if (target.classList.contains('editar-recibo')) {
+        editarRecibo(reciboId);
+    } else if (target.classList.contains('eliminar-recibo')) {
+        eliminarRecibo(reciboId);
+    }
+}
+
+function verRecibo(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los detalles del recibo
+    // Por ahora, simularemos algunos datos
+    const recibo = {
+        id: id,
+        numero: 'REC001',
+        fecha: '2023-05-01',
+        monto: 1000,
+        cuenta_por_cobrar: 'CXC001 - Cliente A',
+        estado: 'emitido',
+        metodo_pago: 'transferencia',
+        usuario_creacion: 'Juan Pérez',
+        fecha_creacion: '2023-05-01 10:30:00',
+        observaciones: 'Pago por factura #123'
+    };
+
+    Swal.fire({
+        title: 'Detalles del Recibo',
+        html: `
+            <p><strong>Número:</strong> ${recibo.numero}</p>
+            <p><strong>Fecha:</strong> ${recibo.fecha}</p>
+            <p><strong>Monto:</strong> $${recibo.monto.toFixed(2)}</p>
+            <p><strong>Cuenta por Cobrar:</strong> ${recibo.cuenta_por_cobrar}</p>
+            <p><strong>Estado:</strong> ${recibo.estado}</p>
+            <p><strong>Método de Pago:</strong> ${recibo.metodo_pago}</p>
+            <p><strong>Usuario Creación:</strong> ${recibo.usuario_creacion}</p>
+            <p><strong>Fecha Creación:</strong> ${recibo.fecha_creacion}</p>
+            <p><strong>Observaciones:</strong> ${recibo.observaciones}</p>
+        `,
+        icon: 'info'
+    });
+}
+
+function editarRecibo(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los datos del recibo
+    // Por ahora, simularemos algunos datos
+    const recibo = {
+        id: id,
+        monto: 1000,
+        fecha: '2023-05-01',
+        cuenta_por_cobrar_id: 1,
+        metodo_pago: 'transferencia'
+    };
+
+    document.getElementById('modal-title').textContent = 'Editar Recibo';
+    document.getElementById('recibo-id').value = recibo.id;
+    document.getElementById('monto').value = recibo.monto;
+    document.getElementById('fecha').value = recibo.fecha;
+    document.getElementById('cuenta_por_cobrar_id').value = recibo.cuenta_por_cobrar_id;
+    document.getElementById('metodo_pago').value = recibo.metodo_pago;
+
+    toggleModal();
+}
+
+function eliminarRecibo(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para eliminar el recibo
+            console.log('Eliminando recibo con ID:', id);
+
+            Swal.fire(
+                'Eliminado',
+                'El recibo ha sido eliminado.',
+                'success'
+            ).then(() => {
+                buscarRecibos();
+            });
+        }
+    });
+}
+
+function validarFormulario() {
+    const monto = parseFloat(document.getElementById('monto').value);
+    const fecha = document.getElementById('fecha').value;
+    const cuentaPorCobrarId = document.getElementById('cuenta_por_cobrar_id').value;
+    const metodoPago = document.getElementById('metodo_pago').value;
+
+    if (isNaN(monto) || monto <= 0) {
+        Swal.fire('Error', 'El monto debe ser un número positivo', 'error');
+        return false;
+    }
+
+    if (!fecha) {
+        Swal.fire('Error', 'Debe seleccionar una fecha', 'error');
+        return false;
+    }
+
+    if (!cuentaPorCobrarId) {
+        Swal.fire('Error', 'Debe seleccionar una cuenta por cobrar', 'error');
+        return false;
+    }
+
+    if (!metodoPago) {
+        Swal.fire('Error', 'Debe seleccionar un método de pago', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+// Agregar validación al formulario antes de enviar
+document.getElementById('recibo-form').addEventListener('submit', function(e) {
+    if (!validarFormulario()) {
+        e.preventDefault();
+    }
+});
+
+// Función para generar reporte de recibos
+function generarReporteRecibos() {
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    if (!fechaInicio || !fechaFin) {
+        Swal.fire('Error', 'Debe seleccionar un rango de fechas para generar el reporte', 'error');
+        return;
+    }
+
+    // Aquí deberías hacer una llamada a tu API para generar el reporte
+    console.log('Generando reporte de recibos para el período:', fechaInicio, 'a', fechaFin);
+
+    Swal.fire({
+        title: 'Reporte Generado',
+        text: 'El reporte de recibos ha sido generado exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'Descargar Reporte'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías proporcionar un enlace para descargar el reporte
+            console.log('Descargando reporte...');
+        }
+    });
+}
+
+// Agregar botón para generar reporte
+const busquedaForm = document.getElementById('busqueda-form');
+const generarReporteBtn = document.createElement('button');
+generarReporteBtn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>Generar Reporte';
+generarReporteBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500';
+generarReporteBtn.addEventListener('click', generarReporteRecibos);
+busquedaForm.querySelector('.flex.justify-between').appendChild(generarReporteBtn);
+
+// Inicializar la búsqueda de recibos al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    cargarCuentasPorCobrar();
+    buscarRecibos();
+});
+</script>
 {% endblock %}

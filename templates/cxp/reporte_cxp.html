@@ -1,28 +1,424 @@
 {% extends "base.html" %}
-{% block title %}Reportes CxP{% endblock %}
+{% block title %}Reportes CxP - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Reportes CxP</h1>
-    <table class="min-w-full bg-white">
-        <thead>
+<div id="reportes-cxp-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Reportes CxP</h1>
+    
+    <div id="generacion-reporte-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <h2 class="text-lg font-semibold mb-4">Generar Nuevo Reporte</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label for="tipo-reporte" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
+                <select id="tipo-reporte" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value="">Seleccionar Tipo</option>
+                    <option value="saldo_suplidor">Saldo por Suplidor</option>
+                    <option value="facturas_vencidas">Facturas Vencidas</option>
+                    <option value="pagos_realizados">Pagos Realizados</option>
+                    <option value="anticipos_pendientes">Anticipos Pendientes</option>
+                </select>
+            </div>
+            <div>
+                <label for="fecha-desde" class="block text-sm font-medium text-gray-700 mb-1">Fecha Desde</label>
+                <input type="text" id="fecha-desde" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="fecha-hasta" class="block text-sm font-medium text-gray-700 mb-1">Fecha Hasta</label>
+                <input type="text" id="fecha-hasta" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+        </div>
+        <div class="mt-4">
+            <button id="generar-reporte-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-file-alt mr-2"></i>Generar Reporte
+            </button>
+        </div>
+    </div>
+    
+    <div id="reportes-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="reportes-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Fecha</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Tipo</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Usuario</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="reportes-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Los reportes se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> reportes
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para visualizar reporte -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-4xl mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Visualización de Reporte</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div id="reporte-contenido" class="mt-4">
+                <!-- El contenido del reporte se cargará aquí dinámicamente -->
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button id="descargar-reporte-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <i class="fas fa-download mr-2"></i>Descargar Reporte
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeReportesCxPModule();
+});
+
+function initializeReportesCxPModule() {
+    const generarReporteBtn = document.getElementById('generar-reporte-btn');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    const descargarReporteBtn = document.getElementById('descargar-reporte-btn');
+
+    generarReporteBtn.addEventListener('click', generarReporte);
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+    descargarReporteBtn.addEventListener('click', descargarReporte);
+
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+
+    document.getElementById('reportes-tbody').addEventListener('click', manejarAccionesReporte);
+
+    flatpickr("#fecha-desde", {
+        dateFormat: "Y-m-d",
+    });
+
+    flatpickr("#fecha-hasta", {
+        dateFormat: "Y-m-d",
+    });
+
+    cargarReportes();
+}
+
+let paginaActual = 1;
+const itemsPorPagina = 10;
+
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function generarReporte() {
+    const tipoReporte = document.getElementById('tipo-reporte').value;
+    const fechaDesde = document.getElementById('fecha-desde').value;
+    const fechaHasta = document.getElementById('fecha-hasta').value;
+
+    if (!tipoReporte) {
+        Swal.fire('Error', 'Debe seleccionar un tipo de reporte', 'error');
+        return;
+    }
+
+    if (!fechaDesde || !fechaHasta) {
+        Swal.fire('Error', 'Debe seleccionar un rango de fechas', 'error');
+        return;
+    }
+
+    // Aquí deberías hacer una llamada a tu API para generar el reporte
+    console.log('Generando reporte:', { tipoReporte, fechaDesde, fechaHasta });
+
+    Swal.fire({
+        title: 'Generando Reporte',
+        text: 'Por favor espere...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Simular la generación del reporte (reemplazar con la llamada real a la API)
+    setTimeout(() => {
+        Swal.fire({
+            title: 'Reporte Generado',
+            text: 'El reporte ha sido generado exitosamente.',
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+        }).then(() => {
+            cargarReportes();
+        });
+    }, 2000);
+}
+
+function cargarReportes() {
+    // Aquí deberías hacer una llamada a tu API para obtener la lista de reportes
+    // Por ahora, usaremos datos simulados
+    const reportes = [
+        { id: 1, fecha: '2023-05-01', tipo: 'Saldo por Suplidor', usuario: 'Juan Pérez' },
+        { id: 2, fecha: '2023-05-02', tipo: 'Facturas Vencidas', usuario: 'María González' },
+        { id: 3, fecha: '2023-05-03', tipo: 'Pagos Realizados', usuario: 'Carlos Rodríguez' },
+    ];
+
+    actualizarTablaReportes(reportes);
+}
+
+function actualizarTablaReportes(reportes) {
+    const tbody = document.getElementById('reportes-tbody');
+    tbody.innerHTML = '';
+    reportes.forEach(reporte => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${reporte.fecha}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${reporte.tipo}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${reporte.usuario}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="ver-reporte text-blue-600 hover:text-blue-900 mr-2" data-id="${reporte.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="descargar-reporte text-green-600 hover:text-green-900" data-id="${reporte.id}">
+                    <i class="fas fa-download"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    actualizarPaginacion(reportes.length);
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    document.getElementById('items-showing').textContent = `${(paginaActual - 1) * itemsPorPagina + 1}-${Math.min(paginaActual * itemsPorPagina, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = paginaActual === 1;
+    document.getElementById('next-page').disabled = paginaActual === totalPaginas;
+}
+
+function cambiarPagina(direccion) {
+    paginaActual += direccion;
+    cargarReportes();
+}
+
+function manejarAccionesReporte(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const reporteId = target.dataset.id;
+
+    if (target.classList.contains('ver-reporte')) {
+        verReporte(reporteId);
+    } else if (target.classList.contains('descargar-reporte')) {
+        descargarReporte(reporteId);
+    }
+}
+
+function verReporte(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los detalles del reporte
+    // Por ahora, simularemos algunos datos
+    const reporte = {
+        id: id,
+        tipo: 'Saldo por Suplidor',
+        fecha: '2023-05-01',
+        datos: [
+            { suplidor: 'Suplidor A', saldo: 10000 },
+            { suplidor: 'Suplidor B', saldo: 15000 },
+            { suplidor: 'Suplidor C', saldo: 5000 },
+        ]
+    };
+
+    document.getElementById('modal-title').textContent = `Reporte: ${reporte.tipo}`;
+    const contenidoReporte = document.getElementById('reporte-contenido');
+    contenidoReporte.innerHTML = '';
+
+    // Crear tabla con los datos del reporte
+    const tabla = document.createElement('table');
+    tabla.className = 'min-w-full divide-y divide-gray-200';
+    tabla.innerHTML = `<thead class="bg-gray-50">
             <tr>
-                <th class="py-2 px-4 border-b">Fecha</th>
-                <th class="py-2 px-4 border-b">Tipo</th>
-                <th class="py-2 px-4 border-b">Acciones</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Suplidor</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Saldo</th>
             </tr>
         </thead>
-        <tbody>
-            {% for reporte in reportes %}
-            <tr>
-                <td class="py-2 px-4 border-b">{{ reporte.fecha }}</td>
-                <td class="py-2 px-4 border-b">{{ reporte.tipo }}</td>
-                <td class="py-2 px-4 border-b">
-                    <a href="#" class="text-blue-500">Ver</a>
-                    <a href="#" class="text-green-500">Descargar</a>
-                </td>
-            </tr>
-            {% endfor %}
+        <tbody class="bg-white divide-y divide-gray-200">
+            ${reporte.datos.map(item => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.suplidor}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${item.saldo.toFixed(2)}</td>
+                </tr>
+            `).join('')}
         </tbody>
-    </table>
-</div>
+    `;
+    contenidoReporte.appendChild(tabla);
+
+    // Crear gráfico
+    const canvas = document.createElement('canvas');
+    canvas.id = 'reporte-grafico';
+    contenidoReporte.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: reporte.datos.map(item => item.suplidor),
+            datasets: [{
+                label: 'Saldo',
+                data: reporte.datos.map(item => item.saldo),
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    toggleModal();
+}
+
+function descargarReporte(id) {
+    // Aquí deberías hacer una llamada a tu API para descargar el reporte
+    console.log('Descargando reporte con ID:', id);
+
+    Swal.fire({
+        title: 'Descargando Reporte',
+        text: 'El reporte se está descargando...',
+        icon: 'info',
+        showConfirmButton: false,
+        timer: 2000
+    }).then(() => {
+        Swal.fire(
+            'Descarga Completada',
+            'El reporte ha sido descargado exitosamente.',
+            'success'
+        );
+    });
+}
+
+// Función para generar un reporte personalizado
+function generarReportePersonalizado() {
+    Swal.fire({
+        title: 'Generar Reporte Personalizado',
+        html: `
+            <div class="mb-4">
+                <label for="campos" class="block text-sm font-medium text-gray-700 mb-1">Seleccione los campos:</label>
+                <select id="campos" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md" multiple>
+                    <option value="suplidor">Suplidor</option>
+                    <option value="factura">Factura</option>
+                    <option value="monto">Monto</option>
+                    <option value="fecha_vencimiento">Fecha de Vencimiento</option>
+                    <option value="estado">Estado</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="filtros" class="block text-sm font-medium text-gray-700 mb-1">Filtros:</label>
+                <input type="text" id="filtros" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md" placeholder="Ej: estado=pendiente">
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Generar',
+        cancelButtonText: 'Cancelar',
+        preConfirm: () => {
+            const campos = Array.from(document.getElementById('campos').selectedOptions).map(option => option.value);
+            const filtros = document.getElementById('filtros').value;
+            return { campos, filtros };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            console.log('Generando reporte personalizado:', result.value);
+            // Aquí deberías hacer una llamada a tu API para generar el reporte personalizado
+            Swal.fire('Reporte Generado', 'El reporte personalizado ha sido generado exitosamente.', 'success');
+        }
+    });
+}
+
+// Agregar botón para generar reporte personalizado
+const generacionReporteForm = document.getElementById('generacion-reporte-form');
+const generarReportePersonalizadoBtn = document.createElement('button');
+generarReportePersonalizadoBtn.innerHTML = '<i class="fas fa-cog mr-2"></i>Reporte Personalizado';
+generarReportePersonalizadoBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ml-2';
+generarReportePersonalizadoBtn.addEventListener('click', generarReportePersonalizado);
+generacionReporteForm.querySelector('.mt-4').appendChild(generarReportePersonalizadoBtn);
+
+// Función para exportar todos los reportes
+function exportarTodosReportes() {
+    Swal.fire({
+        title: '¿Exportar todos los reportes?',
+        text: "Esta acción exportará todos los reportes generados en un archivo comprimido.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, exportar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para exportar todos los reportes
+            console.log('Exportando todos los reportes');
+            Swal.fire(
+                'Exportación Iniciada',
+                'La exportación de todos los reportes ha comenzado. Recibirás una notificación cuando esté lista.',
+                'success'
+            );
+        }
+    });
+}
+
+// Agregar botón para exportar todos los reportes
+const exportarTodosBtn = document.createElement('button');
+exportarTodosBtn.innerHTML = '<i class="fas fa-file-export mr-2"></i>Exportar Todos';
+exportarTodosBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ml-2';
+exportarTodosBtn.addEventListener('click', exportarTodosReportes);
+generacionReporteForm.querySelector('.mt-4').appendChild(exportarTodosBtn);
+
+// Inicializar la carga de reportes al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    cargarReportes();
+});
+</script>
 {% endblock %}

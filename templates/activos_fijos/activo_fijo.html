@@ -1,33 +1,502 @@
 {% extends "base.html" %}
-{% block title %}Activo Fijo{% endblock %}
+{% block title %}Gestión de Activos Fijos - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+    .compact-table th, .compact-table td {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    @media (max-width: 640px) {
+        .compact-table th, .compact-table td {
+            padding: 0.25rem;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Gestión de Activos Fijos</h1>
-    <a href="{{ url_for('activos_fijos.crear_activo_fijo') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Activo Fijo</a>
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Código</th>
-                <th class="py-2 px-4 border-b">Nombre</th>
-                <th class="py-2 px-4 border-b">Fecha Adquisición</th>
-                <th class="py-2 px-4 border-b">Valor</th>
-                <th class="py-2 px-4 border-b">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for activo in activos %}
-            <tr>
-                <td class="py-2 px-4 border-b">{{ activo.codigo }}</td>
-                <td class="py-2 px-4 border-b">{{ activo.nombre }}</td>
-                <td class="py-2 px-4 border-b">{{ activo.fecha_adquisicion }}</td>
-                <td class="py-2 px-4 border-b">{{ activo.valor_adquisicion }}</td>
-                <td class="py-2 px-4 border-b">
-                    <a href="{{ url_for('activos_fijos.editar_activo_fijo', id=activo.id) }}" class="text-blue-500">Editar</a>
-                    <a href="{{ url_for('activos_fijos.ver_activo_fijo', id=activo.id) }}" class="text-green-500">Ver</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div id="activos-fijos-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Activos Fijos</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-4 sm:px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label for="codigo" class="block text-sm font-medium text-gray-700 mb-1">Código:</label>
+                <input type="text" id="codigo" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre:</label>
+                <input type="text" id="nombre" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoría:</label>
+                <select id="categoria" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value="">Todas las categorías</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-activo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Activo Fijo
+            </button>
+        </div>
+    </div>
+    
+    <div id="activos-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="activos-table" class="min-w-full divide-y divide-gray-200 compact-table">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Código</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Nombre</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Categoría</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Fecha Adquisición</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Valor Adquisición</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Valor Actual</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estado</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="activos-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Los activos se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> activos fijos
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para crear/editar activo fijo -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Crear Nuevo Activo Fijo</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+
+            <form id="activo-form" class="mt-4">
+                <input type="hidden" id="activo-id" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo">
+                        Código
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="codigo" name="codigo" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
+                        Nombre
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nombre" name="nombre" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="categoria_id">
+                        Categoría
+                    </label>
+                    <select id="categoria_id" name="categoria_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Seleccione una categoría</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha_adquisicion">
+                        Fecha de Adquisición
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="fecha_adquisicion" name="fecha_adquisicion" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="valor_adquisicion">
+                        Valor de Adquisición
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="valor_adquisicion" name="valor_adquisicion" type="number" step="0.01" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="vida_util">
+                        Vida Útil (años)
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="vida_util" name="vida_util" type="number" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="metodo_depreciacion">
+                        Método de Depreciación
+                    </label>
+                    <select id="metodo_depreciacion" name="metodo_depreciacion" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="lineal">Lineal</option>
+                        <option value="suma_digitos">Suma de Dígitos</option>
+                        <option value="unidades_produccion">Unidades de Producción</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Guardar
+                    </button>
+                    <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeActivosFijos();
+});
+
+function initializeActivosFijos() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearActivoBtn = document.getElementById('crear-activo-btn');
+    const activoForm = document.getElementById('activo-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    buscarBtn.addEventListener('click', buscarActivos);
+    crearActivoBtn.addEventListener('click', mostrarFormularioCrearActivo);
+    activoForm.addEventListener('submit', guardarActivo);
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+
+    document.getElementById('activos-tbody').addEventListener('click', manejarAccionesActivo);
+
+    flatpickr("#fecha_adquisicion", {
+        dateFormat: "Y-m-d",
+    });
+
+    cargarCategorias();
+    buscarActivos();
+}
+
+let paginaActual = 1;
+const itemsPorPagina = 10;
+
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function cargarCategorias() {
+    // Aquí deberías hacer una llamada a tu API para obtener la lista de categorías
+    // Por ahora, usaremos datos simulados
+    const categorias = [
+        { id: 1, nombre: 'Maquinaria' },
+        { id: 2, nombre: 'Vehículos' },
+        { id: 3, nombre: 'Equipos de Oficina' },
+    ];
+
+    const selectCategoria = document.getElementById('categoria');
+    const selectCategoriaModal = document.getElementById('categoria_id');
+
+    categorias.forEach(categoria => {
+        const option = new Option(categoria.nombre, categoria.id);
+        selectCategoria.add(option.cloneNode(true));
+        selectCategoriaModal.add(option);
+    });
+}
+
+function buscarActivos() {
+    const codigo = document.getElementById('codigo').value;
+    const nombre = document.getElementById('nombre').value;
+    const categoria = document.getElementById('categoria').value;
+
+    // Aquí deberías hacer una llamada a tu API para buscar los activos
+    // Por ahora, usaremos datos simulados
+    const activos = [
+        { id: 1, codigo: 'AF001', nombre: 'Computadora', categoria: 'Equipos de Oficina', fecha_adquisicion: '2023-01-15', valor_adquisicion: 1000, valor_actual: 900, estado: 'Activo' },
+        { id: 2, codigo: 'AF002', nombre: 'Vehículo', categoria: 'Vehículos', fecha_adquisicion: '2022-06-20', valor_adquisicion: 20000, valor_actual: 18000, estado: 'Activo' },
+    ];
+
+    actualizarTablaActivos(activos);
+}
+
+function actualizarTablaActivos(activos) {
+    const tbody = document.getElementById('activos-tbody');
+    tbody.innerHTML = '';
+    activos.forEach(activo => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${activo.codigo}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${activo.nombre}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${activo.categoria}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${activo.fecha_adquisicion}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${activo.valor_adquisicion.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${activo.valor_actual.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstadoClass(activo.estado)}">
+                    ${activo.estado}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="ver-activo text-blue-600 hover:text-blue-900 mr-2" data-id="${activo.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="editar-activo text-green-600 hover:text-green-900 mr-2" data-id="${activo.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="depreciar-activo text-yellow-600 hover:text-yellow-900 mr-2" data-id="${activo.id}">
+                    <i class="fas fa-calculator"></i>
+                </button>
+                <button class="eliminar-activo text-red-600 hover:text-red-900" data-id="${activo.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    actualizarPaginacion(activos.length);
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    document.getElementById('items-showing').textContent = `${(paginaActual - 1) * itemsPorPagina + 1}-${Math.min(paginaActual * itemsPorPagina, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = paginaActual === 1;
+    document.getElementById('next-page').disabled = paginaActual === totalPaginas;
+}
+
+function cambiarPagina(direccion) {
+    paginaActual += direccion;
+    buscarActivos();
+}
+
+function mostrarFormularioCrearActivo() {
+    document.getElementById('modal-title').textContent = 'Crear Nuevo Activo Fijo';
+    document.getElementById('activo-form').reset();
+    document.getElementById('activo-id').value = '';
+    toggleModal();
+}
+
+function guardarActivo(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const activoData = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar el activo
+    console.log('Datos del activo:', activoData);
+
+    Swal.fire('Éxito', 'Activo fijo guardado correctamente', 'success');
+    toggleModal();
+    buscarActivos();
+}
+
+function manejarAccionesActivo(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const activoId = target.dataset.id;
+
+    if (target.classList.contains('ver-activo')) {
+        verActivo(activoId);
+    } else if (target.classList.contains('editar-activo')) {
+        editarActivo(activoId);
+    } else if (target.classList.contains('depreciar-activo')) {
+        depreciarActivo(activoId);
+    } else if (target.classList.contains('eliminar-activo')) {
+        eliminarActivo(activoId);
+    }
+}
+
+function verActivo(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los detalles del activo
+    // Por ahora, simularemos algunos datos
+    const activo = {
+        id: id,
+        codigo: 'AF001',
+        nombre: 'Computadora',
+        categoria: 'Equipos de Oficina',
+        fecha_adquisicion: '2023-01-15',
+        valor_adquisicion: 1000,
+        valor_actual: 900,
+        vida_util: 5,
+        metodo_depreciacion: 'Lineal',
+        estado: 'Activo'
+    };
+
+    Swal.fire({
+        title: 'Detalles del Activo Fijo',
+        html: `
+            <p><strong>Código:</strong> ${activo.codigo}</p>
+            <p><strong>Nombre:</strong> ${activo.nombre}</p>
+            <p><strong>Categoría:</strong> ${activo.categoria}</p>
+            <p><strong>Fecha de Adquisición:</strong> ${activo.fecha_adquisicion}</p>
+            <p><strong>Valor de Adquisición:</strong> $${activo.valor_adquisicion.toFixed(2)}</p>
+            <p><strong>Valor Actual:</strong> $${activo.valor_actual.toFixed(2)}</p>
+            <p><strong>Vida Útil:</strong> ${activo.vida_util} años</p>
+            <p><strong>Método de Depreciación:</strong> ${activo.metodo_depreciacion}</p>
+            <p><strong>Estado:</strong> ${activo.estado}</p>
+        `,
+        icon: 'info'
+    });
+}
+
+function editarActivo(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los datos del activo
+    // Por ahora, simularemos algunos datos
+    const activo = {
+        id: id,
+        codigo: 'AF001',
+        nombre: 'Computadora',
+        categoria_id: 3,
+        fecha_adquisicion: '2023-01-15',
+        valor_adquisicion: 1000,
+        vida_util: 5,
+        metodo_depreciacion: 'lineal'
+    };
+
+    document.getElementById('modal-title').textContent = 'Editar Activo Fijo';
+    document.getElementById('activo-id').value = activo.id;
+    document.getElementById('codigo').value = activo.codigo;
+    document.getElementById('nombre').value = activo.nombre;
+    document.getElementById('categoria_id').value = activo.categoria_id;
+    document.getElementById('fecha_adquisicion').value = activo.fecha_adquisicion;
+    document.getElementById('valor_adquisicion').value = activo.valor_adquisicion;
+    document.getElementById('vida_util').value = activo.vida_util;
+    document.getElementById('metodo_depreciacion').value = activo.metodo_depreciacion;
+
+    toggleModal();
+}
+
+function depreciarActivo(id) {
+    Swal.fire({
+        title: 'Depreciar Activo',
+        html: `
+            <p>¿Está seguro que desea calcular la depreciación de este activo?</p>
+            <p>Esto actualizará el valor actual del activo.</p>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, depreciar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para calcular la depreciación
+            console.log('Calculando depreciación para el activo con ID:', id);
+
+            Swal.fire(
+                'Depreciado',
+                'La depreciación del activo ha sido calculada y actualizada.',
+                'success'
+            );
+            buscarActivos();
+        }
+    });
+}
+
+function eliminarActivo(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para eliminar el activo
+            console.log('Eliminando activo con ID:', id);
+
+            Swal.fire(
+                'Eliminado',
+                'El activo fijo ha sido eliminado.',
+                'success'
+            );
+            buscarActivos();
+        }
+    });
+}
+
+function getEstadoClass(estado) {
+    switch (estado) {
+        case 'Activo':
+            return 'bg-green-100 text-green-800';
+        case 'En Mantenimiento':
+            return 'bg-yellow-100 text-yellow-800';
+        case 'Dado de Baja':
+            return 'bg-red-100 text-red-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function validarFormulario() {
+    const valorAdquisicion = parseFloat(document.getElementById('valor_adquisicion').value);
+    const vidaUtil = parseInt(document.getElementById('vida_util').value);
+
+    if (isNaN(valorAdquisicion) || valorAdquisicion <= 0) {
+        Swal.fire('Error', 'El valor de adquisición debe ser un número positivo', 'error');
+        return false;
+    }
+
+    if (isNaN(vidaUtil) || vidaUtil <= 0) {
+        Swal.fire('Error', 'La vida útil debe ser un número entero positivo', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+// Agregar validación al formulario antes de enviar
+document.getElementById('activo-form').addEventListener('submit', function(e) {
+    if (!validarFormulario()) {
+        e.preventDefault();
+    }
+});
+
+// Función para limpiar los campos del formulario
+function limpiarFormulario() {
+    document.getElementById('activo-form').reset();
+    document.getElementById('activo-id').value = '';
+}
+
+// Agregar evento para el botón de limpiar
+document.querySelector('button[type="button"]:not(.modal-close)').addEventListener('click', limpiarFormulario);
+
+// Inicializar la búsqueda de activos al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    cargarCategorias();
+    buscarActivos();
+});
+</script>
 {% endblock %}

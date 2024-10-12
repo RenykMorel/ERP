@@ -25,8 +25,16 @@ class RecepcionMateriales(db.Model):
 
 class Gasto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
-    descripcion = db.Column(db.String(200))
-    monto = db.Column(db.Float)
-    categoria = db.Column(db.String(100))
-    # Añade más campos según sea necesario
+    concepto = db.Column(db.String(100), nullable=False)
+    monto = db.Column(db.Float, nullable=False)
+    fecha = db.Column(db.Date, nullable=False)
+    categoria = db.Column(db.String(50), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'concepto': self.concepto,
+            'monto': self.monto,
+            'fecha': self.fecha.strftime('%Y-%m-%d'),
+            'categoria': self.categoria
+        }

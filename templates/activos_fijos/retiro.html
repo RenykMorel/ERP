@@ -1,28 +1,446 @@
 {% extends "base.html" %}
-{% block title %}Retiro de Activos{% endblock %}
+{% block title %}Gestión de Retiro de Activos Fijos - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+    .compact-table th, .compact-table td {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    @media (max-width: 640px) {
+        .compact-table th, .compact-table td {
+            padding: 0.25rem;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Retiro de Activos Fijos</h1>
-    <a href="{{ url_for('activos_fijos.registrar_retiro') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Registrar Retiro</a>
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Activo</th>
-                <th class="py-2 px-4 border-b">Fecha de Retiro</th>
-                <th class="py-2 px-4 border-b">Motivo</th>
-                <th class="py-2 px-4 border-b">Valor Recuperado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for retiro in retiros %}
-            <tr>
-                <td class="py-2 px-4 border-b">{{ retiro.activo.nombre }}</td>
-                <td class="py-2 px-4 border-b">{{ retiro.fecha }}</td>
-                <td class="py-2 px-4 border-b">{{ retiro.motivo }}</td>
-                <td class="py-2 px-4 border-b">{{ retiro.valor_recuperado }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div id="retiro-activos-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Retiro de Activos Fijos</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-4 sm:px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+                <label for="activo" class="block text-sm font-medium text-gray-700 mb-1">Activo:</label>
+                <select id="activo" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value="">Todos los activos</option>
+                </select>
+            </div>
+            <div>
+                <label for="fecha-inicio" class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio:</label>
+                <input type="text" id="fecha-inicio" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="fecha-fin" class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin:</label>
+                <input type="text" id="fecha-fin" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="registrar-retiro-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Registrar Retiro
+            </button>
+        </div>
+    </div>
+    
+    <div id="retiros-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="retiros-table" class="min-w-full divide-y divide-gray-200 compact-table">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Activo</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Fecha de Retiro</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Motivo</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Valor Recuperado</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="retiros-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Los retiros se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> retiros
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para registrar/editar retiro -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Registrar Retiro de Activo</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+
+            <form id="retiro-form" class="mt-4">
+                <input type="hidden" id="retiro-id" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="activo_id">
+                        Activo
+                    </label>
+                    <select id="activo_id" name="activo_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Seleccione un activo</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha_retiro">
+                        Fecha de Retiro
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="fecha_retiro" name="fecha_retiro" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="motivo">
+                        Motivo
+                    </label>
+                    <select id="motivo" name="motivo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="venta">Venta</option>
+                        <option value="obsolescencia">Obsolescencia</option>
+                        <option value="daño">Daño</option>
+                        <option value="donacion">Donación</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="valor_recuperado">
+                        Valor Recuperado
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="valor_recuperado" name="valor_recuperado" type="number" step="0.01" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="observaciones">
+                        Observaciones
+                    </label>
+                    <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="observaciones" name="observaciones" rows="3"></textarea>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Guardar
+                    </button>
+                    <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeRetiroActivos();
+});
+
+function initializeRetiroActivos() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const registrarRetiroBtn = document.getElementById('registrar-retiro-btn');
+    const retiroForm = document.getElementById('retiro-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    buscarBtn.addEventListener('click', buscarRetiros);
+    registrarRetiroBtn.addEventListener('click', mostrarFormularioRegistrarRetiro);
+    retiroForm.addEventListener('submit', guardarRetiro);
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+
+    document.getElementById('retiros-tbody').addEventListener('click', manejarAccionesRetiro);
+
+    flatpickr("#fecha-inicio", {
+        dateFormat: "Y-m-d",
+    });
+
+    flatpickr("#fecha-fin", {
+        dateFormat: "Y-m-d",
+    });
+
+    flatpickr("#fecha_retiro", {
+        dateFormat: "Y-m-d",
+    });
+
+    cargarActivos();
+    buscarRetiros();
+}
+
+let paginaActual = 1;
+const itemsPorPagina = 10;
+
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function cargarActivos() {
+    // Aquí deberías hacer una llamada a tu API para obtener la lista de activos
+    // Por ahora, usaremos datos simulados
+    const activos = [
+        { id: 1, nombre: 'Computadora' },
+        { id: 2, nombre: 'Vehículo' },
+        { id: 3, nombre: 'Maquinaria' },
+    ];
+
+    const selectActivo = document.getElementById('activo');
+    const selectActivoModal = document.getElementById('activo_id');
+
+    activos.forEach(activo => {
+        const option = new Option(activo.nombre, activo.id);
+        selectActivo.add(option.cloneNode(true));
+        selectActivoModal.add(option);
+    });
+}
+
+function buscarRetiros() {
+    const activo = document.getElementById('activo').value;
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    // Aquí deberías hacer una llamada a tu API para buscar los retiros
+    // Por ahora, usaremos datos simulados
+    const retiros = [
+        { id: 1, activo: 'Computadora', fecha_retiro: '2023-05-01', motivo: 'Obsolescencia', valor_recuperado: 200 },
+        { id: 2, activo: 'Vehículo', fecha_retiro: '2023-05-02', motivo: 'Venta', valor_recuperado: 5000 },
+    ];
+
+    actualizarTablaRetiros(retiros);
+}
+
+function actualizarTablaRetiros(retiros) {
+    const tbody = document.getElementById('retiros-tbody');
+    tbody.innerHTML = '';
+    retiros.forEach(retiro => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${retiro.activo}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${retiro.fecha_retiro}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${retiro.motivo}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${retiro.valor_recuperado.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="ver-retiro text-blue-600 hover:text-blue-900 mr-2" data-id="${retiro.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="anular-retiro text-red-600 hover:text-red-900" data-id="${retiro.id}">
+                    <i class="fas fa-ban"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    actualizarPaginacion(retiros.length);
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    document.getElementById('items-showing').textContent = `${(paginaActual - 1) * itemsPorPagina + 1}-${Math.min(paginaActual * itemsPorPagina, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = paginaActual === 1;
+    document.getElementById('next-page').disabled = paginaActual === totalPaginas;
+}
+
+function cambiarPagina(direccion) {
+    paginaActual += direccion;
+    buscarRetiros();
+}
+
+function mostrarFormularioRegistrarRetiro() {
+    document.getElementById('modal-title').textContent = 'Registrar Retiro de Activo';
+    document.getElementById('retiro-form').reset();
+    document.getElementById('retiro-id').value = '';
+    toggleModal();
+}
+
+function guardarRetiro(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const retiroData = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar el retiro
+    console.log('Datos del retiro:', retiroData);
+
+    Swal.fire({
+        title: 'Éxito',
+        text: 'Retiro de activo registrado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+    }).then(() => {
+        toggleModal();
+        buscarRetiros();
+    });
+}
+
+function manejarAccionesRetiro(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const retiroId = target.dataset.id;
+
+    if (target.classList.contains('ver-retiro')) {
+        verRetiro(retiroId);
+    } else if (target.classList.contains('anular-retiro')) {
+        anularRetiro(retiroId);
+    }
+}
+
+function verRetiro(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los detalles del retiro
+    // Por ahora, simularemos algunos datos
+    const retiro = {
+        id: id,
+        activo: 'Computadora',
+        fecha_retiro: '2023-05-01',
+        motivo: 'Obsolescencia',
+        valor_recuperado: 200,
+        valor_libros: 500,
+        ganancia_perdida: -300,
+        observaciones: 'Equipo obsoleto, reemplazado por modelo más reciente.'
+    };
+
+    Swal.fire({
+        title: 'Detalles del Retiro de Activo',
+        html: `
+            <p><strong>Activo:</strong> ${retiro.activo}</p>
+            <p><strong>Fecha de Retiro:</strong> ${retiro.fecha_retiro}</p>
+            <p><strong>Motivo:</strong> ${retiro.motivo}</p>
+            <p><strong>Valor Recuperado:</strong> $${retiro.valor_recuperado.toFixed(2)}</p>
+            <p><strong>Valor en Libros:</strong> $${retiro.valor_libros.toFixed(2)}</p>
+            <p><strong>Ganancia/Pérdida:</strong> $${retiro.ganancia_perdida.toFixed(2)}</p>
+            <p><strong>Observaciones:</strong> ${retiro.observaciones}</p>
+        `,
+        icon: 'info'
+    });
+}
+
+function anularRetiro(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Anular este retiro revertirá el activo a su estado anterior. Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, anular',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para anular el retiro
+            console.log('Anulando retiro con ID:', id);
+
+            Swal.fire(
+                'Anulado',
+                'El retiro de activo ha sido anulado.',
+                'success'
+            ).then(() => {
+                buscarRetiros();
+            });
+        }
+    });
+}
+
+function validarFormulario() {
+    const activoId = document.getElementById('activo_id').value;
+    const fechaRetiro = document.getElementById('fecha_retiro').value;
+    const valorRecuperado = parseFloat(document.getElementById('valor_recuperado').value);
+
+    if (!activoId) {
+        Swal.fire('Error', 'Debe seleccionar un activo', 'error');
+        return false;
+    }
+
+    if (!fechaRetiro) {
+        Swal.fire('Error', 'Debe seleccionar una fecha de retiro', 'error');
+        return false;
+    }
+
+    if (isNaN(valorRecuperado) || valorRecuperado < 0) {
+        Swal.fire('Error', 'El valor recuperado debe ser un número no negativo', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+// Agregar validación al formulario antes de enviar
+document.getElementById('retiro-form').addEventListener('submit', function(e) {
+    if (!validarFormulario()) {
+        e.preventDefault();
+    }
+});
+
+// Función para generar reporte de retiros de activos
+function generarReporteRetiros() {
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    if (!fechaInicio || !fechaFin) {
+        Swal.fire('Error', 'Debe seleccionar un rango de fechas para generar el reporte', 'error');
+        return;
+    }
+
+    // Aquí deberías hacer una llamada a tu API para generar el reporte
+    console.log('Generando reporte de retiros para el período:', fechaInicio, 'a', fechaFin);
+
+    Swal.fire({
+        title: 'Reporte Generado',
+        text: 'El reporte de retiros de activos ha sido generado exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'Descargar Reporte'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías proporcionar un enlace para descargar el reporte
+            console.log('Descargando reporte...');
+        }
+    });
+}
+
+// Agregar botón para generar reporte
+const busquedaForm = document.getElementById('busqueda-form');
+const generarReporteBtn = document.createElement('button');
+generarReporteBtn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>Generar Reporte';
+generarReporteBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500';
+generarReporteBtn.addEventListener('click', generarReporteRetiros);
+busquedaForm.querySelector('.flex.justify-between').appendChild(generarReporteBtn);
+
+// Inicializar la búsqueda de retiros al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    cargarActivos();
+    buscarRetiros();
+});
+</script>
 {% endblock %}

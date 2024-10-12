@@ -40,9 +40,21 @@ from typing import Any, Optional
 from typing import Tuple, Dict, Any
 from flask import send_from_directory
 from models import Usuario
+import pandas as pd
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+from docx import Document
+from io import BytesIO
+from flask import send_file, make_response, jsonify
+import xlsxwriter
+import base64
 
 # Importar el nuevo módulo de marketing
 from marketing.routes import marketing
+
+# Importar la biblioteca de OpenAI
+from openai import OpenAI
 
 load_dotenv()
 
@@ -170,16 +182,24 @@ class CustomJSONEncoder(json.JSONEncoder):
         if isinstance(obj, datetime):
             return obj.isoformat()
         return super().default(obj)
+    
+def get_assistant_context():
+    with current_app.app_context():
+        empresa_count = Empresa.query.count()
+        usuario_count = Usuario.query.count()
+        return {
+            "empresa_count": empresa_count,
+            "usuario_count": usuario_count,
+        }    
 
 class AsistenteVirtual:
     def __init__(self, api_key, get_context_func):
-        self.api_key = api_key
+        self.client = OpenAI(api_key=api_key)
         self.get_context_func = get_context_func
         self.context = """Eres un asistente virtual multifuncional para CalculAI. 
         Puedes responder preguntas sobre información financiera y transacciones, 
         así como ayudar con tareas de marketing como generar ideas para campañas 
         y crear contenido para emails. Adapta tu respuesta al tipo de solicitud."""
-        self.base_url = "https://api.anthropic.com/v1/messages"
 
     def object_as_dict(self, obj):
         def serialize(value):
@@ -190,70 +210,162 @@ class AsistenteVirtual:
         return {c.key: serialize(getattr(obj, c.key))
                 for c in inspect(obj).mapper.column_attrs}
 
-    def get_db_info(self):
+    def get_db_info(self, usuario_id):
         info = {}
         
-        usuarios = Usuario.query.options(joinedload(Usuario.empresa)).all()
-        info['usuarios'] = [self.object_as_dict(u) for u in usuarios]
-
-        empresas = Empresa.query.all()
-        info['empresas'] = [self.object_as_dict(e) for e in empresas]
-
-        bancos = Banco.query.all()
-        info['bancos'] = [self.object_as_dict(b) for b in bancos]
+        usuario = Usuario.query.get(usuario_id)
+        if usuario:
+            info['usuario'] = self.object_as_dict(usuario)
+            info['empresa'] = self.object_as_dict(usuario.empresa) if usuario.empresa else None
 
         return info
 
-    def responder(self, pregunta, usuario_id):
-        info_db = self.get_db_info()
-        usuario_actual = next((u for u in info_db['usuarios'] if u['id'] == usuario_id), None)
-        
-        if usuario_actual:
-            empresa_actual = next((e for e in info_db['empresas'] if e['id'] == usuario_actual['empresa_id']), None)
-            context_updated = f"{self.context}\n\nInformación del usuario actual: {json.dumps(usuario_actual, cls=CustomJSONEncoder)}\n\nInformación de la empresa del usuario: {json.dumps(empresa_actual, cls=CustomJSONEncoder)}\n\nInformación completa del sistema: {json.dumps(info_db, cls=CustomJSONEncoder)}"
+    def generar_reporte(self, usuario_id, pregunta):
+    # Aquí deberías implementar la lógica para generar el reporte basado en la pregunta
+    # Por ahora, usaremos datos de ejemplo
+        if 'ventas' in pregunta.lower():
+            datos = [
+                ["Producto", "Cantidad", "Precio Unitario", "Total"],
+                ["Producto A", 100, 10.00, 1000.00],
+                ["Producto B", 50, 20.00, 1000.00],
+                ["Producto C", 75, 15.00, 1125.00],
+                ["Producto D", 200, 5.00, 1000.00],
+                ["Producto E", 30, 50.00, 1500.00],
+            ]
+            tipo_reporte = "Reporte de Ventas"
+        elif 'inventario' in pregunta.lower():
+            datos = [
+                ["Producto", "Stock Actual", "Stock Mínimo", "Reorden"],
+                ["Producto A", 500, 100, "No"],
+                ["Producto B", 50, 100, "Sí"],
+                ["Producto C", 750, 500, "No"],
+            ]
+            tipo_reporte = "tabla_inventario"
         else:
-            context_updated = f"{self.context}\n\nInformación completa del sistema: {json.dumps(info_db, cls=CustomJSONEncoder)}"
+            datos = [
+                ["Campo", "Valor"],
+                ["Dato 1", "Valor 1"],
+                ["Dato 2", "Valor 2"],
+                ["Dato 3", "Valor 3"],
+            ]
+            tipo_reporte = "tabla_general"
 
-        headers = {
-            "Content-Type": "application/json",
-            "x-api-key": self.api_key,
-            "anthropic-version": "2023-06-01",
-        }
-        
-        data = {
-            "model": "claude-2.1",
-            "system": context_updated,
-            "messages": [
-                {"role": "user", "content": pregunta}
-            ],
-            "max_tokens": 1000  # Aumentado para permitir respuestas más largas
-        }
+        return datos, tipo_reporte
+
+    def responder(self, pregunta, usuario_id):
+        info_db = self.get_db_info(usuario_id)
+        context_updated = f"{self.context}\n\nInformación del usuario actual: {json.dumps(info_db, cls=CustomJSONEncoder)}"
 
         try:
-            logger.debug(f"Enviando solicitud a la API de Claude. API Key: {self.api_key[:5]}...")
-            response = requests.post(
-                self.base_url,
-                headers=headers,
-                json=data,
-                timeout=30,  # Aumentado el tiempo de espera
+            response = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": context_updated},
+                    {"role": "user", "content": pregunta}
+                ]
             )
-            response.raise_for_status()
-            logger.info("Respuesta recibida de la API de Claude")
-            return response.json()["content"][0]["text"]
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error al comunicarse con la API de Claude: {str(e)}")
-            if hasattr(e, 'response') and e.response is not None:
-                logger.error(f"Respuesta de error: {e.response.text}")
-            raise Exception(f"Error al comunicarse con la API de Claude: {str(e)}")
+            respuesta = response.choices[0].message.content
+            
+            return {"tipo": "texto", "contenido": respuesta}
+        except Exception as e:
+            logger.error(f"Error al comunicarse con la API de OpenAI: {str(e)}")
+            raise Exception(f"Error al comunicarse con la API de OpenAI: {str(e)}")
 
-def get_assistant_context():
-    with current_app.app_context():
-        empresa_count = Empresa.query.count()
-        usuario_count = Usuario.query.count()
-        return {
-            "empresa_count": empresa_count,
-            "usuario_count": usuario_count,
-        }
+    def generar_archivos(self, usuario_id, formato):
+        info = self.get_db_info(usuario_id)
+        if formato == 'pdf':
+            return self.generar_pdf(info)
+        elif formato == 'excel':
+            return self.generar_excel(info)
+        elif formato == 'word':
+            return self.generar_word(info)
+        else:
+            raise ValueError(f"Formato no soportado: {formato}")
+
+    def generar_pdf(self, info):
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        elements = []
+        
+        elements.append(Paragraph("Información del Usuario", styles['Title']))
+        data = [["Campo", "Valor"]]
+        for key, value in info['usuario'].items():
+            data.append([key, str(value)])
+        
+        if info['empresa']:
+            elements.append(Paragraph("Información de la Empresa", styles['Title']))
+            for key, value in info['empresa'].items():
+                data.append([key, str(value)])
+        
+        table = Table(data)
+        table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), '#cccccc')]))
+        elements.append(table)
+        
+        doc.build(elements)
+        pdf = buffer.getvalue()
+        buffer.close()
+        return base64.b64encode(pdf).decode('utf-8')
+
+    # Implementa métodos similares para generar_excel y generar_word
+
+    def generar_excel(self, info):
+        output = BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet()
+
+        row = 0
+        worksheet.write(row, 0, "Información del Usuario")
+        row += 1
+        for key, value in info['usuario'].items():
+            worksheet.write(row, 0, key)
+            worksheet.write(row, 1, str(value))
+            row += 1
+
+        if info['empresa']:
+            row += 1
+            worksheet.write(row, 0, "Información de la Empresa")
+            row += 1
+            for key, value in info['empresa'].items():
+                worksheet.write(row, 0, key)
+                worksheet.write(row, 1, str(value))
+                row += 1
+
+        workbook.close()
+        excel = output.getvalue()
+        output.close()
+        return base64.b64encode(excel).decode('utf-8')
+
+    def generar_word(self, info):
+        doc = Document()
+        doc.add_heading('Información del Usuario', 0)
+        table = doc.add_table(rows=1, cols=2)
+        table.style = 'Table Grid'
+        hdr_cells = table.rows[0].cells
+        hdr_cells[0].text = 'Campo'
+        hdr_cells[1].text = 'Valor'
+        for key, value in info['usuario'].items():
+            row_cells = table.add_row().cells
+            row_cells[0].text = key
+            row_cells[1].text = str(value)
+
+        if info['empresa']:
+            doc.add_heading('Información de la Empresa', 0)
+            table = doc.add_table(rows=1, cols=2)
+            table.style = 'Table Grid'
+            hdr_cells = table.rows[0].cells
+            hdr_cells[0].text = 'Campo'
+            hdr_cells[1].text = 'Valor'
+            for key, value in info['empresa'].items():
+                row_cells = table.add_row().cells
+                row_cells[0].text = key
+                row_cells[1].text = str(value)
+
+        buffer = BytesIO()
+        doc.save(buffer)
+        word = buffer.getvalue()
+        buffer.close()
+        return base64.b64encode(word).decode('utf-8')
 
 def setup_logging(app):
     if not app.debug:
@@ -271,8 +383,6 @@ def setup_logging(app):
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    
-    
     
     if not os.getenv('MJ_APIKEY_PUBLIC') or not os.getenv('MJ_APIKEY_PRIVATE'):
         app.logger.error('Mailjet API keys are not set. Please check your .env file.')
@@ -294,27 +404,27 @@ def create_app():
     
     from compras import compras_bp
     app.register_blueprint(compras_bp, url_prefix='/compras')
-    
+
     from rrhh.routes import rrhh_bp
     app.register_blueprint(rrhh_bp, url_prefix='/rrhh')
-    
+
     from importacion.routes import importacion_bp
     app.register_blueprint(importacion_bp)
-    
+
     from proyectos.routes import proyectos_bp
     app.register_blueprint(proyectos_bp)
-    
+
     from impuestos.routes import impuestos_bp
     app.register_blueprint(impuestos_bp)
-    
+
     from cxc.routes import cxc_bp
     app.register_blueprint(cxc_bp)
-    
+
     from cxp.routes import cxp_bp
     app.register_blueprint(cxp_bp)
         
     from activos_fijos.routes import activos_fijos_bp
-    app.register_blueprint(activos_fijos_bp)  
+    app.register_blueprint(activos_fijos_bp) 
     
     
 
@@ -343,14 +453,14 @@ def create_app():
         from marketing.models import Contact, Campaign, CampaignMetrics
         db.create_all()
         
-    CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY')
-    if not CLAUDE_API_KEY:
-        app.logger.error('Claude API key is not set. Please check your .env file.')    
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+    if not OPENAI_API_KEY:
+        app.logger.error('OpenAI API key is not set. Please check your .env file.')    
 
     app.config['ASISTENTE_ACTIVO'] = True
     
     # Asignar el asistente como atributo de la aplicación
-    app.asistente: Any = AsistenteVirtual(CLAUDE_API_KEY, get_assistant_context)
+    app.asistente = AsistenteVirtual(OPENAI_API_KEY, get_assistant_context)
 
     # Configurar el logging
     setup_logging(app)
@@ -456,8 +566,6 @@ def create_app():
     def registro_exitoso():
         return render_template('registro_exitoso.html')
 
-    
-
     @app.route("/facturacion/facturas")
     @login_required
     def facturas():
@@ -467,7 +575,6 @@ def create_app():
     @login_required
     def pre_facturas():
         return render_template('facturacion/pre_facturas.html')
-
 
     @app.route("/facturacion/reporte-de-ventas")
     @login_required
@@ -656,7 +763,7 @@ def create_app():
             "Importacion",
             "Proyectos",
             "Recursos Humanos",
-            "Marketing",  # Nuevo módulo agregado
+            "Marketing",
         ]
         return jsonify(modulos)
 
@@ -665,107 +772,54 @@ def create_app():
     def get_submodulos(modulo):
         submodulos = {
             "Contabilidad": [
-                "Cuentas",
-                "Diario",
-                "Mayor General",
-                "Balanza de Comprobación",
-                "Estado de Resultados",
-                "Balance General",
-                "Configuraciones",
-                "Flujo de caja",
+                "Cuentas", "Diario", "Mayor General", "Balanza de Comprobación",
+                "Estado de Resultados", "Balance General", "Configuraciones", "Flujo de caja",
             ],
             "Banco": [
-                "Bancos",
-                "Depósitos",
-                "Notas de Crédito/Débito",
-                "Transferencias Bancarias",
-                "Conciliación Bancaria",
-                "Gestión de Bancos",
-                "Divisas",
+                "Bancos", "Depósitos", "Notas de Crédito/Débito", "Transferencias Bancarias",
+                "Conciliación Bancaria", "Gestión de Bancos", "Divisas",
             ],
             "Activos Fijos": [
-                "Activo Fijo",
-                "Depreciación",
-                "Retiro",
-                "Revalorización",
-                "Tipo de Activo Fijo",
+                "Activo Fijo", "Depreciación", "Retiro", "Revalorización", "Tipo de Activo Fijo",
             ],
             "Cuentas Por Cobrar": [
-                "Cliente",
-                "Descuento y devoluciones",
-                "Nota de credito",
-                "Nota de debito",
-                "Recibo",
-                "Anticipo CxC",
-                "Condicion de pago",
-                "Reporte CxC",
-                "Tipo de cliente",
+                "Cliente", "Descuento y devoluciones", "Nota de credito", "Nota de debito",
+                "Recibo", "Anticipo CxC", "Condicion de pago", "Reporte CxC", "Tipo de cliente",
             ],
             "Cuentas Por Pagar": [
-                "Factura Suplidor",
-                "Nota de Crédito",
-                "Nota de Débito",
-                "Orden de Compras",
-                "Suplidor",
-                "Anticipo CxP",
-                "Pago de Contado",
-                "Reporte CxP",
-                "Requisición Cotización",
-                "Solicitud Compras",
-                "Tipo de Suplidor",
+                "Factura Suplidor", "Nota de Crédito", "Nota de Débito", "Orden de Compras",
+                "Suplidor", "Anticipo CxP", "Pago de Contado", "Reporte CxP",
+                "Requisición Cotización", "Solicitud Compras", "Tipo de Suplidor",
             ],
             "Facturacion": [
-                "Facturas",
-                "Pre-facturas",
-                "Notas de Crédito/Débito",
-                "Reporte de Ventas",
-                "Gestión de clientes",
+                "Facturas", "Pre-facturas",
+                "Reporte de Ventas", "Gestión de clientes",
             ],
             "Impuestos": [
-                "Formulario 606",
-                "Formulario 607",
-                "Reporte IT1",
-                "Impuesto sobre la Renta (IR17)",
-                "Serie Fiscal",
-                "Configuraciones",
+                "Formulario 606", "Formulario 607", "Reporte IT1",
+                "Impuesto sobre la Renta (IR17)", "Serie Fiscal", "Configuraciones",
             ],
             "Inventario": [
-                "Items",
-                "Entrada de Almacén",
-                "Salida de Almacén",
-                "Inventario",
-                "Reporte de Inventario",
+                "Items", "Entrada de Almacén", "Salida de Almacén",
+                "Inventario", "Reporte de Inventario",
             ],
             "Compras": [
-                "Solicitudes de Compra",
-                "Órdenes de Compra",
-                "Recepción de Materiales",
-                "Gastos",
-                "Reporte de Compras/Gastos",
+                "Solicitudes de Compra", "Órdenes de Compra", "Recepción de Materiales",
+                "Gastos", "Reporte de Compras/Gastos",
             ],
             "Importacion": [
-                "Expediente de Importacion",
-                "Importador",
-                "Reportes Importacion",
+                "Expediente de Importacion", "Importador", "Reportes Importacion",
             ],
             "Proyectos": [
-                "Gestión de Proyectos",
-                "Presupuestos",
-                "Facturación por Proyecto",
+                "Gestión de Proyectos", "Presupuestos", "Facturación por Proyecto",
             ],
             "Recursos Humanos": [
-                "Gestión de Empleados",
-                "Nómina",
-                "Evaluación de Desempeño",
+                "Gestión de Empleados", "Nómina", "Evaluación de Desempeño",
             ],
             "Marketing": [
-                "Gestión de Contactos",
-                "Campañas de Email",
-                "Plantillas de Email",
-                "Reportes de Campañas",
-                "Segmentación de Contactos",
-                "Automatizaciones",
-                "Integración de Redes Sociales",
+                "Gestión de Contactos", "Campañas de Email", "Plantillas de Email",
+                "Reportes de Campañas", "Segmentación de Contactos",
+                "Automatizaciones", "Integración de Redes Sociales",
             ],
         }
         return jsonify(submodulos.get(modulo, []))
@@ -841,12 +895,26 @@ def create_app():
             return jsonify({"respuesta": "Por favor, proporciona una pregunta."}), 400
         
         try:
+            if 'reporte' in pregunta.lower() or 'tabla' in pregunta.lower():
+                datos, tipo_reporte = app.asistente.generar_reporte(current_user.id, pregunta)
+                return jsonify({
+                    "tipo": "reporte",
+                    "datos": datos,
+                    "tipo_reporte": tipo_reporte,
+                    "mensaje": "Aquí tienes el reporte solicitado. Se mostrará en una ventana emergente."
+                })
+            
             respuesta = app.asistente.responder(pregunta, current_user.id)
-            logger.info(f"Respuesta del asistente obtenida. Longitud: {len(respuesta)}")
-            return jsonify({"respuesta": respuesta})
+            
+            if isinstance(respuesta, dict) and 'contenido' in respuesta:
+                logger.info(f"Respuesta del asistente obtenida. Longitud: {len(respuesta['contenido'])}")
+                return jsonify({"tipo": "texto", "respuesta": respuesta['contenido']})
+            else:
+                logger.info(f"Respuesta del asistente obtenida. Respuesta: {respuesta}")
+                return jsonify({"tipo": "texto", "respuesta": str(respuesta)})
         except Exception as e:
             logger.error(f"Error al consultar el asistente: {str(e)}")
-            return jsonify({"respuesta": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde."}), 500
+            return jsonify({"tipo": "texto", "respuesta": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde."}), 500
 
     @app.route('/api/asistente_status')
     @login_required
@@ -921,9 +989,6 @@ def create_app():
             return redirect(url_for("index"))
         return render_template("admin_panel.html")
 
-
-    
-
     @app.route("/Bancos")
     @login_required
     def redirect_to_bancos():
@@ -969,7 +1034,6 @@ def create_app():
             return jsonify({"error": "Se requiere un prompt"}), 400 
         
         try:
-            # Construir el prompt para la IA
             ai_prompt = f"""Actúa como un experto en marketing digital y diseño de emails. 
             Crea una plantilla de email HTML profesional y atractiva basada en la siguiente descripción: {prompt}. 
             La plantilla debe ser responsive y utilizar estilos en línea para compatibilidad con clientes de email.
@@ -978,11 +1042,9 @@ def create_app():
             Asegúrate de que el diseño sea moderno, atractivo y optimizado para conversiones.
             IMPORTANTE: Devuelve ÚNICAMENTE el código HTML de la plantilla, sin ningún texto explicativo adicional."""
             
-            # Llamar a la función del asistente para generar el contenido
             contenido_generado = app.asistente.responder(ai_prompt, current_user.id)
             
-            # Extraer el HTML generado del contenido
-            html_content = extraer_html(contenido_generado)
+            html_content = extraer_html(contenido_generado['contenido'])
             
             return jsonify({"contenido": html_content})
         except Exception as e:
@@ -990,23 +1052,11 @@ def create_app():
             return jsonify({"error": "Ocurrió un error al generar el contenido"}), 500
 
     def extraer_html(contenido):
-        # Buscar el contenido HTML entre las etiquetas <html> y </html>
         import re
         match = re.search(r'<html>[\s\S]*?</html>', contenido)
         if match:
             return match.group(0)
         else:
-            # Si no se encuentra la etiqueta HTML, devolver todo el contenido
-            return contenido
-
-    def extraer_html(contenido):
-        # Buscar el contenido HTML entre las etiquetas <html> y </html>
-        import re
-        match = re.search(r'<html>[\s\S]*?</html>', contenido)
-        if match:
-            return match.group(0)
-        else:
-            # Si no se encuentra la etiqueta HTML, devolver todo el contenido
             return contenido
 
     @app.errorhandler(CSRFError)
@@ -1029,7 +1079,6 @@ def create_app():
         return response
 
     return app
-
 
 if __name__ == '__main__':
     app = create_app()

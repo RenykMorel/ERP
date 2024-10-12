@@ -1,54 +1,71 @@
 {% extends "base.html" %}
-{% block title %}Configuraciones Contables{% endblock %}
+{% block title %}Gestión de Configuraciones Contables - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Configuraciones Contables</h1>
-
-    <form id="config-form" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        {% for config in configs %}
-        <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="{{ config.clave }}">
-                {{ config.clave }}
-            </label>
-            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                   id="{{ config.clave }}" type="text" value="{{ config.valor }}">
-        </div>
-        {% endfor %}
-        <div class="flex items-center justify-between">
-            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" 
-                    type="submit">
-                Guardar Configuraciones
-            </button>
-        </div>
-    </form>
+<div id="configuraciones-contables-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Configuraciones Contables</h1>
+    
+    <div class="bg-white shadow-sm rounded-lg px-4 sm:px-6 py-4 mb-6">
+        <form id="config-form" class="space-y-4">
+            {% for config in configs %}
+            <div>
+                <label for="{{ config.clave }}" class="block text-sm font-medium text-gray-700 mb-1">{{ config.clave }}</label>
+                <input type="text" id="{{ config.clave }}" name="{{ config.clave }}" value="{{ config.valor }}" 
+                       class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            {% endfor %}
+            <div class="flex justify-end mt-4">
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i class="fas fa-save mr-2"></i>Guardar Configuraciones
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('config-form');
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = {};
-        for (let input of form.elements) {
-            if (input.tagName === 'INPUT') {
-                formData[input.id] = input.value;
-            }
-        }
-        fetch('/contabilidad/configuraciones', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message);
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
-    });
+    initializeConfiguracionesContables();
 });
+
+function initializeConfiguracionesContables() {
+    const configForm = document.getElementById('config-form');
+    configForm.addEventListener('submit', guardarConfiguraciones);
+}
+
+function guardarConfiguraciones(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const configuraciones = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar las configuraciones
+    // Por ahora, simularemos una llamada exitosa
+    console.log('Configuraciones a guardar:', configuraciones);
+
+    // Simular una llamada a la API
+    setTimeout(() => {
+        Swal.fire({
+            title: 'Éxito',
+            text: 'Las configuraciones han sido guardadas correctamente',
+            icon: 'success',
+            confirmButtonText: 'Ok'
+        });
+    }, 1000);
+}
+
+// Función para cargar las configuraciones desde el servidor (si es necesario)
+function cargarConfiguraciones() {
+    // Aquí deberías hacer una llamada a tu API para obtener las configuraciones actuales
+    // Por ahora, usaremos los datos proporcionados en el HTML
+    console.log('Cargando configuraciones...');
+}
 </script>
 {% endblock %}

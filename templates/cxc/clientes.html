@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Gestión de Documentos - CalculAI{% endblock %}
+{% block title %}Gestión de Clientes - CxC - CalculAI{% endblock %}
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -16,22 +16,22 @@
 {% endblock %}
 
 {% block content %}
-<div id="documentos-module" class="container mx-auto px-4 py-6">
-    <h1 class="text-2xl font-semibold mb-6 text-gray-800">CAMBIAR EL CODIGO</h1>
+<div id="clientes-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Clientes - CxC</h1>
     
     <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="id-documento" placeholder="ID">
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="id-cliente" placeholder="ID Cliente">
             </div>
             <div>
-                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="tipo-documento" placeholder="Tipo">
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="nombre-cliente" placeholder="Nombre">
             </div>
             <div>
-                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="fecha-documento" placeholder="Fecha">
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="rfc-cliente" placeholder="RFC">
             </div>
             <div>
-                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" id="estatus-documento">
+                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" id="estatus-cliente">
                     <option value="">Todos</option>
                     <option value="activo">Activo</option>
                     <option value="inactivo">Inactivo</option>
@@ -42,86 +42,76 @@
             <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 <i class="fas fa-search mr-2"></i>Buscar
             </button>
-            <button id="crear-nuevo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                <i class="fas fa-plus mr-2"></i>Crear Nuevo Documento
+            <button id="crear-cliente-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Cliente
             </button>
         </div>
     </div>
     
-    <div id="documentos-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
-        <table id="documentos-table" class="min-w-full divide-y divide-gray-200">
+    <div id="clientes-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="clientes-table" class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">ID</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Tipo</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Fecha</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Nombre</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">RFC</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Email</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Teléfono</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estatus</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
                 </tr>
             </thead>
-            <tbody id="documentos-tbody" class="bg-white divide-y divide-gray-200">
-                {% for documento in documentos %}
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ documento.id }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ documento.tipo }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ documento.fecha }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ 'bg-green-100 text-green-800' if documento.estatus == 'activo' else 'bg-red-100 text-red-800' }}">
-                            {{ documento.estatus }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="editar-documento text-blue-600 hover:text-blue-900 mr-2" data-id="{{ documento.id }}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="eliminar-documento text-red-600 hover:text-red-900 mr-2" data-id="{{ documento.id }}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <button class="cambiar-estatus-documento {{ 'text-yellow-600 hover:text-yellow-900' if documento.estatus == 'activo' else 'text-green-600 hover:text-green-900' }}" data-id="{{ documento.id }}" data-estatus="{{ documento.estatus }}">
-                            <i class="fas {{ 'fa-toggle-off' if documento.estatus == 'activo' else 'fa-toggle-on' }}"></i>
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
+            <tbody id="clientes-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Los clientes se cargarán aquí dinámicamente -->
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal para crear/editar cliente -->
 <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
     <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
     
     <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
         <div class="modal-content py-4 text-left px-6">
             <div class="flex justify-between items-center pb-3">
-                <p class="text-xl font-bold" id="modal-title">Crear Nuevo Documento</p>
+                <p class="text-2xl font-bold" id="modal-title">Crear Nuevo Cliente</p>
                 <div class="modal-close cursor-pointer z-50">
-                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
-                    </svg>
+                    <i class="fas fa-times"></i>
                 </div>
             </div>
 
-            <form id="documento-form" class="mt-4">
-                <input type="hidden" name="id">
+            <form id="cliente-form" class="mt-4">
+                <input type="hidden" id="cliente-id" name="id">
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo">
-                        Tipo
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
+                        Nombre
                     </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="tipo" type="text" placeholder="Tipo de documento" required>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nombre" name="nombre" type="text" required>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
-                        Fecha
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="rfc">
+                        RFC
                     </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="fecha" type="date" required>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="rfc" name="rfc" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
+                        Email
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="email" name="email" type="email" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono">
+                        Teléfono
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="telefono" name="telefono" type="tel" required>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
                         Estatus
                     </label>
-                    <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
+                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="estatus" name="estatus">
                         <option value="activo">Activo</option>
                         <option value="inactivo">Inactivo</option>
                     </select>
@@ -130,7 +120,7 @@
                     <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
                         Guardar
                     </button>
-                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
+                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
                         Cancelar
                     </button>
                 </div>
@@ -139,128 +129,315 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
-        const modal = document.querySelector('.modal');
-        const modalClose = document.querySelector('.modal-close');
-        const modalTitle = document.getElementById('modal-title');
+document.addEventListener('DOMContentLoaded', function() {
+    initializeClientesModule();
+});
 
-        crearNuevoBtn.addEventListener('click', () => {
-            modal.classList.remove('opacity-0', 'pointer-events-none');
-            modal.classList.add('opacity-100', 'pointer-events-auto');
-            modalTitle.innerText = 'Crear Nuevo Documento';
-            resetForm();
-        });
+function initializeClientesModule() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearClienteBtn = document.getElementById('crear-cliente-btn');
+    const clienteForm = document.getElementById('cliente-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
 
-        modalClose.addEventListener('click', () => {
-            closeModal();
-        });
+    buscarBtn.addEventListener('click', buscarClientes);
+    crearClienteBtn.addEventListener('click', mostrarFormularioCrearCliente);
+    clienteForm.addEventListener('submit', guardarCliente);
 
-        document.getElementById('documento-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const id = formData.get('id');
-            const tipo = formData.get('tipo');
-            const fecha = formData.get('fecha');
-            const estatus = formData.get('estatus');
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
 
-            if (id) {
-                // Lógica para actualizar un documento existente
-                updateDocumento(id, { tipo, fecha, estatus });
-            } else {
-                // Lógica para crear un nuevo documento
-                crearDocumento({ tipo, fecha, estatus });
-            }
-        });
+    document.getElementById('clientes-tbody').addEventListener('click', manejarAccionesCliente);
 
-        // Función para cerrar el modal
-        function closeModal() {
-            modal.classList.add('opacity-0', 'pointer-events-none');
-            resetForm();
-        }
+    buscarClientes();
+}
 
-        // Función para resetear el formulario
-        function resetForm() {
-            document.getElementById('documento-form').reset();
-        }
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
 
-        // Funciones para manejar la creación y actualización de documentos
-        function crearDocumento(data) {
-            // Lógica para crear documento (llamada AJAX)
-            Swal.fire({
-                title: 'Éxito',
-                text: 'Documento creado con éxito',
-                icon: 'success',
-                confirmButtonText: 'Aceptar'
+function buscarClientes() {
+    const idCliente = document.getElementById('id-cliente').value;
+    const nombreCliente = document.getElementById('nombre-cliente').value;
+    const rfcCliente = document.getElementById('rfc-cliente').value;
+    const estatusCliente = document.getElementById('estatus-cliente').value;
+
+    // Aquí deberías hacer una llamada a tu API para buscar los clientes
+    // Por ahora, usaremos datos simulados
+    const clientes = [
+        { id: 1, nombre: 'Cliente A', rfc: 'AAAA010101AAA', email: 'clientea@example.com', telefono: '1234567890', estatus: 'activo' },
+        { id: 2, nombre: 'Cliente B', rfc: 'BBBB020202BBB', email: 'clienteb@example.com', telefono: '0987654321', estatus: 'inactivo' },
+    ];
+
+    actualizarTablaClientes(clientes);
+}
+
+function actualizarTablaClientes(clientes) {
+    const tbody = document.getElementById('clientes-tbody');
+    tbody.innerHTML = '';
+    clientes.forEach(cliente => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.nombre}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.rfc}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.email}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.telefono}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstatusClass(cliente.estatus)}">
+                    ${cliente.estatus}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="editar-cliente text-blue-600 hover:text-blue-900 mr-2" data-id="${cliente.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-cliente text-red-600 hover:text-red-900" data-id="${cliente.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function getEstatusClass(estatus) {
+    return estatus === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+}
+
+function mostrarFormularioCrearCliente() {
+    document.getElementById('modal-title').textContent = 'Crear Nuevo Cliente';
+    document.getElementById('cliente-form').reset();
+    document.getElementById('cliente-id').value = '';
+    toggleModal();
+}
+
+function guardarCliente(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const clienteData = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar el cliente
+    console.log('Datos del cliente:', clienteData);
+
+    Swal.fire({
+        title: 'Éxito',
+        text: 'Cliente guardado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+    }).then(() => {
+        toggleModal();
+        buscarClientes();
+    });
+}
+
+function manejarAccionesCliente(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const clienteId = target.dataset.id;
+
+    if (target.classList.contains('editar-cliente')) {
+        editarCliente(clienteId);
+    } else if (target.classList.contains('eliminar-cliente')) {
+        eliminarCliente(clienteId);
+    }
+}
+
+function editarCliente(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los datos del cliente
+    // Por ahora, simularemos algunos datos
+    const cliente = {
+        id: id,
+        nombre: 'Cliente Ejemplo',
+        rfc: 'XAXX010101000',
+        email: 'cliente@ejemplo.com',
+        telefono: '1234567890',
+        estatus: 'activo'
+    };
+
+    document.getElementById('modal-title').textContent = 'Editar Cliente';
+    document.getElementById('cliente-id').value = cliente.id;
+    document.getElementById('nombre').value = cliente.nombre;
+    document.getElementById('rfc').value = cliente.rfc;
+    document.getElementById('email').value = cliente.email;
+    document.getElementById('telefono').value = cliente.telefono;
+    document.getElementById('estatus').value = cliente.estatus;
+
+    toggleModal();
+}
+
+function eliminarCliente(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para eliminar el cliente
+            console.log('Eliminando cliente con ID:', id);
+
+            Swal.fire(
+                'Eliminado',
+                'El cliente ha sido eliminado.',
+                'success'
+            ).then(() => {
+                buscarClientes();
             });
-            closeModal();
-        }
-
-        function updateDocumento(id, data) {
-            // Lógica para actualizar documento (llamada AJAX)
-            Swal.fire({
-                title: 'Éxito',
-                text: 'Documento actualizado con éxito',
-                icon: 'success',
-                confirmButtonText: 'Aceptar'
-            });
-            closeModal();
-        }
-
-        // Manejo de eventos para eliminar y cambiar estatus
-        document.getElementById('documentos-tbody').addEventListener('click', function (e) {
-            if (e.target.classList.contains('eliminar-documento')) {
-                const id = e.target.getAttribute('data-id');
-                eliminarDocumento(id);
-            } else if (e.target.classList.contains('cambiar-estatus-documento')) {
-                const id = e.target.getAttribute('data-id');
-                const estatus = e.target.getAttribute('data-estatus');
-                cambiarEstatusDocumento(id, estatus === 'activo' ? 'inactivo' : 'activo');
-            } else if (e.target.classList.contains('editar-documento')) {
-                const id = e.target.getAttribute('data-id');
-                editarDocumento(id);
-            }
-        });
-
-        function eliminarDocumento(id) {
-            // Lógica para eliminar documento (llamada AJAX)
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: 'No podrás revertir esto',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Lógica para eliminar el documento
-                    Swal.fire('Eliminado!', 'El documento ha sido eliminado.', 'success');
-                }
-            });
-        }
-
-        function cambiarEstatusDocumento(id, nuevoEstatus) {
-            // Lógica para cambiar el estatus del documento (llamada AJAX)
-            Swal.fire({
-                title: 'Éxito',
-                text: `El estatus del documento ha sido cambiado a ${nuevoEstatus}`,
-                icon: 'success',
-                confirmButtonText: 'Aceptar'
-            });
-        }
-
-        function editarDocumento(id) {
-            // Lógica para editar el documento (llamada AJAX para obtener datos y llenar el formulario)
-            modal.classList.remove('opacity-0', 'pointer-events-none');
-            modal.classList.add('opacity-100', 'pointer-events-auto');
-            modalTitle.innerText = 'Editar Documento';
-            // Suponiendo que se obtienen los datos del documento
-            document.querySelector('input[name="id"]').value = id;
-            document.querySelector('input[name="tipo"]').value = 'Ejemplo Tipo'; // Cambiar por el valor real
-            document.querySelector('input[name="fecha"]').value = '2024-01-01'; // Cambiar por el valor real
-            document.querySelector('select[name="estatus"]').value = 'activo'; // Cambiar por el valor real
         }
     });
+}
+
+function validarFormulario() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const rfc = document.getElementById('rfc').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+
+    if (!nombre) {
+        Swal.fire('Error', 'El nombre del cliente es obligatorio', 'error');
+        return false;
+    }
+
+    if (!rfc) {
+        Swal.fire('Error', 'El RFC del cliente es obligatorio', 'error');
+        return false;
+    }
+
+    if (!email || !isValidEmail(email)) {
+        Swal.fire('Error', 'Por favor, ingrese un email válido', 'error');
+        return false;
+    }
+
+    if (!telefono || !isValidPhone(telefono)) {
+        Swal.fire('Error', 'Por favor, ingrese un número de teléfono válido', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+function isValidEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+function isValidPhone(phone) {
+    const re = /^\d{10}$/;
+    return re.test(phone);
+}
+
+// Agregar validación al formulario antes de enviar
+document.getElementById('cliente-form').addEventListener('submit', function(e) {
+    if (!validarFormulario()) {
+        e.preventDefault();
+    }
+});
+
+// Función para generar reporte de clientes
+function generarReporteClientes() {
+    const estatusCliente = document.getElementById('estatus-cliente').value;
+
+    // Aquí deberías hacer una llamada a tu API para generar el reporte
+    console.log('Generando reporte de clientes con estatus:', estatusCliente);
+
+    Swal.fire({
+        title: 'Reporte Generado',
+        text: 'El reporte de clientes ha sido generado exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'Descargar Reporte'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías proporcionar un enlace para descargar el reporte
+            console.log('Descargando reporte de clientes...');
+        }
+    });
+}
+
+// Agregar botón para generar reporte
+const busquedaForm = document.getElementById('busqueda-form');
+const generarReporteBtn = document.createElement('button');
+generarReporteBtn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>Generar Reporte';
+generarReporteBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500';
+generarReporteBtn.addEventListener('click', generarReporteClientes);
+busquedaForm.querySelector('.flex.justify-between').appendChild(generarReporteBtn);
+
+// Función para mostrar el historial de transacciones de un cliente
+function mostrarHistorialTransacciones(clienteId) {
+    // Aquí deberías hacer una llamada a tu API para obtener el historial de transacciones
+    // Por ahora, simularemos algunos datos
+    const transacciones = [
+        { id: 1, fecha: '2023-05-01', tipo: 'Factura', monto: 1000 },
+        { id: 2, fecha: '2023-05-15', tipo: 'Pago', monto: -500 },
+        { id: 3, fecha: '2023-06-01', tipo: 'Factura', monto: 1500 },
+    ];
+
+    let historialHtml = `
+        <h3 class="text-lg font-semibold mb-2">Historial de Transacciones</h3>
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+    `;
+
+    transacciones.forEach(transaccion => {
+        historialHtml += `
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${transaccion.fecha}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${transaccion.tipo}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${transaccion.monto.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    historialHtml += `
+            </tbody>
+        </table>
+    `;
+
+    Swal.fire({
+        title: 'Historial de Transacciones',
+        html: historialHtml,
+        width: 600,
+        confirmButtonText: 'Cerrar'
+    });
+}
+
+// Agregar botón para mostrar historial de transacciones en la tabla de clientes
+function agregarBotonHistorial() {
+    const filas = document.querySelectorAll('#clientes-tbody tr');
+    filas.forEach(fila => {
+        const accionesCelda = fila.querySelector('td:last-child');
+        const clienteId = fila.querySelector('button').dataset.id;
+        const historialBtn = document.createElement('button');
+        historialBtn.innerHTML = '<i class="fas fa-history"></i>';
+        historialBtn.className = 'text-purple-600 hover:text-purple-900 ml-2';
+        historialBtn.addEventListener('click', () => mostrarHistorialTransacciones(clienteId));
+        accionesCelda.appendChild(historialBtn);
+    });
+}
+
+// Llamar a la función para agregar el botón de historial después de cargar los clientes
+buscarClientes();
+setTimeout(agregarBotonHistorial, 500);  // Añadimos un pequeño retraso para asegurar que la tabla se haya cargado
+
 </script>
 {% endblock %}

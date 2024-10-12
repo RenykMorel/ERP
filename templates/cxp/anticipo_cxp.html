@@ -1,30 +1,464 @@
 {% extends "base.html" %}
-{% block title %}Anticipos CxP{% endblock %}
+{% block title %}Anticipos CxP - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Anticipos CxP</h1>
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Suplidor</th>
-                <th class="py-2 px-4 border-b">Fecha</th>
-                <th class="py-2 px-4 border-b">Monto</th>
-                <th class="py-2 px-4 border-b">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for anticipo in anticipos %}
-            <tr>
-                <td class="py-2 px-4 border-b">{{ anticipo.suplidor.nombre }}</td>
-                <td class="py-2 px-4 border-b">{{ anticipo.fecha }}</td>
-                <td class="py-2 px-4 border-b">{{ anticipo.monto }}</td>
-                <td class="py-2 px-4 border-b">
-                    <a href="#" class="text-blue-500">Ver</a>
-                    <a href="#" class="text-green-500">Editar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div id="anticipos-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Anticipos CxP</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" id="suplidor">
+                    <option value="">Seleccionar Suplidor</option>
+                    <!-- Opciones de suplidores se cargarán dinámicamente -->
+                </select>
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="fecha-desde" placeholder="Fecha Desde">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="fecha-hasta" placeholder="Fecha Hasta">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="number" id="monto-minimo" placeholder="Monto Mínimo">
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-anticipo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Anticipo
+            </button>
+        </div>
+    </div>
+    
+    <div id="anticipos-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="anticipos-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Suplidor</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Fecha</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Monto</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estado</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="anticipos-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Los anticipos se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> anticipos
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para crear/editar anticipo -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Crear Nuevo Anticipo</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+
+            <form id="anticipo-form" class="mt-4">
+                <input type="hidden" id="anticipo-id" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="suplidor-id">
+                        Suplidor
+                    </label>
+                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="suplidor-id" name="suplidor_id" required>
+                        <!-- Opciones de suplidores se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
+                        Fecha
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="fecha" name="fecha" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="monto">
+                        Monto
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="monto" name="monto" type="number" step="0.01" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="descripcion">
+                        Descripción
+                    </label>
+                    <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="descripcion" name="descripcion" rows="3"></textarea>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Guardar
+                    </button>
+                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAnticiposModule();
+});
+
+function initializeAnticiposModule() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearAnticipoBtn = document.getElementById('crear-anticipo-btn');
+    const anticipoForm = document.getElementById('anticipo-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    buscarBtn.addEventListener('click', buscarAnticipos);
+    crearAnticipoBtn.addEventListener('click', mostrarFormularioCrearAnticipo);
+    anticipoForm.addEventListener('submit', guardarAnticipo);
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+
+    document.getElementById('anticipos-tbody').addEventListener('click', manejarAccionesAnticipo);
+
+    flatpickr("#fecha-desde", {
+        dateFormat: "Y-m-d",
+    });
+
+    flatpickr("#fecha-hasta", {
+        dateFormat: "Y-m-d",
+    });
+
+    flatpickr("#fecha", {
+        dateFormat: "Y-m-d",
+    });
+
+    cargarSuplidores();
+    buscarAnticipos();
+}
+
+let paginaActual = 1;
+const itemsPorPagina = 10;
+
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function cargarSuplidores() {
+    // Aquí deberías hacer una llamada a tu API para obtener la lista de suplidores
+    // Por ahora, usaremos datos simulados
+    const suplidores = [
+        { id: 1, nombre: 'Suplidor A' },
+        { id: 2, nombre: 'Suplidor B' },
+        { id: 3, nombre: 'Suplidor C' },
+    ];
+
+    const selectSuplidor = document.getElementById('suplidor');
+    const selectSuplidorModal = document.getElementById('suplidor-id');
+    
+    [selectSuplidor, selectSuplidorModal].forEach(select => {
+        select.innerHTML = '<option value="">Seleccionar Suplidor</option>';
+        suplidores.forEach(suplidor => {
+            const option = new Option(suplidor.nombre, suplidor.id);
+            select.add(option);
+        });
+    });
+}
+
+function buscarAnticipos() {
+    const suplidorId = document.getElementById('suplidor').value;
+    const fechaDesde = document.getElementById('fecha-desde').value;
+    const fechaHasta = document.getElementById('fecha-hasta').value;
+    const montoMinimo = document.getElementById('monto-minimo').value;
+
+    // Aquí deberías hacer una llamada a tu API para buscar los anticipos
+    // Por ahora, usaremos datos simulados
+    const anticipos = [
+        { id: 1, suplidor: 'Suplidor A', fecha: '2023-05-01', monto: 1000, estado: 'pendiente' },
+        { id: 2, suplidor: 'Suplidor B', fecha: '2023-05-02', monto: 1500, estado: 'aplicado' },
+    ];
+
+    actualizarTablaAnticipos(anticipos);
+}
+
+function actualizarTablaAnticipos(anticipos) {
+    const tbody = document.getElementById('anticipos-tbody');
+    tbody.innerHTML = '';
+    anticipos.forEach(anticipo => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${anticipo.suplidor}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${anticipo.fecha}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${anticipo.monto.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstadoClass(anticipo.estado)}">
+                    ${anticipo.estado}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="ver-anticipo text-blue-600 hover:text-blue-900 mr-2" data-id="${anticipo.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="editar-anticipo text-green-600 hover:text-green-900 mr-2" data-id="${anticipo.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-anticipo text-red-600 hover:text-red-900" data-id="${anticipo.id}">
+                    <i class="fas fa-trash"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    actualizarPaginacion(anticipos.length);
+}
+
+function getEstadoClass(estado) {
+    switch (estado) {
+        case 'pendiente':
+            return 'bg-yellow-100 text-yellow-800';
+        case 'aplicado':
+            return 'bg-green-100 text-green-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPaginas = Math.ceil(totalItems / itemsPorPagina);
+    document.getElementById('items-showing').textContent = `${(paginaActual - 1) * itemsPorPagina + 1}-${Math.min(paginaActual * itemsPorPagina, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = paginaActual === 1;
+    document.getElementById('next-page').disabled = paginaActual === totalPaginas;
+}
+
+function cambiarPagina(direccion) {
+    paginaActual += direccion;
+    buscarAnticipos();
+}
+
+function mostrarFormularioCrearAnticipo() {
+    document.getElementById('modal-title').textContent = 'Crear Nuevo Anticipo';
+    document.getElementById('anticipo-form').reset();
+    document.getElementById('anticipo-id').value = '';
+    toggleModal();
+}
+
+function guardarAnticipo(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const anticipoData = Object.fromEntries(formData);
+
+    // Aquí deberías hacer una llamada a tu API para guardar el anticipo
+    console.log('Datos del anticipo:', anticipoData);
+
+    Swal.fire({
+        title: 'Éxito',
+        text: 'Anticipo guardado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+    }).then(() => {
+        toggleModal();
+        buscarAnticipos();
+    });
+}
+
+function manejarAccionesAnticipo(event) {
+    const target = event.target.closest('button');
+    if (!target) return;
+
+    const anticipoId = target.dataset.id;
+
+    if (target.classList.contains('ver-anticipo')) {
+        verAnticipo(anticipoId);
+    } else if (target.classList.contains('editar-anticipo')) {
+        editarAnticipo(anticipoId);
+    } else if (target.classList.contains('eliminar-anticipo')) {
+        eliminarAnticipo(anticipoId);
+    }
+}
+
+function verAnticipo(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los detalles del anticipo
+    // Por ahora, simularemos algunos datos
+    const anticipo = {
+        id: id,
+        suplidor: 'Suplidor A',
+        fecha: '2023-05-01',
+        monto: 1000,
+        estado: 'pendiente',
+        descripcion: 'Anticipo para compra de materiales',
+        usuario_creacion: 'Juan Pérez',
+        fecha_creacion: '2023-04-30 10:30:00'
+    };
+
+    Swal.fire({
+        title: 'Detalles del Anticipo',
+        html: `
+            <p><strong>Suplidor:</strong> ${anticipo.suplidor}</p>
+            <p><strong>Fecha:</strong> ${anticipo.fecha}</p>
+            <p><strong>Monto:</strong> $${anticipo.monto.toFixed(2)}</p>
+            <p><strong>Estado:</strong> ${anticipo.estado}</p>
+            <p><strong>Descripción:</strong> ${anticipo.descripcion}</p>
+            <p><strong>Usuario Creación:</strong> ${anticipo.usuario_creacion}</p>
+            <p><strong>Fecha Creación:</strong> ${anticipo.fecha_creacion}</p>
+        `,
+        confirmButtonText: 'Cerrar'
+    });
+}
+
+function editarAnticipo(id) {
+    // Aquí deberías hacer una llamada a tu API para obtener los datos del anticipo
+    // Por ahora, simularemos algunos datos
+    const anticipo = {
+        id: id,
+        suplidor_id: 1,
+        fecha: '2023-05-01',
+        monto: 1000,
+        descripcion: 'Anticipo para compra de materiales'
+    };
+
+    document.getElementById('modal-title').textContent = 'Editar Anticipo';
+    document.getElementById('anticipo-id').value = anticipo.id;
+    document.getElementById('suplidor-id').value = anticipo.suplidor_id;
+    document.getElementById('fecha').value = anticipo.fecha;
+    document.getElementById('monto').value = anticipo.monto;
+    document.getElementById('descripcion').value = anticipo.descripcion;
+
+    toggleModal();
+}
+
+function eliminarAnticipo(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías hacer una llamada a tu API para eliminar el anticipo
+            console.log('Eliminando anticipo con ID:', id);
+
+            Swal.fire(
+                'Eliminado',
+                'El anticipo ha sido eliminado.',
+                'success'
+            ).then(() => {
+                buscarAnticipos();
+            });
+        }
+    });
+}
+
+function validarFormulario() {
+    const suplidorId = document.getElementById('suplidor-id').value;
+    const fecha = document.getElementById('fecha').value;
+    const monto = parseFloat(document.getElementById('monto').value);
+
+    if (!suplidorId) {
+        Swal.fire('Error', 'Debe seleccionar un suplidor', 'error');
+        return false;
+    }
+
+    if (!fecha) {
+        Swal.fire('Error', 'La fecha es obligatoria', 'error');
+        return false;
+    }
+
+    if (isNaN(monto) || monto <= 0) {
+        Swal.fire('Error', 'El monto debe ser un número positivo', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+// Agregar validación al formulario antes de enviar
+document.getElementById('anticipo-form').addEventListener('submit', function(e) {
+    if (!validarFormulario()) {
+        e.preventDefault();
+    }
+});
+
+// Función para generar reporte de anticipos
+function generarReporteAnticipos() {
+    const suplidorId = document.getElementById('suplidor').value;
+    const fechaDesde = document.getElementById('fecha-desde').value;
+    const fechaHasta = document.getElementById('fecha-hasta').value;
+
+    // Aquí deberías hacer una llamada a tu API para generar el reporte
+    console.log('Generando reporte de anticipos:', { suplidorId, fechaDesde, fechaHasta });
+
+    Swal.fire({
+        title: 'Reporte Generado',
+        text: 'El reporte de anticipos ha sido generado exitosamente.',
+        icon: 'success',
+        confirmButtonText: 'Descargar Reporte'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Aquí deberías proporcionar un enlace para descargar el reporte
+            console.log('Descargando reporte de anticipos...');
+        }
+    });
+}
+
+// Agregar botón para generar reporte
+const busquedaForm = document.getElementById('busqueda-form');
+const generarReporteBtn = document.createElement('button');
+generarReporteBtn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>Generar Reporte';
+generarReporteBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500';
+generarReporteBtn.addEventListener('click', generarReporteAnticipos);
+busquedaForm.querySelector('.flex.justify-between').appendChild(generarReporteBtn);
+
+// Inicializar la búsqueda de anticipos al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    cargarSuplidores();
+    buscarAnticipos();
+});
+</script>
 {% endblock %}

@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Función para notificar al asistente virtual
+// Función para notificar al asistente virtual
 function notificarAsistente(mensaje) {
     const paginaActual = window.location.pathname;
     
@@ -37,32 +38,171 @@ function notificarAsistente(mensaje) {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.respuesta) {
+        if (data.tipo === 'archivos') {
+            mostrarMensajeConArchivos(data.mensaje, data.archivos);
+        } else if (data.tipo === 'texto') {
             mostrarMensajeAsistente(data.respuesta);
+        } else {
+            console.error('Respuesta inesperada del asistente:', data);
+            mostrarMensajeAsistente("Lo siento, ocurrió un error al procesar tu solicitud.");
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensajeAsistente("Ocurrió un error al comunicarse con el asistente.");
+    });
+}
+
+// Función para mostrar mensajes con archivos descargables
+function mostrarMensajeConArchivos(mensaje, archivos) {
+    const mensajesDiv = document.getElementById('asistente-mensajes');
+    if (mensajesDiv) {
+        const mensajeDiv = document.createElement('div');
+        mensajeDiv.className = 'assistant-message';
+        mensajeDiv.innerHTML = `<p>${mensaje}</p>`;
+        
+        Object.entries(archivos).forEach(([formato, contenido]) => {
+            const enlace = document.createElement('a');
+            enlace.href = `data:application/${formato === 'excel' ? 'vnd.openxmlformats-officedocument.spreadsheetml.sheet' : formato};base64,${contenido}`;
+            enlace.download = `modulos.${formato === 'excel' ? 'xlsx' : formato}`;
+            enlace.textContent = `Descargar ${formato.toUpperCase()}`;
+            enlace.className = 'archivo-descargable';
+            mensajeDiv.appendChild(enlace);
+            mensajeDiv.appendChild(document.createElement('br'));
+        });
+        
+        mensajesDiv.appendChild(mensajeDiv);
+        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
+    }
+}
+
+// ... (resto del código existente) ...
+
+// Función para descargar un archivo
+function descargarArchivo(contenido, nombre, mimetype) {
+    const blob = b64toBlob(contenido, mimetype);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Función para convertir base64 a Blob
+function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
+    const byteCharacters = atob(b64Data);
+    const byteArrays = [];
+
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        const slice = byteCharacters.slice(offset, offset + sliceSize);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+    }
+
+    const blob = new Blob(byteArrays, {type: contentType});
+    return blob;
+}
+
+// Añade esta nueva función para manejar archivos descargables
+function mostrarArchivosDescargables(archivos) {
+    const mensajesDiv = document.getElementById('asistente-mensajes');
+    if (mensajesDiv) {
+        const archivosMensaje = document.createElement('div');
+        archivosMensaje.innerHTML = '<p>Aquí tienes los archivos solicitados:</p>';
+        
+        Object.entries(archivos).forEach(([formato, archivo]) => {
+            const enlace = document.createElement('a');
+            enlace.href = `data:${archivo.mimetype};base64,${archivo.contenido}`;
+            enlace.download = archivo.nombre;
+            enlace.textContent = `Descargar ${formato.toUpperCase()}`;
+            enlace.className = 'archivo-descargable';
+            archivosMensaje.appendChild(enlace);
+        });
+        
+        mensajesDiv.appendChild(archivosMensaje);
+        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
+    }
 }
 
 // Función para mostrar mensajes del asistente
+function handleAsistenteResponse(response) {
+    console.log("Respuesta recibida:", response);  // Para depuración
+
+    if (response.tipo === 'reporte') {
+        mostrarVentanaReporte(response.datos, response.tipo_reporte);
+        mostrarMensajeAsistente(response.mensaje);
+    } else if (response.tipo === 'texto') {
+        mostrarMensajeAsistente(response.respuesta);
+    } else {
+        console.error("Tipo de respuesta desconocido:", response.tipo);
+        mostrarMensajeAsistente("Lo siento, ha ocurrido un error al procesar la respuesta.");
+    }
+}
+
 function mostrarMensajeAsistente(mensaje) {
     const mensajesDiv = document.getElementById('asistente-mensajes');
-    if (mensajesDiv) {
-        const nuevoMensaje = document.createElement('p');
-        if (mensaje === "El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.") {
-            nuevoMensaje.classList.add('asistente-inactivo');
-            nuevoMensaje.innerHTML = `
-                <span>El asistente no está activo.</span>
-                <span>Por favor, contacte al <span class="highlight">equipo de CalculAI</span> para su activación.</span>
-            `;
-        } else {
-            nuevoMensaje.textContent = mensaje;
-        }
-        mensajesDiv.appendChild(nuevoMensaje);
-        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
-    } else {
-        console.log('Mensaje del asistente:', mensaje);
-    }
+    const nuevoMensaje = document.createElement('p');
+    nuevoMensaje.textContent = mensaje;
+    mensajesDiv.appendChild(nuevoMensaje);
+    mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
+}
+
+function mostrarVentanaReporte(datos, tipoReporte) {
+    const ventanaReporte = document.createElement('div');
+    ventanaReporte.className = 'ventana-reporte';
+    
+    const titulo = document.createElement('h2');
+    titulo.textContent = `Reporte: ${tipoReporte}`;
+    ventanaReporte.appendChild(titulo);
+
+    const tabla = crearTablaDesdeVatos(datos);
+    ventanaReporte.appendChild(tabla);
+
+    const botonDescargar = document.createElement('button');
+    botonDescargar.textContent = 'Descargar Reporte';
+    botonDescargar.onclick = () => descargarReporte(datos, tipoReporte);
+    ventanaReporte.appendChild(botonDescargar);
+
+    const botonCerrar = document.createElement('button');
+    botonCerrar.textContent = 'Cerrar';
+    botonCerrar.onclick = () => document.body.removeChild(ventanaReporte);
+    ventanaReporte.appendChild(botonCerrar);
+
+    document.body.appendChild(ventanaReporte);
+}
+
+function crearTablaDesdeVatos(datos) {
+    const tabla = document.createElement('table');
+    datos.forEach((fila, index) => {
+        const tr = document.createElement('tr');
+        fila.forEach(celda => {
+            const td = document.createElement(index === 0 ? 'th' : 'td');
+            td.textContent = celda;
+            tr.appendChild(td);
+        });
+        tabla.appendChild(tr);
+    });
+    return tabla;
+}
+
+function descargarReporte(datos, tipoReporte) {
+    let contenidoCsv = datos.map(fila => fila.join(',')).join('\n');
+    let blob = new Blob([contenidoCsv], { type: 'text/csv;charset=utf-8;' });
+    let url = URL.createObjectURL(blob);
+    let link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `reporte_${tipoReporte.replace(/\s+/g, '_')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // Función genérica para manejar formularios de autenticación
@@ -1219,19 +1359,37 @@ function initializeCalendar() {
 // Inicializa el asistente virtual
 function initializeAsistente() {
     const chatWindow = document.getElementById('chat-window');
-    const asistenteInput = document.getElementById('asistente-input');
-    const asistenteEnviar = document.getElementById('asistente-enviar');
+    const chatMessages = document.getElementById('chat-messages');
+    const asistenteInput = document.getElementById('assistant-input');
+    const asistenteEnviar = document.getElementById('assistant-send');
+
+    let conversationHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+    let asistenteActivo = false;
+
+    // Función para cargar el historial de conversación
+    function cargarHistorialConversacion() {
+        chatMessages.innerHTML = ''; // Limpia los mensajes existentes
+        conversationHistory.forEach(entry => {
+            const mensajeElement = document.createElement('p');
+            mensajeElement.className = entry.sender === 'Usuario' ? 'user-message' : 'assistant-message';
+            mensajeElement.textContent = `${entry.sender}: ${entry.message}`;
+            chatMessages.appendChild(mensajeElement);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
 
     // Comprobar si el asistente está activo
     fetch('/api/asistente_status')
         .then(response => response.json())
         .then(data => {
             console.log('Estado del asistente:', data);
-            const asistenteActivo = data.activo;
-            if (!asistenteActivo) {
-                chatWindow.classList.add('asistente-inactivo');
-                mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
+            asistenteActivo = data.activo;
+            if (asistenteActivo && conversationHistory.length === 0) {
+                const mensajeBienvenida = "¡Hola! Soy tu asistente virtual de CalculAI. ¿En qué puedo ayudarte hoy?";
+                conversationHistory.push({ sender: 'Asistente', message: mensajeBienvenida });
+                localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
             }
+            cargarHistorialConversacion();
         })
         .catch(error => {
             console.error('Error al verificar el estado del asistente:', error);
@@ -1240,19 +1398,57 @@ function initializeAsistente() {
         });
 
     if (asistenteInput && asistenteEnviar) {
-        asistenteEnviar.addEventListener('click', () => {
-            const pregunta = asistenteInput.value.trim();
-            if (pregunta) {
-                notificarAsistente(pregunta);
-                asistenteInput.value = '';
-            }
-        });
-
+        asistenteEnviar.addEventListener('click', enviarMensaje);
         asistenteInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                asistenteEnviar.click();
+                enviarMensaje();
             }
         });
+    }
+
+    function enviarMensaje() {
+        const pregunta = asistenteInput.value.trim();
+        if (pregunta) {
+            mostrarMensajeUsuario(pregunta);
+            notificarAsistente(pregunta);
+            asistenteInput.value = '';
+        }
+    }
+
+    function mostrarMensajeUsuario(mensaje) {
+        const nuevoMensaje = document.createElement('p');
+        nuevoMensaje.textContent = `Tú: ${mensaje}`;
+        nuevoMensaje.className = 'user-message';
+        chatMessages.appendChild(nuevoMensaje);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        conversationHistory.push({ sender: 'Usuario', message: mensaje });
+        localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+    }
+
+    function mostrarMensajeAsistente(mensaje) {
+        const nuevoMensaje = document.createElement('p');
+        nuevoMensaje.textContent = `Asistente: ${mensaje}`;
+        nuevoMensaje.className = 'assistant-message';
+        chatMessages.appendChild(nuevoMensaje);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        conversationHistory.push({ sender: 'Asistente', message: mensaje });
+        localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+    }
+
+    // Exponer la función mostrarMensajeAsistente para uso externo
+    window.mostrarMensajeAsistente = mostrarMensajeAsistente;
+}
+
+function mostrarMensajeUsuario(mensaje) {
+    const mensajesDiv = document.getElementById('asistente-mensajes');
+    if (mensajesDiv) {
+        const nuevoMensaje = document.createElement('p');
+        nuevoMensaje.textContent = `Tú: ${mensaje}`;
+        nuevoMensaje.className = 'mensaje-usuario';
+        mensajesDiv.appendChild(nuevoMensaje);
+        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
     }
 }
 

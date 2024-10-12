@@ -21,9 +21,9 @@
     <h1 class="text-2xl font-semibold mb-6 text-gray-800">Reporte de Ventas</h1>
     
     <div class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
-        <h2 class="text-xl font-semibold mb-4">Filtrar por Fecha</h2>
+        <h2 class="text-xl font-semibold mb-4">Filtros del Reporte</h2>
         <form id="reporte-form" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label for="fecha-inicio" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
                     <input type="text" id="fecha-inicio" name="fecha_inicio" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
@@ -31,6 +31,37 @@
                 <div>
                     <label for="fecha-fin" class="block text-sm font-medium text-gray-700">Fecha de Fin</label>
                     <input type="text" id="fecha-fin" name="fecha_fin" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="tipo-venta" class="block text-sm font-medium text-gray-700">Tipo de Venta</label>
+                    <select id="tipo-venta" name="tipo_venta" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Todos</option>
+                        <option value="contado">Contado</option>
+                        <option value="credito">Crédito</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="cliente" class="block text-sm font-medium text-gray-700">Cliente</label>
+                    <select id="cliente" name="cliente" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Todos los clientes</option>
+                        <!-- Opciones de clientes se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div>
+                    <label for="vendedor" class="block text-sm font-medium text-gray-700">Vendedor</label>
+                    <select id="vendedor" name="vendedor" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Todos los vendedores</option>
+                        <!-- Opciones de vendedores se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div>
+                    <label for="categoria-producto" class="block text-sm font-medium text-gray-700">Categoría de Producto</label>
+                    <select id="categoria-producto" name="categoria_producto" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Todas las categorías</option>
+                        <!-- Opciones de categorías se cargarán dinámicamente -->
+                    </select>
                 </div>
             </div>
             <div>
@@ -43,19 +74,19 @@
 
     <div id="reporte-contenido" class="hidden">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-blue-500 text-white rounded-lg shadow-sm p-4">
+            <div class="bg-blue-500 text-white rounded-lg shadow-sm p-4 card">
                 <h3 class="text-lg font-semibold mb-2">Total Ventas</h3>
                 <p id="total-ventas" class="text-2xl font-bold">$0.00</p>
             </div>
-            <div class="bg-green-500 text-white rounded-lg shadow-sm p-4">
+            <div class="bg-green-500 text-white rounded-lg shadow-sm p-4 card">
                 <h3 class="text-lg font-semibold mb-2">Número de Ventas</h3>
                 <p id="numero-ventas" class="text-2xl font-bold">0</p>
             </div>
-            <div class="bg-yellow-500 text-white rounded-lg shadow-sm p-4">
+            <div class="bg-yellow-500 text-white rounded-lg shadow-sm p-4 card">
                 <h3 class="text-lg font-semibold mb-2">Promedio por Venta</h3>
                 <p id="promedio-venta" class="text-2xl font-bold">$0.00</p>
             </div>
-            <div class="bg-red-500 text-white rounded-lg shadow-sm p-4">
+            <div class="bg-red-500 text-white rounded-lg shadow-sm p-4 card">
                 <h3 class="text-lg font-semibold mb-2">Mayor Venta</h3>
                 <p id="mayor-venta" class="text-2xl font-bold">$0.00</p>
             </div>
@@ -72,6 +103,17 @@
             </div>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-lg font-semibold mb-4">Ventas por Categoría de Producto</h3>
+                <canvas id="ventas-por-categoria"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-lg font-semibold mb-4">Rendimiento de Vendedores</h3>
+                <canvas id="rendimiento-vendedores"></canvas>
+            </div>
+        </div>
+
         <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
             <h3 class="text-lg font-semibold mb-4">Detalle de Ventas</h3>
             <div class="overflow-x-auto">
@@ -81,6 +123,8 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número de Factura</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedor</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Venta</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                         </tr>
                     </thead>
@@ -91,9 +135,12 @@
             </div>
         </div>
 
-        <div class="flex justify-end">
-            <button id="exportar-btn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+        <div class="flex justify-end space-x-4">
+            <button id="exportar-excel-btn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                 Exportar a Excel
+            </button>
+            <button id="exportar-pdf-btn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                Exportar a PDF
             </button>
         </div>
     </div>
@@ -104,12 +151,10 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    if (typeof initializeAsistente === 'function') {
-        initializeAsistente();
-    }
-    
     initializeReporteVentas();
 });
 
@@ -122,26 +167,52 @@ function initializeReporteVentas() {
     });
 
     const reporteForm = document.getElementById('reporte-form');
-    const exportarBtn = document.getElementById('exportar-btn');
+    const exportarExcelBtn = document.getElementById('exportar-excel-btn');
+    const exportarPdfBtn = document.getElementById('exportar-pdf-btn');
 
     reporteForm.addEventListener('submit', function(e) {
         e.preventDefault();
         generarReporte();
     });
 
-    exportarBtn.addEventListener('click', exportarAExcel);
+    exportarExcelBtn.addEventListener('click', exportarAExcel);
+    exportarPdfBtn.addEventListener('click', exportarAPdf);
+
+    cargarOpcionesFiltros();
+}
+
+function cargarOpcionesFiltros() {
+    // Aquí deberías hacer llamadas a tu API para cargar las opciones de clientes, vendedores y categorías de productos
+    // Por ahora, usaremos datos de ejemplo
+    const clientes = ['Cliente A', 'Cliente B', 'Cliente C'];
+    const vendedores = ['Vendedor 1', 'Vendedor 2', 'Vendedor 3'];
+    const categorias = ['Electrónica', 'Ropa', 'Alimentos'];
+
+    cargarOpciones('cliente', clientes);
+    cargarOpciones('vendedor', vendedores);
+    cargarOpciones('categoria-producto', categorias);
+}
+
+function cargarOpciones(selectId, opciones) {
+    const select = document.getElementById(selectId);
+    opciones.forEach(opcion => {
+        const option = document.createElement('option');
+        option.value = opcion;
+        option.textContent = opcion;
+        select.appendChild(option);
+    });
 }
 
 function generarReporte() {
-    const fechaInicio = document.getElementById('fecha-inicio').value;
-    const fechaFin = document.getElementById('fecha-fin').value;
+    const formData = new FormData(document.getElementById('reporte-form'));
+    const params = new URLSearchParams(formData);
 
-    fetch(`/facturacion/api/reporte-ventas?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`)
+    fetch(`/facturacion/api/reporte-ventas?${params.toString()}`)
         .then(response => response.json())
         .then(data => {
             document.getElementById('reporte-contenido').classList.remove('hidden');
             actualizarResumen(data.resumen);
-            actualizarGraficos(data.ventas_por_dia, data.top_clientes);
+            actualizarGraficos(data);
             actualizarTablaVentas(data.detalle_ventas);
         })
         .catch(error => {
@@ -157,9 +228,16 @@ function actualizarResumen(resumen) {
     document.getElementById('mayor-venta').textContent = `$${resumen.mayor_venta.toFixed(2)}`;
 }
 
-function actualizarGraficos(ventasPorDia, topClientes) {
-    // Gráfico de ventas por día
-    new Chart(document.getElementById('ventas-por-dia').getContext('2d'), {
+function actualizarGraficos(data) {
+    actualizarGraficoVentasPorDia(data.ventas_por_dia);
+    actualizarGraficoTopClientes(data.top_clientes);
+    actualizarGraficoVentasPorCategoria(data.ventas_por_categoria);
+    actualizarGraficoRendimientoVendedores(data.rendimiento_vendedores);
+}
+
+function actualizarGraficoVentasPorDia(ventasPorDia) {
+    const ctx = document.getElementById('ventas-por-dia').getContext('2d');
+    new Chart(ctx, {
         type: 'line',
         data: {
             labels: ventasPorDia.map(v => v.fecha),
@@ -174,14 +252,26 @@ function actualizarGraficos(ventasPorDia, topClientes) {
             responsive: true,
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Monto de Ventas'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Fecha'
+                    }
                 }
             }
         }
     });
+}
 
-    // Gráfico de top clientes
-    new Chart(document.getElementById('top-clientes').getContext('2d'), {
+function actualizarGraficoTopClientes(topClientes) {
+    const ctx = document.getElementById('top-clientes').getContext('2d');
+    new Chart(ctx, {
         type: 'bar',
         data: {
             labels: topClientes.map(c => c.cliente),
@@ -195,7 +285,82 @@ function actualizarGraficos(ventasPorDia, topClientes) {
             responsive: true,
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Monto de Ventas'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Cliente'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function actualizarGraficoVentasPorCategoria(ventasPorCategoria) {
+    const ctx = document.getElementById('ventas-por-categoria').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ventasPorCategoria.map(c => c.categoria),
+            datasets: [{
+                data: ventasPorCategoria.map(c => c.total),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Ventas por Categoría de Producto'
+                }
+            }
+        }
+    });
+}
+
+function actualizarGraficoRendimientoVendedores(rendimientoVendedores) {
+    const ctx = document.getElementById('rendimiento-vendedores').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: rendimientoVendedores.map(v => v.vendedor),
+            datasets: [{
+                label: 'Total de Ventas',
+                data: rendimientoVendedores.map(v => v.total),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Monto de Ventas'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Vendedor'
+                    }
                 }
             }
         }
@@ -211,6 +376,8 @@ function actualizarTablaVentas(ventas) {
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${venta.fecha}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${venta.numero_factura}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${venta.cliente}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${venta.vendedor}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${venta.tipo_venta}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${venta.total.toFixed(2)}</td>
         `;
         tbody.appendChild(tr);
@@ -221,6 +388,36 @@ function exportarAExcel() {
     const tabla = document.getElementById('tabla-ventas');
     const wb = XLSX.utils.table_to_book(tabla, {sheet: "Reporte de Ventas"});
     XLSX.writeFile(wb, 'reporte_ventas.xlsx');
+}
+
+function exportarAPdf() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Añadir título
+    doc.setFontSize(18);
+    doc.text('Reporte de Ventas', 14, 22);
+
+    // Añadir fecha del reporte
+    doc.setFontSize(11);
+    doc.text(`Fecha del reporte: ${new Date().toLocaleDateString()}`, 14, 30);
+
+    // Añadir tabla de ventas
+    doc.autoTable({
+        html: '#tabla-ventas',
+        startY: 35,
+        theme: 'grid',
+        styles: {
+            fontSize: 8
+        },
+        headStyles: {
+            fillColor: [66, 135, 245],
+            textColor: 255
+        }
+    });
+
+    // Guardar el PDF
+    doc.save('reporte_ventas.pdf');
 }
 </script>
 {% endblock %}
