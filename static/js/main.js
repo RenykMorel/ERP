@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeAuthForms();
     initializeMarketingModule();
     initializeRRHHModule();
+    initializeComprasModule();
+    initializeActivosFijosModule();
+    initializeCuentasPorPagarModule();
+    initializeImportacionModule();
+    initializeProyectosModule();
+    initializeCuentasPorCobrarModule();
     window.addEventListener('resize', resizeCharts);
 
     ['line', 'bar', 'pie'].forEach(type => {
@@ -21,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Función para notificar al asistente virtual
 // Función para notificar al asistente virtual
 function notificarAsistente(mensaje) {
     const paginaActual = window.location.pathname;
@@ -76,8 +81,6 @@ function mostrarMensajeConArchivos(mensaje, archivos) {
     }
 }
 
-// ... (resto del código existente) ...
-
 // Función para descargar un archivo
 function descargarArchivo(contenido, nombre, mimetype) {
     const blob = b64toBlob(contenido, mimetype);
@@ -110,7 +113,7 @@ function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
     return blob;
 }
 
-// Añade esta nueva función para manejar archivos descargables
+// Función para mostrar archivos descargables
 function mostrarArchivosDescargables(archivos) {
     const mensajesDiv = document.getElementById('asistente-mensajes');
     if (mensajesDiv) {
@@ -384,8 +387,7 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Facturación no reconocido');
         }
-
-    }else if (moduleName === 'Cuentas Por Pagar') {
+    } else if (moduleName === 'Cuentas Por Pagar') {
         switch (submoduleName) {
             case 'Factura Suplidor':
                 window.location.href = '/cxp/factura-suplidor';
@@ -423,7 +425,7 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Cuentas Por Pagar no reconocido');
         }    
-    }else if (moduleName === 'Activos Fijos') {
+    } else if (moduleName === 'Activos Fijos') {
         switch (submoduleName) {
             case 'Activo Fijo':
                 window.location.href = '/activos_fijos/activo_fijo';
@@ -443,11 +445,7 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Activos Fijos no reconocido');
         }
-            
-    
-            
-        
-    }else if (moduleName === 'Importacion') {
+    } else if (moduleName === 'Importacion') {
         switch (submoduleName) {
             case 'Expediente de Importacion':
                 window.location.href = '/importacion/expediente';
@@ -461,8 +459,7 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Importación no reconocido');
         }
-    
-    }else if (moduleName === 'Cuentas Por Cobrar') {
+    } else if (moduleName === 'Cuentas Por Cobrar') {
         switch (submoduleName) {
             case 'Cliente':
                 window.location.href = '/cxc/clientes';
@@ -494,8 +491,7 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Cuentas Por Cobrar no reconocido');
         }
-        
-    }else if (moduleName === 'Impuestos') {
+    } else if (moduleName === 'Impuestos') {
         switch (submoduleName) {
             case 'Formulario 606':
                 window.location.href = '/impuestos/formulario606';
@@ -518,7 +514,6 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Impuestos no reconocido');
         }
-    
     } else if (moduleName === 'Banco') {
         switch (submoduleName) {
             case 'Bancos':
@@ -545,7 +540,6 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Banco no reconocido');
         }
-
     } else if (moduleName === 'Compras') {
         switch (submoduleName) {
             case 'Solicitudes de Compra':
@@ -566,8 +560,6 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Compras no reconocido');
         }
-
-    
     } else if (moduleName === 'Contabilidad') {
         switch (submoduleName) {
             case 'Cuentas':
@@ -597,8 +589,7 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Contabilidad no reconocido');
         }
-
-    }else if (moduleName === 'Recursos Humanos') {
+    } else if (moduleName === 'Recursos Humanos') {
         switch (submoduleName) {
             case 'Gestión de Empleados':
                 window.location.href = '/rrhh/empleados';
@@ -612,8 +603,7 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Recursos Humanos no reconocido');
         }
-        
-    }else if (moduleName === 'Proyectos') {
+    } else if (moduleName === 'Proyectos') {
         switch (submoduleName) {
             case 'Gestión de Proyectos':
                 window.location.href = '/proyectos/gestion';
@@ -627,40 +617,6 @@ function handleSubmoduleClick(moduleName, submoduleName) {
             default:
                 console.log('Submódulo de Proyectos no reconocido');
         }
-          
-    }else if (moduleName === 'Cuentas Por Cobrar') {
-        switch (submoduleName) {
-            case 'Cliente':
-                loadSubmoduleContent('Cuentas Por Cobrar', 'Cliente');
-                break;
-            case 'Descuento y devoluciones':
-                loadSubmoduleContent('Cuentas Por Cobrar', 'Descuento y devoluciones');
-                break;
-            case 'Nota de credito':
-                loadSubmoduleContent('Cuentas Por Cobrar', 'Nota de credito');
-                break;
-            case 'Nota de debito':
-                loadSubmoduleContent('Cuentas Por Cobrar', 'Nota de debito');
-                break;
-            case 'Recibo':
-                loadSubmoduleContent('Cuentas Por Cobrar', 'Recibo');
-                break;
-            case 'Anticipo CxC':
-                loadSubmoduleContent('Cuentas Por Cobrar', 'Anticipo CxC');
-                break;
-            case 'Condicion de pago':
-                loadSubmoduleContent('Cuentas Por Cobrar', 'Condicion de pago');
-                break;
-            case 'Reporte CxC':
-                loadSubmoduleContent('Cuentas Por Cobrar', 'Reporte CxC');
-                break;
-            case 'Tipo de cliente':
-                loadSubmoduleContent('Cuentas Por Cobrar', 'Tipo de cliente');
-                break;
-            default:
-                console.log('Submódulo de Cuentas Por Cobrar no reconocido');
-        }
-            
     } else if (moduleName === 'Inventario') {
         switch (submoduleName) {
             case 'Items':
@@ -708,7 +664,6 @@ function handleSubmoduleClick(moduleName, submoduleName) {
                 console.log('Submódulo de Marketing no reconocido');
         }
     } else {
-        // Manejar otros submódulos aquí
         console.log('Otro submódulo clickeado');
         loadSubmoduleContent(moduleName, submoduleName);
     }
@@ -863,290 +818,7 @@ function loadSubmodules(moduleName, submoduleContainer) {
 function loadSubmoduleContent(moduleName, submoduleName) {
     console.log(`Loading content for ${moduleName} - ${submoduleName}`);
     
-    let url;
-    if (moduleName === 'Facturacion') {
-        switch (submoduleName) {
-            case 'Facturas':
-                url = '/facturacion/facturas';
-                break;
-            case 'Pre-facturas':
-                url = '/facturacion/pre-facturas';
-                break;
-            case 'Notas de Crédito/Débito':
-                url = '/facturacion/notas-de-credito-debito';
-                break;
-            case 'Reporte de Ventas':
-                url = '/facturacion/reporte-de-ventas';
-                break;
-            case 'Gestión de Clientes':
-                url = '/facturacion/gestion-de-clientes';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-
-    }else if (moduleName === 'Cuentas Por Pagar') {
-        switch (submoduleName) {
-            case 'Factura Suplidor':
-                url = '/cxp/factura-suplidor';
-                break;
-            case 'Nota de Crédito':
-                url = '/cxp/nota-credito';
-                break;
-            case 'Nota de Débito':
-                url = '/cxp/nota-debito';
-                break;
-            case 'Orden de Compras':
-                url = '/cxp/orden-compras';
-                break;
-            case 'Suplidor':
-                url = '/cxp/suplidor';
-                break;
-            case 'Anticipo CxP':
-                url = '/cxp/anticipo-cxp';
-                break;
-            case 'Pago de Contado':
-                url = '/cxp/pago-contado';
-                break;
-            case 'Reporte CxP':
-                url = '/cxp/reporte-cxp';
-                break;
-            case 'Requisición Cotización':
-                url = '/cxp/requisicion-cotizacion';
-                break;
-            case 'Solicitud Compras':
-                url = '/cxp/solicitud-compras';
-                break;
-            case 'Tipo de Suplidor':
-                url = '/cxp/tipo-suplidor';
-                break;
-            default:
-        }     url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-                
-    }else if (moduleName === 'Activos Fijos') {
-        switch (submoduleName) {
-            case 'Activo Fijo':
-                url = '/activos_fijos/activo_fijo';
-                break;
-            case 'Depreciación':
-                url = '/activos_fijos/depreciacion';
-                break;
-            case 'Retiro':
-                url = '/activos_fijos/retiro';
-                break;
-            case 'Revalorización':
-                url = '/activos_fijos/revalorizacion';
-                break;
-            case 'Tipo de Activo Fijo':
-                url = '/activos_fijos/tipo_activo_fijo';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-            
-    }else if (moduleName === 'Cuentas Por Cobrar') {
-        switch (submoduleName) {
-            case 'Cliente':
-                url = '/cxc/clientes';
-                break;
-            case 'Descuento y devoluciones':
-                url = '/cxc/descuentos-devoluciones';
-                break;
-            case 'Nota de credito':
-                url = '/cxc/notas-credito';
-                break;
-            case 'Nota de debito':
-                url = '/cxc/notas-debito';
-                break;
-            case 'Recibo':
-                url = '/cxc/recibos';
-                break;
-            case 'Anticipo CxC':
-                url = '/cxc/anticipos';
-                break;
-            case 'Condicion de pago':
-                url = '/cxc/condiciones-pago';
-                break;
-            case 'Reporte CxC':
-                url = '/cxc/reporte';
-                break;
-            case 'Tipo de cliente':
-                url = '/cxc/tipos-cliente';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-            
-       
-    }else if (moduleName === 'Impuestos') {
-        switch (submoduleName) {
-            case 'Formulario 606':
-                url = '/impuestos/formulario606';
-                break;
-            case 'Formulario 607':
-                url = '/impuestos/formulario607';
-                break;
-            case 'Reporte IT1':
-                url = '/impuestos/reporte-it1';
-                break;
-            case 'Impuesto sobre la Renta (IR17)':
-                url = '/impuestos/ir17';
-                break;
-            case 'Serie Fiscal':
-                url = '/impuestos/serie-fiscal';
-                break;
-            case 'Configuraciones':
-                url = '/impuestos/configuraciones';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-       
-        
-    }else if (moduleName === 'Proyectos') {
-        switch (submoduleName) {
-            case 'Gestión de Proyectos':
-                url = '/proyectos/gestion';
-                break;
-            case 'Presupuestos':
-                url = '/proyectos/presupuestos';
-                break;
-            case 'Facturación por Proyecto':
-                url = '/proyectos/facturacion';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-    }else if (moduleName === 'Importacion') {
-        switch (submoduleName) {
-            case 'Expediente de Importacion':
-                url = '/importacion/expediente';
-                break;
-            case 'Importador':
-                url = '/importacion/importador';
-                break;
-            case 'Reportes Importacion':
-                url = '/importacion/reportes';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-        
-    } else if (moduleName === 'Inventario') {
-        switch (submoduleName) {
-            case 'Items':
-                url = '/inventario/items';
-                break;
-            case 'Entrada de Almacén':
-                url = '/inventario/entrada-almacen';
-                break;
-            case 'Salida de Almacén':
-                url = '/inventario/salida-almacen';
-                break;
-            case 'Inventario':
-                url = '/inventario/inventario';
-                break;
-            case 'Reporte de Inventario':
-                url = '/inventario/reporte';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-    } else if (moduleName === 'Marketing') {
-        switch (submoduleName) {
-            case 'Gestión de Contactos':
-                url = '/marketing/contacts';
-                break;
-            case 'Campañas de Email':
-                url = '/marketing/campaigns';
-                break;
-            case 'Plantillas de Email':
-                url = '/marketing/templates';
-                break;
-            case 'Reportes de Campañas':
-                url = '/marketing/reports';
-                break;
-            case 'Segmentación de Contactos':
-                url = '/marketing/segmentation';
-                break;
-            case 'Automatizaciones':
-                url = '/marketing/automations';
-                break;
-            case 'Integración de Redes Sociales':
-                url = '/marketing/social-media';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-
-    } else if (moduleName === 'Compras') {
-        switch (submoduleName) {
-            case 'Solicitudes de Compra':
-                url = '/compras/solicitudes';
-                break;
-            case 'Órdenes de Compra':
-                url = '/compras/ordenes';
-                break;
-            case 'Recepción de Materiales':
-                url = '/compras/recepcion';
-                break;
-            case 'Gastos':
-                url = '/compras/gastos';
-                break;
-            case 'Reporte de Compras/Gastos':
-                url = '/compras/reporte';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-  
-    }else if (moduleName === 'Recursos Humanos') {
-        switch (submoduleName) {
-            case 'Gestión de Empleados':
-                url = '/rrhh/empleados';
-                break;
-            case 'Nómina':
-                url = '/rrhh/nomina';
-                break;
-            case 'Evaluación de Desempeño':
-                url = '/rrhh/evaluacion';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-    } else if (moduleName === 'Contabilidad') {
-        switch (submoduleName) {
-            case 'Cuentas':
-                url = '/contabilidad/cuentas';
-                break;
-            case 'Diario':
-                url = '/contabilidad/diario';
-                break;
-            case 'Mayor General':
-                url = '/contabilidad/mayor_general';
-                break;
-            case 'Balanza de Comprobación':
-                url = '/contabilidad/balanza_comprobacion';
-                break;
-            case 'Estado de Resultados':
-                url = '/contabilidad/estado_resultados';
-                break;
-            case 'Balance General':
-                url = '/contabilidad/balance_general';
-                break;
-            case 'Configuraciones':
-                url = '/contabilidad/configuraciones';
-                break;
-            case 'Flujo de caja':
-                url = '/contabilidad/flujo_caja';
-                break;
-            default:
-                url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-        }
-    } else {
-        url = `/api/submodule-content/${moduleName}/${submoduleName}`;
-    }
-        
+    let url = `/api/submodule-content/${moduleName}/${submoduleName}`;
     
     console.log('Fetching from URL:', url);
 
@@ -1203,8 +875,6 @@ function loadSubmoduleContent(moduleName, submoduleName) {
         `;
     });
 }
-
-
 
 // Carga las notificaciones desde la API
 function loadNotifications() {
@@ -1365,6 +1035,7 @@ function initializeAsistente() {
 
     let conversationHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
     let asistenteActivo = false;
+    let messageCount = 0;
 
     // Función para cargar el historial de conversación
     function cargarHistorialConversacion() {
@@ -1385,9 +1056,14 @@ function initializeAsistente() {
             console.log('Estado del asistente:', data);
             asistenteActivo = data.activo;
             if (asistenteActivo && conversationHistory.length === 0) {
-                const mensajeBienvenida = "¡Hola! Soy tu asistente virtual de CalculAI. ¿En qué puedo ayudarte hoy?";
-                conversationHistory.push({ sender: 'Asistente', message: mensajeBienvenida });
-                localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+                const lastWelcomeDate = localStorage.getItem('lastWelcomeDate');
+                const today = new Date().toDateString();
+                if (lastWelcomeDate !== today) {
+                    const mensajeBienvenida = "¡Hola! Soy tu asistente virtual de CalculAI. ¿En qué puedo ayudarte hoy?";
+                    conversationHistory.push({ sender: 'Asistente', message: mensajeBienvenida });
+                    localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+                    localStorage.setItem('lastWelcomeDate', today);
+                }
             }
             cargarHistorialConversacion();
         })
@@ -1412,6 +1088,11 @@ function initializeAsistente() {
             mostrarMensajeUsuario(pregunta);
             notificarAsistente(pregunta);
             asistenteInput.value = '';
+            messageCount++;
+
+            if (messageCount % 10 === 0) {
+                preguntarLimpiarChat();
+            }
         }
     }
 
@@ -1435,6 +1116,20 @@ function initializeAsistente() {
 
         conversationHistory.push({ sender: 'Asistente', message: mensaje });
         localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+    }
+
+    function preguntarLimpiarChat() {
+        const confirmacion = confirm("¿Deseas limpiar el historial del chat?");
+        if (confirmacion) {
+            limpiarChat();
+        }
+    }
+
+    function limpiarChat() {
+        conversationHistory = [];
+        localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+        chatMessages.innerHTML = '';
+        messageCount = 0;
     }
 
     // Exponer la función mostrarMensajeAsistente para uso externo
@@ -1512,8 +1207,6 @@ function loadContacts() {
         .catch(error => console.error('Error loading contacts:', error));
 }
 
-
-
 // Carga las campañas desde la API
 function loadCampaigns() {
     fetch('/marketing/api/campaigns')
@@ -1555,8 +1248,6 @@ function initializeContactForm() {
         });
     }
 }
-
-
 
 // Inicializa el formulario de campañas
 function initializeCampaignForm() {
@@ -1628,7 +1319,7 @@ function initializeSocialMediaIntegration() {
     // Implementa la lógica para conectar y mostrar las integraciones de redes sociales
 }
 
-// Funciones específicas para el módulo de Compras
+// Funciones específicas para el módulo de RRHH
 function initializeRRHHModule() {
     const rrhhContainer = document.getElementById('rrhh-container');
     if (rrhhContainer) {
@@ -1731,137 +1422,6 @@ function initializeNominaForm() {
     }
 }
 
-function initializeActivosFijosModule() {
-    const activosFijosContainer = document.getElementById('activos-fijos-container');
-    if (activosFijosContainer) {
-        loadActivosFijos();
-        loadDepreciaciones();
-        loadRetiros();
-        loadRevalorizaciones();
-        loadTiposActivoFijo();
-    }
-}
-
-function loadActivosFijos() {
-    // Lógica para cargar activos fijos
-}
-
-function loadDepreciaciones() {
-    // Lógica para cargar depreciaciones
-}
-
-function loadRetiros() {
-    // Lógica para cargar retiros
-}
-
-function loadRevalorizaciones() {
-    // Lógica para cargar revalorizaciones
-}
-
-function loadTiposActivoFijo() {
-    // Lógica para cargar tipos de activo fijo
-}
-
-// Asegúrate de llamar a esta función cuando se cargue la página
-document.addEventListener('DOMContentLoaded', function() {
-    // ... otras inicializaciones ...
-    initializeActivosFijosModule();
-});
-
-function initializeCuentasPorPagarModule() {
-    const cuentasPorPagarContainer = document.getElementById('cuentas-por-pagar-container');
-    if (cuentasPorPagarContainer) {
-        loadFacturasSuplidores();
-        loadNotasCredito();
-        loadNotasDebito();
-        loadOrdenesCompra();
-        loadSuplidores();
-        loadAnticiposCxP();
-        loadPagosContado();
-        loadReportesCxP();
-        loadRequisicionesCotizacion();
-        loadSolicitudesCompra();
-        loadTiposSuplidores();
-    }
-}
-
-function loadFacturasSuplidores() {
-    // Lógica para cargar facturas de suplidores
-}
-
-function loadNotasCredito() {
-    // Lógica para cargar notas de crédito
-}
-
-function loadNotasDebito() {
-    // Lógica para cargar notas de débito
-}
-
-function loadOrdenesCompra() {
-    // Lógica para cargar órdenes de compra
-}
-
-function loadSuplidores() {
-    // Lógica para cargar suplidores
-}
-
-function loadAnticiposCxP() {
-    // Lógica para cargar anticipos CxP
-}
-
-function loadPagosContado() {
-    // Lógica para cargar pagos de contado
-}
-
-function loadReportesCxP() {
-    // Lógica para cargar reportes CxP
-}
-
-function loadRequisicionesCotizacion() {
-    // Lógica para cargar requisiciones de cotización
-}
-
-function loadSolicitudesCompra() {
-    // Lógica para cargar solicitudes de compra
-}
-
-function loadTiposSuplidores() {
-    // Lógica para cargar tipos de suplidores
-}
-
-// Asegúrate de llamar a esta función cuando se cargue la página
-document.addEventListener('DOMContentLoaded', function() {
-    // ... otras inicializaciones ...
-    initializeCuentasPorPagarModule();
-});
-
-function initializeImportacionModule() {
-    const importacionContainer = document.getElementById('importacion-container');
-    if (importacionContainer) {
-        loadExpedientes();
-        loadImportadores();
-        loadReportesImportacion();
-    }
-}
-
-function loadExpedientes() {
-    // Lógica para cargar expedientes
-}
-
-function loadImportadores() {
-    // Lógica para cargar importadores
-}
-
-function loadReportesImportacion() {
-    // Lógica para cargar reportes de importación
-}
-
-// Asegúrate de llamar a esta función cuando se cargue la página
-document.addEventListener('DOMContentLoaded', function() {
-    // ... otras inicializaciones ...
-    initializeImportacionModule();
-});
-
 function initializeEvaluacionForm() {
     const evaluacionForm = document.getElementById('evaluacion-form');
     if (evaluacionForm) {
@@ -1886,6 +1446,7 @@ function initializeEvaluacionForm() {
     }
 }
 
+// Funciones específicas para el módulo de Compras
 function initializeComprasModule() {
     const comprasContainer = document.getElementById('compras-container');
     if (comprasContainer) {
@@ -1948,12 +1509,468 @@ function initializeSolicitudCompraForm() {
     }
 }
 
+function initializeOrdenCompraForm() {
+    const ordenForm = document.getElementById('orden-compra-form');
+    if (ordenForm) {
+        ordenForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(ordenForm);
+            fetch('/compras/api/ordenes', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Orden de compra creada:', data);
+                loadOrdenesCompra();
+                ordenForm.reset();
+            })
+            .catch(error => console.error('Error creando orden de compra:', error));
+        });
+    }
+}
+
+// Funciones específicas para el módulo de Activos Fijos
+// Funciones específicas para el módulo de Activos Fijos
+function initializeActivosFijosModule() {
+    const activosFijosContainer = document.getElementById('activos-fijos-container');
+    if (activosFijosContainer) {
+        loadActivosFijos();
+        loadDepreciaciones();
+        loadRetiros();
+        loadRevalorizaciones();
+        loadTiposActivoFijo();
+        initializeActivoFijoForm();
+        initializeDepreciacionForm();
+        initializeRetiroForm();
+        initializeRevalorizacionForm();
+    }
+}
+
+function loadActivosFijos() {
+    fetch('/activos_fijos/api/activos')
+        .then(response => response.json())
+        .then(activos => {
+            const activosList = document.getElementById('activos-list');
+            if (activosList) {
+                activosList.innerHTML = activos.map(activo => 
+                    `<li>${activo.nombre} - Valor: $${activo.valor} - Fecha adquisición: ${activo.fecha_adquisicion}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading activos fijos:', error));
+}
+
+function loadDepreciaciones() {
+    fetch('/activos_fijos/api/depreciaciones')
+        .then(response => response.json())
+        .then(depreciaciones => {
+            const depreciacionesList = document.getElementById('depreciaciones-list');
+            if (depreciacionesList) {
+                depreciacionesList.innerHTML = depreciaciones.map(depreciacion => 
+                    `<li>Activo: ${depreciacion.activo} - Monto: $${depreciacion.monto} - Fecha: ${depreciacion.fecha}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading depreciaciones:', error));
+}
+
+function loadRetiros() {
+    fetch('/activos_fijos/api/retiros')
+        .then(response => response.json())
+        .then(retiros => {
+            const retirosList = document.getElementById('retiros-list');
+            if (retirosList) {
+                retirosList.innerHTML = retiros.map(retiro => 
+                    `<li>Activo: ${retiro.activo} - Fecha: ${retiro.fecha} - Motivo: ${retiro.motivo}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading retiros:', error));
+}
+
+function loadRevalorizaciones() {
+    fetch('/activos_fijos/api/revalorizaciones')
+        .then(response => response.json())
+        .then(revalorizaciones => {
+            const revalorizacionesList = document.getElementById('revalorizaciones-list');
+            if (revalorizacionesList) {
+                revalorizacionesList.innerHTML = revalorizaciones.map(revalorizacion => 
+                    `<li>Activo: ${revalorizacion.activo} - Nuevo valor: $${revalorizacion.nuevo_valor} - Fecha: ${revalorizacion.fecha}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading revalorizaciones:', error));
+}
+
+function loadTiposActivoFijo() {
+    fetch('/activos_fijos/api/tipos')
+        .then(response => response.json())
+        .then(tipos => {
+            const tiposList = document.getElementById('tipos-activo-fijo-list');
+            if (tiposList) {
+                tiposList.innerHTML = tipos.map(tipo => 
+                    `<li>${tipo.nombre} - Vida útil: ${tipo.vida_util} años</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading tipos de activo fijo:', error));
+}
+
+function initializeActivoFijoForm() {
+    const activoFijoForm = document.getElementById('activo-fijo-form');
+    if (activoFijoForm) {
+        activoFijoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(activoFijoForm);
+            fetch('/activos_fijos/api/activos', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Activo fijo creado:', data);
+                loadActivosFijos();
+                activoFijoForm.reset();
+            })
+            .catch(error => console.error('Error creando activo fijo:', error));
+        });
+    }
+}
+
+function initializeDepreciacionForm() {
+    const depreciacionForm = document.getElementById('depreciacion-form');
+    if (depreciacionForm) {
+        depreciacionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(depreciacionForm);
+            fetch('/activos_fijos/api/depreciaciones', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Depreciación registrada:', data);
+                loadDepreciaciones();
+                depreciacionForm.reset();
+            })
+            .catch(error => console.error('Error registrando depreciación:', error));
+        });
+    }
+}
+
+function initializeRetiroForm() {
+    const retiroForm = document.getElementById('retiro-form');
+    if (retiroForm) {
+        retiroForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(retiroForm);
+            fetch('/activos_fijos/api/retiros', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Retiro registrado:', data);
+                loadRetiros();
+                retiroForm.reset();
+            })
+            .catch(error => console.error('Error registrando retiro:', error));
+        });
+    }
+}
+
+function initializeRevalorizacionForm() {
+    const revalorizacionForm = document.getElementById('revalorizacion-form');
+    if (revalorizacionForm) {
+        revalorizacionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(revalorizacionForm);
+            fetch('/activos_fijos/api/revalorizaciones', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Revalorización registrada:', data);
+                loadRevalorizaciones();
+                revalorizacionForm.reset();
+            })
+            .catch(error => console.error('Error registrando revalorización:', error));
+        });
+    }
+}
+
+// Funciones específicas para el módulo de Cuentas Por Pagar
+function initializeCuentasPorPagarModule() {
+    const cuentasPorPagarContainer = document.getElementById('cuentas-por-pagar-container');
+    if (cuentasPorPagarContainer) {
+        loadFacturasSuplidores();
+        loadNotasCredito();
+        loadNotasDebito();
+        loadOrdenesCompra();
+        loadSuplidores();
+        loadAnticiposCxP();
+        loadPagosContado();
+        loadReportesCxP();
+        loadRequisicionesCotizacion();
+        loadSolicitudesCompra();
+        loadTiposSuplidores();
+    }
+}
+
+function loadFacturasSuplidores() {
+    fetch('/cxp/api/facturas-suplidores')
+        .then(response => response.json())
+        .then(facturas => {
+            const facturasList = document.getElementById('facturas-suplidores-list');
+            if (facturasList) {
+                facturasList.innerHTML = facturas.map(factura => 
+                    `<li>Factura: ${factura.numero} - Suplidor: ${factura.suplidor} - Monto: $${factura.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading facturas de suplidores:', error));
+}
+
+function loadNotasCredito() {
+    fetch('/cxp/api/notas-credito')
+        .then(response => response.json())
+        .then(notas => {
+            const notasList = document.getElementById('notas-credito-list');
+            if (notasList) {
+                notasList.innerHTML = notas.map(nota => 
+                    `<li>Nota de Crédito: ${nota.numero} - Suplidor: ${nota.suplidor} - Monto: $${nota.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading notas de crédito:', error));
+}
+
+function loadNotasDebito() {
+    fetch('/cxp/api/notas-debito')
+        .then(response => response.json())
+        .then(notas => {
+            const notasList = document.getElementById('notas-debito-list');
+            if (notasList) {
+                notasList.innerHTML = notas.map(nota => 
+                    `<li>Nota de Débito: ${nota.numero} - Suplidor: ${nota.suplidor} - Monto: $${nota.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading notas de débito:', error));
+}
+
+function loadSuplidores() {
+    fetch('/cxp/api/suplidores')
+        .then(response => response.json())
+        .then(suplidores => {
+            const suplidoresList = document.getElementById('suplidores-list');
+            if (suplidoresList) {
+                suplidoresList.innerHTML = suplidores.map(suplidor => 
+                    `<li>${suplidor.nombre} - RNC: ${suplidor.rnc} - Teléfono: ${suplidor.telefono}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading suplidores:', error));
+}
+
+function loadAnticiposCxP() {
+    fetch('/cxp/api/anticipos')
+        .then(response => response.json())
+        .then(anticipos => {
+            const anticiposList = document.getElementById('anticipos-cxp-list');
+            if (anticiposList) {
+                anticiposList.innerHTML = anticipos.map(anticipo => 
+                    `<li>Anticipo: ${anticipo.numero} - Suplidor: ${anticipo.suplidor} - Monto: $${anticipo.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading anticipos CxP:', error));
+}
+
+function loadPagosContado() {
+    fetch('/cxp/api/pagos-contado')
+        .then(response => response.json())
+        .then(pagos => {
+            const pagosList = document.getElementById('pagos-contado-list');
+            if (pagosList) {
+                pagosList.innerHTML = pagos.map(pago => 
+                    `<li>Pago: ${pago.numero} - Suplidor: ${pago.suplidor} - Monto: $${pago.monto}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading pagos de contado:', error));
+}
+
+function loadReportesCxP() {
+    fetch('/cxp/api/reportes')
+        .then(response => response.json())
+        .then(reportes => {
+            const reportesList = document.getElementById('reportes-cxp-list');
+            if (reportesList) {
+                reportesList.innerHTML = reportes.map(reporte => 
+                    `<li>Reporte: ${reporte.nombre} - Fecha: ${reporte.fecha}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading reportes CxP:', error));
+}
+
+function loadRequisicionesCotizacion() {
+    fetch('/cxp/api/requisiciones-cotizacion')
+        .then(response => response.json())
+        .then(requisiciones => {
+            const requisicionesList = document.getElementById('requisiciones-cotizacion-list');
+            if (requisicionesList) {
+                requisicionesList.innerHTML = requisiciones.map(requisicion => 
+                    `<li>Requisición: ${requisicion.numero} - Descripción: ${requisicion.descripcion}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading requisiciones de cotización:', error));
+}
+
+function loadTiposSuplidores() {
+    fetch('/cxp/api/tipos-suplidores')
+        .then(response => response.json())
+        .then(tipos => {
+            const tiposList = document.getElementById('tipos-suplidores-list');
+            if (tiposList) {
+                tiposList.innerHTML = tipos.map(tipo => 
+                    `<li>${tipo.nombre}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading tipos de suplidores:', error));
+}
+
+// Funciones específicas para el módulo de Importación
+function initializeImportacionModule() {
+    const importacionContainer = document.getElementById('importacion-container');
+    if (importacionContainer) {
+        loadExpedientes();
+        loadImportadores();
+        loadReportesImportacion();
+        initializeExpedienteForm();
+        initializeImportadorForm();
+    }
+}
+
+function loadExpedientes() {
+    fetch('/importacion/api/expedientes')
+        .then(response => response.json())
+        .then(expedientes => {
+            const expedientesList = document.getElementById('expedientes-list');
+            if (expedientesList) {
+                expedientesList.innerHTML = expedientes.map(expediente => 
+                    `<li>Expediente: ${expediente.numero} - Estado: ${expediente.estado}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading expedientes:', error));
+}
+
+function loadImportadores() {
+    fetch('/importacion/api/importadores')
+        .then(response => response.json())
+        .then(importadores => {
+            const importadoresList = document.getElementById('importadores-list');
+            if (importadoresList) {
+                importadoresList.innerHTML = importadores.map(importador => 
+                    `<li>${importador.nombre} - RNC: ${importador.rnc}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading importadores:', error));
+}
+
+function loadReportesImportacion() {
+    fetch('/importacion/api/reportes')
+        .then(response => response.json())
+        .then(reportes => {
+            const reportesList = document.getElementById('reportes-importacion-list');
+            if (reportesList) {
+                reportesList.innerHTML = reportes.map(reporte => 
+                    `<li>Reporte: ${reporte.nombre} - Fecha: ${reporte.fecha}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading reportes de importación:', error));
+}
+
+function initializeExpedienteForm() {
+    const expedienteForm = document.getElementById('expediente-form');
+    if (expedienteForm) {
+        expedienteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(expedienteForm);
+            fetch('/importacion/api/expedientes', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Expediente creado:', data);
+                loadExpedientes();
+                expedienteForm.reset();
+            })
+            .catch(error => console.error('Error creando expediente:', error));
+        });
+    }
+}
+
+function initializeImportadorForm() {
+    const importadorForm = document.getElementById('importador-form');
+    if (importadorForm) {
+        importadorForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(importadorForm);
+            fetch('/importacion/api/importadores', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Importador creado:', data);
+                loadImportadores();
+                importadorForm.reset();
+            })
+            .catch(error => console.error('Error creando importador:', error));
+        });
+    }
+}
+
+// Funciones específicas para el módulo de Proyectos
 function initializeProyectosModule() {
     const proyectosContainer = document.getElementById('proyectos-container');
     if (proyectosContainer) {
         loadProyectos();
         loadPresupuestos();
         loadFacturacion();
+        initializeProyectoForm();
+        initializePresupuestoForm();
     }
 }
 
@@ -1964,7 +1981,7 @@ function loadProyectos() {
             const proyectosList = document.getElementById('proyectos-list');
             if (proyectosList) {
                 proyectosList.innerHTML = proyectos.map(proyecto => 
-                    `<li>${proyecto.nombre} - ${proyecto.estado}</li>`
+                    `<li>${proyecto.nombre} - Estado: ${proyecto.estado}</li>`
                 ).join('');
             }
         })
@@ -1999,19 +2016,13 @@ function loadFacturacion() {
         .catch(error => console.error('Error loading facturación:', error));
 }
 
-// Asegúrate de llamar a esta función cuando se cargue la página
-document.addEventListener('DOMContentLoaded', function() {
-    // ... otras inicializaciones ...
-    initializeProyectosModule();
-});
-
-function initializeOrdenCompraForm() {
-    const ordenForm = document.getElementById('orden-compra-form');
-    if (ordenForm) {
-        ordenForm.addEventListener('submit', function(e) {
+function initializeProyectoForm() {
+    const proyectoForm = document.getElementById('proyecto-form');
+    if (proyectoForm) {
+        proyectoForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            const formData = new FormData(ordenForm);
-            fetch('/compras/api/ordenes', {
+            const formData = new FormData(proyectoForm);
+            fetch('/proyectos/api/proyectos', {
                 method: 'POST',
                 body: JSON.stringify(Object.fromEntries(formData)),
                 headers: {
@@ -2020,15 +2031,40 @@ function initializeOrdenCompraForm() {
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Orden de compra creada:', data);
-                loadOrdenesCompra();
-                ordenForm.reset();
+                console.log('Proyecto creado:', data);
+                loadProyectos();
+                proyectoForm.reset();
             })
-            .catch(error => console.error('Error creando orden de compra:', error));
+            .catch(error => console.error('Error creando proyecto:', error));
         });
     }
 }
 
+function initializePresupuestoForm() {
+    const presupuestoForm = document.getElementById('presupuesto-form');
+    if (presupuestoForm) {
+        presupuestoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(presupuestoForm);
+            fetch('/proyectos/api/presupuestos', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Presupuesto creado:', data);
+                loadPresupuestos();
+                presupuestoForm.reset();
+            })
+            .catch(error => console.error('Error creando presupuesto:', error));
+        });
+    }
+}
+
+// Funciones específicas para el módulo de Cuentas Por Cobrar
 function initializeCuentasPorCobrarModule() {
     const cxcContainer = document.getElementById('cxc-container');
     if (cxcContainer) {
@@ -2041,6 +2077,10 @@ function initializeCuentasPorCobrarModule() {
         loadCondicionesPago();
         loadReporteCxC();
         loadTiposCliente();
+        initializeClienteForm();
+        initializeNotaCreditoForm();
+        initializeNotaDebitoForm();
+        initializeReciboForm();
     }
 }
 
@@ -2173,31 +2213,307 @@ function loadTiposCliente() {
         .catch(error => console.error('Error loading tipos de cliente:', error));
 }
 
+function initializeClienteForm() {
+    const clienteForm = document.getElementById('cliente-form');
+    if (clienteForm) {
+        clienteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(clienteForm);
+            fetch('/cxc/api/clientes', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Cliente creado:', data);
+                loadClientes();
+                clienteForm.reset();
+            })
+            .catch(error => console.error('Error creando cliente:', error));
+        });
+    }
+}
 
+function initializeNotaCreditoForm() {
+    const notaCreditoForm = document.getElementById('nota-credito-form');
+    if (notaCreditoForm) {
+        notaCreditoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(notaCreditoForm);
+            fetch('/cxc/api/notas-credito', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Nota de crédito creada:', data);
+                loadNotasCredito();
+                notaCreditoForm.reset();
+            })
+            .catch(error => console.error('Error creando nota de crédito:', error));
+        });
+    }
+}
 
+function initializeNotaDebitoForm() {
+    const notaDebitoForm = document.getElementById('nota-debito-form');
+    if (notaDebitoForm) {
+        notaDebitoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(notaDebitoForm);
+            fetch('/cxc/api/notas-debito', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Nota de débito creada:', data);
+                loadNotasDebito();
+                notaDebitoForm.reset();
+            })
+            .catch(error => console.error('Error creando nota de débito:', error));
+        });
+    }
+}
 
+function initializeReciboForm() {
+    const reciboForm = document.getElementById('recibo-form');
+    if (reciboForm) {
+        reciboForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(reciboForm);
+            fetch('/cxc/api/recibos', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Recibo creado:', data);
+                loadRecibos();
+                reciboForm.reset();
+            })
+            .catch(error => console.error('Error creando recibo:', error));
+        });
+    }
+}
 
-// Asegúrate de llamar a initializeSubmoduleHandlers cuando el DOM esté listo
+// Funciones específicas para el módulo de Inventario
+function initializeInventarioModule() {
+    const inventarioContainer = document.getElementById('inventario-container');
+    if (inventarioContainer) {
+        loadItems();
+        loadEntradasAlmacen();
+        loadSalidasAlmacen();
+        loadInventario();
+        loadReporteInventario();
+        initializeItemForm();
+        initializeEntradaAlmacenForm();
+        initializeSalidaAlmacenForm();
+    }
+}
+
+function loadItems() {
+    fetch('/inventario/api/items')
+        .then(response => response.json())
+        .then(items => {
+            const itemsList = document.getElementById('items-list');
+            if (itemsList) {
+                itemsList.innerHTML = items.map(item => 
+                    `<li>${item.nombre} - Código: ${item.codigo} - Stock: ${item.stock}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading items:', error));
+}
+
+function loadEntradasAlmacen() {
+    fetch('/inventario/api/entradas-almacen')
+        .then(response => response.json())
+        .then(entradas => {
+            const entradasList = document.getElementById('entradas-almacen-list');
+            if (entradasList) {
+                entradasList.innerHTML = entradas.map(entrada => 
+                    `<li>Entrada #${entrada.id} - Item: ${entrada.item_nombre} - Cantidad: ${entrada.cantidad}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading entradas de almacén:', error));
+}
+
+function loadSalidasAlmacen() {
+    fetch('/inventario/api/salidas-almacen')
+        .then(response => response.json())
+        .then(salidas => {
+            const salidasList = document.getElementById('salidas-almacen-list');
+            if (salidasList) {
+                salidasList.innerHTML = salidas.map(salida => 
+                    `<li>Salida #${salida.id} - Item: ${salida.item_nombre} - Cantidad: ${salida.cantidad}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading salidas de almacén:', error));
+}
+
+function loadInventario() {
+    fetch('/inventario/api/inventario')
+        .then(response => response.json())
+        .then(inventario => {
+            const inventarioList = document.getElementById('inventario-list');
+            if (inventarioList) {
+                inventarioList.innerHTML = inventario.map(item => 
+                    `<li>${item.nombre} - Stock: ${item.stock} - Valor: $${item.valor_total}</li>`
+                ).join('');
+            }
+        })
+        .catch(error => console.error('Error loading inventario:', error));
+}
+
+function loadReporteInventario() {
+    fetch('/inventario/api/reporte')
+        .then(response => response.json())
+        .then(reporte => {
+            const reporteContainer = document.getElementById('reporte-inventario-container');
+            if (reporteContainer) {
+                reporteContainer.innerHTML = `
+                    <h2>Resumen de Inventario</h2>
+                    <p>Total de items: ${reporte.total_items}</p>
+                    <p>Valor total del inventario: $${reporte.valor_total}</p>
+                    <p>Items con bajo stock: ${reporte.items_bajo_stock}</p>
+                `;
+            }
+        })
+        .catch(error => console.error('Error loading reporte de inventario:', error));
+}
+
+function initializeItemForm() {
+    const itemForm = document.getElementById('item-form');
+    if (itemForm) {
+        itemForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(itemForm);
+            fetch('/inventario/api/items', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Item creado:', data);
+                loadItems();
+                itemForm.reset();
+            })
+            .catch(error => console.error('Error creando item:', error));
+        });
+    }
+}
+
+function initializeEntradaAlmacenForm() {
+    const entradaForm = document.getElementById('entrada-almacen-form');
+    if (entradaForm) {
+        entradaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(entradaForm);
+            fetch('/inventario/api/entradas-almacen', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Entrada de almacén registrada:', data);
+                loadEntradasAlmacen();
+                loadInventario();
+                entradaForm.reset();
+            })
+            .catch(error => console.error('Error registrando entrada de almacén:', error));
+        });
+    }
+}
+
+function initializeSalidaAlmacenForm() {
+    const salidaForm = document.getElementById('salida-almacen-form');
+    if (salidaForm) {
+        salidaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(salidaForm);
+            fetch('/inventario/api/salidas-almacen', {
+                method: 'POST',
+                body: JSON.stringify(Object.fromEntries(formData)),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Salida de almacén registrada:', data);
+                loadSalidasAlmacen();
+                loadInventario();
+                salidaForm.reset();
+            })
+            .catch(error => console.error('Error registrando salida de almacén:', error));
+        });
+    }
+}
+
+// Inicialización del sistema
 document.addEventListener('DOMContentLoaded', function() {
+    loadUserInfo();
+    loadModules();
+    loadTasks();
+    loadNotifications();
+    initializeCharts();
+    initializeCalendar();
+    initializeAsistente();
     initializeSubmoduleHandlers();
-    // Otras inicializaciones...
-});
-// Asegúrate de llamar a esta función cuando se cargue la página
-document.addEventListener('DOMContentLoaded', function() {
-    // ... otras inicializaciones ...
-    initializeCuentasPorCobrarModule();
-});
-// Asegúrate de llamar a esta función cuando se cargue la página
-document.addEventListener('DOMContentLoaded', function() {
-    // ... otras inicializaciones ...
+    initializeAuthForms();
+    initializeMarketingModule();
+    initializeRRHHModule();
     initializeComprasModule();
+    initializeActivosFijosModule();
+    initializeCuentasPorPagarModule();
+    initializeImportacionModule();
+    initializeProyectosModule();
+    initializeCuentasPorCobrarModule();
+    initializeInventarioModule();
+    window.addEventListener('resize', resizeCharts);
+
+    ['line', 'bar', 'pie'].forEach(type => {
+        const toggleButton = document.getElementById(`toggle-${type}-chart`);
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => toggleChartVisibility(`${type}-chart`));
+        }
+    });
+
+    console.log('Sistema inicializado correctamente');
 });
 
-// Asegúrate de llamar a estas nuevas funciones cuando sea necesario
-document.addEventListener('DOMContentLoaded', function() {
-    initializeMarketingModule();
-    initializeEmailTemplateEditor();
-    loadContactSegmentation();
-    initializeMarketingAutomations();
-    initializeSocialMediaIntegration();
-});
+// Función para manejar errores globales
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('Error global capturado:', message, 'en', source, 'línea:', lineno);
+    // Aquí podrías implementar un sistema de logging de errores o notificaciones al usuario
+};
+
+// Exportar funciones que puedan ser necesarias en otros scripts
+window.CalculAI = {
+    loadUserInfo,
+    loadModules,
+    initializeAsistente,
+    handleLogout,
+    // ... otras funciones que necesites exponer
+};

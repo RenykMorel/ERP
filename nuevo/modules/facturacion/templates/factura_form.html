@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if factura %}Editar Factura{% else %}Nueva Factura{% endif %} - CalculAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('facturacion.static', filename='css/facturacion.css') }}">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">
+            {% if factura %}Editar Factura{% else %}Nueva Factura{% endif %}
+        </h1>
+
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <form method="POST" id="factura-form">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-4">
+                    {{ form.numero.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                    {{ form.numero(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline", required=true) }}
+                    {% for error in form.numero.errors %}
+                        <p class="text-red-500 text-xs italic">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.cliente.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                    {{ form.cliente(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline", required=true) }}
+                    {% for error in form.cliente.errors %}
+                        <p class="text-red-500 text-xs italic">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.fecha.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                    {{ form.fecha(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline", type="date", required=true) }}
+                    {% for error in form.fecha.errors %}
+                        <p class="text-red-500 text-xs italic">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.total.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                    {{ form.total(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline", type="number", step="0.01", required=true) }}
+                    {% for error in form.total.errors %}
+                        <p class="text-red-500 text-xs italic">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-6">
+                    {{ form.estatus.label(class="block text-gray-700 text-sm font-bold mb-2") }}
+                    {{ form.estatus(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
+                    {% for error in form.estatus.errors %}
+                        <p class="text-red-500 text-xs italic">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        {% if factura %}Actualizar{% else %}Crear{% endif %} Factura
+                    </button>
+                    <a href="{{ url_for('facturacion.index') }}" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('factura-form');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (this.checkValidity()) {
+                    const formData = new FormData(this);
+                    const url = '{{ url_for('facturacion.crear_factura') if not factura else url_for('facturacion.editar_factura', id=factura.id) }}';
+                    
+                    fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Éxito',
+                                text: data.message,
+                            }).then(() => {
+                                window.location.href = '{{ url_for('facturacion.index') }}';
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Ha ocurrido un error al procesar la factura.',
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Ha ocurrido un error al procesar la solicitud.',
+                        });
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Campos incompletos',
+                        text: 'Por favor, completa todos los campos requeridos correctamente.',
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

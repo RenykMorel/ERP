@@ -1,35 +1,349 @@
 {% extends "base.html" %}
-{% block title %}Formulario 607{% endblock %}
+{% block title %}Formulario 607 - Ventas de Bienes y Servicios - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Formulario 607 - Ventas de Bienes y Servicios</h1>
-    <a href="{{ url_for('impuestos.crear_formulario607') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nuevo Registro</a>
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Fecha</th>
-                <th class="py-2 px-4 border-b">RNC/Cédula</th>
-                <th class="py-2 px-4 border-b">Tipo de Ingreso</th>
-                <th class="py-2 px-4 border-b">NCF</th>
-                <th class="py-2 px-4 border-b">Monto</th>
-                <th class="py-2 px-4 border-b">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for registro in registros %}
-            <tr>
-                <td class="py-2 px-4 border-b">{{ registro.fecha }}</td>
-                <td class="py-2 px-4 border-b">{{ registro.rnc_cedula }}</td>
-                <td class="py-2 px-4 border-b">{{ registro.tipo_ingreso }}</td>
-                <td class="py-2 px-4 border-b">{{ registro.ncf }}</td>
-                <td class="py-2 px-4 border-b">{{ registro.monto }}</td>
-                <td class="py-2 px-4 border-b">
-                    <a href="{{ url_for('impuestos.editar_formulario607', id=registro.id) }}" class="text-blue-500">Editar</a>
-                    <a href="{{ url_for('impuestos.eliminar_formulario607', id=registro.id) }}" class="text-red-500 ml-2">Eliminar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div id="formulario607-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Formulario 607 - Ventas de Bienes y Servicios</h1>
+    
+    <div class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Filtros de Búsqueda</h2>
+        <form id="busqueda-form" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="fecha-inicio" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+                    <input type="text" id="fecha-inicio" name="fecha_inicio" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="fecha-fin" class="block text-sm font-medium text-gray-700">Fecha de Fin</label>
+                    <input type="text" id="fecha-fin" name="fecha_fin" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="rnc-cedula" class="block text-sm font-medium text-gray-700">RNC/Cédula</label>
+                    <input type="text" id="rnc-cedula" name="rnc_cedula" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+            </div>
+            <div class="flex justify-between">
+                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-search mr-2"></i>Buscar
+                </button>
+                <button type="button" onclick="openModal()" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <i class="fas fa-plus mr-2"></i>Nuevo Registro
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <table id="registros-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RNC/Cédula</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Ingreso</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NCF</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="registros-body">
+                <!-- Los registros se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-700">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> registros
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para editar/crear registro -->
+<div id="registro-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form id="registro-form">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Crear/Editar Registro</h3>
+                    <div class="mt-4 space-y-4">
+                        <input type="hidden" id="registro-id" name="id">
+                        <div>
+                            <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
+                            <input type="text" name="fecha" id="fecha" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label for="rnc-cedula" class="block text-sm font-medium text-gray-700">RNC/Cédula</label>
+                            <input type="text" name="rnc_cedula" id="rnc-cedula" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label for="tipo-ingreso" class="block text-sm font-medium text-gray-700">Tipo de Ingreso</label>
+                            <select name="tipo_ingreso" id="tipo-ingreso" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="">Seleccione un tipo</option>
+                                <option value="01">01 - Ingresos por Operaciones (No Financieros)</option>
+                                <option value="02">02 - Ingresos Financieros</option>
+                                <option value="03">03 - Ingresos Extraordinarios</option>
+                                <option value="04">04 - Ingresos por Arrendamientos</option>
+                                <option value="05">05 - Ingresos por Venta de Activo Depreciable</option>
+                                <option value="06">06 - Otros Ingresos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="ncf" class="block text-sm font-medium text-gray-700">NCF</label>
+                            <input type="text" name="ncf" id="ncf" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label for="monto" class="block text-sm font-medium text-gray-700">Monto</label>
+                            <input type="number" name="monto" id="monto" step="0.01" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Guardar
+                    </button>
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeModal()">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+let currentPage = 1;
+const itemsPerPage = 10;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFormulario607();
+});
+
+function initializeFormulario607() {
+    flatpickr("#fecha-inicio", {
+        dateFormat: "Y-m-d"
+    });
+    flatpickr("#fecha-fin", {
+        dateFormat: "Y-m-d"
+    });
+    flatpickr("#fecha", {
+        dateFormat: "Y-m-d"
+    });
+
+    const busquedaForm = document.getElementById('busqueda-form');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    busquedaForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        currentPage = 1;
+        buscarRegistros();
+    });
+
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+
+    document.getElementById('registro-form').addEventListener('submit', guardarRegistro);
+
+    buscarRegistros();
+}
+
+function buscarRegistros() {
+    const formData = new FormData(document.getElementById('busqueda-form'));
+    const params = new URLSearchParams(formData);
+    params.append('page', currentPage);
+    params.append('per_page', itemsPerPage);
+
+    fetch(`/impuestos/api/formulario607?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            actualizarTablaRegistros(data.registros);
+            actualizarPaginacion(data.total);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Ocurrió un error al buscar los registros', 'error');
+        });
+}
+
+function actualizarTablaRegistros(registros) {
+    const tbody = document.getElementById('registros-body');
+    tbody.innerHTML = '';
+    registros.forEach(registro => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${registro.fecha}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${registro.rnc_cedula}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${registro.tipo_ingreso}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${registro.ncf}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${registro.monto.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button onclick="editarRegistro(${registro.id})" class="text-indigo-600 hover:text-indigo-900 mr-2">Editar</button>
+                <button onclick="eliminarRegistro(${registro.id})" class="text-red-600 hover:text-red-900">Eliminar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    document.getElementById('items-showing').textContent = `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = currentPage === 1;
+    document.getElementById('next-page').disabled = currentPage === totalPages;
+}
+
+function cambiarPagina(direccion) {
+    currentPage += direccion;
+    buscarRegistros();
+}
+
+function guardarRegistro(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const registroId = formData.get('id');
+    const url = registroId ? `/impuestos/api/formulario607/${registroId}` : '/impuestos/api/formulario607';
+    const method = registroId ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire('Éxito', 'Registro guardado correctamente', 'success');
+            closeModal();
+            buscarRegistros();
+        } else {
+            Swal.fire('Error', data.message || 'Ocurrió un error al guardar el registro', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'Ocurrió un error al guardar el registro', 'error');
+    });
+}
+
+function editarRegistro(id) {
+    fetch(`/impuestos/api/formulario607/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const registro = data.registro;
+                document.getElementById('registro-id').value = registro.id;
+                document.getElementById('fecha').value = registro.fecha;
+                document.getElementById('rnc-cedula').value = registro.rnc_cedula;
+                document.getElementById('tipo-ingreso').value = registro.tipo_ingreso;
+                document.getElementById('ncf').value = registro.ncf;
+                document.getElementById('monto').value = registro.monto;
+                document.getElementById('modal-title').textContent = 'Editar Registro';
+                openModal();
+            } else {
+                Swal.fire('Error', data.message || 'No se pudo cargar el registro', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Ocurrió un error al cargar el registro', 'error');
+        });
+}
+
+function eliminarRegistro(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/impuestos/api/formulario607/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Eliminado', 'El registro ha sido eliminado', 'success');
+                    buscarRegistros();
+                } else {
+                    Swal.fire('Error', data.message || 'No se pudo eliminar el registro', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Ocurrió un error al eliminar el registro', 'error');
+            });
+        }
+    });
+}
+
+function openModal() {
+    document.getElementById('registro-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('registro-modal').classList.add('hidden');
+    document.getElementById('registro-form').reset();
+}
+
+// Función para exportar a Excel
+function exportarExcel() {
+    const params = new URLSearchParams(new FormData(document.getElementById('busqueda-form')));
+    params.append('export', 'excel');
+    
+    window.location.href = `/impuestos/api/formulario607/export?${params.toString()}`;
+}
+
+// Función para generar el reporte 607
+function generarReporte607() {
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    if (!fechaInicio || !fechaFin) {
+        Swal.fire('Error', 'Debe seleccionar un rango de fechas para generar el reporte', 'error');
+        return;
+    }
+
+    const params = new URLSearchParams({fecha_inicio: fechaInicio, fecha_fin: fechaFin});
+    window.location.href = `/impuestos/api/formulario607/reporte?${params.toString()}`;
+}
+
+// Agregar botones para exportar y generar reporte
+const buttonsContainer = document.createElement('div');
+buttonsContainer.className = 'mt-4 flex justify-end space-x-4';
+
+const exportarExcelBtn = document.createElement('button');
+exportarExcelBtn.textContent = 'Exportar a Excel';
+exportarExcelBtn.className = 'px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600';
+exportarExcelBtn.onclick = exportarExcel;
+
+const generarReporteBtn = document.createElement('button');
+generarReporteBtn.textContent = 'Generar Reporte 607';
+generarReporteBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600';
+generarReporteBtn.onclick = generarReporte607;
+
+buttonsContainer.appendChild(exportarExcelBtn);
+buttonsContainer.appendChild(generarReporteBtn);
+
+document.getElementById('formulario607-module').appendChild(buttonsContainer);
+</script>
 {% endblock %}

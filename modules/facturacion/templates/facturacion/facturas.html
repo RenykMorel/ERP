@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Facturas - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="facturas-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Facturas</h1>
+    
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="numero-factura" placeholder="Número de Factura">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="cliente-factura" placeholder="Cliente">
+            </div>
+            <div>
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="date" id="fecha-factura" placeholder="Fecha">
+            </div>
+            <div>
+                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" id="estatus-factura">
+                    <option value="">Todos</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="pagada">Pagada</option>
+                    <option value="anulada">Anulada</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-nuevo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nueva Factura
+            </button>
+        </div>
+    </div>
+    
+    <div id="facturas-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="facturas-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Número</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Cliente</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Fecha</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Total</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estatus</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="facturas-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Las filas de facturas se insertarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-xl font-bold" id="modal-title">Crear Nueva Factura</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <form id="factura-form" class="mt-4">
+                <input type="hidden" name="id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="numero">
+                        Número de Factura
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="numero" type="text" placeholder="Número de factura" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cliente">
+                        Cliente
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="cliente" type="text" placeholder="Nombre del cliente" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
+                        Fecha
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="fecha" type="date" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="total">
+                        Total
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="total" type="number" step="0.01" placeholder="Total de la factura" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
+                        Estatus
+                    </label>
+                    <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
+                        <option value="pendiente">Pendiente</option>
+                        <option value="pagada">Pagada</option>
+                        <option value="anulada">Anulada</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Guardar
+                    </button>
+                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeFacturas();
+        buscarFacturas(); // Cargar facturas inicialmente
+    });
+
+    function initializeFacturas() {
+        const buscarBtn = document.getElementById('buscar-btn');
+        const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
+        const facturaForm = document.getElementById('factura-form');
+        const modal = document.querySelector('.modal');
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const modalCloseButtons = document.querySelectorAll('.modal-close');
+    
+        buscarBtn.addEventListener('click', buscarFacturas);
+        crearNuevoBtn.addEventListener('click', mostrarFormularioCrearFactura);
+        facturaForm.addEventListener('submit', guardarFactura);
+    
+        modalOverlay.addEventListener('click', toggleModal);
+        modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+    
+        document.getElementById('facturas-tbody').addEventListener('click', manejarAccionesFactura);
+    }
+
+    function manejarAccionesFactura(event) {
+        const target = event.target.closest('button');
+        if (!target) return;
+    
+        const id = target.dataset.id;
+        if (target.classList.contains('editar-factura')) {
+            editarFactura(id);
+        } else if (target.classList.contains('eliminar-factura')) {
+            eliminarFactura(id);
+        } else if (target.classList.contains('cambiar-estatus-factura')) {
+            cambiarEstatusFactura(id, target.dataset.estatus);
+        }
+    }
+
+    function toggleModal() {
+        const modal = document.querySelector('.modal');
+        modal.classList.toggle('opacity-0');
+        modal.classList.toggle('pointer-events-none');
+        document.body.classList.toggle('modal-active');
+        if (modal.classList.contains('opacity-0')) {
+            limpiarFormulario();
+        }
+    }
+
+    function buscarFacturas() {
+        const numero = document.getElementById('numero-factura').value;
+        const cliente = document.getElementById('cliente-factura').value;
+        const fecha = document.getElementById('fecha-factura').value;
+        const estatus = document.getElementById('estatus-factura').value;
+    
+        fetch(`/api/buscar-facturas?numero=${numero}&cliente=${cliente}&fecha=${fecha}&estatus=${estatus}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => actualizarTablaFacturas(data))
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Ocurrió un error al buscar facturas', 'error');
+            });
+    }
+
+    function limpiarFormulario() {
+        document.getElementById('factura-form').reset();
+        document.getElementById('factura-form').querySelector('[name="id"]').value = '';
+    }
+    
+    function mostrarFormularioCrearFactura() {
+        document.getElementById('modal-title').textContent = 'Crear Nueva Factura';
+        limpiarFormulario();
+        toggleModal();
+    }
+
+    function actualizarTablaFacturas(facturas) {
+        const tbody = document.getElementById('facturas-tbody');
+        tbody.innerHTML = '';
+        facturas.forEach(factura => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${factura.numero}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${factura.cliente}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${factura.fecha}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${factura.total}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstatusColor(factura.estatus)}">
+                        ${factura.estatus}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button class="editar-factura text-blue-600 hover:text-blue-900 mr-2" data-id="${factura.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="eliminar-factura text-red-600 hover:text-red-900 mr-2" data-id="${factura.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="cambiar-estatus-factura text-yellow-600 hover:text-yellow-900" data-id="${factura.id}" data-estatus="${factura.estatus}">
+                        <i class="fas fa-exchange-alt"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function getEstatusColor(estatus) {
+        switch (estatus) {
+            case 'pendiente':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'pagada':
+                return 'bg-green-100 text-green-800';
+            case 'anulada':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    }
+
+    function guardarFactura(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const facturaData = Object.fromEntries(formData);
+        const facturaId = facturaData.id;
+        const url = facturaId ? `/api/actualizar-factura/${facturaId}` : '/api/crear-factura';
+        const method = facturaId ? 'PUT' : 'POST';
+    
+        fetch(url, {
+            method: method,
+            body: JSON.stringify(facturaData),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            Swal.fire('Éxito', facturaId ? 'Factura actualizada correctamente' : 'Factura creada correctamente', 'success');
+            toggleModal();
+            buscarFacturas();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', error.message || 'Ocurrió un error al guardar la factura', 'error');
+        });
+    }
+
+    function editarFactura(id) {
+        fetch(`/api/obtener-factura/${id}`)
+            .then(response => response.json())
+            .then(factura => {
+                document.getElementById('modal-title').textContent = 'Editar Factura';
+                const form = document.getElementById('factura-form');
+                form.id.value = factura.id;
+                form.numero.value = factura.numero;
+                form.cliente.value = factura.cliente;
+                form.fecha.value = factura.fecha;
+                form.total.value = factura.total;
+                form.estatus.value = factura.estatus;
+                toggleModal();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudo cargar la información de la factura', 'error');
+            });
+    }
+
+    function eliminarFactura(id) {
+        Swal.fire({
+            title: '¿Está seguro?',
+            text: "Esta acción no se puede deshacer",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/api/eliminar-factura/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            Swal.fire('Eliminado', data.message, 'success');
+                            buscarFacturas();
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error', 'Ocurrió un error al eliminar la factura', 'error');
+                    });
+            }
+        });
+    }
+
+    function cambiarEstatusFactura(id, estatusActual) {
+        Swal.fire({
+            title: 'Cambiar Estatus',
+            input: 'select',
+            inputOptions: {
+                'pendiente': 'Pendiente',
+                'pagada': 'Pagada',
+                'anulada': 'Anulada'
+            },
+            inputValue: estatusActual,
+            showCancelButton: true,
+            confirmButtonText: 'Cambiar',
+            cancelButtonText: 'Cancelar',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Debes seleccionar un estatus';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/api/cambiar-estatus-factura/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estatus: result.value }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        Swal.fire('Error', data.error, 'error');
+                    } else {
+                        Swal.fire('Éxito', `Estatus cambiado a ${result.value}`, 'success');
+                        buscarFacturas();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Ocurrió un error al cambiar el estatus de la factura', 'error');
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -28,43 +28,6 @@
             transition: background-color 0.3s;
         }
 
-        .ventana-reporte {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-            z-index: 1000;
-            max-width: 80%;
-            max-height: 80%;
-            overflow: auto;
-        }
-        
-        .ventana-reporte table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        
-        .ventana-reporte th, .ventana-reporte td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        
-        .ventana-reporte th {
-            background-color: #f2f2f2;
-        }
-        
-        .ventana-reporte button {
-            margin-right: 10px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
         .logout-button:hover {
             background-color: #f10606;
         }
@@ -85,12 +48,12 @@
             background-color: #45a049;
         }
 
-        /* Estilos para el asistente virtual */
+        /* Estilos modificados para el asistente virtual */
         #virtual-assistant {
             position: fixed;
             bottom: 20px;
-            right: 20px;
-            z-index: 1000;
+            right: 40px;
+            z-index: 9999;
             width: 100px;
             height: 150px;
             transition: all 0.3s ease;
@@ -106,7 +69,7 @@
             display: none;
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            right: 40px;
             width: 300px;
             height: 500px;
             background-color: white;
@@ -114,7 +77,7 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             overflow: hidden;
             transition: all 0.3s ease;
-            z-index: 1001;
+            z-index: 10000;
         }
 
         #chat-header {
@@ -198,12 +161,16 @@
         }
 
         .chat-open #virtual-assistant {
-            transform: translate(-150px, -520px);
-            z-index: 1002;
+            display: none;
         }
 
         .chat-open #chat-window {
             display: block;
+        }
+
+        /* Ajuste del contenido principal para dar espacio al asistente */
+        #content {
+            margin-right: -305px; /* Ajustado para dar espacio al asistente */
         }
 
         /* Nuevos estilos para el chat y archivos descargables */
@@ -228,6 +195,123 @@
         .mensaje-usuario {
             text-align: right;
             color: #0056b3;
+        }
+
+        /* Nuevos estilos para la ventana de reporte */
+        .ventana-reporte {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 80%;
+            max-width: 1000px;
+            max-height: 80vh;
+            overflow: auto;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .ventana-reporte h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .ventana-reporte table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .ventana-reporte th, .ventana-reporte td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .ventana-reporte th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .ventana-reporte tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .ventana-reporte tr:hover {
+            background-color: #e8f4f8;
+        }
+
+        .ventana-reporte button {
+            padding: 10px 20px;
+            margin-right: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .ventana-reporte button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-descargar-csv {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-descargar-pdf {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-descargar-word {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-cerrar {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-descargar-csv:hover { background-color: #2ecc71; }
+        .btn-descargar-pdf:hover { background-color: #c0392b; }
+        .btn-descargar-word:hover { background-color: #2980b9; }
+        .btn-cerrar:hover { background-color: #7f8c8d; }
+
+        @keyframes blink {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.1); }
+        }
+
+        @keyframes nod {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .robot-eye {
+            animation: blink 3s infinite;
+        }
+
+        .robot-head {
+            animation: nod 5s infinite;
         }
     </style>
 </head>
@@ -261,7 +345,7 @@
             {% block content %}{% endblock %}
         </main>
         
-        <!-- Virtual assistant component -->
+        <!-- Updated Virtual assistant component -->
         <div id="virtual-assistant">
             <svg id="assistant-icon" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg" aria-label="Abrir asistente virtual">
                 <defs>
@@ -313,7 +397,7 @@
                     <animate attributeName="r" values="5;4;5" dur="3s" repeatCount="indefinite" />
                 </circle>
 
-                <!-- Mouth -->
+                <!-- Mouth  -->
                 <path d="M42 92 Q50 98 58 92" stroke="#333" stroke-width="2" fill="none" />
 
                 <!-- Antenna -->
@@ -375,96 +459,237 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% if current_user.is_authenticated %}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const virtualAssistant = document.getElementById('virtual-assistant');
-            const assistantIcon = document.getElementById('assistant-icon');
-            const chatWindow = document.getElementById('chat-window');
-            const minimizeChat = document.getElementById('minimize-chat');
-            const chatMessages = document.getElementById('chat-messages');
-            const chatInput = document.getElementById('assistant-input');
-            const chatSendButton = document.getElementById('assistant-send');
+    document.addEventListener('DOMContentLoaded', function() {
+        const virtualAssistant = document.getElementById('virtual-assistant');
+        const chatWindow = document.getElementById('chat-window');
+        const minimizeChat = document.getElementById('minimize-chat');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('assistant-input');
+        const chatSendButton = document.getElementById('assistant-send');
 
-            let asistenteActivo = false;
+        let asistenteActivo = false;
+        let conversationHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+        let messageCount = conversationHistory.length;
+        let initialMessageSent = false;
 
-            function mostrarMensajeAsistente(mensaje, esUsuario = false) {
-                const mensajeElement = document.createElement('p');
-                mensajeElement.className = esUsuario ? 'user-message' : 'assistant-message';
-                mensajeElement.textContent = esUsuario ? `Tú: ${mensaje}` : `Asistente: ${mensaje}`;
-                chatMessages.appendChild(mensajeElement);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+        function mostrarMensajeAsistente(mensaje, esUsuario = false) {
+            const mensajeElement = document.createElement('p');
+            mensajeElement.className = esUsuario ? 'user-message' : 'assistant-message';
+            mensajeElement.textContent = esUsuario ? `Tú: ${mensaje}` : `Asistente: ${mensaje}`;
+            chatMessages.appendChild(mensajeElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            if (!mensaje.startsWith("Se han acumulado varios mensajes")) {
+                conversationHistory.push({ sender: esUsuario ? 'Usuario' : 'Asistente', message: mensaje });
+                localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+                messageCount++;
             }
 
-            assistantIcon.addEventListener('click', function() {
-                document.body.classList.add('chat-open');
-                chatWindow.style.display = 'block';
-            });
-
-            minimizeChat.addEventListener('click', function() {
-                document.body.classList.remove('chat-open');
-                chatWindow.style.display = 'none';
-            });
-
-            function enviarMensaje() {
-                const pregunta = chatInput.value.trim();
-                if (pregunta) {
-                    mostrarMensajeAsistente(pregunta, true);
-                    if (asistenteActivo) {
-                        fetch('/api/asistente', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ pregunta: pregunta })
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            console.log('Respuesta del servidor:', data);
-                            mostrarMensajeAsistente(data.respuesta);
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            mostrarMensajeAsistente("Lo siento, ha ocurrido un error. Por favor, intenta de nuevo más tarde.");
-                        });
-                    } else {
-                        mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
-                    }
-                    chatInput.value = '';
-                }
+            if (esUsuario && messageCount % 10 === 0 && messageCount > 0) {
+                preguntarLimpiarChat();
             }
+        }
 
-            chatSendButton.addEventListener('click', enviarMensaje);
+        function preguntarLimpiarChat() {
+            const mensajeElement = document.createElement('div');
+            mensajeElement.className = 'assistant-message';
+            mensajeElement.innerHTML = `
+                Asistente: Se han acumulado varios mensajes. ¿Deseas borrar el historial del chat?
+                <button onclick="responderLimpiarChat('si')">Sí</button>
+                <button onclick="responderLimpiarChat('no')">No</button>
+            `;
+            chatMessages.appendChild(mensajeElement);
+            chatMessages.scrollTop = chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
 
-            chatInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    enviarMensaje();
-                }
+        window.responderLimpiarChat = function(respuesta) {
+            if (respuesta.toLowerCase() === 'si') {
+                chatMessages.innerHTML = '';
+                conversationHistory = [];
+                localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+                messageCount = 0;
+                mostrarMensajeAsistente("El historial del chat ha sido borrado. ¿En qué más puedo ayudarte?");
+            } else {
+                mostrarMensajeAsistente("Entendido, continuaremos con la conversación actual.");
+            }
+        }
+
+        function cargarHistorialConversacion() {
+            chatMessages.innerHTML = '';
+            conversationHistory.forEach(entry => {
+                mostrarMensajeAsistente(entry.message, entry.sender === 'Usuario');
             });
+        }
 
-            // Verificar el estado del asistente al cargar la página
-            fetch('/api/asistente_status')
-            .then(response => response.json())
-            .then(data => {
-                console.log('Estado del asistente:', data);
-                asistenteActivo = data.activo;
-                if (asistenteActivo) {
-                    mostrarMensajeAsistente("¡Hola! Soy tu asistente virtual de CalculAI. ¿En qué puedo ayudarte hoy?");
-                } else {
-                    mostrarMensajeAsistente("El asistente no está activo. Por favor, contacta al administrador para activarlo.");
-                }
-            })
-            .catch(error => {
-                console.error('Error al verificar el estado del asistente:', error);
-                mostrarMensajeAsistente("Ha ocurrido un error al verificar el estado del asistente. Por favor, intenta de nuevo más tarde.");
-            });
+        virtualAssistant.addEventListener('click', function() {
+            document.body.classList.add('chat-open');
+            chatWindow.style.display = 'block';
+            virtualAssistant.style.display = 'none';
+            if (!initialMessageSent) {
+                mostrarMensajeAsistente("¡Hola! Soy tu asistente virtual de CalculAI. ¿En qué puedo ayudarte hoy?");
+                initialMessageSent = true;
+            }
+        });
 
-            // Asegurarse de que el asistente sea visible inicialmente
+        minimizeChat.addEventListener('click', function() {
+            document.body.classList.remove('chat-open');
+            chatWindow.style.display = 'none';
             virtualAssistant.style.display = 'block';
         });
+
+        function enviarMensaje() {
+            const pregunta = chatInput.value.trim();
+            if (pregunta) {
+                mostrarMensajeAsistente(pregunta, true);
+                if (asistenteActivo) {
+                    fetch('/api/asistente', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ pregunta: pregunta })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Respuesta del servidor:', data);
+                        if (data.tipo === 'reporte') {
+                            mostrarVentanaReporte(data.datos, data.tipo_reporte);
+                            mostrarMensajeAsistente(data.mensaje);
+                        } else {
+                            mostrarMensajeAsistente(data.respuesta);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        mostrarMensajeAsistente("Lo siento, ha ocurrido un error. Por favor, intenta de nuevo más tarde.");
+                    });
+                } else {
+                    mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
+                }
+                chatInput.value = '';
+            }
+        }
+
+
+        function mostrarVentanaReporte(datos, tipoReporte) {
+            const ventanaReporte = document.createElement('div');
+            ventanaReporte.className = 'ventana-reporte';
+            
+            const titulo = document.createElement('h2');
+            titulo.textContent = obtenerTituloReporte(tipoReporte);
+            ventanaReporte.appendChild(titulo);
+
+            const tabla = document.createElement('table');
+            datos.forEach((fila, index) => {
+                const tr = document.createElement('tr');
+                fila.forEach(celda => {
+                    const td = document.createElement(index === 0 ? 'th' : 'td');
+                    td.textContent = celda;
+                    tr.appendChild(td);
+                });
+                tabla.appendChild(tr);
+            });
+            ventanaReporte.appendChild(tabla);
+
+            const botonesContainer = document.createElement('div');
+            botonesContainer.style.textAlign = 'right';
+
+            const botonDescargarCSV = crearBoton('Descargar CSV', 'btn-descargar-csv', () => descargarReporte(datos, 'csv'));
+            const botonDescargarPDF = crearBoton('Descargar PDF', 'btn-descargar-pdf', () => descargarReporte(datos, 'pdf'));
+            const botonDescargarWord = crearBoton('Descargar Word', 'btn-descargar-word', () => descargarReporte(datos, 'word'));
+            const botonCerrar = crearBoton('Cerrar', 'btn-cerrar', () => document.body.removeChild(ventanaReporte));
+
+            botonesContainer.appendChild(botonDescargarCSV);
+            botonesContainer.appendChild(botonDescargarPDF);
+            botonesContainer.appendChild(botonDescargarWord);
+            botonesContainer.appendChild(botonCerrar);
+
+            ventanaReporte.appendChild(botonesContainer);
+
+            document.body.appendChild(ventanaReporte);
+        }
+
+        function crearBoton(texto, clase, onClick) {
+            const boton = document.createElement('button');
+            boton.textContent = texto;
+            boton.className = clase;
+            boton.onclick = onClick;
+            return boton;
+        }
+
+        function obtenerTituloReporte(tipoReporte) {
+            switch (tipoReporte.toLowerCase()) {
+                case 'ventas':
+                    return 'Reporte de Ventas Realizadas';
+                case 'facturas pendientes':
+                    return 'Reporte de Facturas Pendientes de Pago';
+                case 'clientes que pagaron':
+                    return 'Reporte de Clientes con Pagos Realizados';
+                case 'facturas pagadas':
+                    return 'Reporte de Facturas Pagadas';
+                default:
+                    return `Reporte de ${tipoReporte}`;
+            }
+        }
+
+        function descargarReporte(datos, tipoArchivo) {
+            fetch(`/api/descargar_reporte/${tipoArchivo}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ datos: datos })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `reporte.${tipoArchivo}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('Error al descargar el reporte:', error);
+                alert('Hubo un error al descargar el reporte. Por favor, inténtalo de nuevo.');
+            });
+        }
+
+        chatSendButton.addEventListener('click', enviarMensaje);
+
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                enviarMensaje();
+            }
+        });
+
+        // Verificar el estado del asistente al cargar la página
+        fetch('/api/asistente_status')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Estado del asistente:', data);
+            asistenteActivo = data.activo;
+        })
+        .catch(error => {
+            console.error('Error al verificar el estado del asistente:', error);
+        });
+
+        // Asegurarse de que el asistente virtual sea visible inicialmente
+        virtualAssistant.style.display = 'block';
+        chatWindow.style.display = 'none';
+    });
     </script>
     {% endif %}
     {% block extra_js %}{% endblock %}

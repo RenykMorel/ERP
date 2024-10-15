@@ -1,71 +1,265 @@
 {% extends "base.html" %}
-{% block title %}Reporte de Compras y Gastos{% endblock %}
+{% block title %}Reporte de Compras y Gastos - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Reporte de Compras y Gastos</h1>
+<div id="reporte-compras-gastos-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Reporte de Compras y Gastos</h1>
     
-    <div class="mb-8">
-        <h2 class="text-xl font-semibold mb-2">Resumen</h2>
-        <div class="grid grid-cols-2 gap-4">
+    <div class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Filtros de Búsqueda</h2>
+        <form id="busqueda-form" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="fecha-inicio" class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+                    <input type="text" id="fecha-inicio" name="fecha_inicio" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="fecha-fin" class="block text-sm font-medium text-gray-700">Fecha de Fin</label>
+                    <input type="text" id="fecha-fin" name="fecha_fin" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="tipo" class="block text-sm font-medium text-gray-700">Tipo</label>
+                    <select id="tipo" name="tipo" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Todos</option>
+                        <option value="compras">Compras</option>
+                        <option value="gastos">Gastos</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-search mr-2"></i>Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Resumen</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-blue-100 p-4 rounded">
-                <p class="text-lg font-bold">Total Compras: ${{ total_compras | round(2) }}</p>
+                <p class="text-lg font-bold">Total Compras: $<span id="total-compras">0.00</span></p>
             </div>
             <div class="bg-green-100 p-4 rounded">
-                <p class="text-lg font-bold">Total Gastos: ${{ total_gastos | round(2) }}</p>
+                <p class="text-lg font-bold">Total Gastos: $<span id="total-gastos">0.00</span></p>
             </div>
         </div>
     </div>
 
-    <div class="mb-8">
-        <h2 class="text-xl font-semibold mb-2">Compras</h2>
-        <table class="min-w-full bg-white">
-            <thead>
-                <tr>
-                    <th class="py-2 px-4 border-b">ID</th>
-                    <th class="py-2 px-4 border-b">Fecha</th>
-                    <th class="py-2 px-4 border-b">Proveedor</th>
-                    <th class="py-2 px-4 border-b">Total</th>
-                    <th class="py-2 px-4 border-b">Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for compra in compras %}
-                <tr>
-                    <td class="py-2 px-4 border-b">{{ compra.id }}</td>
-                    <td class="py-2 px-4 border-b">{{ compra.fecha }}</td>
-                    <td class="py-2 px-4 border-b">{{ compra.proveedor }}</td>
-                    <td class="py-2 px-4 border-b">${{ compra.total | round(2) }}</td>
-                    <td class="py-2 px-4 border-b">{{ compra.estado }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Gráfico de Compras y Gastos</h2>
+        <canvas id="compras-gastos-chart"></canvas>
     </div>
 
-    <div class="mb-8">
-        <h2 class="text-xl font-semibold mb-2">Gastos</h2>
-        <table class="min-w-full bg-white">
-            <thead>
-                <tr>
-                    <th class="py-2 px-4 border-b">ID</th>
-                    <th class="py-2 px-4 border-b">Fecha</th>
-                    <th class="py-2 px-4 border-b">Concepto</th>
-                    <th class="py-2 px-4 border-b">Monto</th>
-                    <th class="py-2 px-4 border-b">Categoría</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for gasto in gastos %}
-                <tr>
-                    <td class="py-2 px-4 border-b">{{ gasto.id }}</td>
-                    <td class="py-2 px-4 border-b">{{ gasto.fecha }}</td>
-                    <td class="py-2 px-4 border-b">{{ gasto.concepto }}</td>
-                    <td class="py-2 px-4 border-b">${{ gasto.monto | round(2) }}</td>
-                    <td class="py-2 px-4 border-b">{{ gasto.categoria }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Compras</h2>
+        <div class="overflow-x-auto">
+            <table id="compras-table" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="compras-body">
+                    <!-- Las compras se cargarán aquí dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Gastos</h2>
+        <div class="overflow-x-auto">
+            <table id="gastos-table" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concepto</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="gastos-body">
+                    <!-- Los gastos se cargarán aquí dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-700">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> registros
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+let currentPage = 1;
+const itemsPerPage = 10;
+let chart;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeReporteComprasGastos();
+});
+
+function initializeReporteComprasGastos() {
+    flatpickr("#fecha-inicio", {
+        dateFormat: "Y-m-d"
+    });
+    flatpickr("#fecha-fin", {
+        dateFormat: "Y-m-d"
+    });
+
+    const busquedaForm = document.getElementById('busqueda-form');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    busquedaForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        currentPage = 1;
+        buscarDatos();
+    });
+
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+
+    buscarDatos();
+    initChart();
+}
+
+function buscarDatos() {
+    const formData = new FormData(document.getElementById('busqueda-form'));
+    const params = new URLSearchParams(formData);
+    params.append('page', currentPage);
+    params.append('per_page', itemsPerPage);
+
+    fetch(`/api/reporte-compras-gastos?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            actualizarTablaCompras(data.compras);
+            actualizarTablaGastos(data.gastos);
+            actualizarResumen(data.total_compras, data.total_gastos);
+            actualizarPaginacion(data.total_items);
+            actualizarGrafico(data.compras_por_mes, data.gastos_por_mes);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Ocurrió un error al buscar los datos del reporte', 'error');
+        });
+}
+
+function actualizarTablaCompras(compras) {
+    const tbody = document.getElementById('compras-body');
+    tbody.innerHTML = '';
+    compras.forEach(compra => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${compra.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${compra.fecha}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${compra.proveedor}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${compra.total.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${compra.estado}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function actualizarTablaGastos(gastos) {
+    const tbody = document.getElementById('gastos-body');
+    tbody.innerHTML = '';
+    gastos.forEach(gasto => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${gasto.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${gasto.fecha}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${gasto.concepto}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${gasto.monto.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${gasto.categoria}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function actualizarResumen(totalCompras, totalGastos) {
+    document.getElementById('total-compras').textContent = totalCompras.toFixed(2);
+    document.getElementById('total-gastos').textContent = totalGastos.toFixed(2);
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    document.getElementById('items-showing').textContent = `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = currentPage === 1;
+    document.getElementById('next-page').disabled = currentPage === totalPages;
+}
+
+function cambiarPagina(direccion) {
+    currentPage += direccion;
+    buscarDatos();
+}
+
+function initChart() {
+    const ctx = document.getElementById('compras-gastos-chart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Compras',
+                    data: [],
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Gastos',
+                    data: [],
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function actualizarGrafico(comprasPorMes, gastosPorMes) {
+    const labels = Object.keys(comprasPorMes);
+    const comprasData = Object.values(comprasPorMes);
+    const gastosData = Object.values(gastosPorMes);
+
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = comprasData;
+    
+    chart.data.datasets[1].data = gastosData;
+    chart.update();
+}
+</script>
 {% endblock %}

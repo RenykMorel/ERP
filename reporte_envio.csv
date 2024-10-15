@@ -1,0 +1,3 @@
+Estado del envío,Respuesta de la API,Cuerpo del correo enviado
+200,"{'Messages': [{'Status': 'success', 'CustomID': 'AppTestEmail', 'To': [{'Email': 'renyk.morel@sendiu.net', 'MessageUUID': 'e9576609-e975-49b6-aaeb-2e38c8b28fc4', 'MessageID': 576460778673552395, 'MessageHref': 'https://api.mailjet.com/v3/REST/message/576460778673552395'}], 'Cc': [], 'Bcc': []}]}","Hola,
+Este es un ejemplo de correo enviado desde Mailjet por Renyk Morel."

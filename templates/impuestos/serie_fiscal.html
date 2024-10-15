@@ -1,35 +1,306 @@
 {% extends "base.html" %}
-{% block title %}Serie Fiscal{% endblock %}
+{% block title %}Serie Fiscal - CalculAI{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">Series Fiscales</h1>
-    <a href="{{ url_for('impuestos.crear_serie_fiscal') }}" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 inline-block">Nueva Serie Fiscal</a>
-    <table class="min-w-full bg-white">
-        <thead>
-            <tr>
-                <th class="py-2 px-4 border-b">Serie</th>
-                <th class="py-2 px-4 border-b">Tipo de Comprobante</th>
-                <th class="py-2 px-4 border-b">Fecha de Vencimiento</th>
-                <th class="py-2 px-4 border-b">Secuencia Desde</th>
-                <th class="py-2 px-4 border-b">Secuencia Hasta</th>
-                <th class="py-2 px-4 border-b">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for serie in series %}
-            <tr>
-                <td class="py-2 px-4 border-b">{{ serie.serie }}</td>
-                <td class="py-2 px-4 border-b">{{ serie.tipo_comprobante }}</td>
-                <td class="py-2 px-4 border-b">{{ serie.fecha_vencimiento }}</td>
-                <td class="py-2 px-4 border-b">{{ serie.secuencia_desde }}</td>
-                <td class="py-2 px-4 border-b">{{ serie.secuencia_hasta }}</td>
-                <td class="py-2 px-4 border-b">
-                    <a href="{{ url_for('impuestos.editar_serie_fiscal', id=serie.id) }}" class="text-blue-500">Editar</a>
-                    <a href="{{ url_for('impuestos.eliminar_serie_fiscal', id=serie.id) }}" class="text-red-500 ml-2">Eliminar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div id="serie-fiscal-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Series Fiscales</h1>
+    
+    <div class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Filtros de Búsqueda</h2>
+        <form id="busqueda-form" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="serie" class="block text-sm font-medium text-gray-700">Serie</label>
+                    <input type="text" id="serie" name="serie" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="tipo-comprobante" class="block text-sm font-medium text-gray-700">Tipo de Comprobante</label>
+                    <select id="tipo-comprobante" name="tipo_comprobante" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Todos</option>
+                        <option value="Factura">Factura</option>
+                        <option value="Nota de Crédito">Nota de Crédito</option>
+                        <option value="Nota de Débito">Nota de Débito</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="fecha-vencimiento" class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
+                    <input type="text" id="fecha-vencimiento" name="fecha_vencimiento" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+            </div>
+            <div class="flex justify-between">
+                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-search mr-2"></i>Buscar
+                </button>
+                <button type="button" onclick="openModal()" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <i class="fas fa-plus mr-2"></i>Nueva Serie Fiscal
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <table id="series-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serie</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Comprobante</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Vencimiento</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Secuencia Desde</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Secuencia Hasta</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="series-body">
+                <!-- Las series se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 flex justify-between items-center">
+        <span class="text-sm text-gray-700">
+            Mostrando <span id="items-showing">0</span> de <span id="total-items">0</span> series
+        </span>
+        <div class="space-x-2">
+            <button id="prev-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Anterior</button>
+            <button id="next-page" class="px-3 py-1 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Siguiente</button>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para editar/crear serie fiscal -->
+<div id="serie-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <form id="serie-form">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Crear/Editar Serie Fiscal</h3>
+                    <div class="mt-4 space-y-4">
+                        <input type="hidden" id="serie-id" name="id">
+                        <div>
+                            <label for="serie-input" class="block text-sm font-medium text-gray-700">Serie</label>
+                            <input type="text" name="serie" id="serie-input" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label for="tipo-comprobante-input" class="block text-sm font-medium text-gray-700">Tipo de Comprobante</label>
+                            <select name="tipo_comprobante" id="tipo-comprobante-input" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <option value="Factura">Factura</option>
+                                <option value="Nota de Crédito">Nota de Crédito</option>
+                                <option value="Nota de Débito">Nota de Débito</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="fecha-vencimiento-input" class="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
+                            <input type="text" name="fecha_vencimiento" id="fecha-vencimiento-input" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label for="secuencia-desde" class="block text-sm font-medium text-gray-700">Secuencia Desde</label>
+                            <input type="number" name="secuencia_desde" id="secuencia-desde" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label for="secuencia-hasta" class="block text-sm font-medium text-gray-700">Secuencia Hasta</label>
+                            <input type="number" name="secuencia_hasta" id="secuencia-hasta" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Guardar
+                    </button>
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeModal()">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+let currentPage = 1;
+const itemsPerPage = 10;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSerieFiscal();
+});
+
+function initializeSerieFiscal() {
+    flatpickr("#fecha-vencimiento", {
+        dateFormat: "Y-m-d"
+    });
+    flatpickr("#fecha-vencimiento-input", {
+        dateFormat: "Y-m-d"
+    });
+
+    const busquedaForm = document.getElementById('busqueda-form');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+
+    busquedaForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        currentPage = 1;
+        buscarSeries();
+    });
+
+    prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
+    nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+
+    document.getElementById('serie-form').addEventListener('submit', guardarSerie);
+
+    buscarSeries();
+}
+
+function buscarSeries() {
+    const formData = new FormData(document.getElementById('busqueda-form'));
+    const params = new URLSearchParams(formData);
+    params.append('page', currentPage);
+    params.append('per_page', itemsPerPage);
+
+    fetch(`/impuestos/api/serie-fiscal?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            actualizarTablaSeries(data.series);
+            actualizarPaginacion(data.total);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Ocurrió un error al buscar las series fiscales', 'error');
+        });
+}
+
+function actualizarTablaSeries(series) {
+    const tbody = document.getElementById('series-body');
+    tbody.innerHTML = '';
+    series.forEach(serie => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${serie.serie}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${serie.tipo_comprobante}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${serie.fecha_vencimiento}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${serie.secuencia_desde}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${serie.secuencia_hasta}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button onclick="editarSerie(${serie.id})" class="text-indigo-600 hover:text-indigo-900 mr-2">Editar</button>
+                <button  onclick="eliminarSerie(${serie.id})" class="text-red-600 hover:text-red-900">Eliminar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function actualizarPaginacion(totalItems) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    document.getElementById('items-showing').textContent = `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalItems)}`;
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('prev-page').disabled = currentPage === 1;
+    document.getElementById('next-page').disabled = currentPage === totalPages;
+}
+
+function cambiarPagina(direccion) {
+    currentPage += direccion;
+    buscarSeries();
+}
+
+function guardarSerie(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const serieId = formData.get('id');
+    const url = serieId ? `/impuestos/api/serie-fiscal/${serieId}` : '/impuestos/api/serie-fiscal';
+    const method = serieId ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire('Éxito', 'Serie fiscal guardada correctamente', 'success');
+            closeModal();
+            buscarSeries();
+        } else {
+            Swal.fire('Error', data.message || 'Ocurrió un error al guardar la serie fiscal', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'Ocurrió un error al guardar la serie fiscal', 'error');
+    });
+}
+
+function editarSerie(id) {
+    fetch(`/impuestos/api/serie-fiscal/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const serie = data.serie;
+                document.getElementById('serie-id').value = serie.id;
+                document.getElementById('serie-input').value = serie.serie;
+                document.getElementById('tipo-comprobante-input').value = serie.tipo_comprobante;
+                document.getElementById('fecha-vencimiento-input').value = serie.fecha_vencimiento;
+                document.getElementById('secuencia-desde').value = serie.secuencia_desde;
+                document.getElementById('secuencia-hasta').value = serie.secuencia_hasta;
+                document.getElementById('modal-title').textContent = 'Editar Serie Fiscal';
+                openModal();
+            } else {
+                Swal.fire('Error', data.message || 'No se pudo cargar la serie fiscal', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Ocurrió un error al cargar la serie fiscal', 'error');
+        });
+}
+
+function eliminarSerie(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/impuestos/api/serie-fiscal/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Eliminado', 'La serie fiscal ha sido eliminada', 'success');
+                    buscarSeries();
+                } else {
+                    Swal.fire('Error', data.message || 'No se pudo eliminar la serie fiscal', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Ocurrió un error al eliminar la serie fiscal', 'error');
+            });
+        }
+    });
+}
+
+function openModal() {
+    document.getElementById('serie-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('serie-modal').classList.add('hidden');
+    document.getElementById('serie-form').reset();
+}
+</script>
 {% endblock %}

@@ -218,5 +218,12 @@ def divisas():
         logger.error(f"Error al cargar la página de divisas: {str(e)}")
         return jsonify({"error": f"Error al cargar la página de divisas: {str(e)}"}), 500
 
-# Aquí puedes añadir más rutas para las operaciones CRUD de cada submódulo
-# siguiendo el patrón utilizado para los bancos
+@banco_bp.route("/gestion-bancos")
+@login_required
+def gestion_bancos():
+    try:
+        bancos = NuevoBanco.query.all()
+        return render_template('banco/gestion_bancos.html', bancos=bancos)
+    except Exception as e:
+        logger.error(f"Error al cargar la página de gestión de bancos: {str(e)}")
+        return jsonify({"error": f"Error al cargar la página de gestión de bancos: {str(e)}"}), 500

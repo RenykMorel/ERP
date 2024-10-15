@@ -1,4 +1,4 @@
-from flask import Flask, session, render_template, jsonify, request, redirect, url_for, flash, render_template_string, current_app
+from flask import Flask, session, render_template, jsonify, request, redirect, url_for, flash, render_template_string, current_app, send_file
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
 from facturas.facturas_models import Facturacion, PreFactura, NotaCredito, NotaDebito, Cliente
 from inventario.inventario_models import InventarioItem, MovimientoInventario, ItemFactura
@@ -11,7 +11,7 @@ import json
 from dotenv import load_dotenv
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 import psycopg2
@@ -45,10 +45,12 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 from docx import Document
-from io import BytesIO
+from io import BytesIO, StringIO
 from flask import send_file, make_response, jsonify
 import xlsxwriter
 import base64
+import csv
+from reportlab.lib import colors
 
 # Importar el nuevo módulo de marketing
 from marketing.routes import marketing
@@ -221,8 +223,8 @@ class AsistenteVirtual:
         return info
 
     def generar_reporte(self, usuario_id, pregunta):
-    # Aquí deberías implementar la lógica para generar el reporte basado en la pregunta
-    # Por ahora, usaremos datos de ejemplo
+        # Aquí deberías implementar la lógica para generar el reporte basado en la pregunta
+        # Por ahora, usaremos datos de ejemplo
         if 'ventas' in pregunta.lower():
             datos = [
                 ["Producto", "Cantidad", "Precio Unitario", "Total"],
@@ -240,7 +242,7 @@ class AsistenteVirtual:
                 ["Producto B", 50, 100, "Sí"],
                 ["Producto C", 750, 500, "No"],
             ]
-            tipo_reporte = "tabla_inventario"
+            tipo_reporte = "Reporte de Inventario"
         else:
             datos = [
                 ["Campo", "Valor"],
@@ -248,7 +250,7 @@ class AsistenteVirtual:
                 ["Dato 2", "Valor 2"],
                 ["Dato 3", "Valor 3"],
             ]
-            tipo_reporte = "tabla_general"
+            tipo_reporte = "Reporte General"
 
         return datos, tipo_reporte
 
@@ -306,8 +308,6 @@ class AsistenteVirtual:
         pdf = buffer.getvalue()
         buffer.close()
         return base64.b64encode(pdf).decode('utf-8')
-
-    # Implementa métodos similares para generar_excel y generar_word
 
     def generar_excel(self, info):
         output = BytesIO()
@@ -425,10 +425,6 @@ def create_app():
         
     from activos_fijos.routes import activos_fijos_bp
     app.register_blueprint(activos_fijos_bp) 
-    
-    
-
-# ... resto de tus rutas ...
     
     db.init_app(app)
     migrate.init_app(app, db)
@@ -895,6 +891,25 @@ def create_app():
             return jsonify({"respuesta": "Por favor, proporciona una pregunta."}), 400
         
         try:
+            # Verificar si ya se mostró el mensaje de inactividad hoy
+            last_inactive_message = session.get('last_inactive_message_date')
+            today = date.today().isoformat()
+
+            if not app.config['ASISTENTE_ACTIVO']:
+                if last_inactive_message != today:
+                    session['last_inactive_message_date'] = today
+                    return jsonify({"tipo": "texto", "respuesta": "El asistente no está activo. Por favor, contacta al administrador para activarlo."})
+                else:
+                    return jsonify({"tipo": "texto", "respuesta": "El asistente sigue inactivo. Por favor, espera a que sea activado por un administrador."})
+
+            # Verificar si ya se mostró el saludo diario
+            last_greeting_date = session.get('last_greeting_date')
+            if last_greeting_date != today:
+                session['last_greeting_date'] = today
+                greeting = "¡Hola! Soy tu asistente virtual de CalculAI. ¿En qué puedo ayudarte hoy?"
+                return jsonify({"tipo": "texto", "respuesta": greeting})
+
+            # Procesar la pregunta normalmente
             if 'reporte' in pregunta.lower() or 'tabla' in pregunta.lower():
                 datos, tipo_reporte = app.asistente.generar_reporte(current_user.id, pregunta)
                 return jsonify({
@@ -1035,8 +1050,7 @@ def create_app():
         
         try:
             ai_prompt = f"""Actúa como un experto en marketing digital y diseño de emails. 
-            Crea una plantilla de email HTML profesional y atractiva basada en la siguiente descripción: {prompt}. 
-            La plantilla debe ser responsive y utilizar estilos en línea para compatibilidad con clientes de email.
+            Crea una plantilla de email HTML profesional y atractiva basada en la siguiente descripción: {prompt}.La plantilla debe ser responsive y utilizar estilos en línea para compatibilidad con clientes de email.
             Incluye contenido relevante y convincente que se ajuste al tema solicitado.
             Para las imágenes, utiliza placeholders de https://placehold.co con dimensiones y texto descriptivo apropiados. 
             Asegúrate de que el diseño sea moderno, atractivo y optimizado para conversiones.
@@ -1058,6 +1072,91 @@ def create_app():
             return match.group(0)
         else:
             return contenido
+
+    @app.route('/api/descargar_reporte/<tipo_archivo>', methods=['POST'])
+    @login_required
+    def descargar_reporte(tipo_archivo):
+        datos = request.json.get('datos')
+        if not datos:
+            return jsonify({"error": "No se proporcionaron datos para el reporte"}), 400
+
+        if tipo_archivo == 'csv':
+            return generar_csv(datos)
+        elif tipo_archivo == 'pdf':
+            return generar_pdf(datos)
+        elif tipo_archivo == 'word':
+            return generar_word(datos)
+        else:
+            return jsonify({"error": "Formato de archivo no soportado"}), 400
+
+    def generar_csv(datos):
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerows(datos)
+        output.seek(0)
+        return send_file(
+            BytesIO(output.getvalue().encode('utf-8')),
+            mimetype='text/csv',
+            as_attachment=True,
+            attachment_filename='reporte.csv'
+        )
+
+    def generar_pdf(datos):
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+        
+        t = Table(datos)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 14),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 12),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(t)
+        
+        doc.build(elements)
+        buffer.seek(0)
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            attachment_filename='reporte.pdf'
+        )
+
+    def generar_word(datos):
+        document = Document()
+        document.add_heading('Reporte', 0)
+
+        table = document.add_table(rows=1, cols=len(datos[0]))
+        hdr_cells = table.rows[0].cells
+        for i, item in enumerate(datos[0]):
+            hdr_cells[i].text = str(item)
+
+        for row in datos[1:]:
+            row_cells = table.add_row().cells
+            for i, item in enumerate(row):
+                row_cells[i].text = str(item)
+
+        buffer = BytesIO()
+        document.save(buffer)
+        buffer.seek(0)
+        return send_file(
+            buffer,
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            as_attachment=True,
+            attachment_filename='reporte.docx'
+        )
 
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
