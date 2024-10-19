@@ -115,30 +115,60 @@
                     <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="nombre" type="text" placeholder="Nombre del banco" required>
                 </div>
                 <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">
+                        Dirección
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="direccion" type="text" placeholder="Dirección del banco">
+                </div>
+                <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono">
                         Teléfono
                     </label>
                     <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono" type="text" placeholder="Teléfono del banco" required>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="contacto">
-                        Contacto
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fax">
+                        Fax
                     </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="contacto" type="text" placeholder="Nombre del contacto" required>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="fax" type="text" placeholder="Fax del banco">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="rnc">
+                        RNC
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="rnc" type="text" placeholder="RNC del banco" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="contacto">
+                        Nombre Contacto
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="contacto" type="text" placeholder="Nombre del contacto">
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono_contacto">
                         Teléfono de Contacto
                     </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono_contacto" type="text" placeholder="Teléfono del contacto" required>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono_contacto" type="text" placeholder="Teléfono del contacto">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo">
+                        Código
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="codigo" type="text" placeholder="Código del banco">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo_swift">
+                        Código SWIFT
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="codigo_swift" type="text" placeholder="Código SWIFT del banco">
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
                         Estatus
                     </label>
                     <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
+                        <option value="Activa">Activa</option>
+                        <option value="Inactiva">Inactiva</option>
                     </select>
                 </div>
                 <div class="flex items-center justify-between">
@@ -172,7 +202,7 @@
         const bancoForm = document.getElementById('banco-form');
         const modal = document.querySelector('.modal');
         const modalOverlay = document.querySelector('.modal-overlay');
-        const modalCloseButtons = document.querySelectorAll('.modal-close');
+        const modalCloseButtons =   document.querySelectorAll('.modal-close');
 
         buscarBtn.addEventListener('click', buscarBancos);
         crearNuevoBtn.addEventListener('click', () => {
@@ -288,9 +318,14 @@
                 const form = document.getElementById('banco-form');
                 form.id.value = banco.id;
                 form.nombre.value = banco.nombre;
+                form.direccion.value = banco.direccion;
                 form.telefono.value = banco.telefono;
+                form.fax.value = banco.fax;
+                form.rnc.value = banco.rnc;
                 form.contacto.value = banco.contacto;
                 form.telefono_contacto.value = banco.telefono_contacto;
+                form.codigo.value = banco.codigo;
+                form.codigo_swift.value = banco.codigo_swift;
                 form.estatus.value = banco.estatus;
                 toggleModal();
             })

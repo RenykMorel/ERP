@@ -116,6 +116,12 @@
                     <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="nombre" type="text" placeholder="Nombre del banco" required>
                 </div>
                 <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">
+                        Dirección
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="direccion" type="text" placeholder="Dirección del banco">
+                </div>
+                <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono">
                         Teléfono
                     </label>
@@ -123,23 +129,35 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="contacto">
-                        Contacto
+                        Nombre Contacto
                     </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="contacto" type="text" placeholder="Nombre del contacto" required>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="contacto" type="text" placeholder="Nombre del contacto">
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono_contacto">
                         Teléfono de Contacto
                     </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono_contacto" type="text" placeholder="Teléfono del contacto" required>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono_contacto" type="text" placeholder="Teléfono del contacto">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo">
+                        Código
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="codigo" type="text" placeholder="Código del banco">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo_swift">
+                        Código SWIFT
+                    </label>
+                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="codigo_swift" type="text" placeholder="Código SWIFT del banco">
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
                         Estatus
                     </label>
                     <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
+                        <option value="activo">Activa</option>
+                        <option value="inactivo">Inactiva</option>
                     </select>
                 </div>
                 <div class="flex items-center justify-between">
@@ -178,6 +196,7 @@
     
         buscarBtn.addEventListener('click', buscarBancos);
         crearNuevoBtn.addEventListener('click', mostrarFormularioCrearBanco);
+        
         bancoForm.addEventListener('submit', guardarBanco);
     
         modalOverlay.addEventListener('click', toggleModal);
@@ -191,7 +210,7 @@
         if (!target) return;
     
         const id = target.dataset.id;
-        if (target.classList.contains('editar-banco')) {
+        if  (target.classList.contains('editar-banco')) {
             editarBanco(id);
         } else if (target.classList.contains('eliminar-banco')) {
             eliminarBanco(id);
@@ -240,17 +259,6 @@
         limpiarFormulario();
         toggleModal();
     }
-    
-    // Modificar la función toggleModal para que limpie el formulario al cerrar
-    function toggleModal() {
-        const modal = document.querySelector('.modal');
-        modal.classList.toggle('opacity-0');
-        modal.classList.toggle('pointer-events-none');
-        document.body.classList.toggle('modal-active');
-        if (modal.classList.contains('opacity-0')) {
-            limpiarFormulario();
-        }
-    }
 
     function actualizarTablaBancos(bancos) {
         const tbody = document.getElementById('bancos-tbody');
@@ -289,11 +297,20 @@
         event.preventDefault();
         const formData = new FormData(event.target);
         const bancoData = Object.fromEntries(formData);
+        console.log('Datos del formulario:', bancoData);
+
+        // Normalize estatus
+        if (bancoData.estatus === 'Activa') {
+            bancoData.estatus = 'activo';
+        } else if (bancoData.estatus === 'Inactiva') {
+            bancoData.estatus = 'inactivo';
+        }
+    
         const bancoId = bancoData.id;
         const url = bancoId ? `/api/actualizar-banco/${bancoId}` : '/api/crear-banco';
         const method = bancoId ? 'PUT' : 'POST';
     
-        console.log(`Iniciando ${bancoId ? 'actualización' : 'creación'} de banco:`, bancoData);
+        console.log(`Enviando datos al servidor:`, JSON.stringify(bancoData));
     
         fetch(url, {
             method: method,
@@ -304,28 +321,23 @@
         })
         .then(response => {
             console.log(`Respuesta del servidor recibida. Status: ${response.status}`);
-            if (!response.ok) {
-                console.warn(`Respuesta del servidor no exitosa. Status: ${response.status}`);
-                return response.json().then(err => { throw err; });
-            }
-            return response.json();
+            return response.json().then(data => {
+                if (!response.ok) {
+                    console.warn(`Respuesta del servidor no exitosa:`, data);
+                    throw data;
+                }
+                return data;
+            });
         })
         .then(data => {
-            if (data.error) {
-                console.error(`Error reportado por el servidor:`, data.error);
-                throw new Error(data.error);
-            }
             console.log(`Banco ${bancoId ? 'actualizado' : 'creado'} exitosamente:`, data);
             Swal.fire('Éxito', bancoId ? 'Banco actualizado correctamente' : 'Banco creado correctamente', 'success');
             toggleModal();
             buscarBancos();
         })
         .catch(error => {
-            console.error(`Error al ${bancoId ? 'actualizar' : 'crear'} banco:`, error);
-            let errorMessage = error.message || 'Ocurrió un error al guardar el banco';
-            if (error.error) {
-                errorMessage = error.error;
-            }
+            console.error(`Error completo:`, error);
+            let errorMessage = error.error || error.message || 'Ocurrió un error al guardar el banco';
             console.error('Mensaje de error mostrado al usuario:', errorMessage);
             Swal.fire('Error', errorMessage, 'error');
         });
@@ -339,9 +351,12 @@
                 const form = document.getElementById('banco-form');
                 form.id.value = banco.id;
                 form.nombre.value = banco.nombre;
+                form.direccion.value = banco.direccion || '';
                 form.telefono.value = banco.telefono;
-                form.contacto.value = banco.contacto;
-                form.telefono_contacto.value = banco.telefono_contacto;
+                form.contacto.value = banco.contacto || '';
+                form.telefono_contacto.value = banco.telefono_contacto || '';
+                form.codigo.value = banco.codigo || '';
+                form.codigo_swift.value = banco.codigo_swift || '';
                 form.estatus.value = banco.estatus;
                 toggleModal();
             })

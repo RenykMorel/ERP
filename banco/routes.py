@@ -5,6 +5,7 @@ from . import banco_bp
 from .banco_models import NuevoBanco, Deposito, NotaCreditoBanco, NotaDebitoBanco, Transferencia, Conciliacion, Divisa
 from extensions import db
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -23,15 +24,19 @@ def sub_bancos():
 @banco_bp.route("/obtener-banco/<int:id>")
 @login_required
 def obtener_banco(id):
-    banco = NuevoBanco.query.get_or_404(id)
-    return jsonify(banco.to_dict())
+    try:
+        banco = NuevoBanco.query.get_or_404(id)
+        return jsonify(banco.to_dict())
+    except Exception as e:
+        logger.error(f"Error al obtener banco: {str(e)}")
+        return jsonify({"error": f"Error al obtener banco: {str(e)}"}), 500
 
 @banco_bp.route("/actualizar-banco/<int:id>", methods=["PUT"])
 @login_required
 def actualizar_banco(id):
     banco = NuevoBanco.query.get_or_404(id)
     datos = request.json
-    campos_actualizables = ["nombre", "telefono", "contacto", "telefono_contacto", "estatus"]
+    campos_actualizables = ["nombre", "telefono", "contacto", "telefono_contacto", "estatus", "direccion", "codigo", "codigo_swift"]
     
     try:
         for key, value in datos.items():
@@ -100,18 +105,33 @@ def buscar_bancos():
         logger.error(f"Error en buscar_bancos: {str(e)}")
         return jsonify({"error": "Error interno del servidor"}), 500
 
+from datetime import datetime
+
 @banco_bp.route("/crear-banco", methods=["POST"])
 @login_required
 def crear_banco():
     datos = request.json
+    logger.info(f"Datos recibidos para crear banco: {datos}")
+    
+    required_fields = ['nombre', 'telefono']
+    for field in required_fields:
+        if not datos.get(field):
+            logger.warning(f"Campo requerido faltante: {field}")
+            return jsonify({"error": f"El campo '{field}' es obligatorio."}), 400
+
     try:
         nuevo_banco = NuevoBanco(
             nombre=datos['nombre'],
             telefono=datos['telefono'],
-            contacto=datos['contacto'],
-            telefono_contacto=datos['telefono_contacto'],
-            estatus=datos.get('estatus', 'activo')
+            contacto=datos.get('contacto', ''),
+            telefono_contacto=datos.get('telefono_contacto', ''),
+            estatus=datos.get('estatus', 'activo'),
+            direccion=datos.get('direccion', ''),
+            codigo=datos.get('codigo', ''),
+            codigo_swift=datos.get('codigo_swift', ''),
+            fecha=datetime.now()  # Añade esta línea
         )
+        logger.info(f"Objeto NuevoBanco creado: {vars(nuevo_banco)}")
         db.session.add(nuevo_banco)
         db.session.commit()
         logger.info(f"Nuevo banco creado: {nuevo_banco.nombre}")
@@ -122,7 +142,8 @@ def crear_banco():
     except IntegrityError as e:
         db.session.rollback()
         error_info = str(e.orig)
-        if 'duplicate key value violates unique constraint' in error_info:
+        logger.error(f"IntegrityError al crear banco: {error_info}")
+        if 'unique constraint' in error_info.lower():
             if 'nuevo_bancos_nombre_key' in error_info:
                 mensaje = "Ya existe un banco con este nombre."
             elif 'nuevo_bancos_telefono_key' in error_info:
@@ -137,41 +158,15 @@ def crear_banco():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error inesperado al crear banco: {str(e)}")
-        return jsonify({"error": "Error inesperado al crear el banco."}), 500
+        return jsonify({"error": f"Error inesperado al crear el banco: {str(e)}"}), 500
 
-# Rutas para Depósitos
-@banco_bp.route("/depositos")
+@banco_bp.route("/eventos", methods=["GET"])
 @login_required
-def depositos():
-    try:
-        depositos = Deposito.query.all()
-        return render_template('banco/depositos.html', depositos=depositos)
-    except Exception as e:
-        logger.error(f"Error al cargar la página de depósitos: {str(e)}")
-        return jsonify({"error": f"Error al cargar la página de depósitos: {str(e)}"}), 500
-
-@banco_bp.route("/crear-deposito", methods=["POST"])
-@login_required
-def crear_deposito():
-    datos = request.json
-    try:
-        nuevo_deposito = Deposito(
-            monto=datos['monto'],
-            fecha=datos['fecha'],
-            banco_id=datos['banco_id'],
-            descripcion=datos.get('descripcion', '')
-        )
-        db.session.add(nuevo_deposito)
-        db.session.commit()
-        logger.info(f"Nuevo depósito creado: {nuevo_deposito.id}")
-        return jsonify({
-            "message": "Depósito creado exitosamente",
-            "deposito": nuevo_deposito.to_dict()
-        }), 201
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error al crear depósito: {str(e)}")
-        return jsonify({"error": "Error al crear el depósito."}), 500
+def obtener_eventos():
+    start = request.args.get('start')
+    end = request.args.get('end')
+    # Implementa la lógica de eventos aquí.
+    return jsonify({"eventos": "Eventos encontrados"})
 
 # Rutas para Notas de Crédito/Débito
 @banco_bp.route("/notas-credito-debito")

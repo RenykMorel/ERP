@@ -3,10 +3,14 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 class Entidad(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
+
+class EmpresaMarketing(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    # Agrega aquí otros campos que necesites para la empresa
 
 class Prospecto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -16,8 +20,10 @@ class Prospecto(db.Model):
     nombre = db.Column(db.String(64))
     apellido = db.Column(db.String(64))
     telefono = db.Column(db.String(20))
-    empresa_id = db.Column(db.Integer, db.ForeignKey('empresa.id'))
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresa_marketing.id'))
     asistente_activo = db.Column(db.Boolean, default=False)
+
+    empresa = db.relationship('EmpresaMarketing', backref=db.backref('prospectos', lazy=True))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -27,6 +33,8 @@ class Prospecto(db.Model):
 
     def __repr__(self):
         return f'<Prospecto {self.nombre_usuario}>'
+
+# ... (el resto de tus modelos permanecen sin cambios)
 
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)

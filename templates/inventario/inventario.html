@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Inventario Actual - CalculAI Inventario{% endblock %}
+{% block title %}Current Inventory - ERP Accounting System{% endblock %}
 
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -9,11 +9,11 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Inventario Actual</h1>
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Current Inventory</h1>
 
     <div class="mb-6">
         <div class="relative">
-            <input type="text" id="buscar-item" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Buscar item...">
+            <input type="text" id="search-item" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Search item...">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i class="fas fa-search text-gray-400"></i>
             </div>
@@ -25,67 +25,67 @@
             <thead>
                 <tr>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Código
+                        Code
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Nombre
+                        Name
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Categoría
+                        Category
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Stock Actual
+                        Current Stock
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Valor Unitario
+                        Unit Price
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Valor Total
+                        Total Value
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Acciones
+                        Actions
                     </th>
                 </tr>
             </thead>
-            <tbody id="inventario-tbody">
-                <!-- Los items del inventario se cargarán aquí dinámicamente -->
+            <tbody id="inventory-tbody">
+                <!-- Inventory items will be loaded here dynamically -->
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- Modal para ajustar stock -->
-<div id="ajusteStockModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+<!-- Modal for stock adjustment -->
+<div id="adjustStockModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
-                    Ajustar Stock
+                    Adjust Stock
                 </h3>
-                <form id="ajuste-stock-form" class="space-y-4">
-                    <input type="hidden" id="item-id" name="id">
+                <form id="adjust-stock-form" class="space-y-4">
+                    <input type="hidden" id="item-id" name="item_id">
                     <div>
-                        <label for="stock-actual" class="block text-sm font-medium text-gray-700 mb-1">Stock Actual</label>
-                        <input type="number" id="stock-actual" class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" readonly>
+                        <label for="current-stock" class="block text-sm font-medium text-gray-700 mb-1">Current Stock</label>
+                        <input type="number" id="current-stock" class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" readonly>
                     </div>
                     <div>
-                        <label for="ajuste-cantidad" class="block text-sm font-medium text-gray-700 mb-1">Cantidad a Ajustar</label>
-                        <input type="number" id="ajuste-cantidad" name="cantidad" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                        <label for="adjustment-quantity" class="block text-sm font-medium text-gray-700 mb-1">Adjustment Quantity</label>
+                        <input type="number" id="adjustment-quantity" name="quantity" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                     </div>
                     <div>
-                        <label for="ajuste-motivo" class="block text-sm font-medium text-gray-700 mb-1">Motivo del Ajuste</label>
-                        <textarea id="ajuste-motivo" name="motivo" rows="3" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required></textarea>
+                        <label for="adjustment-reason" class="block text-sm font-medium text-gray-700 mb-1">Adjustment Reason</label>
+                        <textarea id="adjustment-reason" name="reason" rows="3" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required></textarea>
                     </div>
                 </form>
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" id="guardar-ajuste-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Guardar Ajuste
+                <button type="button" id="save-adjustment-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Save Adjustment
                 </button>
-                <button type="button" id="cerrar-modal-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                    Cerrar
+                <button type="button" id="close-modal-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Close
                 </button>
             </div>
         </div>
@@ -96,111 +96,111 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const buscarItemInput = document.getElementById('buscar-item');
-    const inventarioTbody = document.getElementById('inventario-tbody');
-    const ajusteStockModal = document.getElementById('ajusteStockModal');
-    const ajusteStockForm = document.getElementById('ajuste-stock-form');
-    const guardarAjusteBtn = document.getElementById('guardar-ajuste-btn');
-    const cerrarModalBtn = document.getElementById('cerrar-modal-btn');
+    const searchItemInput = document.getElementById('search-item');
+    const inventoryTbody = document.getElementById('inventory-tbody');
+    const adjustStockModal = document.getElementById('adjustStockModal');
+    const adjustStockForm = document.getElementById('adjust-stock-form');
+    const saveAdjustmentBtn = document.getElementById('save-adjustment-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
 
-    cargarInventario();
-    buscarItemInput.addEventListener('input', cargarInventario);
-    guardarAjusteBtn.addEventListener('click', guardarAjusteStock);
-    cerrarModalBtn.addEventListener('click', () => ajusteStockModal.classList.add('hidden'));
+    loadInventory();
+    searchItemInput.addEventListener('input', loadInventory);
+    saveAdjustmentBtn.addEventListener('click', saveStockAdjustment);
+    closeModalBtn.addEventListener('click', () => adjustStockModal.classList.add('hidden'));
 
-    function cargarInventario() {
-        const busqueda = buscarItemInput.value;
-        fetch(`/inventario/api/items?busqueda=${busqueda}`)
+    function loadInventory() {
+        const search = searchItemInput.value;
+        fetch(`/inventory/items?search=${search}`)
             .then(response => response.json())
-            .then(data => actualizarTablaInventario(data))
+            .then(data => updateInventoryTable(data))
             .catch(error => {
                 console.error('Error:', error);
-                mostrarNotificacion('Ocurrió un error al cargar el inventario', 'error');
+                showNotification('An error occurred while loading the inventory', 'error');
             });
     }
 
-    function actualizarTablaInventario(items) {
-        inventarioTbody.innerHTML = '';
+    function updateInventoryTable(items) {
+        inventoryTbody.innerHTML = '';
         items.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.codigo}</p>
+                    <p class="text-gray-900 whitespace-no-wrap">${item.code}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.nombre}</p>
+                    <p class="text-gray-900 whitespace-no-wrap">${item.name}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.categoria}</p>
+                    <p class="text-gray-900 whitespace-no-wrap">${item.category}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.stock_actual}</p>
+                    <p class="text-gray-900 whitespace-no-wrap">${item.stock}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">$${item.valor_unitario.toFixed(2)}</p>
+                    <p class="text-gray-900 whitespace-no-wrap">$${item.price.toFixed(2)}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">$${(item.stock_actual * item.valor_unitario).toFixed(2)}</p>
+                    <p class="text-gray-900 whitespace-no-wrap">$${(item.stock * item.price).toFixed(2)}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ajustar-stock" data-id="${item.id}" data-stock="${item.stock_actual}">
-                        Ajustar Stock
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline adjust-stock" data-id="${item.id}" data-stock="${item.stock}">
+                        Adjust Stock
                     </button>
                 </td>
             `;
-            inventarioTbody.appendChild(tr);
+            inventoryTbody.appendChild(tr);
         });
 
-        document.querySelectorAll('.ajustar-stock').forEach(btn => {
-            btn.addEventListener('click', mostrarModalAjusteStock);
+        document.querySelectorAll('.adjust-stock').forEach(btn => {
+            btn.addEventListener('click', showAdjustStockModal);
         });
     }
 
-    function mostrarModalAjusteStock(event) {
+    function showAdjustStockModal(event) {
         const itemId = event.target.dataset.id;
-        const stockActual = event.target.dataset.stock;
+        const currentStock = event.target.dataset.stock;
         document.getElementById('item-id').value = itemId;
-        document.getElementById('stock-actual').value = stockActual;
-        document.getElementById('ajuste-cantidad').value = '';
-        document.getElementById('ajuste-motivo').value = '';
-        ajusteStockModal.classList.remove('hidden');
+        document.getElementById('current-stock').value = currentStock;
+        document.getElementById('adjustment-quantity').value = '';
+        document.getElementById('adjustment-reason').value = '';
+        adjustStockModal.classList.remove('hidden');
     }
 
-    function guardarAjusteStock() {
-        const formData = new FormData(ajusteStockForm);
-        const ajusteData = Object.fromEntries(formData);
+    function saveStockAdjustment() {
+        const formData = new FormData(adjustStockForm);
+        const adjustmentData = Object.fromEntries(formData);
         
-        fetch(`/inventario/api/ajustar-stock/${ajusteData.id}`, {
+        fetch(`/inventory/adjustments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token() }}'
             },
-            body: JSON.stringify(ajusteData)
+            body: JSON.stringify(adjustmentData)
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                mostrarNotificacion('Stock ajustado correctamente', 'success');
-                ajusteStockModal.classList.add('hidden');
-                cargarInventario();
+            if (data.message) {
+                showNotification('Stock adjusted successfully', 'success');
+                adjustStockModal.classList.add('hidden');
+                loadInventory();
             } else {
-                mostrarNotificacion(data.message || 'Ocurrió un error al ajustar el stock', 'error');
+                showNotification(data.error || 'An error occurred while adjusting the stock', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            mostrarNotificacion('Ocurrió un error al ajustar el stock', 'error');
+            showNotification('An error occurred while adjusting the stock', 'error');
         });
     }
 
-    function mostrarNotificacion(mensaje, tipo) {
-        const notificacion = document.createElement('div');
-        notificacion.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md text-white ${tipo === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-        notificacion.textContent = mensaje;
-        document.body.appendChild(notificacion);
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
         setTimeout(() => {
-            notificacion.remove();
+            notification.remove();
         }, 3000);
     }
 });

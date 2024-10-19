@@ -5,17 +5,20 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from sqlalchemy import event
 
+
 class NuevoBanco(db.Model):
     __tablename__ = 'nuevo_bancos'
-    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), unique=True, nullable=False)
     telefono = db.Column(db.String(20), unique=True, nullable=False)
     contacto = db.Column(db.String(100))
     telefono_contacto = db.Column(db.String(20))
     estatus = db.Column(db.String(20), default='activo')
-    fecha_creacion = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    fecha_actualizacion = db.Column(db.DateTime(timezone=True), onupdate=func.now())
+    direccion = db.Column(db.String(200))
+    codigo = db.Column(db.String(20))
+    codigo_swift = db.Column(db.String(20))
+    fecha = db.Column(db.DateTime(timezone=True), nullable=False, server_default=func.now())
+    # No debería haber una columna banco_id aquí
 
     @validates('nombre', 'telefono')
     def validate_unique_fields(self, key, value):
@@ -42,25 +45,25 @@ class NuevoBanco(db.Model):
             'contacto': self.contacto,
             'telefono_contacto': self.telefono_contacto,
             'estatus': self.estatus,
-            'fecha_creacion': self.fecha_creacion.isoformat() if self.fecha_creacion else None,
-            'fecha_actualizacion': self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None
+            'direccion': self.direccion,
+            'codigo': self.codigo,
+            'codigo_swift': self.codigo_swift,
+            'fecha': self.fecha.isoformat() if self.fecha else None
         }
 
     @classmethod
     def from_dict(cls, data):
-        allowed_keys = ['nombre', 'telefono', 'contacto', 'telefono_contacto', 'estatus']
+        allowed_keys = ['nombre', 'telefono', 'contacto', 'telefono_contacto', 'estatus', 'direccion', 'codigo', 'codigo_swift']
         return cls(**{k: v for k, v in data.items() if k in allowed_keys})
 
     def update_from_dict(self, data):
-        allowed_keys = ['nombre', 'telefono', 'contacto', 'telefono_contacto', 'estatus']
+        allowed_keys = ['nombre', 'telefono', 'contacto', 'telefono_contacto', 'estatus', 'direccion', 'codigo', 'codigo_swift']
         for key, value in data.items():
             if key in allowed_keys:
                 setattr(self, key, value)
 
     def __repr__(self):
         return f'<NuevoBanco {self.nombre}>'
-
-
 
 class NotaCreditoBanco(db.Model):
     __tablename__ = 'notas_credito_banco'
@@ -275,7 +278,6 @@ class Banco(db.Model):
     def __repr__(self):
         return f'<Banco {self.nombre}>'
     
-    
 class BancoCuenta(db.Model):
     __tablename__ = 'banco_cuentas'
     __table_args__ = {'extend_existing': True}
@@ -294,7 +296,7 @@ class BancoCuenta(db.Model):
 class Deposito(db.Model):
     __tablename__ = 'depositos'
     __table_args__ = {'extend_existing': True}
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer,   primary_key=True)
     monto = db.Column(db.Float, nullable=False)
     fecha = db.Column(db.DateTime, nullable=False)
     banco_id = db.Column(db.Integer, db.ForeignKey('nuevo_bancos.id'), nullable=False)

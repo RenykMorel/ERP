@@ -407,6 +407,7 @@ def create_app():
 
     from rrhh.routes import rrhh_bp
     app.register_blueprint(rrhh_bp, url_prefix='/rrhh')
+    
 
     from importacion.routes import importacion_bp
     app.register_blueprint(importacion_bp)
