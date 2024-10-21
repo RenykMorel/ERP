@@ -1,65 +1,68 @@
-2024-10-19 15:18:08,648 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-19 15:18:11,329 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-19 15:41:15,358 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:41:15,358 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:41:15,366 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,372 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,374 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,376 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,391 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,393 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,397 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,401 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,440 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,442 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,445 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,449 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:52:31,449 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,361 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,364 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,368 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,385 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,386 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,393 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,395 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,412 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,417 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,424 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,430 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:02,430 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,412 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,418 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,430 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,430 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,442 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,459 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,459 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,461 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,472 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,478 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,480 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,483 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,496 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,506 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:09,509 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 15:53:42,650 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-19 15:53:44,880 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-19 16:39:53,200 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:39:53,208 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:39:53,210 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:39:53,249 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:39:53,251 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:39:53,260 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:41,548 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:41,554 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:41,555 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:41,570 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:41,574 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:41,598 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:41,624 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:41,630 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:41,646 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:41,648 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:49,247 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:49,248 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-19 16:41:49,254 ERROR: Unhandled exception: 429 Too Many Requests: 50 per 1 hour [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
+2024-10-20 00:47:36,597 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 00:47:38,902 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 00:50:50,289 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 01:04:17,071 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 01:14:30,953 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 01:28:23,719 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 01:28:29,539 ERROR: Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
+2024-10-20 01:28:43,877 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 14:57:23,092 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 14:58:50,100 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 14:59:53,794 INFO: Intentando eliminar divisa con ID: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:398]
+2024-10-20 14:59:53,795 INFO: Detalles de la divisa: {'id': 9, 'codigo': 'KIP', 'nombre': 'kip', 'tasa_cambio': 23.0, 'fecha_actualizacion': '2024-10-20T14:46:14.650011', 'abreviatura': 'X', 'simbolo': 'E', 'cuenta_por_cobrar': '', 'cuenta_por_pagar': '', 'prima_cxc': '', 'prima_cxp': '', 'ganancia_diferencia_cambiaria': '', 'perdida_diferencia_cambiaria': '', 'anticipo': '', 'anticipo_prima': '', 'anticipo_cxp': '', 'anticipo_cxp_prima': '', 'caja': '', 'caja_prima': '', 'nota_credito': '', 'nota_credito_prima': '', 'moneda_funcional': False, 'desglose': ''} [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:399]
+2024-10-20 14:59:53,809 ERROR: Error de base de datos al eliminar divisa: (psycopg2.errors.UndefinedColumn) no existe la columna depositos.divisa_id
+LINE 2: ..._fecha, depositos.banco_id AS depositos_banco_id, depositos....
+                                                             ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT depositos.id AS depositos_id, depositos.monto AS depositos_monto, depositos.fecha AS depositos_fecha, depositos.banco_id AS depositos_banco_id, depositos.divisa_id AS depositos_divisa_id, depositos.descripcion AS depositos_descripcion, depositos.cuenta_bancaria AS depositos_cuenta_bancaria, depositos.numero AS depositos_numero, depositos.concepto AS depositos_concepto, depositos.estatus AS depositos_estatus, depositos.referencia AS depositos_referencia, depositos.creador AS depositos_creador, depositos.actualizado_por AS depositos_actualizado_por, depositos.fuente AS depositos_fuente, depositos.fuente_referencia AS depositos_fuente_referencia 
+FROM depositos 
+WHERE depositos.divisa_id = %(divisa_id_1)s) AS anon_1]
+[parameters: {'divisa_id_1': 9}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:420]
+2024-10-20 15:05:04,039 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 15:05:36,158 INFO: Intentando eliminar divisa con ID: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:397]
+2024-10-20 15:05:36,159 INFO: Detalles de la divisa: {'id': 9, 'codigo': 'KIP', 'nombre': 'kip', 'tasa_cambio': 23.0, 'fecha_actualizacion': '2024-10-20T14:46:14.650011', 'abreviatura': 'X', 'simbolo': 'E', 'cuenta_por_cobrar': '', 'cuenta_por_pagar': '', 'prima_cxc': '', 'prima_cxp': '', 'ganancia_diferencia_cambiaria': '', 'perdida_diferencia_cambiaria': '', 'anticipo': '', 'anticipo_prima': '', 'anticipo_cxp': '', 'anticipo_cxp_prima': '', 'caja': '', 'caja_prima': '', 'nota_credito': '', 'nota_credito_prima': '', 'moneda_funcional': False, 'desglose': ''} [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:398]
+2024-10-20 15:05:36,161 INFO: Ejecutando consulta de conteo para divisa_id: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:401]
+2024-10-20 15:05:36,162 ERROR: Error de base de datos al eliminar divisa: (psycopg2.errors.UndefinedColumn) no existe la columna depositos.divisa_id
+LINE 3: WHERE depositos.divisa_id = 9
+              ^
+
+[SQL: SELECT count(depositos.id) AS count_1 
+FROM depositos 
+WHERE depositos.divisa_id = %(divisa_id_1)s]
+[parameters: {'divisa_id_1': 9}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:422]
+2024-10-20 21:26:09,256 INFO: Intentando eliminar divisa con ID: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:397]
+2024-10-20 21:26:09,256 INFO: Detalles de la divisa: {'id': 9, 'codigo': 'KIP', 'nombre': 'kip', 'tasa_cambio': 23.0, 'fecha_actualizacion': '2024-10-20T14:46:14.650011', 'abreviatura': 'X', 'simbolo': 'E', 'cuenta_por_cobrar': '', 'cuenta_por_pagar': '', 'prima_cxc': '', 'prima_cxp': '', 'ganancia_diferencia_cambiaria': '', 'perdida_diferencia_cambiaria': '', 'anticipo': '', 'anticipo_prima': '', 'anticipo_cxp': '', 'anticipo_cxp_prima': '', 'caja': '', 'caja_prima': '', 'nota_credito': '', 'nota_credito_prima': '', 'moneda_funcional': False, 'desglose': ''} [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:398]
+2024-10-20 21:26:09,256 INFO: Ejecutando consulta de conteo para divisa_id: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:401]
+2024-10-20 21:26:09,267 ERROR: Error de base de datos al eliminar divisa: (psycopg2.errors.UndefinedColumn) no existe la columna depositos.divisa_id
+LINE 3: WHERE depositos.divisa_id = 9
+              ^
+
+[SQL: SELECT count(depositos.id) AS count_1 
+FROM depositos 
+WHERE depositos.divisa_id = %(divisa_id_1)s]
+[parameters: {'divisa_id_1': 9}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:422]
+2024-10-20 21:32:01,158 INFO: Intentando eliminar divisa con ID: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:397]
+2024-10-20 21:32:01,166 INFO: Detalles de la divisa: {'id': 9, 'codigo': 'KIP', 'nombre': 'kip', 'tasa_cambio': 23.0, 'fecha_actualizacion': '2024-10-20T14:46:14.650011', 'abreviatura': 'X', 'simbolo': 'E', 'cuenta_por_cobrar': '', 'cuenta_por_pagar': '', 'prima_cxc': '', 'prima_cxp': '', 'ganancia_diferencia_cambiaria': '', 'perdida_diferencia_cambiaria': '', 'anticipo': '', 'anticipo_prima': '', 'anticipo_cxp': '', 'anticipo_cxp_prima': '', 'caja': '', 'caja_prima': '', 'nota_credito': '', 'nota_credito_prima': '', 'moneda_funcional': False, 'desglose': ''} [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:398]
+2024-10-20 21:32:01,166 INFO: Ejecutando consulta de conteo para divisa_id: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:401]
+2024-10-20 21:32:01,172 INFO: Conteo de depósitos para divisa 9: 0 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:404]
+2024-10-20 21:32:01,191 ERROR: Error de base de datos al eliminar divisa: (psycopg2.errors.UndefinedColumn) no existe la columna depositos.cuenta_bancaria
+LINE 1: ..., depositos.descripcion AS depositos_descripcion, depositos....
+                                                             ^
+
+[SQL: SELECT depositos.id AS depositos_id, depositos.monto AS depositos_monto, depositos.fecha AS depositos_fecha, depositos.banco_id AS depositos_banco_id, depositos.divisa_id AS depositos_divisa_id, depositos.descripcion AS depositos_descripcion, depositos.cuenta_bancaria AS depositos_cuenta_bancaria, depositos.numero AS depositos_numero, depositos.concepto AS depositos_concepto, depositos.estatus AS depositos_estatus, depositos.referencia AS depositos_referencia, depositos.creador AS depositos_creador, depositos.actualizado_por AS depositos_actualizado_por, depositos.fuente AS depositos_fuente, depositos.fuente_referencia AS depositos_fuente_referencia 
+FROM depositos 
+WHERE %(param_1)s = depositos.divisa_id]
+[parameters: {'param_1': 9}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:422]
+2024-10-20 21:34:51,589 INFO: Intentando eliminar divisa con ID: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:397]
+2024-10-20 21:34:51,589 INFO: Detalles de la divisa: {'id': 9, 'codigo': 'KIP', 'nombre': 'kip', 'tasa_cambio': 23.0, 'fecha_actualizacion': '2024-10-20T14:46:14.650011', 'abreviatura': 'X', 'simbolo': 'E', 'cuenta_por_cobrar': '', 'cuenta_por_pagar': '', 'prima_cxc': '', 'prima_cxp': '', 'ganancia_diferencia_cambiaria': '', 'perdida_diferencia_cambiaria': '', 'anticipo': '', 'anticipo_prima': '', 'anticipo_cxp': '', 'anticipo_cxp_prima': '', 'caja': '', 'caja_prima': '', 'nota_credito': '', 'nota_credito_prima': '', 'moneda_funcional': False, 'desglose': ''} [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:398]
+2024-10-20 21:34:51,589 INFO: Ejecutando consulta de conteo para divisa_id: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:401]
+2024-10-20 21:34:51,589 INFO: Conteo de depósitos para divisa 9: 0 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:404]
+2024-10-20 21:44:41,741 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 21:46:29,082 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 21:46:45,055 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+2024-10-20 21:51:13,536 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]

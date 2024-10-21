@@ -149,7 +149,6 @@ def crear_banco():
                              f"Código SWIFT: {nuevo_banco.codigo_swift}\n"
                              f"Fecha de creación: {nuevo_banco.fecha}")
         respuesta_asistente = asistente.responder(mensaje_asistente, current_user.id)
-        logger.info(f"Respuesta del asistente: {respuesta_asistente}")
 
         return jsonify({
             "message": "Banco creado exitosamente",
@@ -160,18 +159,19 @@ def crear_banco():
         db.session.rollback()
         error_info = str(e.orig)
         logger.error(f"IntegrityError al crear banco: {error_info}")
+        error_details = {}
         if 'unique constraint' in error_info.lower():
             if 'nuevo_bancos_nombre_key' in error_info:
-                mensaje = "Ya existe un banco con este nombre."
+                error_details['nombre'] = "Ya existe un banco con este nombre."
             elif 'nuevo_bancos_telefono_key' in error_info:
-                mensaje = "Ya existe un banco con este número de teléfono."
+                error_details['telefono'] = "Ya existe un banco con este número de teléfono."
             else:
-                mensaje = "Ya existe un banco con información duplicada."
+                error_details['general'] = "Ya existe un banco con información duplicada."
         else:
-            mensaje = "Error de integridad al crear el banco."
+            error_details['general'] = "Error de integridad al crear el banco."
         
-        logger.warning(f"Error al crear banco: {mensaje} Detalles: {datos}")
-        return jsonify({"error": mensaje}), 400
+        logger.warning(f"Error al crear banco: {error_details} Detalles: {datos}")
+        return jsonify({"error": "Error al crear el banco", "details": error_details}), 400
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error inesperado al crear banco: {str(e)}")

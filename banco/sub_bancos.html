@@ -297,7 +297,14 @@
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                Swal.fire('Error', data.error, 'error');
+                let errorMessage = data.error;
+                if (data.details) {
+                    errorMessage += '\n\nDetalles:\n';
+                    for (const [key, value] of Object.entries(data.details)) {
+                        errorMessage += `${key}: ${value}\n`;
+                    }
+                }
+                Swal.fire('Error', errorMessage, 'error');
             } else {
                 Swal.fire('Éxito', 'Banco guardado correctamente', 'success');
                 toggleModal();
@@ -309,6 +316,10 @@
             Swal.fire('Error', 'Ocurrió un error al guardar el banco', 'error');
         });
     }
+
+    // ... (El resto del código permanece sin cambios)
+</script>
+{% endblock %}
 
     function editarBanco(id) {
         fetch(`/banco/api/obtener-banco/${id}`)
