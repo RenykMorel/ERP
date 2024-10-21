@@ -176,6 +176,22 @@ def crear_banco():
         db.session.rollback()
         logger.error(f"Error inesperado al crear banco: {str(e)}")
         return jsonify({"error": f"Error inesperado al crear el banco: {str(e)}"}), 500
+    
+@banco_bp.route("/obtener-divisas-activas", methods=["GET"])
+@login_required
+def obtener_divisas_activas():
+    try:
+        divisas = Divisa.query.filter_by(estatus='activo').all()
+        return jsonify([{
+            'id': divisa.id,
+            'codigo': divisa.codigo,
+            'nombre': divisa.nombre,
+            'simbolo': divisa.simbolo
+        } for divisa in divisas])
+    except Exception as e:
+        logger.error(f"Error al obtener divisas activas: {str(e)}")
+        return jsonify({"error": "Error al obtener divisas"}), 500 
+        
 
 @banco_bp.route("/crear-deposito", methods=["POST"])
 @login_required
@@ -265,34 +281,34 @@ def obtener_depositos():
 @login_required
 def listar_crear_divisas():
     if request.method == "GET":
-        logger.info("Iniciando función listar_divisas")
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 10, type=int)
-        search = request.args.get('search', '')
-
-        logger.info(f"Parámetros recibidos: page={page}, per_page={per_page}, search={search}")
-
-        query = Divisa.query
-
-        if search:
-            query = query.filter(or_(
-                Divisa.codigo.ilike(f'%{search}%'),
-                Divisa.nombre.ilike(f'%{search}%'),
-                Divisa.abreviatura.ilike(f'%{search}%')
-            ))
-
         try:
+            logger.info("Iniciando función listar_divisas")
+            page = request.args.get('page', 1, type=int)
+            per_page = request.args.get('per_page', 10, type=int)
+            codigo = request.args.get('codigo', '')
+            nombre = request.args.get('nombre', '')
+
+            logger.info(f"Parámetros recibidos: page={page}, per_page={per_page}, codigo={codigo}, nombre={nombre}")
+
+            query = Divisa.query
+
+            if codigo:
+                query = query.filter(Divisa.codigo.ilike(f'%{codigo}%'))
+            if nombre:
+                query = query.filter(Divisa.nombre.ilike(f'%{nombre}%'))
+
             divisas_paginadas = query.paginate(page=page, per_page=per_page, error_out=False)
             logger.info(f"Divisas paginadas obtenidas. Total: {divisas_paginadas.total}")
 
             divisas = [{
-                'id':   divisa.id,
+                'id': divisa.id,
                 'codigo': divisa.codigo,
                 'nombre': divisa.nombre,
                 'tasa_cambio': divisa.tasa_cambio,
                 'fecha_actualizacion': divisa.fecha_actualizacion.isoformat() if divisa.fecha_actualizacion else None,
                 'abreviatura': divisa.abreviatura,
-                'simbolo': divisa.simbolo
+                'simbolo': divisa.simbolo,
+                'estatus': divisa.estatus
             } for divisa in divisas_paginadas.items]
 
             logger.info(f"Divisas procesadas: {len(divisas)}")
@@ -307,8 +323,12 @@ def listar_crear_divisas():
             logger.info("Respuesta preparada con éxito")
             return jsonify(response), 200
         except Exception as e:
-            logger.error(f"Error al listar divisas: {str(e)}")
-            return jsonify({"error": "Error interno del servidor"}), 500
+            logger.error(f"Error al listar divisas: {str(e)}", exc_info=True)
+            return jsonify({"error": "Error interno del servidor al listar divisas", "details": str(e)}), 500
+
+    # ... (el resto del código para el método POST)
+
+    # ... (el resto del código para el método POST)
     elif request.method == "POST":
         datos = request.json
         logger.info(f"Datos recibidos para crear divisa: {datos}")

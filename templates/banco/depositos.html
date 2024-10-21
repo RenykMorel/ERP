@@ -122,13 +122,11 @@
                     </select>
                 </div>
                 <div class="col-span-1">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="moneda">
-                        Moneda
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="divisa_id">
+                        Divisa
                     </label>
-                    <select id="moneda" name="moneda" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <option value="DOP">Peso Dominicano</option>
-                        <option value="USD">Dólar Estadounidense</option>
-                        <option value="EUR">Euro</option>
+                    <select id="divisa_id" name="divisa_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="">Seleccione una divisa</option>
                     </select>
                 </div>
                 <div class="col-span-1">
@@ -287,6 +285,7 @@ function initializeDepositos() {
 
     loadBancos();
     buscarDepositos();
+    cargarDivisas();
     initChart();
 }
 
@@ -304,6 +303,22 @@ function loadBancos() {
             });
         })
         .catch(error => console.error('Error:', error));
+}
+
+function cargarDivisas() {
+    fetch('/api/obtener-divisas-activas')
+        .then(response => response.json())
+        .then(divisas => {
+            const selectMoneda = document.getElementById('moneda');
+            selectMoneda.innerHTML = ''; // Limpia las opciones existentes
+            divisas.forEach(divisa => {
+                const option = document.createElement('option');
+                option.value = divisa.id;
+                option.textContent = `${divisa.nombre} (${divisa.codigo})`;
+                selectMoneda.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error al cargar divisas:', error));
 }
 
 function buscarDepositos() {
@@ -359,6 +374,7 @@ function guardarDeposito(event) {
 
     depositoData.monto = parseFloat(depositoData.monto);
     depositoData.banco_id = parseInt(depositoData.banco_id);
+    depositoData.divisa_id = parseInt(depositoData.divisa_id); // Asegúrate de que esto se llame divisa_id
     depositoData.cuentas_afectadas = getCuentasAfectadas();
 
     const url = depositoData.id ? `/api/actualizar-deposito/${depositoData.id}` : '/api/crear-deposito';
@@ -396,6 +412,28 @@ function manejarAccionesDeposito(event) {
         eliminarDeposito(depositoId);
     }
 }
+
+function cargarDivisasActivas() {
+    fetch('/api/obtener-divisas-activas')
+        .then(response => response.json())
+        .then(divisas => {
+            const selectDivisa = document.getElementById('divisa_id');
+            selectDivisa.innerHTML = '<option value="">Seleccione una moneda</option>';
+            divisas.forEach(divisa => {
+                const option = document.createElement('option');
+                option.value = divisa.id;
+                option.textContent = `${divisa.nombre} (${divisa.codigo})`;
+                selectDivisa.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error al cargar divisas:', error));
+}
+
+// Llamar a esta función cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDivisasActivas();
+    // ... otras inicializaciones ...
+});
 
 function editarDeposito(id) {
     fetch(`/api/obtener-deposito/${id}`)

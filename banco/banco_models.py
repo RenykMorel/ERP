@@ -72,7 +72,8 @@ class Divisa(db.Model):
     tasa_cambio = db.Column(db.Float, nullable=False)
     fecha_actualizacion = db.Column(db.DateTime, nullable=False, default=func.now())
     abreviatura = db.Column(db.String(10))
-    simbolo = db.Column(db.String(5))  # Asegúrate de que esta columna esté presente
+    simbolo = db.Column(db.String(5))
+    estatus = db.Column(db.String(20), default='activo')
     cuenta_por_cobrar = db.Column(db.String(50))
     cuenta_por_pagar = db.Column(db.String(50))
     prima_cxc = db.Column(db.String(50))
@@ -90,28 +91,16 @@ class Divisa(db.Model):
     moneda_funcional = db.Column(db.Boolean, default=False)
     desglose = db.Column(db.Text)
 
-
-    @validates('codigo')
-    def validate_codigo(self, key, codigo):
-        if len(codigo) != 3:
-            raise ValueError("El código de la divisa debe tener exactamente 3 caracteres")
-        return codigo.upper()
-
-    @validates('tasa_cambio')
-    def validate_tasa_cambio(self, key, tasa_cambio):
-        if tasa_cambio <= 0:
-            raise ValueError("La tasa de cambio debe ser mayor que cero")
-        return tasa_cambio
-
     def to_dict(self):
         return {
             'id': self.id,
             'codigo': self.codigo,
             'nombre': self.nombre,
             'tasa_cambio': self.tasa_cambio,
-            'fecha_actualizacion': self.fecha_actualizacion.isoformat(),
+            'fecha_actualizacion': self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None,
             'abreviatura': self.abreviatura,
             'simbolo': self.simbolo,
+            'estatus': self.estatus,
             'cuenta_por_cobrar': self.cuenta_por_cobrar,
             'cuenta_por_pagar': self.cuenta_por_pagar,
             'prima_cxc': self.prima_cxc,
@@ -129,6 +118,8 @@ class Divisa(db.Model):
             'moneda_funcional': self.moneda_funcional,
             'desglose': self.desglose
         }
+
+    # ... (resto de los métodos)
 
     @classmethod
     def from_dict(cls, data):

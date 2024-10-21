@@ -109,10 +109,10 @@
             <form id="conciliacion-form" class="mt-4">
                 <input type="hidden" id="conciliacion-id" name="id">
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="banco_id">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="divisa_id">
                         Banco
                     </label>
-                    <select id="banco_id" name="banco_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                    <select id="divisa_id" name="divisa_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                         <option value="">Seleccione un banco</option>
                     </select>
                 </div>
@@ -358,6 +358,28 @@ function manejarAccionesConciliacion(event) {
         eliminarConciliacion(conciliacionId);
     }
 }
+
+function cargarDivisasActivas() {
+    fetch('/api/obtener-divisas-activas')
+        .then(response => response.json())
+        .then(divisas => {
+            const selectDivisa = document.getElementById('divisa_id');
+            selectDivisa.innerHTML = '<option value="">Seleccione una moneda</option>';
+            divisas.forEach(divisa => {
+                const option = document.createElement('option');
+                option.value = divisa.id;
+                option.textContent = `${divisa.nombre} (${divisa.codigo})`;
+                selectDivisa.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error al cargar divisas:', error));
+}
+
+// Llamar a esta función cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDivisasActivas();
+    // ... otras inicializaciones ...
+});
 
 function verConciliacion(id) {
     // Aquí deberías hacer una llamada a tu API para obtener los detalles de la conciliación
