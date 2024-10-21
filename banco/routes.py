@@ -8,6 +8,8 @@ import logging
 from datetime import datetime
 from flask import current_app
 from sqlalchemy import or_, func
+from .banco_models import CuentaBancaria
+
 
 logger = logging.getLogger(__name__)
 
@@ -396,6 +398,16 @@ def listar_crear_divisas():
             db.session.rollback()
             logger.error(f"Error inesperado al crear divisa: {str(e)}")
             return jsonify({"error": f"Error inesperado al crear la divisa: {str(e)}"}), 500
+
+@banco_bp.route("/obtener-cuentas-bancarias", methods=["GET"])
+@login_required
+def obtener_cuentas_bancarias():
+    try:
+        cuentas = CuentaBancaria.query.all()
+        return jsonify([cuenta.to_dict() for cuenta in cuentas])
+    except Exception as e:
+        logger.error(f"Error al obtener cuentas bancarias: {str(e)}")
+        return jsonify({"error": "Error al obtener cuentas bancarias"}), 500
 
 @banco_bp.route("/divisas/<int:id>", methods=["GET", "PUT", "DELETE"])
 @login_required

@@ -15,10 +15,20 @@
         overflow-y: visible !important;
     }
     .modal-container {
-        width: 600px;
-        height: 600px;
-        max-width: 90%;
-        max-height: 90%;
+        width: 80%;
+        max-width: 850px;
+        max-height: 200vh;
+        overflow-y: auto;
+    }
+    .input-green {
+        border: 2px solid #4CAF50;
+    }
+    .button-green {
+        background-color: #4CAF50;
+        color: white;
+    }
+    .button-green:hover {
+        background-color: #45a049;
     }
 </style>
 {% endblock %}
@@ -94,10 +104,10 @@
 <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
     <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
     
-    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+    <div class="modal-container bg-white w-11/12 md:max-w-4xl mx-auto rounded shadow-lg z-50 overflow-y-auto border-2 border-green-500">
         <div class="modal-content py-4 text-left px-6">
             <div class="flex justify-between items-center pb-3">
-                <p class="text-2xl font-bold" id="modal-title">Crear Depósito</p>
+                <p class="text-2xl font-bold text-green-600" id="modal-title">Crear Depósito</p>
                 <div class="modal-close cursor-pointer z-50">
                     <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
                         <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
@@ -111,13 +121,13 @@
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="cuenta-bancaria">
                         Cuenta Bancaria
                     </label>
-                    <input type="text" id="cuenta-bancaria" name="cuenta_bancaria" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" id="cuenta-bancaria" name="cuenta_bancaria" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <div class="col-span-1">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="banco_id">
                         Banco
                     </label>
-                    <select id="banco_id" name="banco_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <select id="banco_id" name="banco_id" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                         <option value="">Seleccione un banco</option>
                     </select>
                 </div>
@@ -125,7 +135,7 @@
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="divisa_id">
                         Divisa
                     </label>
-                    <select id="divisa_id" name="divisa_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <select id="divisa_id" name="divisa_id" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                         <option value="">Seleccione una divisa</option>
                     </select>
                 </div>
@@ -133,31 +143,31 @@
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
                         Fecha
                     </label>
-                    <input type="text" id="fecha" name="fecha" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" id="fecha" name="fecha" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <div class="col-span-1">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="monto">
                         Monto
                     </label>
-                    <input type="number" step="0.01" id="monto" name="monto" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="number" step="0.01" id="monto" name="monto" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <div class="col-span-1">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="numero">
                         Número
                     </label>
-                    <input type="text" id="numero" name="numero" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" id="numero" name="numero" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <div class="col-span-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="concepto">
                         Concepto
                     </label>
-                    <input type="text" id="concepto" name="concepto" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" id="concepto" name="concepto" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <div class="col-span-1">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
                         Estatus
                     </label>
-                    <select id="estatus" name="estatus" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <select id="estatus" name="estatus" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                         <option value="nuevo">Nuevo</option>
                         <option value="procesado">Procesado</option>
                         <option value="cancelado">Cancelado</option>
@@ -167,49 +177,49 @@
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="referencia">
                         Referencia
                     </label>
-                    <input type="text" id="referencia" name="referencia" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" id="referencia" name="referencia" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <div class="col-span-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="descripcion">
                         Descripción
                     </label>
-                    <textarea id="descripcion" name="descripcion" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                    <textarea id="descripcion" name="descripcion" rows="3" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                 </div>
                 <div class="col-span-1">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="creador">
                         Creado Por
                     </label>
-                    <input type="text" id="creador" name="creador" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
+                    <input type="text" id="creador" name="creador" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
                 </div>
                 <div class="col-span-1">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="actualizado">
                         Actualizado Por
                     </label>
-                    <input type="text" id="actualizado" name="actualizado" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
+                    <input type="text" id="actualizado" name="actualizado" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
                 </div>
                 <div class="col-span-1">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="fuente">
                         Fuente
                     </label>
-                    <input type="text" id="fuente" name="fuente" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" id="fuente" name="fuente" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <div class="col-span-1">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="fuente-referencia">
                         Fuente Referencia
                     </label>
-                    <input  type="text" id="fuente-referencia" name="fuente_referencia" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" id="fuente-referencia" name="fuente_referencia" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <div class="col-span-2">
-                    <h3 class="text-lg font-semibold mb-2">Cuentas Afectadas</h3>
+                    <h3 class="text-lg font-semibold mb-2 text-green-600">Cuentas Afectadas</h3>
                     <div class="grid grid-cols-3 gap-2">
-                        <input type="text" id="identificador" placeholder="Identificador" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <select id="tipo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <input type="text" id="identificador" placeholder="Identificador" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <select id="tipo" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                             <option value="debito">Débito</option>
                             <option value="credito">Crédito</option>
                         </select>
-                        <input type="number" step="0.01" id="monto-cuenta" placeholder="Monto" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <input type="number" step="0.01" id="monto-cuenta" placeholder="Monto" class="input-green shadow appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                     </div>
-                    <button type="button" id="agregar-cuenta" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <button type="button" id="agregar-cuenta" class="mt-2 button-green font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                         Agregar
                     </button>
                 </div>
@@ -237,7 +247,7 @@
                     </table>
                 </div>
                 <div class="col-span-2 flex items-center justify-between mt-4">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <button type="submit" class="button-green font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                         Guardar
                     </button>
                     <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">

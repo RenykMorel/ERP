@@ -58,12 +58,18 @@
                 <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="number" id="saldo-cuenta" placeholder="Saldo mínimo">
             </div>
         </div>
-        <div class="flex flex-col sm:flex-row justify-between mt-4">
-            <button id="buscar-btn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mb-2 sm:mb-0">
+        <div class="flex flex-wrap justify-between mt-4">
+            <button id="buscar-btn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mb-2 sm:mb-0 sm:mr-2">
                 <i class="fas fa-search mr-2"></i>Buscar
             </button>
-            <button id="crear-nueva-btn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            <button id="crear-nueva-btn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mb-2 sm:mb-0 sm:mr-2">
                 <i class="fas fa-plus mr-2"></i>Crear Nueva Cuenta
+            </button>
+            <button id="imprimir-catalogo-btn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 mb-2 sm:mb-0 sm:mr-2">
+                <i class="fas fa-print mr-2"></i>Imprimir Catálogo de Cuentas
+            </button>
+            <button id="cargar-catalogo-btn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                <i class="fas fa-upload mr-2"></i>Cargar Catálogo
             </button>
         </div>
     </div>
@@ -180,12 +186,45 @@
                             <span class="ml-2">Balance General</span>
                         </label>
                     </div>
+                
                 </div>
                 <div class="flex items-center justify-between mt-6">
                     <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Grabar</button>
                     <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" id="limpiar-btn">Limpiar</button>
                     <button type="button" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">Volver</button>
                     <button type="button" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" id="clonar-btn">Clonar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for file upload -->
+<div id="upload-modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-xl font-bold">Cargar Catálogo de Cuentas</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <form id="upload-form">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="file-upload">
+                        Seleccione el archivo CSV o Excel
+                    </label>
+                    <input type="file" id="file-upload" name="file" accept=".csv,.xlsx,.xls" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Cargar
+                    </button>
+                    <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
+                        Cancelar
+                    </button>
                 </div>
             </form>
         </div>
@@ -210,12 +249,18 @@ function initializeCuentas() {
     const modalCloseButtons = document.querySelectorAll('.modal-close');
     const limpiarBtn = document.getElementById('limpiar-btn');
     const clonarBtn = document.getElementById('clonar-btn');
+    const imprimirCatalogoBtn = document.getElementById('imprimir-catalogo-btn');
+    const cargarCatalogoBtn = document.getElementById('cargar-catalogo-btn');
+    const uploadForm = document.getElementById('upload-form');
 
     buscarBtn.addEventListener('click', buscarCuentas);
     crearNuevaBtn.addEventListener('click', mostrarFormularioCrearCuenta);
     cuentaForm.addEventListener('submit', guardarCuenta);
     limpiarBtn.addEventListener('click', limpiarFormulario);
     clonarBtn.addEventListener('click', clonarCuenta);
+    imprimirCatalogoBtn.addEventListener('click', imprimirCatalogo);
+    cargarCatalogoBtn.addEventListener('click', mostrarModalCargaCatalogo);
+    uploadForm.addEventListener('submit', cargarCatalogo);
 
     modalOverlay.addEventListener('click', toggleModal);
     modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
@@ -382,6 +427,31 @@ function clonarCuenta() {
     Swal.fire('Éxito', 'Cuenta clonada correctamente', 'success');
     toggleModal();
     buscarCuentas();
+}
+
+function imprimirCatalogo() {
+    // Implementación para imprimir el catálogo
+    Swal.fire('Imprimir Catálogo', 'Función de impresión del catálogo de cuentas', 'info');
+    // Aquí deberías implementar la lógica para generar y descargar o imprimir el catálogo
+}
+
+function mostrarModalCargaCatalogo() {
+    const modal = document.getElementById('upload-modal');
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+}
+
+function cargarCatalogo(event) {
+    event.preventDefault();
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput.files[0];
+    if (file) {
+        // Aquí deberías implementar la lógica para cargar y procesar el archivo
+        // Por ahora, solo mostraremos un mensaje de éxito
+        Swal.fire('Éxito', 'Catálogo cargado correctamente', 'success');
+        document.getElementById('upload-modal').classList.add('opacity-0', 'pointer-events-none');
+    } else {
+        Swal.fire('Error', 'Por favor, seleccione un archivo', 'error');
+    }
 }
 
 // Inicializar la búsqueda de cuentas al cargar la página

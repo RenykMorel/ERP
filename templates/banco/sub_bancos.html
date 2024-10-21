@@ -12,6 +12,13 @@
         overflow-x: hidden;
         overflow-y: visible !important;
     }
+    .green-border {
+        border: 2px solid #4CAF50;
+    }
+    .green-border:focus {
+        border-color: #45a049;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
 </style>
 {% endblock %}
 
@@ -45,6 +52,9 @@
             <button id="crear-nuevo-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                 <i class="fas fa-plus mr-2"></i>Crear Nuevo Banco
             </button>
+            <button id="gestionar-cuentas-btn" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                <i class="fas fa-university mr-2"></i>Gestionar Cuentas Bancarias
+            </button>
         </div>
     </div>
     
@@ -62,44 +72,20 @@
                 </tr>
             </thead>
             <tbody id="bancos-tbody" class="bg-white divide-y divide-gray-200">
-                {% for banco in bancos %}
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ banco.id }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ banco.nombre }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ banco.telefono }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ banco.contacto }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ banco.telefono_contacto }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ 'bg-green-100 text-green-800' if banco.estatus == 'activo' else 'bg-red-100 text-red-800' }}">
-                            {{ banco.estatus }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="editar-banco text-blue-600 hover:text-blue-900 mr-2" data-id="{{ banco.id }}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="eliminar-banco text-red-600 hover:text-red-900 mr-2" data-id="{{ banco.id }}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <button class="cambiar-estatus-banco {{ 'text-yellow-600 hover:text-yellow-900' if banco.estatus == 'activo' else 'text-green-600 hover:text-green-900' }}" data-id="{{ banco.id }}" data-estatus="{{ banco.estatus }}">
-                            <i class="fas {{ 'fa-toggle-off' if banco.estatus == 'activo' else 'fa-toggle-on' }}"></i>
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
+                <!-- Bancos se cargarán aquí dinámicamente -->
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- Modal -->
-<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+<!-- Modal para Banco -->
+<div id="banco-modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
     <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
     
-    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+    <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded shadow-lg z-50 overflow-y-auto green-border">
         <div class="modal-content py-4 text-left px-6">
             <div class="flex justify-between items-center pb-3">
-                <p class="text-xl font-bold" id="modal-title">Crear Nuevo Banco</p>
+                <p class="text-2xl font-bold text-gray-800" id="banco-modal-title">Crear Nuevo Banco</p>
                 <div class="modal-close cursor-pointer z-50">
                     <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
                         <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
@@ -107,65 +93,228 @@
                 </div>
             </div>
 
-            <form id="banco-form" class="mt-4">
+            <form id="banco-form" class="mt-4 grid grid-cols-2 gap-4">
                 <input type="hidden" name="id">
-                <div class="mb-4">
+                <div class="col-span-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
-                        Nombre
+                        Nombre del Banco
                     </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="nombre" type="text" placeholder="Nombre del banco" required>
+                    <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="nombre" type="text" placeholder="Ingrese el nombre del banco" required>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">
-                        Dirección
-                    </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="direccion" type="text" placeholder="Dirección del banco">
-                </div>
-                <div class="mb-4">
+                <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono">
                         Teléfono
                     </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono" type="text" placeholder="Teléfono del banco" required>
+                    <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono" type="tel" placeholder="Ej: +1234567890" required>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="contacto">
-                        Nombre Contacto
-                    </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="contacto" type="text" placeholder="Nombre del contacto">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono_contacto">
-                        Teléfono de Contacto
-                    </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono_contacto" type="text" placeholder="Teléfono del contacto">
-                </div>
-                <div class="mb-4">
+                <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo">
                         Código
                     </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="codigo" type="text" placeholder="Código del banco">
+                    <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="codigo" type="text" placeholder="Código único del banco">
                 </div>
-                <div class="mb-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="contacto">
+                        Nombre de Contacto
+                    </label>
+                    <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="contacto" type="text" placeholder="Nombre de la persona de contacto">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono_contacto">
+                        Teléfono de Contacto
+                    </label>
+                    <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="telefono_contacto" type="tel" placeholder="Ej: +1234567890">
+                </div>
+                <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo_swift">
                         Código SWIFT
                     </label>
-                    <input class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="codigo_swift" type="text" placeholder="Código SWIFT del banco">
+                    <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="codigo_swift" type="text" placeholder="Código SWIFT del banco">
                 </div>
-                <div class="mb-4">
+                <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
                         Estatus
                     </label>
-                    <select class="shadow-sm appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
-                        <option value="activo">Activa</option>
-                        <option value="inactivo">Inactiva</option>
+                    <select class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
                     </select>
                 </div>
-                <div class="flex items-center justify-between">
+                <div class="col-span-2">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">
+                        Dirección
+                    </label>
+                    <textarea class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="direccion" rows="3" placeholder="Dirección completa del banco"></textarea>
+                </div>
+                <div class="col-span-2 flex items-center justify-end space-x-4 mt-4">
+                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
+                        Cancelar
+                    </button>
                     <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
                         Guardar
                     </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Cuentas Bancarias -->
+<div id="cuentas-bancarias-modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-4xl mx-auto rounded shadow-lg z-50 overflow-y-auto green-border">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold text-gray-800">Gestión de Cuentas Bancarias</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <button id="crear-cuenta-bancaria-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <i class="fas fa-plus mr-2"></i>Crear Nueva Cuenta Bancaria
+                </button>
+            </div>
+
+            <div id="cuentas-bancarias-table-container" class="overflow-x-auto">
+                <table id="cuentas-bancarias-table" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Número</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Nombre</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Banco</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Tipo</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estatus</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuentas-bancarias-tbody" class="bg-white divide-y divide-gray-200">
+                        <!-- Cuentas bancarias se cargarán aquí dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Crear/Editar Cuenta Bancaria -->
+<div id="cuenta-bancaria-modal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded shadow-lg z-50 overflow-y-auto green-border">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold text-gray-800" id="cuenta-bancaria-modal-title">Crear Nueva Cuenta Bancaria</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <form id="cuenta-bancaria-form" class="mt-4 grid grid-cols-2 gap-4">
+                <input type="hidden" name="id">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="numero">
+                        Número
+                    </label>
+                    <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="numero" type="text" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
+                        Nombre
+                    </label>
+                    <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="nombre" type="text" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="banco">
+                        Banco
+                    </label>
+                    <select class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="banco" required>
+                        <!-- Opciones de bancos se cargarán dinámicamente -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="moneda">
+                        Moneda
+                    </label>
+                    <select class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="moneda" required>
+                        <option value="DOP">Peso Dominicano</option>
+                        <option value="USD">Dólar Estadounidense</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo_cuenta">
+                        Tipo de Cuenta
+                    </label>
+                    <select class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="tipo_cuenta" required>
+                        <option value="Ahorro">Ahorro</option>
+                        <option value="Corriente">Corriente</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cuenta_contable">
+                        Cuenta Contable
+                    </label>
+                    <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="cuenta_contable" type="text">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo">
+                        Código
+                    </label>
+                    <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="codigo" type="text">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
+                        Estatus
+                    </label>
+                    <select class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="estatus">
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" class="form-checkbox" name="es_predeterminada">
+                        <span class="ml-2">Es Predeterminada</span>
+                    </label>
+                </div>
+                <div class="col-span-2">
+                    <h3 class="text-lg font-semibold mb-2">Impresión de Cheque</h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="dimensiones">
+                                Dimensiones
+                            </label>
+                            <select class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="dimensiones">
+                                <option value="1">Opción 1</option>
+                                <option value="2">Opción 2</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="ajuste_vertical">
+                                Ajuste Vertical
+                            </label>
+                            <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="ajuste_vertical" type="number">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="ajuste_horizontal">
+                                Ajuste Horizontal
+                            </label>
+                            <input class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="ajuste_horizontal" type="number">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-span-2 flex items-center justify-end space-x-4 mt-4">
                     <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
                         Cancelar
+                    </button>
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Guardar
                     </button>
                 </div>
             </form>
@@ -178,55 +327,106 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        if (typeof initializeAsistente === 'function') {
-            initializeAsistente();
-        }
-        
         initializeBancos();
-        buscarBancos(); // Cargar bancos inicialmente
+        buscarBancos();
     });
 
     function initializeBancos() {
         const buscarBtn = document.getElementById('buscar-btn');
         const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
+        const gestionarCuentasBtn = document.getElementById('gestionar-cuentas-btn');
         const bancoForm = document.getElementById('banco-form');
-        const modal = document.querySelector('.modal');
-        const modalOverlay = document.querySelector('.modal-overlay');
+        const cuentaBancariaForm = document.getElementById('cuenta-bancaria-form');
+        const crearCuentaBancariaBtn = document.getElementById('crear-cuenta-bancaria-btn');
+        const modalOverlays = document.querySelectorAll('.modal-overlay');
         const modalCloseButtons = document.querySelectorAll('.modal-close');
-    
+
         buscarBtn.addEventListener('click', buscarBancos);
-        crearNuevoBtn.addEventListener('click', mostrarFormularioCrearBanco);
-        
+        crearNuevoBtn.addEventListener('click', () => mostrarModal('banco-modal', 'Crear Nuevo Banco'));
+        gestionarCuentasBtn.addEventListener('click', mostrarGestionCuentasBancarias);
         bancoForm.addEventListener('submit', guardarBanco);
-    
-        modalOverlay.addEventListener('click', toggleModal);
-        modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
-    
+        cuentaBancariaForm.addEventListener('submit', guardarCuentaBancaria);
+        crearCuentaBancariaBtn.addEventListener('click', () => mostrarModal('cuenta-bancaria-modal', 'Crear Nueva Cuenta Bancaria'));
+
+        modalOverlays.forEach(overlay => overlay.addEventListener('click', cerrarModales));
+        modalCloseButtons.forEach(btn => btn.addEventListener('click', cerrarModales));
+
         document.getElementById('bancos-tbody').addEventListener('click', manejarAccionesBanco);
+        document.getElementById('cuentas-bancarias-tbody').addEventListener('click', manejarAccionesCuentaBancaria);
     }
 
-    function manejarAccionesBanco(event) {
-        const target = event.target.closest('button');
-        if (!target) return;
+    // Agregar esta función al principio de tu archivo JavaScript
+    function mockObtenerCuentasBancarias() {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve([
+                    { id: 1, numero: '1234567890', nombre: 'Cuenta Principal', banco: 'Banco A', tipo_cuenta: 'Corriente', estatus: 'activo' },
+                    { id: 2, numero: '0987654321', nombre: 'Cuenta Secundaria', banco: 'Banco B', tipo_cuenta: 'Ahorro', estatus: 'activo' },
+                ]);
+            }, 500);
+        });
+    }
+
+    // Modificar la función cargarCuentasBancarias para usar la versión simulada
+    function cargarCuentasBancarias() {
+        fetch('/api/obtener-cuentas-bancarias')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(cuentas => {
+                actualizarTablaCuentasBancarias(cuentas);
+            })
+            .catch(error => {
+                console.error('Error al cargar cuentas bancarias:', error);
+                Swal.fire('Error', `Ocurrió un error al cargar las cuentas bancarias: ${error.message}`, 'error');
+            });
+    }
+
+    function obtenerBancos() {
+        return fetch('/api/obtener-bancos')
+            .then(response => response.json())
+            .catch(error => {
+                console.error('Error al obtener bancos:', error);
+                Swal.fire('Error', 'No se pudieron cargar los bancos', 'error');
+            });
+    }
+
+    function poblarSelectorBancos(bancos) {
+        const selectorBanco = document.querySelector('#cuenta-bancaria-form select[name="banco"]');
+        selectorBanco.innerHTML = '<option value="">Seleccione un banco</option>';
+        bancos.forEach(banco => {
+            const option = document.createElement('option');
+            option.value = banco.id;
+            option.textContent = banco.nombre;
+            selectorBanco.appendChild(option);
+        });
+    }
+
+    function mostrarModal(modalId, titulo) {
+        const modal = document.getElementById(modalId);
+        const tituloElement = modal.querySelector('.text-2xl');
+        if (tituloElement) {
+            tituloElement.textContent = titulo;
+        }
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        document.body.classList.add('modal-active');
     
-        const id = target.dataset.id;
-        if  (target.classList.contains('editar-banco')) {
-            editarBanco(id);
-        } else if (target.classList.contains('eliminar-banco')) {
-            eliminarBanco(id);
-        } else if (target.classList.contains('cambiar-estatus-banco')) {
-            cambiarEstatusBanco(id, target.dataset.estatus);
+        // Si es el modal de cuenta bancaria, cargar los bancos
+        if (modalId === 'cuenta-bancaria-modal') {
+            obtenerBancos().then(bancos => {
+                poblarSelectorBancos(bancos);
+            });
         }
     }
 
-    function toggleModal() {
-        const modal = document.querySelector('.modal');
-        modal.classList.toggle('opacity-0');
-        modal.classList.toggle('pointer-events-none');
-        document.body.classList.toggle('modal-active');
-        if (modal.classList.contains('opacity-0')) {
-            limpiarFormulario();
-        }
+    function cerrarModales() {
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        });
+        document.body.classList.remove('modal-active');
     }
 
     function buscarBancos() {
@@ -234,30 +434,16 @@
         const nombre = document.getElementById('nombre-banco').value;
         const contacto = document.getElementById('contacto-banco').value;
         const estatus = document.getElementById('estatus-banco').value;
-    
+
         fetch(`/api/buscar-bancos?id=${id}&nombre=${nombre}&contacto=${contacto}&estatus=${estatus}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
-                return response.json();
+            .then(response => response.json())
+            .then(bancos => {
+                actualizarTablaBancos(bancos);
             })
-            .then(data => actualizarTablaBancos(data))
             .catch(error => {
                 console.error('Error:', error);
                 Swal.fire('Error', 'Ocurrió un error al buscar bancos', 'error');
             });
-    }
-
-    function limpiarFormulario() {
-        document.getElementById('banco-form').reset();
-        document.getElementById('banco-form').querySelector('[name="id"]').value = '';
-    }
-    
-    function mostrarFormularioCrearBanco() {
-        document.getElementById('modal-title').textContent = 'Crear Nuevo Banco';
-        limpiarFormulario();
-        toggleModal();
     }
 
     function actualizarTablaBancos(bancos) {
@@ -273,7 +459,7 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${banco.telefono_contacto}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${banco.estatus === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                        ${banco.estatus}
+                        ${banco.estatus.charAt(0).toUpperCase() + banco.estatus.slice(1)}
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -283,35 +469,24 @@
                     <button class="eliminar-banco text-red-600 hover:text-red-900 mr-2" data-id="${banco.id}">
                         <i class="fas fa-trash"></i>
                     </button>
-                    <button class="cambiar-estatus-banco ${banco.estatus === 'activo' ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900'}" data-id="${banco.id}" data-estatus="${banco.estatus}">
-                        <i class="fas ${banco.estatus === 'activo' ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
+                    <button class="toggle-estatus-banco ${banco.estatus === 'activo' ? 'text-green-600 hover:text-green-900' : 'text-red-600 hover:text-red-900'}" data-id="${banco.id}" data-estatus="${banco.estatus}">
+                        <i class="fas ${banco.estatus === 'activo' ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
                     </button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
-        initializeBancos();
     }
 
     function guardarBanco(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
         const bancoData = Object.fromEntries(formData);
-        console.log('Datos del formulario:', bancoData);
 
-        // Normalize estatus
-        if (bancoData.estatus === 'Activa') {
-            bancoData.estatus = 'activo';
-        } else if (bancoData.estatus === 'Inactiva') {
-            bancoData.estatus = 'inactivo';
-        }
-    
         const bancoId = bancoData.id;
         const url = bancoId ? `/api/actualizar-banco/${bancoId}` : '/api/crear-banco';
         const method = bancoId ? 'PUT' : 'POST';
-    
-        console.log(`Enviando datos al servidor:`, JSON.stringify(bancoData));
-    
+
         fetch(url, {
             method: method,
             body: JSON.stringify(bancoData),
@@ -319,27 +494,56 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => {
-            console.log(`Respuesta del servidor recibida. Status: ${response.status}`);
-            return response.json().then(data => {
-                if (!response.ok) {
-                    console.warn(`Respuesta del servidor no exitosa:`, data);
-                    throw data;
-                }
-                return data;
-            });
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log(`Banco ${bancoId ? 'actualizado' : 'creado'} exitosamente:`, data);
+            if (data.error) {
+                throw new Error(data.error);
+            }
             Swal.fire('Éxito', bancoId ? 'Banco actualizado correctamente' : 'Banco creado correctamente', 'success');
-            toggleModal();
+            cerrarModales();
             buscarBancos();
         })
         .catch(error => {
-            console.error(`Error completo:`, error);
-            let errorMessage = error.error || error.message || 'Ocurrió un error al guardar el banco';
-            console.error('Mensaje de error mostrado al usuario:', errorMessage);
-            Swal.fire('Error', errorMessage, 'error');
+            console.error('Error:', error);
+            Swal.fire('Error', error.message || 'Ocurrió un error al guardar el banco', 'error');
+        });
+    }
+
+    function manejarAccionesBanco(event) {
+        const target = event.target.closest('button');
+        if (!target) return;
+    
+        const id = target.dataset.id;
+        if (target.classList.contains('editar-banco')) {
+            editarBanco(id);
+        } else if (target.classList.contains('eliminar-banco')) {
+            eliminarBanco(id);
+        } else if (target.classList.contains('toggle-estatus-banco')) {
+            toggleEstatusBanco(id, target.dataset.estatus);
+        }
+    }
+
+
+    function toggleEstatusBanco(id, estatusActual) {
+        const nuevoEstatus = estatusActual === 'activo' ? 'inactivo' : 'activo';
+        fetch(`/api/cambiar-estatus-banco/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ estatus: nuevoEstatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            Swal.fire('Éxito', `Estatus del banco cambiado a ${nuevoEstatus}`, 'success');
+            buscarBancos();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', error.message || 'Ocurrió un error al cambiar el estatus del banco', 'error');
         });
     }
 
@@ -347,18 +551,15 @@
         fetch(`/api/obtener-banco/${id}`)
             .then(response => response.json())
             .then(banco => {
-                document.getElementById('modal-title').textContent = 'Editar Banco';
+                document.getElementById('banco-modal-title').textContent = 'Editar Banco';
                 const form = document.getElementById('banco-form');
-                form.id.value = banco.id;
-                form.nombre.value = banco.nombre;
-                form.direccion.value = banco.direccion || '';
-                form.telefono.value = banco.telefono;
-                form.contacto.value = banco.contacto || '';
-                form.telefono_contacto.value = banco.telefono_contacto || '';
-                form.codigo.value = banco.codigo || '';
-                form.codigo_swift.value = banco.codigo_swift || '';
-                form.estatus.value = banco.estatus;
-                toggleModal();
+                for (const [key, value] of Object.entries(banco)) {
+                    const field = form.elements[key];
+                    if (field) {
+                        field.value = value;
+                    }
+                }
+                mostrarModal('banco-modal');
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -396,11 +597,59 @@
         });
     }
 
-    function cambiarEstatusBanco(id, estatusActual) {
-        const nuevoEstatus = estatusActual === 'activo' ? 'inactivo' : 'activo';
-        fetch(`/api/cambiar-estatus-banco/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify({ estatus: nuevoEstatus }),
+    function mostrarGestionCuentasBancarias() {
+        mostrarModal('cuentas-bancarias-modal');
+        cargarCuentasBancarias();
+    }
+
+    function cargarCuentasBancarias() {
+        fetch('/api/obtener-cuentas-bancarias')
+            .then(response => response.json())
+            .then(cuentas => {
+                actualizarTablaCuentasBancarias(cuentas);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Ocurrió un error al cargar las cuentas bancarias', 'error');
+            });
+    }
+
+    function actualizarTablaCuentasBancarias(cuentas) {
+        const tbody = document.getElementById('cuentas-bancarias-tbody');
+        tbody.innerHTML = '';
+        cuentas.forEach(cuenta => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cuenta.numero}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cuenta.nombre}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cuenta.banco}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cuenta.tipo_cuenta}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cuenta.estatus}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button class="editar-cuenta-bancaria text-blue-600 hover:text-blue-900 mr-2" data-id="${cuenta.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="eliminar-cuenta-bancaria text-red-600 hover:text-red-900" data-id="${cuenta.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function guardarCuentaBancaria(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const cuentaData = Object.fromEntries(formData);
+
+        const cuentaId = cuentaData.id;
+        const url = cuentaId ? `/api/actualizar-cuenta-bancaria/${cuentaId}` : '/api/crear-cuenta-bancaria';
+        const method = cuentaId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            body: JSON.stringify(cuentaData),
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -408,15 +657,87 @@
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                Swal.fire('Error', data.error, 'error');
-            } else {
-                Swal.fire('Éxito', `Estatus cambiado a ${nuevoEstatus}`, 'success');
-                buscarBancos();
+                throw new Error(data.error);
             }
+            Swal.fire('Éxito', cuentaId ? 'Cuenta bancaria actualizada correctamente' : 'Cuenta bancaria creada correctamente', 'success');
+            cerrarModales();
+            cargarCuentasBancarias();
         })
         .catch(error => {
             console.error('Error:', error);
-            Swal.fire('Error', 'Ocurrió un error al cambiar el estatus del banco', 'error');
+            Swal.fire('Error', error.message || 'Ocurrió un error al guardar la cuenta bancaria', 'error');
+        });
+    }
+
+    function manejarAccionesCuentaBancaria(event) {
+        const target = event.target.closest('button');
+        if (!target) return;
+
+        const id = target.dataset.id;
+        if (target.classList.contains('editar-cuenta-bancaria')) {
+            editarCuentaBancaria(id);
+        } else if (target.classList.contains('eliminar-cuenta-bancaria')) {
+            eliminarCuentaBancaria(id);
+        }
+    }
+
+    // Modificar la función editarCuentaBancaria para cargar los bancos y seleccionar el correcto
+function editarCuentaBancaria(id) {
+    Promise.all([
+        fetch(`/api/obtener-cuenta-bancaria/${id}`).then(response => response.json()),
+        obtenerBancos()
+    ])
+    .then(([cuenta, bancos]) => {
+        document.getElementById('cuenta-bancaria-modal-title').textContent = 'Editar Cuenta Bancaria';
+        const form = document.getElementById('cuenta-bancaria-form');
+        for (const [key, value] of Object.entries(cuenta)) {
+            const field = form.elements[key];
+            if (field) {
+                if (field.type === 'checkbox') {
+                    field.checked = value;
+                } else {
+                    field.value = value;
+                }
+            }
+        }
+        poblarSelectorBancos(bancos);
+        // Seleccionar el banco correcto
+        form.elements['banco'].value = cuenta.banco_id;
+        mostrarModal('cuenta-bancaria-modal');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'No se pudo cargar la información de la cuenta bancaria', 'error');
+    });
+}
+
+    function eliminarCuentaBancaria(id) {
+        Swal.fire({
+            title: '¿Está seguro?',
+            text: "Esta acción no se puede deshacer",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/api/eliminar-cuenta-bancaria/${id}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            Swal.fire('Eliminada', data.message, 'success');
+                            cargarCuentasBancarias();
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error', 'Ocurrió un error al eliminar la cuenta bancaria', 'error');
+                    });
+            }
         });
     }
 </script>

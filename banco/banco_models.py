@@ -143,6 +143,27 @@ class Divisa(db.Model):
     def __repr__(self):
         return f'<Divisa {self.codigo} - {self.nombre}>'
 
+class CuentaBancaria(db.Model):
+    __tablename__ = 'cuentas_bancarias'
+    id = db.Column(db.Integer, primary_key=True)
+    numero = db.Column(db.String(20), unique=True, nullable=False)
+    nombre = db.Column(db.String(100), nullable=False)
+    banco_id = db.Column(db.Integer, db.ForeignKey('nuevo_bancos.id'), nullable=False)
+    tipo_cuenta = db.Column(db.String(20), nullable=False)
+    estatus = db.Column(db.String(10), default='activo')
+    
+    banco = db.relationship('NuevoBanco', backref=db.backref('cuentas', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'numero': self.numero,
+            'nombre': self.nombre,
+            'banco': self.banco.nombre,
+            'tipo_cuenta': self.tipo_cuenta,
+            'estatus': self.estatus
+        }
+
 class Deposito(db.Model):
     __tablename__ = 'depositos'
     id = db.Column(db.Integer, primary_key=True)
