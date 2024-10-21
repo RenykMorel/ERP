@@ -23,6 +23,12 @@
             font-size: 0.7rem;
         }
     }
+    .modal-container {
+        width: 600px;
+        height: 600px;
+        max-width: 90%;
+        max-height: 90%;
+    }
 </style>
 {% endblock %}
 
@@ -111,25 +117,60 @@
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
-                        Fecha
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cuenta_bancaria">
+                        Cuenta Bancaria
                     </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="fecha" name="fecha" type="text" required>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="cuenta_bancaria" name="cuenta_bancaria" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="moneda">
+                        Moneda
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="moneda" name="moneda" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha_hasta">
+                        Fecha Hasta
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="fecha_hasta" name="fecha_hasta" type="text" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="saldo_libro">
+                        Saldo en Libro
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="saldo_libro" name="saldo_libro" type="number" step="0.01" required>
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="saldo_banco">
-                        Saldo Banco
+                        Saldo en Banco
                     </label>
                     <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="saldo_banco" name="saldo_banco" type="number" step="0.01" required>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="saldo_libros">
-                        Saldo Libros
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="monto_transito">
+                        Monto en Tránsito
                     </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="saldo_libros" name="saldo_libros" type="number" step="0.01" required>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="monto_transito" name="monto_transito" type="number" step="0.01" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="monto_conciliado">
+                        Monto Conciliado
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="monto_conciliado" name="monto_conciliado" type="number" step="0.01" readonly>
+                </div>
+                <div class="mb-4">
+                    <button type="button" id="buscar-transacciones-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Buscar Transacciones Sin Conciliar
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="archivo">
+                        Cargar archivo de transacciones
+                    </label>
+                    <input type="file" id="archivo" name="archivo" accept=".xlsx,.xls,.csv" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <div class="flex items-center justify-between">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                         Guardar
                     </button>
                     <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
@@ -159,12 +200,17 @@ function initializeConciliacionBancaria() {
     const modalCloseButtons = document.querySelectorAll('.modal-close');
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
+    const buscarTransaccionesBtn = document.getElementById('buscar-transacciones-btn');
+    const archivoInput = document.getElementById('archivo');
 
     buscarBtn.addEventListener('click', buscarConciliaciones);
+    
     crearConciliacionBtn.addEventListener('click', mostrarFormularioCrearConciliacion);
     conciliacionForm.addEventListener('submit', guardarConciliacion);
     prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
     nextPageBtn.addEventListener('click', () => cambiarPagina(1));
+    buscarTransaccionesBtn.addEventListener('click', buscarTransaccionesSinConciliar);
+    archivoInput.addEventListener('change', cargarTransacciones);
 
     modalOverlay.addEventListener('click', toggleModal);
     modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
@@ -179,7 +225,7 @@ function initializeConciliacionBancaria() {
         dateFormat: "Y-m-d",
     });
 
-    flatpickr("#fecha", {
+    flatpickr("#fecha_hasta", {
         dateFormat: "Y-m-d",
     });
 
@@ -346,17 +392,25 @@ function editarConciliacion(id) {
     const conciliacion = {
         id: id,
         banco_id: 1,
-        fecha: '2023-05-01',
+        cuenta_bancaria: '1234567890',
+        moneda: 'USD',
+        fecha_hasta: '2023-05-01',
+        saldo_libro: 9800,
         saldo_banco: 10000,
-        saldo_libros: 9800
+        monto_transito: 200,
+        monto_conciliado: 9800
     };
 
     document.getElementById('modal-title').textContent = 'Editar Conciliación';
     document.getElementById('conciliacion-id').value = conciliacion.id;
     document.getElementById('banco_id').value = conciliacion.banco_id;
-    document.getElementById('fecha').value = conciliacion.fecha;
+    document.getElementById('cuenta_bancaria').value = conciliacion.cuenta_bancaria;
+    document.getElementById('moneda').value = conciliacion.moneda;
+    document.getElementById('fecha_hasta').value = conciliacion.fecha_hasta;
+    document.getElementById('saldo_libro').value = conciliacion.saldo_libro;
     document.getElementById('saldo_banco').value = conciliacion.saldo_banco;
-    document.getElementById('saldo_libros').value = conciliacion.saldo_libros;
+    document.getElementById('monto_transito').value = conciliacion.monto_transito;
+    document.getElementById('monto_conciliado').value = conciliacion.monto_conciliado;
 
     toggleModal();
 }
@@ -397,11 +451,26 @@ function getEstadoClass(estado) {
     }
 }
 
+function buscarTransaccionesSinConciliar() {
+    // Aquí deberías hacer una llamada a tu API para buscar las transacciones sin conciliar
+    // Por ahora, mostraremos un mensaje de éxito
+    Swal.fire('Éxito', 'Búsqueda de transacciones sin conciliar completada', 'success');
+}
+
+function cargarTransacciones(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Aquí deberías procesar el archivo y cargar las transacciones
+        // Por ahora, mostraremos un mensaje de éxito
+        Swal.fire('Éxito', 'Archivo de transacciones cargado correctamente', 'success');
+    }
+}
+
 function validarFormulario() {
     const saldoBanco = parseFloat(document.getElementById('saldo_banco').value);
-    const saldoLibros = parseFloat(document.getElementById('saldo_libros').value);
+    const saldoLibro = parseFloat(document.getElementById('saldo_libro').value);
 
-    if (isNaN(saldoBanco) || isNaN(saldoLibros)) {
+    if (isNaN(saldoBanco) || isNaN(saldoLibro)) {
         Swal.fire('Error', 'Los saldos deben ser números válidos', 'error');
         return false;
     }
@@ -420,6 +489,7 @@ document.getElementById('conciliacion-form').addEventListener('submit', function
 function limpiarFormulario() {
     document.getElementById('conciliacion-form').reset();
     document.getElementById('conciliacion-id').value = '';
+    document.getElementById('monto_conciliado').value = '';
 }
 
 // Agregar evento para el botón de limpiar

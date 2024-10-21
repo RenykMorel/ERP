@@ -3,68 +3,87 @@
 
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
-    .custom-shadow {
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+    body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+    }
+    .modal-container {
+        width: 600px;
+        height: 600px;
+        max-width: 90%;
+        max-height: 90%;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Gestión de Depósitos</h1>
+<div id="depositos-module" class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Depósitos</h1>
     
-    <div class="mb-6 flex flex-wrap items-center justify-between">
-        <button id="crear-deposito-btn" class="bg-black text-white font-bold py-2 px-4 rounded">
-            + Crear Nuevo Depósito
-        </button>
-        <div class="flex flex-wrap items-center space-x-2 mt-4 sm:mt-0">
-            <select id="filtro-banco" class="border rounded px-2 py-1">
-                <option value="">Todos los bancos</option>
-                <option>Banco A</option>
-                <option>Banco B</option>
-                <option>Banco C</option>
-            </select>
-            <input type="text" id="filtro-fecha" placeholder="mm/dd/yyyy" class="border rounded px-2 py-1">
-            <button id="aplicar-filtros-btn" class="bg-gray-200 text-gray-800 font-bold py-1 px-4 rounded">
-                Aplicar Filtros
+    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <select id="filtro-banco" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <option value="">Todos los bancos</option>
+                </select>
+            </div>
+            <div>
+                <input type="text" id="filtro-fecha" placeholder="Fecha del depósito" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+                <input type="number" id="filtro-monto" placeholder="Monto mínimo" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+        </div>
+        <div class="flex justify-between mt-4">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            <button id="crear-deposito-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i class="fas fa-plus mr-2"></i>Crear Nuevo Depósito
             </button>
         </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white p-4 rounded custom-shadow">
+        <div class="bg-white p-4 rounded shadow-sm">
             <h2 class="text-lg font-semibold mb-2">Total Depósitos</h2>
-            <p class="text-3xl font-bold text-blue-500" id="total-depositos">$4500.00</p>
+            <p class="text-3xl font-bold text-blue-500" id="total-depositos">$0.00</p>
         </div>
-        <div class="bg-white p-4 rounded custom-shadow">
+        <div class="bg-white p-4 rounded shadow-sm">
             <h2 class="text-lg font-semibold mb-2">Depósito más alto</h2>
-            <p class="text-3xl font-bold text-green-500" id="deposito-mas-alto">$2000.00</p>
+            <p class="text-3xl font-bold text-green-500" id="deposito-mas-alto">$0.00</p>
         </div>
-        <div class="bg-white p-4 rounded custom-shadow">
+        <div class="bg-white p-4 rounded shadow-sm">
             <h2 class="text-lg font-semibold mb-2">Promedio de Depósitos</h2>
-            <p class="text-3xl font-bold text-purple-500" id="promedio-depositos">$1500.00</p>
+            <p class="text-3xl font-bold text-purple-500" id="promedio-depositos">$0.00</p>
         </div>
     </div>
 
-    <div class="bg-white p-4 rounded custom-shadow mb-6">
+    <div class="bg-white p-4 rounded shadow-sm mb-6">
         <h2 class="text-lg font-semibold mb-4">Depósitos por Mes</h2>
         <canvas id="grafico-depositos" width="400" height="200"></canvas>
     </div>
 
-    <div class="bg-white rounded custom-shadow overflow-x-auto">
-        <table id="tabla-depositos" class="min-w-full">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Banco</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+    <div id="depositos-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+        <table id="depositos-table" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Banco</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
             </thead>
-            <tbody id="depositos-body">
+            <tbody id="depositos-body" class="bg-white divide-y divide-gray-200">
                 <!-- Los depósitos se cargarán dinámicamente aquí -->
             </tbody>
         </table>
@@ -72,43 +91,158 @@
 </div>
 
 <!-- Modal para crear/editar depósito -->
-<div id="deposito-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3 text-center">
-            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Crear Depósito</h3>
-            <form id="deposito-form" class="mt-2 text-left">
-                <input type="hidden" id="deposito-id">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="banco">
+<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-2xl font-bold" id="modal-title">Crear Depósito</p>
+                <div class="modal-close cursor-pointer z-50">
+                    <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <form id="deposito-form" class="grid grid-cols-2 gap-4">
+                <input type="hidden" id="deposito-id" name="id">
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cuenta-bancaria">
+                        Cuenta Bancaria
+                    </label>
+                    <input type="text" id="cuenta-bancaria" name="cuenta_bancaria" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="banco_id">
                         Banco
                     </label>
-                    <select id="banco" name="banco" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <select id="banco_id" name="banco_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                         <option value="">Seleccione un banco</option>
                     </select>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="monto">
-                        Monto
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="moneda">
+                        Moneda
                     </label>
-                    <input type="number" step="0.01" id="monto" name="monto" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <select id="moneda" name="moneda" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="DOP">Peso Dominicano</option>
+                        <option value="USD">Dólar Estadounidense</option>
+                        <option value="EUR">Euro</option>
+                    </select>
                 </div>
-                <div class="mb-4">
+                <div class="col-span-1">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha">
                         Fecha
                     </label>
                     <input type="text" id="fecha" name="fecha" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
-                <div class="mb-4">
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="monto">
+                        Monto
+                    </label>
+                    <input type="number" step="0.01" id="monto" name="monto" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="numero">
+                        Número
+                    </label>
+                    <input type="text" id="numero" name="numero" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="concepto">
+                        Concepto
+                    </label>
+                    <input type="text" id="concepto" name="concepto" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
+                        Estatus
+                    </label>
+                    <select id="estatus" name="estatus" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="nuevo">Nuevo</option>
+                        <option value="procesado">Procesado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="referencia">
+                        Referencia
+                    </label>
+                    <input type="text" id="referencia" name="referencia" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="descripcion">
                         Descripción
                     </label>
                     <textarea id="descripcion" name="descripcion" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
                 </div>
-                <div class="flex items-center justify-between">
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="creador">
+                        Creado Por
+                    </label>
+                    <input type="text" id="creador" name="creador" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="actualizado">
+                        Actualizado Por
+                    </label>
+                    <input type="text" id="actualizado" name="actualizado" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" readonly>
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fuente">
+                        Fuente
+                    </label>
+                    <input type="text" id="fuente" name="fuente" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="fuente-referencia">
+                        Fuente Referencia
+                    </label>
+                    <input  type="text" id="fuente-referencia" name="fuente_referencia" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-2">
+                    <h3 class="text-lg font-semibold mb-2">Cuentas Afectadas</h3>
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="text" id="identificador" placeholder="Identificador" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <select id="tipo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="debito">Débito</option>
+                            <option value="credito">Crédito</option>
+                        </select>
+                        <input type="number" step="0.01" id="monto-cuenta" placeholder="Monto" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <button type="button" id="agregar-cuenta" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Agregar
+                    </button>
+                </div>
+                <div class="col-span-2">
+                    <table id="cuentas-afectadas" class="min-w-full leading-normal">
+                        <thead>
+                            <tr>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Identificador
+                                </th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Tipo
+                                </th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Monto
+                                </th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Cuentas afectadas se cargarán dinámicamente aquí -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-span-2 flex items-center justify-between mt-4">
                     <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                         Guardar
                     </button>
-                    <button type="button" id="cerrar-modal" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
                         Cancelar
                     </button>
                 </div>
@@ -123,144 +257,339 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const crearDepositoBtn = document.getElementById('crear-deposito-btn');
-    const depositoModal = document.getElementById('deposito-modal');
-    const depositoForm = document.getElementById('deposito-form');
-    const cerrarModalBtn = document.getElementById('cerrar-modal');
-    const depositosBody = document.getElementById('depositos-body');
-    const aplicarFiltrosBtn = document.getElementById('aplicar-filtros-btn');
+    initializeDepositos();
+});
 
-    crearDepositoBtn.addEventListener('click', () => showModal('Crear Depósito'));
-    cerrarModalBtn.addEventListener('click', hideModal);
-    depositoForm.addEventListener('submit', handleSubmit);
-    aplicarFiltrosBtn.addEventListener('click', loadDepositos);
+function initializeDepositos() {
+    const buscarBtn = document.getElementById('buscar-btn');
+    const crearDepositoBtn = document.getElementById('crear-deposito-btn');
+    const depositoForm = document.getElementById('deposito-form');
+    const modal = document.querySelector('.modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const agregarCuentaBtn = document.getElementById('agregar-cuenta');
+
+    buscarBtn.addEventListener('click', buscarDepositos);
+    crearDepositoBtn.addEventListener('click', mostrarFormularioCrearDeposito);
+    depositoForm.addEventListener('submit', guardarDeposito);
+    modalOverlay.addEventListener('click', toggleModal);
+    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+    document.getElementById('depositos-body').addEventListener('click', manejarAccionesDeposito);
+    agregarCuentaBtn.addEventListener('click', agregarCuentaAfectada);
 
     flatpickr("#fecha", {
         dateFormat: "Y-m-d",
     });
 
     flatpickr("#filtro-fecha", {
-        dateFormat: "m/d/Y",
+        dateFormat: "Y-m-d",
     });
 
     loadBancos();
-    loadDepositos();
+    buscarDepositos();
     initChart();
+}
 
-    function showModal(title) {
-        document.getElementById('modal-title').textContent = title;
-        depositoModal.classList.remove('hidden');
-    }
+function loadBancos() {
+    fetch('/api/obtener-bancos')
+        .then(response => response.json())
+        .then(bancos => {
+            const bancoSelect = document.getElementById('banco_id');
+            const filtroBancoSelect = document.getElementById('filtro-banco');
+            bancoSelect.innerHTML = '<option value="">Seleccione un banco</option>';
+            filtroBancoSelect.innerHTML = '<option value="">Todos los bancos</option>';
+            bancos.forEach(banco => {
+                bancoSelect.innerHTML += `<option value="${banco.id}">${banco.nombre}</option>`;
+                filtroBancoSelect.innerHTML += `<option value="${banco.id}">${banco.nombre}</option>`;
+            });
+        })
+        .catch(error => console.error('Error:', error));
+}
 
-    function hideModal() {
-        depositoModal.classList.add('hidden');
-        depositoForm.reset();
-    }
+function buscarDepositos() {
+    const filtroBanco = document.getElementById('filtro-banco').value;
+    const filtroFecha = document.getElementById('filtro-fecha').value;
+    const filtroMonto = document.getElementById('filtro-monto').value;
 
-    function loadBancos() {
-        // Simulated API call
-        const bancos = [
-            { id: 1, nombre: 'Banco A' },
-            { id: 2, nombre: 'Banco B' },
-            { id: 3, nombre: 'Banco C' },
-        ];
-        const bancoSelect = document.getElementById('banco');
-        bancos.forEach(banco => {
-            const option = document.createElement('option');
-            option.value = banco.id;
-            option.textContent = banco.nombre;
-            bancoSelect.appendChild(option);
-        });
-    }
+    fetch(`/api/obtener-depositos?banco_id=${filtroBanco}&fecha=${filtroFecha}&monto_minimo=${filtroMonto}`)
+        .then(response => response.json())
+        .then(data => {
+            mostrarDepositos(data);
+            updateResumen(data);
+            updateChart(data);
+        })
+        .catch(error => console.error('Error:', error));
+}
 
-    function loadDepositos() {
-        // Simulated API call
-        const depositos = [
-            { id: 1, banco: 'Banco A', monto: 1000, fecha: '2023-04-30', descripcion: 'Depósito mensual' },
-            { id: 2, banco: 'Banco B', monto: 1500, fecha: '2023-05-01', descripcion: 'Venta de activos' },
-            { id: 3, banco: 'Banco C', monto: 2000, fecha: '2023-05-02', descripcion: 'Inversión' },
-        ];
-        updateTable(depositos);
-        updateResumen(depositos);
-    }
+function mostrarDepositos(depositos) {
+    const tbody = document.getElementById('depositos-body');
+    tbody.innerHTML = '';
 
-    function updateTable(depositos) {
-        depositosBody.innerHTML = depositos.map(d => `
-            <tr>
-                <td class="px-6 py-4 whitespace-nowrap">${d.banco}</td>
-                <td class="px-6 py-4 whitespace-nowrap">$${d.monto.toFixed(2)}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${d.fecha}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${d.descripcion}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <button class="text-blue-600 hover:text-blue-900 mr-2" onclick="editarDeposito(${d.id})">Editar</button>
-                    <button class="text-red-600 hover:text-red-900" onclick="eliminarDeposito(${d.id})">Eliminar</button>
-                </td>
-            </tr>
-        `).join('');
-    }
+    depositos.forEach(deposito => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">${deposito.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${deposito.banco_nombre}</td>
+            <td class="px-6 py-4 whitespace-nowrap">$${deposito.monto.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${deposito.fecha}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${deposito.descripcion}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <button class="text-blue-600 hover:text-blue-900 mr-2 editar-deposito" data-id="${deposito.id}">Editar</button>
+                <button class="text-red-600 hover:text-red-900 eliminar-deposito" data-id="${deposito.id}">Eliminar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
-    function handleSubmit(e) {
-        e.preventDefault();
-        const formData = new FormData(depositoForm);
-        const depositoData = Object.fromEntries(formData.entries());
-        console.log('Datos del depósito:', depositoData);
-        // Aquí iría la lógica para enviar los datos al servidor
-        hideModal();
-        loadDepositos(); // Recargar la lista de depósitos
-    }
+function mostrarFormularioCrearDeposito() {
+    document.getElementById('modal-title').textContent = 'Crear Depósito';
+    document.getElementById('deposito-form').reset();
+    document.getElementById('creador').value = 'Usuario Actual';
+    document.getElementById('actualizado').value = 'Usuario Actual';
+    document.getElementById('cuentas-afectadas').querySelector('tbody').innerHTML = '';
+    toggleModal();
+}
 
-    function editarDeposito(id) {
-        // Simular la carga de datos del depósito
-        const deposito = { id: id, banco: 'Banco A', monto: 1000, fecha: '2023-05-01', descripcion: 'Editar este depósito' };
-        document.getElementById('deposito-id').value = deposito.id;
-        document.getElementById('banco').value = deposito.banco;
-        document.getElementById('monto').value = deposito.monto;
-        document.getElementById('fecha').value = deposito.fecha;
-        document.getElementById('descripcion').value = deposito.descripcion;
-        showModal('Editar Depósito');
-    }
+function guardarDeposito(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const depositoData = Object.fromEntries(formData.entries());
 
-    function eliminarDeposito(id) {
-        if (confirm('¿Está seguro de que desea eliminar este depósito?')) {
-            console.log('Eliminando depósito:', id);
-            // Aquí iría la lógica para eliminar el depósito del servidor
-            loadDepositos(); // Recargar la lista de depósitos
+    depositoData.monto = parseFloat(depositoData.monto);
+    depositoData.banco_id = parseInt(depositoData.banco_id);
+    depositoData.cuentas_afectadas = getCuentasAfectadas();
+
+    const url = depositoData.id ? `/api/actualizar-deposito/${depositoData.id}` : '/api/crear-deposito';
+    const method = depositoData.id ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(depositoData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            Swal.fire('Error', data.error, 'error');
+        } else {
+            Swal.fire('Éxito', depositoData.id ? 'Depósito actualizado correctamente' : 'Depósito creado correctamente', 'success');
+            toggleModal();
+            buscarDepositos();
         }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'Error al procesar el depósito', 'error');
+    });
+}
+
+function manejarAccionesDeposito(event) {
+    if (event.target.classList.contains('editar-deposito')) {
+        const depositoId = event.target.getAttribute('data-id');
+        editarDeposito(depositoId);
+    } else if (event.target.classList.contains('eliminar-deposito')) {
+        const depositoId = event.target.getAttribute('data-id');
+        eliminarDeposito(depositoId);
     }
+}
 
-    function updateResumen(depositos) {
-        const total = depositos.reduce((sum, d) => sum + d.monto, 0);
-        const maximo = Math.max(...depositos.map(d => d.monto));
-        const promedio = total / depositos.length;
+function editarDeposito(id) {
+    fetch(`/api/obtener-deposito/${id}`)
+        .then(response => response.json())
+        .then(deposito => {
+            document.getElementById('deposito-id').value = deposito.id;
+            document.getElementById('banco_id').value = deposito.banco_id;
+            document.getElementById('cuenta-bancaria').value = deposito.cuenta_bancaria;
+            document.getElementById('moneda').value = deposito.moneda;
+            document.getElementById('monto').value = deposito.monto;
+            document.getElementById('fecha').value = deposito.fecha.split('T')[0];
+            document.getElementById('numero').value = deposito.numero;
+            document.getElementById('concepto').value = deposito.concepto;
+            document.getElementById('estatus').value = deposito.estatus;
+            document.getElementById('referencia').value = deposito.referencia;
+            document.getElementById('descripcion').value = deposito.descripcion;
+            document.getElementById('creador').value = deposito.creador;
+            document.getElementById('actualizado').value = 'Usuario Actual';
+            document.getElementById('fuente').value = deposito.fuente;
+            document.getElementById('fuente-referencia').value = deposito.fuente_referencia;
+            document.getElementById('modal-title').textContent = 'Editar Depósito';
+            
+            // Cargar cuentas afectadas
+            const cuentasAfectadasBody = document.getElementById('cuentas-afectadas').querySelector('tbody');
+            cuentasAfectadasBody.innerHTML = '';
+            deposito.cuentas_afectadas.forEach(cuenta => {
+                agregarFilaCuentaAfectada(cuenta.identificador, cuenta.tipo, cuenta.monto);
+            });
+            
+            toggleModal();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Error al cargar los datos del depósito', 'error');
+        });
+}
 
-        document.getElementById('total-depositos').textContent = `$${total.toFixed(2)}`;
-        document.getElementById('deposito-mas-alto').textContent = `$${maximo.toFixed(2)}`;
-        document.getElementById('promedio-depositos').textContent = `$${promedio.toFixed(2)}`;
-    }
-
-    function initChart() {
-        const ctx = document.getElementById('grafico-depositos').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo'],
-                datasets: [{
-                    label: 'Depósitos por Mes',
-                    data: [3000, 3500, 4000, 4500, 5000],
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+function eliminarDeposito(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/eliminar-deposito/${id}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        Swal.fire('Error', data.error, 'error');
+                    } else {
+                        Swal.fire('Eliminado', 'El depósito ha sido eliminado.', 'success');
+                        buscarDepositos();
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Error al eliminar el depósito', 'error');
+                });
+        }
+    });
+}
+
+function updateResumen(depositos) {
+    const total = depositos.reduce((sum, d) => sum + d.monto, 0);
+    const maximo = Math.max(...depositos.map(d => d.monto));
+    const promedio = depositos.length > 0 ? total / depositos.length : 0;
+
+    document.getElementById('total-depositos').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('deposito-mas-alto').textContent = `$${maximo.toFixed(2)}`;
+    document.getElementById('promedio-depositos').textContent = `$${promedio.toFixed(2)}`;
+}
+
+function updateChart(depositos) {
+    const depositosPorMes = {};
+    depositos.forEach(d => {
+        const mes = new Date(d.fecha).getMonth();
+        depositosPorMes[mes] = (depositosPorMes[mes] || 0) + d.monto;
+    });
+
+    const labels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const data = labels.map((_, index) => depositosPorMes[index] || 0);
+
+    const ctx = document.getElementById('grafico-depositos').getContext('2d');
+    if (window.myChart instanceof Chart) {
+        window.myChart.destroy();
+    }
+    window.myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Depósitos por Mes',
+                data: data,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
-        });
+        }
+    });
+}
+
+function toggleModal() {
+    const modal = document.querySelector('.modal');
+    modal.classList.toggle('opacity-0');
+    modal.classList.toggle('pointer-events-none');
+    document.body.classList.toggle('modal-active');
+}
+
+function initChart() {
+    const ctx = document.getElementById('grafico-depositos').getContext('2d');
+    window.myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+            datasets: [{
+                label: 'Depósitos por Mes',
+                data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function agregarCuentaAfectada() {
+    const identificador = document.getElementById('identificador').value;
+    const tipo = document.getElementById('tipo').value;
+    const monto = document.getElementById('monto-cuenta').value;
+
+    if (!identificador || !monto) {
+        Swal.fire('Error', 'Por favor, complete todos los campos', 'error');
+        return;
     }
-});
+
+    agregarFilaCuentaAfectada(identificador, tipo, monto);
+
+    // Limpiar campos
+    document.getElementById('identificador').value = '';
+    document.getElementById('monto-cuenta').value = '';
+}
+
+function agregarFilaCuentaAfectada(identificador, tipo, monto) {
+    const cuentasAfectadasBody = document.getElementById('cuentas-afectadas').querySelector('tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${identificador}</td>
+        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${tipo}</td>
+        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">$${parseFloat(monto).toFixed(2)}</td>
+        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+            <button class="eliminar-cuenta text-red-600 hover:text-red-900">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+        </td>
+    `;
+    cuentasAfectadasBody.appendChild(newRow);
+
+    // Agregar evento para eliminar la cuenta
+    newRow.querySelector('.eliminar-cuenta').addEventListener('click', function() {
+        cuentasAfectadasBody.removeChild(newRow);
+    });
+}
+
+function getCuentasAfectadas() {
+    const cuentas = [];
+    const rows = document.getElementById('cuentas-afectadas').querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        cuentas.push({
+            identificador: cells[0].textContent,
+            tipo: cells[1].textContent,
+            monto: parseFloat(cells[2].textContent.replace('$', ''))
+        });
+    });
+    return cuentas;
+}
 </script>
 {% endblock %}

@@ -1,6 +1,12 @@
 from app import db
 from datetime import datetime
 
+class ProyectoCliente(db.Model):
+    __tablename__ = 'proyecto_cliente'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    # Agrega otros campos necesarios para el proyecto_cliente
+
 class Proyecto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
@@ -8,8 +14,9 @@ class Proyecto(db.Model):
     fecha_inicio = db.Column(db.Date, nullable=False)
     fecha_fin = db.Column(db.Date)
     estado = db.Column(db.String(20), default='En progreso')
-    cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'))
+    proyecto_cliente_id = db.Column(db.Integer, db.ForeignKey('proyecto_cliente.id'))
     
+    proyecto_cliente = db.relationship('ProyectoCliente', backref='proyectos')
     presupuestos = db.relationship('Presupuesto', backref='proyecto', lazy=True)
     facturas = db.relationship('FacturacionProyecto', backref='proyecto', lazy=True)
 

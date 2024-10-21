@@ -17,6 +17,12 @@
         height: 38px;
         line-height: 38px;
     }
+    .modal-container {
+        width: 800px;
+        max-width: 90%;
+        max-height: 90%;
+        overflow-y: auto;
+    }
 </style>
 {% endblock %}
 
@@ -65,7 +71,10 @@
             <thead>
                 <tr>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Código
+                        ID
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Abreviatura
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         Nombre
@@ -113,27 +122,129 @@
                 </div>
             </div>
 
-            <form id="divisa-form">
-                <input type="hidden" id="divisa-id">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="codigo">
-                        Código
-                    </label>
-                    <input type="text" id="codigo" name="codigo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" maxlength="3" required>
-                </div>
-                <div class="mb-4">
+            <form id="divisa-form" class="grid grid-cols-2 gap-4">
+                <input type="hidden" id="divisa-id" name="id">
+                <div class="col-span-1">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
                         Nombre
                     </label>
                     <input type="text" id="nombre" name="nombre" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="tasa-cambio">
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="tasa_cambio">
                         Tasa de Cambio
                     </label>
-                    <input type="number" step="0.0001" id="tasa-cambio" name="tasa_cambio" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                    <input type="number" step="0.0001" id="tasa_cambio" name="tasa_cambio" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                 </div>
-                <div class="flex items-center justify-between">
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="abreviatura">
+                        Abreviatura
+                    </label>
+                    <input type="text" id="abreviatura" name="abreviatura" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" maxlength="3" required>
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="simbolo">
+                        Símbolo
+                    </label>
+                    <input type="text" id="simbolo" name="simbolo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cuenta_por_cobrar">
+                        Cuenta por Cobrar
+                    </label>
+                    <input type="text" id="cuenta_por_cobrar" name="cuenta_por_cobrar" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="cuenta_por_pagar">
+                        Cuenta por Pagar
+                    </label>
+                    <input type="text" id="cuenta_por_pagar" name="cuenta_por_pagar" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="prima_cxc">
+                        Prima (CxC)
+                    </label>
+                    <input type="text" id="prima_cxc" name="prima_cxc" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="prima_cxp">
+                        Prima (CxP)
+                    </label>
+                    <input type="text" id="prima_cxp" name="prima_cxp" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="ganancia_diferencia_cambiaria">
+                        Ganancia por Diferencia Cambiaria
+                    </label>
+                    <input type="text" id="ganancia_diferencia_cambiaria" name="ganancia_diferencia_cambiaria" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="perdida_diferencia_cambiaria">
+                        Pérdida por Diferencia Cambiaria
+                    </label>
+                    <input type="text" id="perdida_diferencia_cambiaria" name="perdida_diferencia_cambiaria" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="anticipo">
+                        Anticipo
+                    </label>
+                    <input type="text" id="anticipo" name="anticipo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="anticipo_prima">
+                        Anticipo Prima
+                    </label>
+                    <input type="text" id="anticipo_prima" name="anticipo_prima" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="anticipo_cxp">
+                        Anticipo CxP
+                    </label>
+                    <input type="text" id="anticipo_cxp" name="anticipo_cxp" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div  class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="anticipo_cxp_prima">
+                        Anticipo CxP Prima
+                    </label>
+                    <input type="text" id="anticipo_cxp_prima" name="anticipo_cxp_prima" class="shadow appearance-none border  rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none  focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="caja">
+                        Caja
+                    </label>
+                    <input type="text" id="caja" name="caja" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="caja_prima">
+                        Caja Prima
+                    </label>
+                    <input type="text" id="caja_prima" name="caja_prima" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nota_credito">
+                        Nota de Crédito
+                    </label>
+                    <input type="text" id="nota_credito" name="nota_credito" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nota_credito_prima">
+                        Nota de Crédito Prima
+                    </label>
+                    <input type="text" id="nota_credito_prima" name="nota_credito_prima" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="col-span-1">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="moneda_funcional" name="moneda_funcional" class="form-checkbox h-5 w-5 text-blue-600">
+                        <span class="ml-2 text-gray-700">Moneda de Registro/Funcional</span>
+                    </label>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="desglose">
+                        Desglose
+                    </label>
+                    <textarea id="desglose" name="desglose" rows="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
+                <div class="col-span-2 flex items-center justify-between mt-4">
                     <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out">
                         Guardar
                     </button>
@@ -195,23 +306,45 @@ document.addEventListener('DOMContentLoaded', function() {
         const nombre = document.getElementById('filtro-nombre').value;
         
         fetch(`/api/divisas?codigo=${codigo}&nombre=${nombre}&page=${currentPage}&per_page=${itemsPerPage}`)
-            .then(response => response.json())
-            .then(data => {
-                updateTable(data.divisas);
-                updatePagination(data.total, data.page, data.per_page);
-                updateResumen(data.resumen);
-                updateChart(data.resumen.tasas_cambio);
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
             })
-            .catch(error => console.error('Error cargando divisas:', error));
+            .then(data => {
+                console.log("Datos recibidos:", data); // Para depuración
+                if (data.divisas && Array.isArray(data.divisas)) {
+                    updateTable(data.divisas);
+                    updatePagination(data.total, data.page, data.per_page);
+                    if (data.resumen) {
+                        updateResumen(data.resumen);
+                        if (data.resumen.tasas_cambio) {
+                            updateChart(data.resumen.tasas_cambio);
+                        }
+                    }
+                } else {
+                    console.error("Formato de datos inesperado:", data);
+                }
+            })
+            .catch(error => {
+                console.error('Error cargando divisas:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Hubo un problema al cargar las divisas. Por favor, intente de nuevo.',
+                });
+            });
     }
-
+    
     function updateTable(divisas) {
         divisasBody.innerHTML = divisas.map(d => `
             <tr>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${d.codigo}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${d.nombre}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${d.tasa_cambio.toFixed(4)}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${d.fecha_actualizacion}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${d.id || ''}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${d.abreviatura || ''}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${d.nombre || ''}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${d.tasa_cambio ? d.tasa_cambio.toFixed(4) : ''}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${d.fecha_actualizacion || ''}</td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                     <button class="editar-divisa text-blue-600 hover:text-blue-900 mr-2" data-id="${d.id}">
                         <i class="fas fa-edit"></i> Editar
@@ -222,22 +355,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 </td>
             </tr>
         `).join('');
-
+    
         document.querySelectorAll('.editar-divisa').forEach(btn => {
             btn.addEventListener('click', () => editarDivisa(btn.dataset.id));
         });
-
+    
         document.querySelectorAll('.eliminar-divisa').forEach(btn => {
             btn.addEventListener('click', () => eliminarDivisa(btn.dataset.id));
         });
     }
-
+    
     function updatePagination(total, page, perPage) {
         const totalPages = Math.ceil(total / perPage);
         document.getElementById('items-showing').textContent = `${(page - 1) * perPage + 1}-${Math.min(page * perPage, total)}`;
         document.getElementById('total-items').textContent = total;
-        prevPageBtn.disabled = page === 1;
-        nextPageBtn.disabled = page === totalPages;
+        prevPageBtn.disabled = page <= 1;
+        nextPageBtn.disabled = page >= totalPages;
+    }
+    
+    function updateResumen(resumen) {
+        if (resumen) {
+            document.getElementById('total-divisas').textContent = resumen.total || '0';
+            document.getElementById('tasa-mas-alta').textContent = resumen.tasa_mas_alta ? resumen.tasa_mas_alta.toFixed(4) : '0.0000';
+            document.getElementById('ultima-actualizacion').textContent = resumen.ultima_actualizacion || '-';
+        }
     }
 
     function changePage(direction) {
@@ -247,9 +388,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handleSubmit(e) {
         e.preventDefault();
+        if (!validarFormulario()) {
+            return;
+        }
+
         const formData = new FormData(divisaForm);
         const divisaData = Object.fromEntries(formData.entries());
+        divisaData.tasa_cambio = parseFloat(divisaData.tasa_cambio);
         const divisaId = document.getElementById('divisa-id').value;
+
+        // Convertir el checkbox de moneda_funcional a booleano
+        divisaData.moneda_funcional = divisaData.moneda_funcional === 'on';
 
         const url = divisaId 
             ? `/api/divisas/${divisaId}` 
@@ -290,9 +439,26 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(divisa => {
                 document.getElementById('divisa-id').value = divisa.id;
-                document.getElementById('codigo').value = divisa.codigo;
                 document.getElementById('nombre').value = divisa.nombre;
-                document.getElementById('tasa-cambio').value = divisa.tasa_cambio;
+                document.getElementById('tasa_cambio').value = divisa.tasa_cambio;
+                document.getElementById('abreviatura').value = divisa.abreviatura;
+                document.getElementById('simbolo').value = divisa.simbolo;
+                document.getElementById('cuenta_por_cobrar').value = divisa.cuenta_por_cobrar;
+                document.getElementById('cuenta_por_pagar').value = divisa.cuenta_por_pagar;
+                document.getElementById('prima_cxc').value = divisa.prima_cxc;
+                document.getElementById('prima_cxp').value = divisa.prima_cxp;
+                document.getElementById('ganancia_diferencia_cambiaria').value = divisa.ganancia_diferencia_cambiaria;
+                document.getElementById('perdida_diferencia_cambiaria').value = divisa.perdida_diferencia_cambiaria;
+                document.getElementById('anticipo').value = divisa.anticipo;
+                document.getElementById('anticipo_prima').value = divisa.anticipo_prima;
+                document.getElementById('anticipo_cxp').value = divisa.anticipo_cxp;
+                document.getElementById('anticipo_cxp_prima').value = divisa.anticipo_cxp_prima;
+                document.getElementById('caja').value = divisa.caja;
+                document.getElementById('caja_prima').value = divisa.caja_prima;
+                document.getElementById('nota_credito').value = divisa.nota_credito;
+                document.getElementById('nota_credito_prima').value = divisa.nota_credito_prima;
+                document.getElementById('moneda_funcional').checked = divisa.moneda_funcional;
+                document.getElementById('desglose').value = divisa.desglose;
                 showModal('Editar Divisa');
             })
             .catch(error => {
@@ -319,11 +485,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch(`/api/divisas/${id}`, {
                     method: 'DELETE',
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        throw new Error(data.error);
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw err; });
                     }
+                    return response.json();
+                })
+                .then(data => {
                     Swal.fire(
                         'Eliminado',
                         'La divisa ha sido eliminada.',
@@ -332,10 +500,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     loadDivisas();
                 })
                 .catch(error => {
+                    console.error('Error:', error);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: error.message || 'Hubo un error al eliminar la divisa',
+                        text: error.error || 'Hubo un error al eliminar la divisa. Por favor, verifica que no haya depósitos u otros registros asociados a esta divisa.',
                     });
                 });
             }
@@ -343,9 +512,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateResumen(resumen) {
-        document.getElementById('total-divisas').textContent = resumen.total;
-        document.getElementById('tasa-mas-alta').textContent = resumen.tasa_mas_alta.toFixed(4);
-        document.getElementById('ultima-actualizacion').textContent = resumen.ultima_actualizacion;
+        if (resumen) {
+            document.getElementById('total-divisas').textContent = resumen.total || '0';
+            document.getElementById('tasa-mas-alta').textContent = resumen.tasa_mas_alta ? resumen.tasa_mas_alta.toFixed(4) : '0.0000';
+            document.getElementById('ultima-actualizacion').textContent = resumen.ultima_actualizacion || '-';
+        }
     }
 
     function initChart() {
@@ -417,6 +588,102 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Iniciar actualización automática de tasas cada hora
     setInterval(actualizarTasasCambio, 3600000); // 3600000 ms = 1 hora
+
+    // Función para validar el formulario antes de enviar
+    function validarFormulario() {
+        const camposRequeridos = ['nombre', 'tasa_cambio', 'abreviatura', 'simbolo'];
+        let esValido = true;
+
+        camposRequeridos.forEach(campo => {
+            const input = document.getElementById(campo);
+            if (!input.value.trim()) {
+                marcarCampoInvalido(input, 'Este campo es requerido');
+                esValido = false;
+            } else {
+                if (campo === 'tasa_cambio') {
+                    if (isNaN(parseFloat(input.value)) || parseFloat(input.value) <= 0) {
+                        marcarCampoInvalido(input, 'La tasa de cambio debe ser un número positivo');
+                        esValido = false;
+                    } else {
+                        marcarCampoValido(input);
+                    }
+                } else {
+                    marcarCampoValido(input);
+                }
+            }
+        });
+
+        return esValido;
+    }
+
+    function marcarCampoInvalido(input, mensaje) {
+        input.classList.add('border-red-500');
+        let errorMsg = input.parentNode.querySelector('.error-message');
+        if (!errorMsg) {
+            errorMsg = document.createElement('p');
+            errorMsg.classList.add('text-red-500', 'text-xs', 'italic', 'error-message');
+            input.parentNode.appendChild(errorMsg);
+        }
+        errorMsg.textContent = mensaje;
+    }
+
+    function marcarCampoValido(input) {
+        input.classList.remove('border-red-500');
+        const errorMsg = input.parentNode.querySelector('.error-message');
+        if (errorMsg) {
+            errorMsg.remove();
+        }
+    }
+
+    // Agregar eventos de validación en tiempo real
+    const camposValidar = ['nombre', 'tasa_cambio', 'abreviatura', 'simbolo'];
+    camposValidar.forEach(campo => {
+        const input = document.getElementById(campo);
+        input.addEventListener('blur', () => {
+            if (campo === 'tasa_cambio') {
+                if (isNaN(parseFloat(input.value)) || parseFloat(input.value) <= 0) {
+                    marcarCampoInvalido(input, 'La tasa de cambio debe ser un número positivo');
+                } else {
+                    marcarCampoValido(input);
+                }
+            } else if (!input.value.trim()) {
+                marcarCampoInvalido(input, 'Este campo es requerido');
+            } else {
+                marcarCampoValido(input);
+            }
+        });
+    });
+
+    // Función para exportar datos
+    function exportarDatos(formato) {
+        fetch(`/api/divisas/exportar?formato=${formato}`)
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `divisas.${formato}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => console.error('Error al exportar datos:', error));
+    }
+
+    // Agregar botones de exportación
+    const botonesExportar = ['CSV', 'Excel', 'PDF'].map(formato => {
+        const btn = document.createElement('button');
+        btn.textContent = `Exportar ${formato}`;
+        btn.classList.add('bg-blue-500', 'hover:bg-blue-700', 'text-white', 'font-bold', 'py-2', 'px-4', 'rounded', 'ml-2');
+        btn.addEventListener('click', () => exportarDatos(formato.toLowerCase()));
+        return btn;
+    });
+
+    const contenedorBotones = document.createElement('div');
+    contenedorBotones.classList.add('mt-4', 'mb-4');
+    botonesExportar.forEach(btn => contenedorBotones.appendChild(btn));
+    document.querySelector('.container').insertBefore(contenedorBotones, document.querySelector('.bg-white.shadow-lg'));
 });
 </script>
 {% endblock %}
