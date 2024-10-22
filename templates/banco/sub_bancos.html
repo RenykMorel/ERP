@@ -239,12 +239,11 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="moneda">
-                        Moneda
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="divisa_id">
+                        Divisa
                     </label>
-                    <select class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="moneda" required>
-                        <option value="DOP">Peso Dominicano</option>
-                        <option value="USD">Dólar Estadounidense</option>
+                    <select id="divisa_id" name="divisa_id" class="green-border shadow-sm appearance-none rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Cargando divisas...</option>
                     </select>
                 </div>
                 <div>
@@ -332,6 +331,7 @@
     });
 
     function initializeBancos() {
+        // Obtener referencias a los elementos del DOM
         const buscarBtn = document.getElementById('buscar-btn');
         const crearNuevoBtn = document.getElementById('crear-nuevo-btn');
         const gestionarCuentasBtn = document.getElementById('gestionar-cuentas-btn');
@@ -340,20 +340,73 @@
         const crearCuentaBancariaBtn = document.getElementById('crear-cuenta-bancaria-btn');
         const modalOverlays = document.querySelectorAll('.modal-overlay');
         const modalCloseButtons = document.querySelectorAll('.modal-close');
-
+    
+        // Event listener para búsqueda de bancos
         buscarBtn.addEventListener('click', buscarBancos);
-        crearNuevoBtn.addEventListener('click', () => mostrarModal('banco-modal', 'Crear Nuevo Banco'));
+        crearNuevoBtn.addEventListener('click', () => {
+            limpiarFormularioBanco();
+            mostrarModal('banco-modal', 'Crear Nuevo Banco');
+        });
         gestionarCuentasBtn.addEventListener('click', mostrarGestionCuentasBancarias);
-        bancoForm.addEventListener('submit', guardarBanco);
-        cuentaBancariaForm.addEventListener('submit', guardarCuentaBancaria);
-        crearCuentaBancariaBtn.addEventListener('click', () => mostrarModal('cuenta-bancaria-modal', 'Crear Nueva Cuenta Bancaria'));
-
-        modalOverlays.forEach(overlay => overlay.addEventListener('click', cerrarModales));
-        modalCloseButtons.forEach(btn => btn.addEventListener('click', cerrarModales));
-
+    
+        // Event listener para crear nuevo banco
+        crearNuevoBtn.addEventListener('click', () => {
+            limpiarFormularioBanco(); // Limpiar el formulario antes de mostrarlo
+            mostrarModal('banco-modal', 'Crear Nuevo Banco');
+        });
+    
+        // Event listener para gestionar cuentas bancarias
+        gestionarCuentasBtn.addEventListener('click', mostrarGestionCuentasBancarias);
+    
+        // Event listener para guardar banco
+        bancoForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            guardarBanco(event);
+        });
+    
+        // Event listener para guardar cuenta bancaria
+        cuentaBancariaForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            guardarCuentaBancaria(event);
+        });
+    
+        // Event listener para crear nueva cuenta bancaria
+        crearCuentaBancariaBtn.addEventListener('click', () => {
+            crearNuevaCuentaBancaria();  // Usaremos una única función
+        });
+    
+        // Event listeners para cerrar modales
+        modalOverlays.forEach(overlay => {
+            overlay.addEventListener('click', () => {
+                cerrarModales();
+                limpiarFormularioBanco(); // Limpiar formulario al cerrar
+                limpiarFormularioCuentaBancaria(); // Limpiar formulario al cerrar
+            });
+        });
+    
+        modalCloseButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                cerrarModales();
+                limpiarFormularioBanco(); // Limpiar formulario al cerrar
+                limpiarFormularioCuentaBancaria(); // Limpiar formulario al cerrar
+            });
+        });
+    
+        // Event listeners para acciones en las tablas
         document.getElementById('bancos-tbody').addEventListener('click', manejarAccionesBanco);
         document.getElementById('cuentas-bancarias-tbody').addEventListener('click', manejarAccionesCuentaBancaria);
+    
+        // Cargar datos iniciales
+        buscarBancos();
+        
+        // Inicializar selectores si es necesario
+        cargarDivisas();
     }
+    
+    // Asegurarse de que la inicialización se ejecute cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeBancos();
+    });
 
     // Agregar esta función al principio de tu archivo JavaScript
     function mockObtenerCuentasBancarias() {
@@ -385,40 +438,81 @@
             });
     }
 
+    function limpiarFormularioCuentaBancaria() {
+        const form = document.getElementById('cuenta-bancaria-form');
+        form.reset();
+        form.querySelector('input[name="id"]').value = '';
+        form.querySelector('select[name="banco"]').innerHTML = '<option value="">Seleccione un banco</option>';
+        form.querySelector('select[name="divisa_id"]').innerHTML = '<option value="">Seleccione una divisa</option>';
+    }
+
     function obtenerBancos() {
+        console.log('Obteniendo bancos...');
         return fetch('/api/obtener-bancos')
-            .then(response => response.json())
-            .catch(error => {
-                console.error('Error al obtener bancos:', error);
-                Swal.fire('Error', 'No se pudieron cargar los bancos', 'error');
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al obtener los bancos');
+                }
+                return response.json();
             });
     }
 
+    function obtenerDivisas() {
+        console.log('Obteniendo divisas...');
+        return fetch('/api/obtener-divisas')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al obtener las divisas');
+                }
+                return response.json();
+            });
+    }
+    
+
     function poblarSelectorBancos(bancos) {
-        const selectorBanco = document.querySelector('#cuenta-bancaria-form select[name="banco"]');
-        selectorBanco.innerHTML = '<option value="">Seleccione un banco</option>';
+        console.log('Poblando selector de bancos');
+        const selector = document.querySelector('#cuenta-bancaria-form select[name="banco"]');
+        selector.innerHTML = '<option value="">Seleccione un banco</option>';
         bancos.forEach(banco => {
             const option = document.createElement('option');
             option.value = banco.id;
             option.textContent = banco.nombre;
-            selectorBanco.appendChild(option);
+            selector.appendChild(option);
+        });
+    }
+
+    function poblarSelectorMonedas(divisas) {
+        console.log('Poblando selector de divisas');
+        const selector = document.querySelector('#cuenta-bancaria-form select[name="divisa_id"]');
+        selector.innerHTML = '<option value="">Seleccione una divisa</option>';
+        divisas.forEach(divisa => {
+            const option = document.createElement('option');
+            option.value = divisa.id;
+            option.textContent = `${divisa.nombre} (${divisa.simbolo || divisa.codigo})`;
+            selector.appendChild(option);
         });
     }
 
     function mostrarModal(modalId, titulo) {
         const modal = document.getElementById(modalId);
         const tituloElement = modal.querySelector('.text-2xl');
-        if (tituloElement) {
+        if (tituloElement && titulo) {
             tituloElement.textContent = titulo;
         }
         modal.classList.remove('opacity-0', 'pointer-events-none');
         document.body.classList.add('modal-active');
     
-        // Si es el modal de cuenta bancaria, cargar los bancos
+        // Si es el modal de cuenta bancaria, cargar los bancos y las divisas
         if (modalId === 'cuenta-bancaria-modal') {
-            obtenerBancos().then(bancos => {
-                poblarSelectorBancos(bancos);
-            });
+            Promise.all([obtenerBancos(), obtenerDivisas()])
+                .then(([bancos, divisas]) => {
+                    poblarSelectorBancos(bancos);
+                    poblarSelectorMonedas(divisas);
+                })
+                .catch(error => {
+                    console.error('Error al cargar datos:', error);
+                    Swal.fire('Error', 'No se pudieron cargar los datos necesarios', 'error');
+                });
         }
     }
 
@@ -434,7 +528,7 @@
         const nombre = document.getElementById('nombre-banco').value;
         const contacto = document.getElementById('contacto-banco').value;
         const estatus = document.getElementById('estatus-banco').value;
-
+    
         fetch(`/api/buscar-bancos?id=${id}&nombre=${nombre}&contacto=${contacto}&estatus=${estatus}`)
             .then(response => response.json())
             .then(bancos => {
@@ -442,7 +536,11 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                Swal.fire('Error', 'Ocurrió un error al buscar bancos', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al buscar bancos'
+                });
             });
     }
 
@@ -480,13 +578,29 @@
 
     function guardarBanco(event) {
         event.preventDefault();
+        
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Procesando...',
+            text: 'Guardando información del banco',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    
         const formData = new FormData(event.target);
         const bancoData = Object.fromEntries(formData);
-
-        const bancoId = bancoData.id;
+        
+        // Remover el id si está vacío o si estamos creando un nuevo banco
+        const bancoId = bancoData.id || null;
+        if (!bancoId) {
+            delete bancoData.id;
+        }
+        
         const url = bancoId ? `/api/actualizar-banco/${bancoId}` : '/api/crear-banco';
         const method = bancoId ? 'PUT' : 'POST';
-
+        
         fetch(url, {
             method: method,
             body: JSON.stringify(bancoData),
@@ -494,18 +608,54 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                throw new Error(data.error);
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json().then(data => {
+                console.log('Response data:', data);
+                return {
+                    ok: response.ok,
+                    status: response.status,
+                    data: data
+                };
+            });
+        })
+        .then(({ ok, status, data }) => {
+            // Si hay error en la respuesta
+            if (!ok) {
+                throw data;
             }
-            Swal.fire('Éxito', bancoId ? 'Banco actualizado correctamente' : 'Banco creado correctamente', 'success');
+    
+            // Si la operación fue exitosa
             cerrarModales();
+            limpiarFormularioBanco();
             buscarBancos();
+    
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: bancoId ? 'Banco actualizado correctamente' : 'Banco creado correctamente',
+                timer: 2000,
+                showConfirmButton: false
+            });
         })
         .catch(error => {
             console.error('Error:', error);
-            Swal.fire('Error', error.message || 'Ocurrió un error al guardar el banco', 'error');
+            
+            let errorMessage = 'Ocurrió un error al procesar la solicitud';
+            
+            // Si el error tiene detalles específicos
+            if (error.details) {
+                errorMessage = Object.values(error.details).join('\n');
+            } else if (error.error) {
+                errorMessage = error.error;
+            }
+    
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMessage,
+                confirmButtonText: 'Entendido'
+            });
         });
     }
 
@@ -523,6 +673,41 @@
         }
     }
 
+    function crearNuevaCuentaBancaria() {
+        const form = document.getElementById('cuenta-bancaria-form');
+        
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Cargando...',
+            text: 'Preparando formulario',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    
+        // Cargar los datos necesarios
+        Promise.all([obtenerBancos(), obtenerDivisas()])
+            .then(([bancos, divisas]) => {
+                // Limpiar el formulario
+                form.reset();
+                form.querySelector('input[name="id"]').value = '';
+                
+                // Poblar los selectores
+                poblarSelectorBancos(bancos);
+                poblarSelectorMonedas(divisas);
+                
+                // Cerrar el indicador de carga
+                Swal.close();
+                
+                // Mostrar el modal
+                mostrarModal('cuenta-bancaria-modal', 'Crear Nueva Cuenta Bancaria');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudieron cargar los datos necesarios', 'error');
+            });
+    }
 
     function toggleEstatusBanco(id, estatusActual) {
         const nuevoEstatus = estatusActual === 'activo' ? 'inactivo' : 'activo';
@@ -626,7 +811,7 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cuenta.tipo_cuenta}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cuenta.estatus}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button class="editar-cuenta-bancaria text-blue-600 hover:text-blue-900 mr-2" data-id="${cuenta.id}">
+                    <button class="editar-cuenta-bancaria text-blue-600 hover:text-blue-900 mr-2" data-id="${cuenta.id}" onclick="editarCuentaBancaria(${cuenta.id})">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button class="eliminar-cuenta-bancaria text-red-600 hover:text-red-900" data-id="${cuenta.id}">
@@ -638,15 +823,51 @@
         });
     }
 
+    function cargarDivisas() {
+        fetch('/api/obtener-divisas-activas')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const selectDivisa = document.getElementById('divisa_id');
+                selectDivisa.innerHTML = '<option value="">Seleccione una divisa</option>';
+                data.forEach(divisa => {
+                    const option = document.createElement('option');
+                    option.value = divisa.id;
+                    option.textContent = `${divisa.nombre} (${divisa.codigo})`;
+                    selectDivisa.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error al cargar divisas:', error);
+                alert('No se pudieron cargar las divisas. Por favor, intente nuevamente.');
+            });
+    }
+    
+    // Llamar a la función cuando se carga la página
+    document.addEventListener('DOMContentLoaded', cargarDivisas);
+
     function guardarCuentaBancaria(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
         const cuentaData = Object.fromEntries(formData);
-
-        const cuentaId = cuentaData.id;
+        
+        // Remover el id si está vacío o si estamos creando una nueva cuenta
+        const cuentaId = cuentaData.id || null;
+        if (!cuentaId) {
+            delete cuentaData.id;
+        }
+        
+        // Convertir los ids a números
+        cuentaData.banco_id = parseInt(cuentaData.banco, 10);
+        cuentaData.divisa_id = parseInt(cuentaData.divisa_id, 10);
+        
         const url = cuentaId ? `/api/actualizar-cuenta-bancaria/${cuentaId}` : '/api/crear-cuenta-bancaria';
         const method = cuentaId ? 'PUT' : 'POST';
-
+        
         fetch(url, {
             method: method,
             body: JSON.stringify(cuentaData),
@@ -656,9 +877,7 @@
         })
         .then(response => response.json())
         .then(data => {
-            if (data.error) {
-                throw new Error(data.error);
-            }
+            if (data.error) throw new Error(data.error);
             Swal.fire('Éxito', cuentaId ? 'Cuenta bancaria actualizada correctamente' : 'Cuenta bancaria creada correctamente', 'success');
             cerrarModales();
             cargarCuentasBancarias();
@@ -668,6 +887,44 @@
             Swal.fire('Error', error.message || 'Ocurrió un error al guardar la cuenta bancaria', 'error');
         });
     }
+
+    function limpiarFormularioBanco() {
+        const form = document.getElementById('banco-form');
+        form.reset();
+        form.elements['id'].value = ''; // Limpiar el id oculto
+    }
+    
+    function mostrarModal(modalId, titulo) {
+        const modal = document.getElementById(modalId);
+        const tituloElement = modal.querySelector('.text-2xl');
+        if (tituloElement) {
+            tituloElement.textContent = titulo;
+        }
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        document.body.classList.add('modal-active');
+    
+        // Limpiar formularios según el modal
+        if (modalId === 'banco-modal' && titulo === 'Crear Nuevo Banco') {
+            limpiarFormularioBanco();
+        } else if (modalId === 'cuenta-bancaria-modal' && titulo === 'Crear Nueva Cuenta Bancaria') {
+            limpiarFormularioCuentaBancaria();
+        }
+    
+        // Cargar datos necesarios para cuenta bancaria
+        if (modalId === 'cuenta-bancaria-modal') {
+            Promise.all([obtenerBancos(), obtenerDivisas()])
+                .then(([bancos, divisas]) => {
+                    poblarSelectorBancos(bancos);
+                    poblarSelectorMonedas(divisas);
+                })
+                .catch(error => {
+                    console.error('Error al cargar datos:', error);
+                    Swal.fire('Error', 'No se pudieron cargar los datos necesarios', 'error');
+                });
+        }
+    }    
+
+    
 
     function manejarAccionesCuentaBancaria(event) {
         const target = event.target.closest('button');
@@ -682,34 +939,78 @@
     }
 
     // Modificar la función editarCuentaBancaria para cargar los bancos y seleccionar el correcto
-function editarCuentaBancaria(id) {
-    Promise.all([
-        fetch(`/api/obtener-cuenta-bancaria/${id}`).then(response => response.json()),
-        obtenerBancos()
-    ])
-    .then(([cuenta, bancos]) => {
-        document.getElementById('cuenta-bancaria-modal-title').textContent = 'Editar Cuenta Bancaria';
-        const form = document.getElementById('cuenta-bancaria-form');
-        for (const [key, value] of Object.entries(cuenta)) {
-            const field = form.elements[key];
-            if (field) {
-                if (field.type === 'checkbox') {
-                    field.checked = value;
-                } else {
-                    field.value = value;
-                }
+    function editarCuentaBancaria(id) {
+        console.log('Iniciando edición de cuenta bancaria:', id);
+        
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Cargando...',
+            text: 'Obteniendo información de la cuenta bancaria',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
-        }
-        poblarSelectorBancos(bancos);
-        // Seleccionar el banco correcto
-        form.elements['banco'].value = cuenta.banco_id;
-        mostrarModal('cuenta-bancaria-modal');
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire('Error', 'No se pudo cargar la información de la cuenta bancaria', 'error');
-    });
-}
+        });
+    
+        // Primero, cargar los datos necesarios
+        Promise.all([
+            fetch(`/api/obtener-cuenta-bancaria/${id}`)
+                .then(response => {
+                    console.log('Respuesta de cuenta bancaria:', response.status);
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            throw new Error('Cuenta bancaria no encontrada');
+                        }
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Error al obtener la cuenta bancaria');
+                        });
+                    }
+                    return response.json();
+                }),
+            obtenerBancos()
+                .then(bancos => {
+                    console.log('Bancos obtenidos:', bancos.length);
+                    return bancos;
+                }),
+            obtenerDivisas()
+                .then(divisas => {
+                    console.log('Divisas obtenidas:', divisas.length);
+                    return divisas;
+                })
+        ])
+        .then(([cuenta, bancos, divisas]) => {
+            console.log('Datos obtenidos:', { cuenta, bancos, divisas });
+            
+            // Cerrar el indicador de carga
+            Swal.close();
+    
+            const form = document.getElementById('cuenta-bancaria-form');
+            
+            // Poblar los selectores
+            poblarSelectorBancos(bancos);
+            poblarSelectorMonedas(divisas);
+            
+            // Establecer los valores del formulario
+            form.elements['id'].value = cuenta.id;
+            form.elements['numero'].value = cuenta.numero;
+            form.elements['nombre'].value = cuenta.nombre;
+            form.elements['banco'].value = cuenta.banco_id;
+            form.elements['divisa_id'].value = cuenta.divisa_id;
+            form.elements['tipo_cuenta'].value = cuenta.tipo_cuenta;
+            form.elements['estatus'].value = cuenta.estatus;
+    
+            // Mostrar el modal
+            mostrarModal('cuenta-bancaria-modal', 'Editar Cuenta Bancaria');
+        })
+        .catch(error => {
+            console.error('Error en editarCuentaBancaria:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'No se pudo cargar la información de la cuenta bancaria'
+            });
+        });
+    }
 
     function eliminarCuentaBancaria(id) {
         Swal.fire({

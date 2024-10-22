@@ -149,17 +149,22 @@ class CuentaBancaria(db.Model):
     numero = db.Column(db.String(20), unique=True, nullable=False)
     nombre = db.Column(db.String(100), nullable=False)
     banco_id = db.Column(db.Integer, db.ForeignKey('nuevo_bancos.id'), nullable=False)
+    divisa_id = db.Column(db.Integer, db.ForeignKey('divisas.id'), nullable=False)
     tipo_cuenta = db.Column(db.String(20), nullable=False)
     estatus = db.Column(db.String(10), default='activo')
     
     banco = db.relationship('NuevoBanco', backref=db.backref('cuentas', lazy=True))
+    divisa = db.relationship('Divisa', backref=db.backref('cuentas', lazy=True))
 
     def to_dict(self):
         return {
             'id': self.id,
             'numero': self.numero,
             'nombre': self.nombre,
+            'banco_id': self.banco_id,  # Añadido
+            'divisa_id': self.divisa_id,  # Añadido
             'banco': self.banco.nombre,
+            'divisa': self.divisa.codigo if self.divisa else None,
             'tipo_cuenta': self.tipo_cuenta,
             'estatus': self.estatus
         }

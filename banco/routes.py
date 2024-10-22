@@ -10,7 +10,6 @@ from flask import current_app
 from sqlalchemy import or_, func
 from .banco_models import CuentaBancaria
 
-
 logger = logging.getLogger(__name__)
 
 # Rutas para Bancos
@@ -115,13 +114,37 @@ def crear_banco():
     datos = request.json
     logger.info(f"Datos recibidos para crear banco: {datos}")
     
+    # Validación de campos requeridos
     required_fields = ['nombre', 'telefono']
-    for field in required_fields:
-        if not datos.get(field):
-            logger.warning(f"Campo requerido faltante: {field}")
-            return jsonify({"error": f"El campo '{field}' es obligatorio."}), 400
+    missing_fields = [field for field in required_fields if not datos.get(field)]
+    if missing_fields:
+        error_msg = ", ".join(missing_fields)
+        logger.warning(f"Campos requeridos faltantes: {error_msg}")
+        return jsonify({
+            "error": "Campos requeridos faltantes",
+            "details": {field: f"El campo '{field}' es obligatorio." for field in missing_fields}
+        }), 400
 
     try:
+        # Validar si ya existe un banco con el mismo nombre o teléfono antes de crear
+        existing_banco = NuevoBanco.query.filter(
+            (NuevoBanco.nombre == datos['nombre']) | 
+            (NuevoBanco.telefono == datos['telefono'])
+        ).first()
+        
+        if existing_banco:
+            error_details = {}
+            if existing_banco.nombre == datos['nombre']:
+                error_details['nombre'] = "Ya existe un banco con este nombre."
+            if existing_banco.telefono == datos['telefono']:
+                error_details['telefono'] = "Ya existe un banco con este número de teléfono."
+            
+            logger.warning(f"Intento de crear banco con datos duplicados: {error_details}")
+            return jsonify({
+                "error": "Datos duplicados",
+                "details": error_details
+            }), 400
+
         nuevo_banco = NuevoBanco(
             nombre=datos['nombre'],
             telefono=datos['telefono'],
@@ -133,34 +156,42 @@ def crear_banco():
             codigo_swift=datos.get('codigo_swift', ''),
             fecha=datetime.now()
         )
+        
         logger.info(f"Objeto NuevoBanco creado: {vars(nuevo_banco)}")
         db.session.add(nuevo_banco)
         db.session.commit()
         logger.info(f"Nuevo banco creado: {nuevo_banco.nombre}")
 
         # Notificar al asistente virtual
-        asistente = current_app.asistente
-        mensaje_asistente = (f"Se ha creado un nuevo banco con los siguientes detalles:\n"
-                             f"Nombre: {nuevo_banco.nombre}\n"
-                             f"Teléfono: {nuevo_banco.telefono}\n"
-                             f"Contacto: {nuevo_banco.contacto}\n"
-                             f"Teléfono de contacto: {nuevo_banco.telefono_contacto}\n"
-                             f"Estatus: {nuevo_banco.estatus}\n"
-                             f"Dirección: {nuevo_banco.direccion}\n"
-                             f"Código: {nuevo_banco.codigo}\n"
-                             f"Código SWIFT: {nuevo_banco.codigo_swift}\n"
-                             f"Fecha de creación: {nuevo_banco.fecha}")
-        respuesta_asistente = asistente.responder(mensaje_asistente, current_user.id)
+        try:
+            asistente = current_app.asistente
+            mensaje_asistente = (f"Se ha creado un nuevo banco con los siguientes detalles:\n"
+                                f"Nombre: {nuevo_banco.nombre}\n"
+                                f"Teléfono: {nuevo_banco.telefono}\n"
+                                f"Contacto: {nuevo_banco.contacto}\n"
+                                f"Teléfono de contacto: {nuevo_banco.telefono_contacto}\n"
+                                f"Estatus: {nuevo_banco.estatus}\n"
+                                f"Dirección: {nuevo_banco.direccion}\n"
+                                f"Código: {nuevo_banco.codigo}\n"
+                                f"Código SWIFT: {nuevo_banco.codigo_swift}\n"
+                                f"Fecha de creación: {nuevo_banco.fecha}")
+            respuesta_asistente = asistente.responder(mensaje_asistente, current_user.id)
+            logger.info("Asistente virtual notificado exitosamente")
+        except Exception as e:
+            logger.error(f"Error al notificar al asistente virtual: {str(e)}")
+            respuesta_asistente = {"contenido": "Error al notificar al asistente"}
 
         return jsonify({
             "message": "Banco creado exitosamente",
             "banco": nuevo_banco.to_dict(),
             "asistente_respuesta": respuesta_asistente['contenido'] if isinstance(respuesta_asistente, dict) else str(respuesta_asistente)
         }), 201
+
     except IntegrityError as e:
         db.session.rollback()
         error_info = str(e.orig)
         logger.error(f"IntegrityError al crear banco: {error_info}")
+        
         error_details = {}
         if 'unique constraint' in error_info.lower():
             if 'nuevo_bancos_nombre_key' in error_info:
@@ -173,12 +204,79 @@ def crear_banco():
             error_details['general'] = "Error de integridad al crear el banco."
         
         logger.warning(f"Error al crear banco: {error_details} Detalles: {datos}")
-        return jsonify({"error": "Error al crear el banco", "details": error_details}), 400
+        return jsonify({
+            "error": "Error al crear el banco",
+            "details": error_details
+        }), 400
+
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error inesperado al crear banco: {str(e)}")
-        return jsonify({"error": f"Error inesperado al crear el banco: {str(e)}"}), 500
+        error_msg = str(e)
+        logger.error(f"Error inesperado al crear banco: {error_msg}", exc_info=True)
+        return jsonify({
+            "error": "Error inesperado al crear el banco",
+            "details": {
+                "general": error_msg
+            }
+        }), 500
     
+@banco_bp.route("/obtener-divisas", methods=["GET"])
+@login_required
+def obtener_divisas():
+    try:
+        divisas = Divisa.query.filter_by(estatus='activo').all()
+        return jsonify([{
+            'id': divisa.id,
+            'codigo': divisa.codigo,
+            'nombre': divisa.nombre,
+            'simbolo': divisa.simbolo,
+            'tasa_cambio': divisa.tasa_cambio,
+            'abreviatura': divisa.abreviatura
+        } for divisa in divisas])
+    except Exception as e:
+        logger.error(f"Error al obtener divisas: {str(e)}")
+        return jsonify({"error": "Error al obtener divisas"}), 500
+    
+@banco_bp.route("/obtener-cuenta-bancaria/<int:id>", methods=["GET"])
+@login_required
+def obtener_cuenta_bancaria(id):
+    try:
+        logger.info(f"Intentando obtener cuenta bancaria con ID: {id}")
+        
+        cuenta = CuentaBancaria.query.get(id)
+        if not cuenta:
+            logger.warning(f"No se encontró la cuenta bancaria con ID: {id}")
+            return jsonify({"error": "Cuenta bancaria no encontrada"}), 404
+
+        logger.info(f"Cuenta bancaria encontrada: {cuenta.numero}")
+        
+        response_data = {
+            'id': cuenta.id,
+            'numero': cuenta.numero,
+            'nombre': cuenta.nombre,
+            'banco_id': cuenta.banco_id,
+            'divisa_id': cuenta.divisa_id,
+            'tipo_cuenta': cuenta.tipo_cuenta,
+            'estatus': cuenta.estatus,
+            'banco': {
+                'id': cuenta.banco.id,
+                'nombre': cuenta.banco.nombre
+            } if cuenta.banco else None,
+            'divisa': {
+                'id': cuenta.divisa.id,
+                'codigo': cuenta.divisa.codigo,
+                'nombre': cuenta.divisa.nombre,
+                'simbolo': cuenta.divisa.simbolo
+            } if hasattr(cuenta, 'divisa') and cuenta.divisa else None
+        }
+        
+        logger.info(f"Datos de respuesta preparados: {response_data}")
+        return jsonify(response_data)
+    except Exception as e:
+        logger.error(f"Error al obtener cuenta bancaria {id}: {str(e)}", exc_info=True)
+        return jsonify({"error": f"Error al obtener la cuenta bancaria: {str(e)}"}), 500   
+
+# También mantener la ruta existente para compatibilidad
 @banco_bp.route("/obtener-divisas-activas", methods=["GET"])
 @login_required
 def obtener_divisas_activas():
@@ -188,12 +286,13 @@ def obtener_divisas_activas():
             'id': divisa.id,
             'codigo': divisa.codigo,
             'nombre': divisa.nombre,
-            'simbolo': divisa.simbolo
+            'simbolo': divisa.simbolo,
+            'tasa_cambio': divisa.tasa_cambio,
+            'abreviatura': divisa.abreviatura
         } for divisa in divisas])
     except Exception as e:
         logger.error(f"Error al obtener divisas activas: {str(e)}")
-        return jsonify({"error": "Error al obtener divisas"}), 500 
-        
+        return jsonify({"error": "Error al obtener divisas"}), 500
 
 @banco_bp.route("/crear-deposito", methods=["POST"])
 @login_required
@@ -277,7 +376,7 @@ def obtener_depositos():
         return jsonify([deposito.to_dict() for deposito in depositos])
     except Exception as e:
         logger.error(f"Error al obtener depósitos: {str(e)}")
-        return jsonify({"error": f"Error al obtener depósitos: {str(e)}"}), 500    
+        return jsonify({"error": f"Error al obtener depósitos: {str(e)}"}), 500        
 
 @banco_bp.route("/divisas", methods=["GET", "POST"])
 @login_required
@@ -328,9 +427,6 @@ def listar_crear_divisas():
             logger.error(f"Error al listar divisas: {str(e)}", exc_info=True)
             return jsonify({"error": "Error interno del servidor al listar divisas", "details": str(e)}), 500
 
-    # ... (el resto del código para el método POST)
-
-    # ... (el resto del código para el método POST)
     elif request.method == "POST":
         datos = request.json
         logger.info(f"Datos recibidos para crear divisa: {datos}")
@@ -398,16 +494,78 @@ def listar_crear_divisas():
             db.session.rollback()
             logger.error(f"Error inesperado al crear divisa: {str(e)}")
             return jsonify({"error": f"Error inesperado al crear la divisa: {str(e)}"}), 500
-
+        
 @banco_bp.route("/obtener-cuentas-bancarias", methods=["GET"])
 @login_required
 def obtener_cuentas_bancarias():
     try:
         cuentas = CuentaBancaria.query.all()
-        return jsonify([cuenta.to_dict() for cuenta in cuentas])
+        return jsonify([{
+            **cuenta.to_dict(),
+            'divisa': cuenta.divisa.to_dict()
+        } for cuenta in cuentas])
     except Exception as e:
-        logger.error(f"Error al obtener cuentas bancarias: {str(e)}")
-        return jsonify({"error": "Error al obtener cuentas bancarias"}), 500
+        return jsonify({"error": f"Error al obtener cuentas bancarias: {str(e)}"}), 500
+    
+@banco_bp.route("/crear-cuenta-bancaria", methods=["POST"])
+@login_required
+def crear_cuenta_bancaria():
+    try:
+        datos = request.json
+        nueva_cuenta = CuentaBancaria(
+            numero=datos['numero'],
+            nombre=datos['nombre'],
+            banco_id=datos['banco_id'],
+            divisa_id=datos['divisa_id'],
+            tipo_cuenta=datos['tipo_cuenta'],
+            estatus=datos.get('estatus', 'activo')
+        )
+        db.session.add(nueva_cuenta)
+        db.session.commit()
+        return jsonify({
+            "message": "Cuenta bancaria creada exitosamente",
+            "cuenta": nueva_cuenta.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al crear cuenta bancaria: {str(e)}")
+        return jsonify({"error": f"Error al crear la cuenta bancaria: {str(e)}"}), 500
+
+@banco_bp.route("/actualizar-cuenta-bancaria/<int:id>", methods=["PUT"])
+@login_required
+def actualizar_cuenta_bancaria(id):
+    try:
+        cuenta = CuentaBancaria.query.get_or_404(id)
+        datos = request.json
+        
+        # Actualizar campos
+        campos_actualizables = ['numero', 'nombre', 'banco_id', 'divisa_id', 'tipo_cuenta', 'estatus']
+        for campo in campos_actualizables:
+            if campo in datos:
+                setattr(cuenta, campo, datos[campo])
+        
+        db.session.commit()
+        return jsonify({
+            "message": "Cuenta bancaria actualizada exitosamente",
+            "cuenta": cuenta.to_dict()
+        })
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al actualizar cuenta bancaria {id}: {str(e)}")
+        return jsonify({"error": f"Error al actualizar la cuenta bancaria: {str(e)}"}), 500
+
+@banco_bp.route("/eliminar-cuenta-bancaria/<int:id>", methods=["DELETE"])
+@login_required
+def eliminar_cuenta_bancaria(id):
+    try:
+        cuenta = CuentaBancaria.query.get_or_404(id)
+        db.session.delete(cuenta)
+        db.session.commit()
+        return jsonify({"message": "Cuenta bancaria eliminada exitosamente"})
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al eliminar cuenta bancaria {id}: {str(e)}")
+        return jsonify({"error": f"Error al eliminar la cuenta bancaria: {str(e)}"}), 500   
 
 @banco_bp.route("/divisas/<int:id>", methods=["GET", "PUT", "DELETE"])
 @login_required
@@ -483,9 +641,6 @@ def manejar_divisa(id):
             db.session.rollback()
             current_app.logger.error(f"Error inesperado al eliminar divisa: {str(e)}")
             return jsonify({"error": f"Error inesperado al eliminar la divisa: {str(e)}"}), 500
-
-
-
 
 @banco_bp.route("/eventos", methods=["GET"])
 @login_required
@@ -581,6 +736,8 @@ def actualizar_deposito(id):
         db.session.rollback()
         logger.error(f"Error al actualizar depósito: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
 
 @banco_bp.route("/eliminar-deposito/<int:id>", methods=["DELETE"])
 @login_required
