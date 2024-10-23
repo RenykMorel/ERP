@@ -296,93 +296,117 @@ def cargar_catalogo():
 
     if file and allowed_file(file.filename):
         try:
-            # Leer el archivo Excel con nombres de columnas explícitos
-            df = pd.read_excel(
-                file, 
-                skiprows=3,  # Saltar las tres primeras filas
-                names=['numero_cuenta', 'nombre', 'origen', 'categoria']  # Nombres de columnas que usaremos
-            )
+            # Leer el archivo Excel
+            df = pd.read_excel(file)
             
-            # Eliminar filas vacías
-            df = df.dropna(subset=['numero_cuenta', 'nombre'])
+            # Imprimir información para debug
+            logger.info(f"Columnas detectadas: {df.columns.tolist()}")
+            logger.info(f"Primeras filas:\n{df.head()}")
+
+            # Seleccionar solo las columnas que necesitamos
+            df = df.iloc[:, :5]
             
-            # Limpiar datos
-            df['numero_cuenta'] = df['numero_cuenta'].astype(str).str.strip()
-            df['nombre'] = df['nombre'].astype(str).str.strip()
-            df['origen'] = df['origen'].astype(str).str.strip().fillna('')
-            df['categoria'] = df['categoria'].astype(str).str.strip().fillna('')
+            # Asignar nombres de columnas
+            df.columns = ['NO. CUENTA', 'NOMBRE DE LA CUENTA', 'Unnamed: 2', 'ORIGEN', 'CATEGORIA']
             
-            # Procesar cada fila
+            # Limpiar datos y manejar NaN
+            df = df.dropna(subset=['NO. CUENTA', 'NOMBRE DE LA CUENTA'])
+            df['NO. CUENTA'] = df['NO. CUENTA'].astype(str).str.strip()
+            df['NOMBRE DE LA CUENTA'] = df['NOMBRE DE LA CUENTA'].astype(str).str.strip()
+            df['ORIGEN'] = df['ORIGEN'].fillna('').astype(str).str.strip().str.upper()
+            df['CATEGORIA'] = df['CATEGORIA'].fillna('').astype(str).str.strip().str.upper()
+            
+            # Normalizar categorías
+            def normalizar_categoria(cat):
+                if pd.isna(cat) or cat == '':
+                    return 'AUXILIAR'
+                cat = cat.upper().strip()
+                return 'CONTROL' if 'CONTROL' in cat else 'AUXILIAR'
+            
+            df['CATEGORIA'] = df['CATEGORIA'].apply(normalizar_categoria)
+            
             cuentas_creadas = 0
-            cuentas_actualizadas = 0
             errores = []
 
-            for idx, row in df.iterrows():
+            # Procesar cada fila
+            for index, row in df.iterrows():
                 try:
-                    numero = row['numero_cuenta']
-                    nombre = row['nombre']
-                    origen = row['origen'] if row['origen'] else None
-                    categoria = row['categoria'] if row['categoria'] else None
-
-                    if not numero or not nombre:
+                    if pd.isna(row['NO. CUENTA']) or pd.isna(row['NOMBRE DE LA CUENTA']):
+                        continue
+                        
+                    # Verificar si la cuenta ya existe
+                    cuenta_existente = ContabilidadCuenta.query.filter_by(
+                        numero_cuenta=str(row['NO. CUENTA'])
+                    ).first()
+                    
+                    if cuenta_existente:
+                        logger.info(f"La cuenta {row['NO. CUENTA']} ya existe, omitiendo...")
                         continue
 
-                    # Buscar si la cuenta ya existe
-                    cuenta = ContabilidadCuenta.query.filter_by(numero_cuenta=numero).first()
+                    # Crear nueva cuenta
+                    nueva_cuenta = ContabilidadCuenta(
+                        numero_cuenta=str(row['NO. CUENTA']),
+                        codigo=str(row['NO. CUENTA']),
+                        nombre=str(row['NOMBRE DE LA CUENTA']),
+                        origen=str(row['ORIGEN']) if row['ORIGEN'] else None,
+                        categoria=str(row['CATEGORIA']),
+                        estatus='Activo'
+                    )
                     
-                    if cuenta:
-                        # Actualizar cuenta existente
-                        cuenta.nombre = nombre
-                        if origen:
-                            cuenta.origen = origen.upper()
-                        if categoria:
-                            cuenta.categoria = categoria.upper()
-                        cuenta.calcular_nivel_y_padre()
-                        cuenta.codigo = numero
-                        cuentas_actualizadas += 1
-                    else:
-                        # Crear nueva cuenta
-                        nueva_cuenta = ContabilidadCuenta(
-                            numero_cuenta=numero,
-                            codigo=numero,
-                            nombre=nombre,
-                            origen=origen.upper() if origen else None,
-                            categoria=categoria.upper() if categoria else None,
-                            estatus='Activo'
-                        )
-                        nueva_cuenta.calcular_nivel_y_padre()
-                        db.session.add(nueva_cuenta)
-                        cuentas_creadas += 1
+                    nueva_cuenta.calcular_nivel_y_padre()
+                    db.session.add(nueva_cuenta)
+                    cuentas_creadas += 1
+                    
+                    if cuentas_creadas % 100 == 0:
+                        db.session.commit()
 
                 except Exception as e:
-                    error_msg = f"Error en línea {idx + 4}: {str(e)}"  # +4 por las filas de encabezado
-                    errores.append(error_msg)
+                    error_msg = f"Error en línea {index + 2}: {str(e)}"
                     logger.error(error_msg)
+                    errores.append(error_msg)
                     continue
 
-            db.session.commit()
-            
-            mensaje = f"Proceso completado.\nCuentas creadas: {cuentas_creadas}\nCuentas actualizadas: {cuentas_actualizadas}"
-            if errores:
-                mensaje += f"\nErrores encontrados: {len(errores)}"
-            
+            try:
+                db.session.commit()
+                logger.info(f"Se crearon {cuentas_creadas} cuentas exitosamente")
+            except Exception as e:
+                db.session.rollback()
+                error_msg = f"Error al guardar en la base de datos: {str(e)}"
+                logger.error(error_msg)
+                return jsonify({
+                    'success': False,
+                    'error': error_msg
+                }), 400
+
+            # Preparar vista previa de datos manejando NaN
+            preview_data = []
+            for _, row in df.head().iterrows():
+                preview_row = {}
+                for column in df.columns:
+                    value = row[column]
+                    if pd.isna(value):
+                        preview_row[column] = None
+                    else:
+                        preview_row[column] = str(value)
+                preview_data.append(preview_row)
+
             return jsonify({
                 'success': True,
-                'message': mensaje,
-                'errores': errores if errores else None,
+                'message': f"Proceso completado exitosamente.\nCuentas creadas: {cuentas_creadas}",
                 'detalles': {
                     'cuentas_creadas': cuentas_creadas,
-                    'cuentas_actualizadas': cuentas_actualizadas,
-                    'errores': len(errores)
+                    'errores': errores,
+                    'data_preview': preview_data
                 }
             })
 
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Error al procesar el archivo: {str(e)}")
+            error_msg = f"Error al procesar el archivo: {str(e)}"
+            logger.error(error_msg)
             return jsonify({
                 'success': False,
-                'error': f"Error al procesar el archivo: {str(e)}"
+                'error': error_msg
             }), 400
 
     return jsonify({'success': False, 'error': 'Tipo de archivo no permitido'}), 400
