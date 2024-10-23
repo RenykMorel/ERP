@@ -740,7 +740,8 @@ function cargarCatalogo(event) {
         }
     });
 
-    fetch('/api/cargar-catalogo', {
+    // Cambiar la URL para incluir el prefijo /contabilidad
+    fetch('/contabilidad/api/cargar-catalogo', {
         method: 'POST',
         body: formData
     })
@@ -751,7 +752,7 @@ function cargarCatalogo(event) {
             document.getElementById('upload-modal').classList.add('opacity-0', 'pointer-events-none');
             buscarCuentas();
         } else {
-            throw new Error(data.error);
+            throw new Error(data.error || 'Error al procesar el archivo');
         }
     })
     .catch(error => {

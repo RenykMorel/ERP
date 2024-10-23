@@ -11,6 +11,12 @@ from io import BytesIO
 import os
 from werkzeug.utils import secure_filename
 from flask_login import current_user, login_required
+import logging
+
+
+# Configuración del logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Definición de errores personalizados
 class ContabilidadError(Exception):
@@ -279,74 +285,118 @@ def api_buscar_cuentas():
         }), 500
 
 @contabilidad_bp.route('/api/cargar-catalogo', methods=['POST'])
+@login_required
 def cargar_catalogo():
     if 'file' not in request.files:
-        return jsonify({'error': 'No se encontró el archivo'}), 400
+        return jsonify({'success': False, 'error': 'No se encontró el archivo'}), 400
     
     file = request.files['file']
     if file.filename == '':
-        return jsonify({'error': 'No se seleccionó ningún archivo'}), 400
+        return jsonify({'success': False, 'error': 'No se seleccionó ningún archivo'}), 400
 
     if file and allowed_file(file.filename):
         try:
-            df = pd.read_excel(file, skiprows=3)
-            df.columns = ['numero_cuenta', 'nombre', 'origen', 'categoria']
+            # Leer el archivo Excel con nombres de columnas explícitos
+            df = pd.read_excel(
+                file, 
+                skiprows=3,  # Saltar las tres primeras filas
+                names=['numero_cuenta', 'nombre', 'origen', 'categoria']  # Nombres de columnas que usaremos
+            )
+            
+            # Eliminar filas vacías
             df = df.dropna(subset=['numero_cuenta', 'nombre'])
             
+            # Limpiar datos
+            df['numero_cuenta'] = df['numero_cuenta'].astype(str).str.strip()
+            df['nombre'] = df['nombre'].astype(str).str.strip()
+            df['origen'] = df['origen'].astype(str).str.strip().fillna('')
+            df['categoria'] = df['categoria'].astype(str).str.strip().fillna('')
+            
+            # Procesar cada fila
             cuentas_creadas = 0
             cuentas_actualizadas = 0
             errores = []
 
-            for _, row in df.iterrows():
+            for idx, row in df.iterrows():
                 try:
-                    numero = str(row['numero_cuenta']).strip()
-                    nombre = str(row['nombre']).strip()
-                    origen = str(row['origen']).strip() if not pd.isna(row['origen']) else None
-                    categoria = str(row['categoria']).strip() if not pd.isna(row['categoria']) else None
+                    numero = row['numero_cuenta']
+                    nombre = row['nombre']
+                    origen = row['origen'] if row['origen'] else None
+                    categoria = row['categoria'] if row['categoria'] else None
 
+                    if not numero or not nombre:
+                        continue
+
+                    # Buscar si la cuenta ya existe
                     cuenta = ContabilidadCuenta.query.filter_by(numero_cuenta=numero).first()
                     
                     if cuenta:
+                        # Actualizar cuenta existente
                         cuenta.nombre = nombre
-                        cuenta.origen = origen
-                        cuenta.categoria = categoria
+                        if origen:
+                            cuenta.origen = origen.upper()
+                        if categoria:
+                            cuenta.categoria = categoria.upper()
                         cuenta.calcular_nivel_y_padre()
+                        cuenta.codigo = numero
                         cuentas_actualizadas += 1
                     else:
-                        cuenta = ContabilidadCuenta(
+                        # Crear nueva cuenta
+                        nueva_cuenta = ContabilidadCuenta(
                             numero_cuenta=numero,
+                            codigo=numero,
                             nombre=nombre,
-                            origen=origen,
-                            categoria=categoria
+                            origen=origen.upper() if origen else None,
+                            categoria=categoria.upper() if categoria else None,
+                            estatus='Activo'
                         )
-                        cuenta.calcular_nivel_y_padre()
-                        db.session.add(cuenta)
+                        nueva_cuenta.calcular_nivel_y_padre()
+                        db.session.add(nueva_cuenta)
                         cuentas_creadas += 1
 
                 except Exception as e:
-                    errores.append(f"Error en cuenta {numero}: {str(e)}")
+                    error_msg = f"Error en línea {idx + 4}: {str(e)}"  # +4 por las filas de encabezado
+                    errores.append(error_msg)
+                    logger.error(error_msg)
                     continue
 
             db.session.commit()
             
-            mensaje = f"Proceso completado. Cuentas creadas: {cuentas_creadas}, actualizadas: {cuentas_actualizadas}"
+            mensaje = f"Proceso completado.\nCuentas creadas: {cuentas_creadas}\nCuentas actualizadas: {cuentas_actualizadas}"
             if errores:
                 mensaje += f"\nErrores encontrados: {len(errores)}"
             
             return jsonify({
                 'success': True,
                 'message': mensaje,
-                'errores': errores
+                'errores': errores if errores else None,
+                'detalles': {
+                    'cuentas_creadas': cuentas_creadas,
+                    'cuentas_actualizadas': cuentas_actualizadas,
+                    'errores': len(errores)
+                }
             })
 
         except Exception as e:
             db.session.rollback()
+            logger.error(f"Error al procesar el archivo: {str(e)}")
             return jsonify({
                 'success': False,
                 'error': f"Error al procesar el archivo: {str(e)}"
             }), 400
 
-    return jsonify({'error': 'Tipo de archivo no permitido'}), 400
+    return jsonify({'success': False, 'error': 'Tipo de archivo no permitido'}), 400
+
+def validar_formato_excel(df):
+    """Valida que el archivo Excel tenga el formato correcto"""
+    required_columns = ['NO. CUENTA', 'NOMBRE DE LA CUENTA', 'ORIGEN', 'CATEGORIA']
+    
+    # Verificar que todas las columnas requeridas estén presentes
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        raise ValueError(f"Columnas faltantes en el archivo: {', '.join(missing_columns)}")
+    
+    return True
 
 @contabilidad_bp.route('/api/descargar-catalogo', methods=['GET'])
 def descargar_catalogo():
