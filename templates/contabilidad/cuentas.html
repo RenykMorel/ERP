@@ -110,19 +110,38 @@
                     <input type="hidden" id="cuenta-id" name="id">
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-1" for="nivel">Nivel</label>
-                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nivel" name="nivel" type="text" required>
+                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                               id="nivel" 
+                               name="nivel" 
+                               type="number" 
+                               required>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="codigo">Código <span class="text-red-500">*</span></label>
+                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                            id="codigo" 
+                            name="codigo" 
+                            type="text" 
+                            required>
+                    </div>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-xs font-bold mb-1" for="identificador">Identificador</label>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="numero_cuenta">Número de Cuenta <span class="text-red-500">*</span></label>
                         <div class="flex">
-                            <input class="shadow-sm appearance-none border rounded-l w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="identificador" name="identificador" type="text" required>
-                            <button type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded-r">Cambiar</button>
+                            <input class="shadow-sm appearance-none border rounded-l w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                   id="numero_cuenta" 
+                                   name="numero_cuenta" 
+                                   type="text" 
+                                   required>
+                            <button type="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded-r">Generar</button>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-xs font-bold mb-1" for="cuenta-padre">Cuenta Padre</label>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="padre_id">Cuenta Padre</label>
                         <div class="relative">
-                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline pr-8" id="cuenta-padre" name="cuenta_padre" type="text">
+                            <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline pr-8" 
+                                   id="padre_id" 
+                                   name="padre_id" 
+                                   type="text">
                             <div class="absolute inset-y-0 right-0 flex items-center px-2">
                                 <i class="fas fa-search text-gray-400"></i>
                             </div>
@@ -130,15 +149,33 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-1" for="nombre">Nombre <span class="text-red-500">*</span></label>
-                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nombre" name="nombre" type="text" required>
+                        <input class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                               id="nombre" 
+                               name="nombre" 
+                               type="text" 
+                               required>
                     </div>
                     <div class="col-span-2">
                         <label class="block text-gray-700 text-xs font-bold mb-1" for="descripcion">Descripción</label>
-                        <textarea class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="descripcion" name="descripcion" rows="3"></textarea>
+                        <textarea class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                  id="descripcion" 
+                                  name="descripcion" 
+                                  rows="3"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="origen">Origen</label>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                id="origen" 
+                                name="origen">
+                            <option value="DEBITO">DÉBITO</option>
+                            <option value="CREDITO">CRÉDITO</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-1" for="grupo">Grupo</label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="grupo" name="grupo">
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                id="grupo" 
+                                name="grupo">
                             <option value="Activo">Activo</option>
                             <option value="Pasivo">Pasivo</option>
                             <option value="Patrimonio">Patrimonio</option>
@@ -148,51 +185,66 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-1" for="tipo">Tipo</label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="tipo" name="tipo">
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                id="tipo" 
+                                name="tipo">
                             <option value="Detalle">Detalle</option>
                             <option value="Grupo">Grupo</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-1" for="categoria">Categoría</label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="categoria" name="categoria">
-                            <option value="Control">Control</option>
-                            <option value="Auxiliar">Auxiliar</option>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                id="categoria" 
+                                name="categoria">
+                            <option value="CONTROL">Control</option>
+                            <option value="AUXILIAR">Auxiliar</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 text-xs font-bold mb-1" for="flujo-efectivo">Flujo de Efectivo</label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="flujo-efectivo" name="flujo_efectivo">
+                        <label class="block text-gray-700 text-xs font-bold mb-1" for="flujo_efectivo">Flujo de Efectivo</label>
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                id="flujo_efectivo" 
+                                name="flujo_efectivo">
                             <option value="Efectivo">Efectivo</option>
                             <option value="No Efectivo">No Efectivo</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs font-bold mb-1" for="estatus">Estatus</label>
-                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="estatus" name="estatus">
+                        <select class="shadow-sm appearance-none border rounded w-full py-1 px-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                id="estatus" 
+                                name="estatus">
                             <option value="Activo">Activo</option>
                             <option value="Inactivo">Inactivo</option>
                         </select>
                     </div>
                     <div>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" class="form-checkbox" name="corriente">
+                            <input type="checkbox" class="form-checkbox" name="corriente" value="true">
                             <span class="ml-2">Corriente</span>
                         </label>
                     </div>
                     <div>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" class="form-checkbox" name="balance_general">
+                            <input type="checkbox" class="form-checkbox" name="balance_general" value="true">
                             <span class="ml-2">Balance General</span>
                         </label>
                     </div>
-                
                 </div>
                 <div class="flex items-center justify-between mt-6">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Grabar</button>
-                    <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" id="limpiar-btn">Limpiar</button>
-                    <button type="button" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">Volver</button>
-                    <button type="button" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" id="clonar-btn">Clonar</button>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Grabar
+                    </button>
+                    <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" id="limpiar-btn">
+                        Limpiar
+                    </button>
+                    <button type="button" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close">
+                        Volver
+                    </button>
+                    <button type="button" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" id="clonar-btn">
+                        Clonar
+                    </button>
                 </div>
             </form>
         </div>
@@ -279,16 +331,126 @@ function buscarCuentas() {
     const codigoCuenta = document.getElementById('codigo-cuenta').value;
     const nombreCuenta = document.getElementById('nombre-cuenta').value;
     const tipoCuenta = document.getElementById('tipo-cuenta').value;
-    const saldoCuenta = document.getElementById('saldo-cuenta').value;
 
-    // Aquí deberías hacer una llamada a tu API para buscar las cuentas
-    // Por ahora, simularemos algunos datos
-    const cuentas = [
-        { id: 1, codigo: '1000', nombre: 'Caja', tipo: 'Activo', saldo: 5000 },
-        { id: 2, codigo: '2000', nombre: 'Cuentas por Pagar', tipo: 'Pasivo', saldo: 3000 },
-    ];
+    fetch(`/contabilidad/api/buscar-cuentas?numero=${codigoCuenta}&nombre=${nombreCuenta}&categoria=${tipoCuenta}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarTablaCuentas(data.cuentas);
+            } else {
+                Swal.fire('Error', data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Error al buscar cuentas', 'error');
+        });
+}
 
-    actualizarTablaCuentas(cuentas);
+function guardarCuenta(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const cuentaData = Object.fromEntries(formData);
+    const isUpdate = cuentaData.id;
+
+    // Mapear los campos del formulario a los campos del modelo
+    const datosCuenta = {
+        numero_cuenta: cuentaData.identificador || cuentaData.numero_cuenta, // Cambiar identificador a numero_cuenta
+        nombre: cuentaData.nombre,
+        origen: cuentaData.origen || null,
+        categoria: cuentaData.categoria,
+        nivel: cuentaData.nivel ? parseInt(cuentaData.nivel) : null,
+        padre_id: cuentaData.cuenta_padre || null,
+        tipo: cuentaData.tipo,
+        grupo: cuentaData.grupo,
+        descripcion: cuentaData.descripcion,
+        estatus: cuentaData.estatus,
+        flujo_efectivo: cuentaData.flujo_efectivo,
+        corriente: formData.get('corriente') === 'on', // Convertir a boolean
+        balance_general: formData.get('balance_general') === 'on', // Convertir a boolean
+    };
+
+    // Asegurar que código es igual a número de cuenta si no existe
+    if (!datosCuenta.numero_cuenta) {
+        datosCuenta.numero_cuenta = cuentaData.numero_cuenta;
+    }
+
+    // Definir URL y método según si es actualización o creación
+    const url = isUpdate ? 
+        `/contabilidad/api/cuentas/${cuentaData.id}` : 
+        '/contabilidad/api/cuentas';
+    const method = isUpdate ? 'PUT' : 'POST';
+
+    // Mostrar indicador de carga
+    Swal.fire({
+        title: 'Guardando...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Enviar los datos al servidor
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(datosCuenta)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire('Éxito', data.message, 'success');
+            toggleModal();
+            buscarCuentas(); // Actualizar la lista de cuentas
+        } else {
+            throw new Error(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', error.message || 'Error al guardar la cuenta', 'error');
+    });
+}
+
+
+// Actualiza todas las demás llamadas fetch de manera similar
+function cargarCatalogo(event) {
+    event.preventDefault();
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        Swal.fire('Error', 'Por favor, seleccione un archivo', 'error');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    fetch('/contabilidad/api/cargar-catalogo', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire('Éxito', data.message, 'success');
+            document.getElementById('upload-modal').classList.add('opacity-0', 'pointer-events-none');
+            buscarCuentas();
+        } else {
+            throw new Error(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', error.message || 'Error al cargar el catálogo', 'error');
+    });
+}
+
+function imprimirCatalogo() {
+    window.location.href = '/contabilidad/api/descargar-catalogo';
 }
 
 function actualizarTablaCuentas(cuentas) {
@@ -297,11 +459,14 @@ function actualizarTablaCuentas(cuentas) {
     cuentas.forEach(cuenta => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cuenta.codigo}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cuenta.numero_cuenta}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cuenta.nombre}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cuenta.tipo}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cuenta.saldo.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cuenta.origen || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(cuenta.saldo || 0).toFixed(2)}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="ver-cuenta text-green-600 hover:text-green-900 mr-2" data-id="${cuenta.id}">
+                    <i class="fas fa-eye"></i>
+                </button>
                 <button class="editar-cuenta text-blue-600 hover:text-blue-900 mr-2" data-id="${cuenta.id}">
                     <i class="fas fa-edit"></i>
                 </button>
@@ -324,13 +489,107 @@ function guardarCuenta(event) {
     event.preventDefault();
     const formData = new FormData(event.target);
     const cuentaData = Object.fromEntries(formData);
+    const isUpdate = cuentaData.id && cuentaData.id !== '';
 
-    // Aquí deberías hacer una llamada a tu API para guardar la cuenta
-    console.log('Datos de la cuenta:', cuentaData);
+    // Convertir valores
+    cuentaData.corriente = formData.get('corriente') === 'on';
+    cuentaData.balance_general = formData.get('balance_general') === 'on';
+    if (cuentaData.nivel) {
+        cuentaData.nivel = parseInt(cuentaData.nivel);
+    }
 
-    Swal.fire('Éxito', 'Cuenta guardada correctamente', 'success');
-    toggleModal();
-    buscarCuentas();
+    // Asegurar que código es igual a número de cuenta si está vacío
+    if (!cuentaData.codigo) {
+        cuentaData.codigo = cuentaData.numero_cuenta;
+    }
+
+    const url = isUpdate ? 
+        `/contabilidad/api/cuentas/${cuentaData.id}` : 
+        '/contabilidad/api/cuentas';
+
+    const method = isUpdate ? 'PUT' : 'POST';
+
+    console.log('Método:', method);
+    console.log('URL:', url);
+    console.log('Datos:', cuentaData);
+
+    Swal.fire({
+        title: isUpdate ? 'Actualizando...' : 'Guardando...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cuentaData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire('Éxito', data.message, 'success');
+            toggleModal();
+            buscarCuentas();
+        } else {
+            throw new Error(data.error || 'Error al guardar los cambios');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', error.message || 'Error al guardar la cuenta', 'error');
+    });
+}
+
+function verCuenta(id) {
+    Swal.fire({
+        title: 'Cargando...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch(`/contabilidad/api/cuentas/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const cuenta = data.cuenta;
+                Swal.fire({
+                    title: 'Detalles de la Cuenta',
+                    html: `
+                        <div class="text-left">
+                            <p><strong>Número de Cuenta:</strong> ${cuenta.numero_cuenta}</p>
+                            <p><strong>Nombre:</strong> ${cuenta.nombre}</p>
+                            <p><strong>Origen:</strong> ${cuenta.origen || '-'}</p>
+                            <p><strong>Categoría:</strong> ${cuenta.categoria || '-'}</p>
+                            <p><strong>Nivel:</strong> ${cuenta.nivel || '-'}</p>
+                            <p><strong>Padre:</strong> ${cuenta.padre_id || '-'}</p>
+                            <p><strong>Tipo:</strong> ${cuenta.tipo || '-'}</p>
+                            <p><strong>Grupo:</strong> ${cuenta.grupo || '-'}</p>
+                            <p><strong>Descripción:</strong> ${cuenta.descripcion || '-'}</p>
+                            <p><strong>Estatus:</strong> ${cuenta.estatus || '-'}</p>
+                            <p><strong>Saldo:</strong> ${(cuenta.saldo || 0).toFixed(2)}</p>
+                            <p><strong>Flujo de Efectivo:</strong> ${cuenta.flujo_efectivo || '-'}</p>
+                            <p><strong>Corriente:</strong> ${cuenta.corriente ? 'Sí' : 'No'}</p>
+                            <p><strong>Balance General:</strong> ${cuenta.balance_general ? 'Sí' : 'No'}</p>
+                        </div>
+                    `,
+                    width: '600px',
+                    showCloseButton: true,
+                    showConfirmButton: false
+                });
+            } else {
+                throw new Error(data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', error.message || 'Error al cargar los detalles de la cuenta', 'error');
+        });
 }
 
 function manejarAccionesCuenta(event) {
@@ -343,42 +602,55 @@ function manejarAccionesCuenta(event) {
         editarCuenta(cuentaId);
     } else if (target.classList.contains('eliminar-cuenta')) {
         eliminarCuenta(cuentaId);
+    } else if (target.classList.contains('ver-cuenta')) {
+        verCuenta(cuentaId);
     }
 }
 
 function editarCuenta(id) {
-    // Aquí deberías hacer una llamada a tu API para obtener los datos de la cuenta
-    // Por ahora, simularemos algunos datos
-    const cuenta = {
-        id: id,
-        nivel: '1',
-        identificador: '1000',
-        cuenta_padre: '',
-        nombre: 'Caja',
-        descripcion: 'Cuenta de caja',
-        grupo: 'Activo',
-        tipo: 'Detalle',
-        categoria: 'Control',
-        flujo_efectivo: 'Efectivo',
-        estatus: 'Activo',
-        corriente: true,
-        balance_general: true
-    };
-
-    const form = document.getElementById('cuenta-form');
-    for (const [key, value] of Object.entries(cuenta)) {
-        const field = form.elements[key];
-        if (field) {
-            if (field.type === 'checkbox') {
-                field.checked = value;
-            } else {
-                field.value = value;
-            }
+    Swal.fire({
+        title: 'Cargando...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
         }
-    }
+    });
 
-    document.getElementById('modal-title').textContent = 'Editar Cuenta';
-    toggleModal();
+    fetch(`/contabilidad/api/cuentas/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const form = document.getElementById('cuenta-form');
+                const cuenta = data.cuenta;
+                
+                // Llenar todos los campos del formulario
+                form.elements['id'].value = cuenta.id;
+                form.elements['codigo'].value = cuenta.codigo;
+                form.elements['numero_cuenta'].value = cuenta.numero_cuenta;
+                form.elements['nombre'].value = cuenta.nombre;
+                form.elements['nivel'].value = cuenta.nivel;
+                form.elements['padre_id'].value = cuenta.padre_id || '';
+                form.elements['origen'].value = cuenta.origen || '';
+                form.elements['categoria'].value = cuenta.categoria || '';
+                form.elements['tipo'].value = cuenta.tipo || 'Detalle';
+                form.elements['grupo'].value = cuenta.grupo || '';
+                form.elements['descripcion'].value = cuenta.descripcion || '';
+                form.elements['estatus'].value = cuenta.estatus || 'Activo';
+                form.elements['flujo_efectivo'].value = cuenta.flujo_efectivo || '';
+                form.elements['corriente'].checked = cuenta.corriente || false;
+                form.elements['balance_general'].checked = cuenta.balance_general || false;
+                
+                document.getElementById('modal-title').textContent = 'Editar Cuenta';
+                Swal.close();
+                toggleModal();
+            } else {
+                throw new Error(data.error || 'Error al cargar la cuenta');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', error.message || 'Error al cargar la cuenta', 'error');
+        });
 }
 
 function eliminarCuenta(id) {
@@ -393,15 +665,22 @@ function eliminarCuenta(id) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Aquí deberías hacer una llamada a tu API para eliminar la cuenta
-            console.log('Eliminando cuenta con ID:', id);
-
-            Swal.fire(
-                'Eliminado',
-                'La cuenta ha sido eliminada.',
-                'success'
-            );
-            buscarCuentas();
+            fetch(`/contabilidad/api/cuentas/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Eliminado', data.message, 'success');
+                    buscarCuentas();
+                } else {
+                    throw new Error(data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', error.message || 'Error al eliminar la cuenta', 'error');
+            });
         }
     });
 }
@@ -444,14 +723,45 @@ function cargarCatalogo(event) {
     event.preventDefault();
     const fileInput = document.getElementById('file-upload');
     const file = fileInput.files[0];
-    if (file) {
-        // Aquí deberías implementar la lógica para cargar y procesar el archivo
-        // Por ahora, solo mostraremos un mensaje de éxito
-        Swal.fire('Éxito', 'Catálogo cargado correctamente', 'success');
-        document.getElementById('upload-modal').classList.add('opacity-0', 'pointer-events-none');
-    } else {
+    
+    if (!file) {
         Swal.fire('Error', 'Por favor, seleccione un archivo', 'error');
+        return;
     }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    Swal.fire({
+        title: 'Cargando catálogo...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch('/api/cargar-catalogo', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire('Éxito', data.message, 'success');
+            document.getElementById('upload-modal').classList.add('opacity-0', 'pointer-events-none');
+            buscarCuentas();
+        } else {
+            throw new Error(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', error.message || 'Error al cargar el catálogo', 'error');
+    });
+}
+
+function imprimirCatalogo() {
+    window.location.href = '/contabilidad/api/descargar-catalogo';
 }
 
 // Inicializar la búsqueda de cuentas al cargar la página
