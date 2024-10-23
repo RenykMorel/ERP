@@ -243,7 +243,7 @@ body.modal-active {
                             id="grupo" 
                             name="grupo">
                         <option value="Activo">Activo</option>
-                        <option value="Pasivo">Pasivo</option>
+                        <option  value="Pasivo">Pasivo</option>
                         <option  value="Patrimonio">Patrimonio</option>
                         <option value="Ingreso">Ingreso</option>
                         <option value="Gasto">Gasto</option>
@@ -525,69 +525,103 @@ function guardarCuenta(event) {
 }
 
 function cargarCatalogo(event) {
-  event.preventDefault();
-  const fileInput = document.getElementById('file-upload');
-  const file = fileInput.files[0];
-  
-  if (!file) {
-      Swal.fire('Error', 'Por favor, seleccione un archivo', 'error');
-      return;
-  }
+    event.preventDefault();
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        Swal.fire('Error', 'Por favor, seleccione un archivo', 'error');
+        return;
+    }
 
-  if (file.name.split('.').pop().toLowerCase() !== 'xlsx') {
-      Swal.fire('Error', 'Por favor, seleccione un archivo Excel (.xlsx)', 'error');
-      return;
-  }
+    const formData = new FormData();
+    formData.append('file', file);
 
-  Swal.fire({
-      title: 'Cargando catálogo...',
-      text: 'Por favor espere mientras se procesan las cuentas',
-      allowOutsideClick: false,
-      didOpen: () => {
-          Swal.showLoading();
-      }
-  });
+    const progressBar = document.querySelector('.progress-bar');
+    progressBarFill = progressBar.querySelector('.progress-bar-fill');
+    progressBar.classList.remove('hidden');
+    progressBarFill.style.width = '0%';
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, {type: 'array'});
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+    // Mostrar loading
+    Swal.fire({
+        title: 'Procesando archivo...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
-      // Verify the file format
-      const expectedHeaders = ['No.  Cuenta', 'Nombre', 'Cuenta Padre', 'Tipo', 'Categoria', 'Grupo'];
-      const headers = jsonData[0];
-      if (!arraysEqual(headers, expectedHeaders)) {
-          Swal.fire('Error', 'El formato del archivo no es válido. Por favor, use la plantilla correcta.', 'error');
-          return;
-      }
+    // Enviar directamente al backend
+    fetch('/contabilidad/api/cargar-catalogo', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            let html = `<div class="text-left">
+                <p><strong>Resultado:</strong></p>
+                <p>${data.message}</p>`;
+            
+            if (data.detalles.data_preview && data.detalles.data_preview.length > 0) {
+                html += `<p><strong>Vista previa de datos leídos:</strong></p>
+                <table class="min-w-full divide-y divide-gray-200 mt-4">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            ${Object.keys(data.detalles.data_preview[0]).map(key => 
+                                `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${key}</th>`
+                            ).join('')}
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${data.detalles.data_preview.map(row => 
+                            `<tr>
+                                ${Object.values(row).map(value => 
+                                    `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${value || '-'}</td>`
+                                ).join('')}
+                            </tr>`
+                        ).join('')}
+                    </tbody>
+                </table>`;
+            }
+            
+            if (data.detalles.errores && data.detalles.errores.length > 0) {
+                html += `<p class="mt-4"><strong>Errores encontrados:</strong></p>
+                <pre class="mt-2 p-4 bg-red-50 rounded-lg overflow-auto max-h-60 text-sm text-red-600">
+                ${data.detalles.errores.join('\n')}
+                </pre>`;
+            }
+            
+            html += '</div>';
 
-      const cuentas = jsonData.slice(1).map(row => ({
-          numero_cuenta: row[0],
-          nombre: row[1],
-          padre_id: row[2],
-          tipo: row[3],
-          categoria: row[4],
-          grupo: row[5]
-      }));
+            // Cerrar modal de carga
+            toggleModal('upload-modal');
 
-      // Here you should make an API call to save the accounts
-      // For now, we'll simulate a successful response
-      setTimeout(() => {
-          Swal.fire({
-              icon: 'success',
-              title: 'Catálogo cargado con éxito',
-              text: `Se han procesado ${cuentas.length} cuentas.`,
-              confirmButtonText: 'OK'
-          }).then(() => {
-              buscarCuentas();  // Update the list of accounts
-              toggleModal('upload-modal');
-          });
-      }, 2000);
-  };
-  reader.readAsArrayBuffer(file);
+            // Mostrar resultado
+            Swal.fire({
+                icon: data.detalles.errores?.length ? 'warning' : 'success',
+                title: 'Proceso Completado',
+                html: html,
+                width: '800px',
+                showConfirmButton: true,
+                confirmButtonText: 'Entendido',
+                showCloseButton: true
+            });
+
+            buscarCuentas();  // Actualizar la lista de cuentas
+            
+            // Limpiar el formulario
+            fileInput.value = '';
+            document.getElementById('file-name').textContent = '';
+            progressBar.classList.add('hidden');
+        } else {
+            throw new Error(data.error || 'Error al procesar el archivo');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', error.message || 'Error al cargar el catálogo', 'error');
+    });
 }
 
 function arraysEqual(arr1, arr2) {

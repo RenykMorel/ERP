@@ -13,7 +13,6 @@ from werkzeug.utils import secure_filename
 from flask_login import current_user, login_required
 import logging
 
-
 # Configuración del logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -42,9 +41,8 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 def allowed_file(filename):
     """Verifica si la extensión del archivo está permitida"""
-    ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    ALLOWED_EXTENSIONS = {'xlsx', 'xls', 'csv'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Funciones auxiliares
 def validar_cuenta(data):
@@ -140,40 +138,6 @@ def crear_cuenta():
             'error': str(e)
         }), 400
 
-        # Crear la cuenta con los campos permitidos
-        cuenta_data = {
-            'numero_cuenta': data.get('numero_cuenta'),
-            'nombre': data.get('nombre'),
-            'origen': data.get('origen'),
-            'categoria': data.get('categoria'),
-            'nivel': data.get('nivel'),
-            'padre_id': data.get('padre_id'),
-            'tipo': data.get('tipo'),
-            'grupo': data.get('grupo'),
-            'descripcion': data.get('descripcion'),
-            'estatus': data.get('estatus', 'Activo'),
-            'flujo_efectivo': data.get('flujo_efectivo'),
-            'corriente': data.get('corriente', False),
-            'balance_general': data.get('balance_general', False)
-        }
-
-        cuenta = ContabilidadCuenta(**cuenta_data)
-        db.session.add(cuenta)
-        db.session.commit()
-
-        return jsonify({
-            'success': True,
-            'message': 'Cuenta creada exitosamente',
-            'cuenta': cuenta.to_dict()
-        })
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
-
 @contabilidad_bp.route('/api/cuentas/<int:cuenta_id>', methods=['GET'])
 def obtener_cuenta(cuenta_id):
     try:
@@ -256,7 +220,6 @@ def eliminar_cuenta(cuenta_id):
 
 # Ruta para búsqueda de cuentas
 @contabilidad_bp.route('/api/buscar-cuentas', methods=['GET'])
-@login_required
 def api_buscar_cuentas():
     try:
         numero = request.args.get('numero', '')
@@ -274,9 +237,19 @@ def api_buscar_cuentas():
             
         cuentas = query.order_by(ContabilidadCuenta.numero_cuenta).all()
         
+        cuentas_data = [{
+            'id': cuenta.id,
+            'numero_cuenta': cuenta.numero_cuenta,
+            'nombre': cuenta.nombre,
+            'padre_id': cuenta.padre_id,
+            'tipo': cuenta.tipo or '',
+            'categoria': cuenta.categoria,
+            'grupo': cuenta.grupo or '',
+        } for cuenta in cuentas]
+        
         return jsonify({
             'success': True,
-            'cuentas': [cuenta.to_dict() for cuenta in cuentas]
+            'cuentas': cuentas_data
         })
     except Exception as e:
         return jsonify({
@@ -303,100 +276,77 @@ def cargar_catalogo():
             logger.info(f"Columnas detectadas: {df.columns.tolist()}")
             logger.info(f"Primeras filas:\n{df.head()}")
 
-            # Seleccionar solo las columnas que necesitamos
-            df = df.iloc[:, :5]
-            
-            # Asignar nombres de columnas
-            df.columns = ['NO. CUENTA', 'NOMBRE DE LA CUENTA', 'Unnamed: 2', 'ORIGEN', 'CATEGORIA']
-            
-            # Limpiar datos y manejar NaN
-            df = df.dropna(subset=['NO. CUENTA', 'NOMBRE DE LA CUENTA'])
-            df['NO. CUENTA'] = df['NO. CUENTA'].astype(str).str.strip()
-            df['NOMBRE DE LA CUENTA'] = df['NOMBRE DE LA CUENTA'].astype(str).str.strip()
-            df['ORIGEN'] = df['ORIGEN'].fillna('').astype(str).str.strip().str.upper()
-            df['CATEGORIA'] = df['CATEGORIA'].fillna('').astype(str).str.strip().str.upper()
-            
-            # Normalizar categorías
-            def normalizar_categoria(cat):
-                if pd.isna(cat) or cat == '':
-                    return 'AUXILIAR'
-                cat = cat.upper().strip()
-                return 'CONTROL' if 'CONTROL' in cat else 'AUXILIAR'
-            
-            df['CATEGORIA'] = df['CATEGORIA'].apply(normalizar_categoria)
-            
+            # Limpiar y preparar los datos
+            df = df.dropna(subset=['No. Cuenta', 'Nombre'])  # Eliminar filas sin número de cuenta o nombre
+            df = df.fillna('')  # Rellenar valores NaN con cadenas vacías
+
             cuentas_creadas = 0
+            cuentas_actualizadas = 0
             errores = []
 
-            # Procesar cada fila
             for index, row in df.iterrows():
                 try:
-                    if pd.isna(row['NO. CUENTA']) or pd.isna(row['NOMBRE DE LA CUENTA']):
-                        continue
-                        
-                    # Verificar si la cuenta ya existe
-                    cuenta_existente = ContabilidadCuenta.query.filter_by(
-                        numero_cuenta=str(row['NO. CUENTA'])
-                    ).first()
-                    
-                    if cuenta_existente:
-                        logger.info(f"La cuenta {row['NO. CUENTA']} ya existe, omitiendo...")
-                        continue
+                    # Convertir y limpiar datos
+                    numero_cuenta = str(row['No. Cuenta']).strip()
+                    nombre = str(row['Nombre']).strip()
+                    padre_id = str(row['Cuenta Padre']).strip() if row['Cuenta Padre'] else None
+                    tipo = str(row['Tipo']).strip() if row['Tipo'] else 'Detalle'
+                    categoria = str(row['Categoria']).strip() if row['Categoria'] else 'CONTROL'
+                    grupo = str(row['Grupo']).strip() if row['Grupo'] else None
 
-                    # Crear nueva cuenta
-                    nueva_cuenta = ContabilidadCuenta(
-                        numero_cuenta=str(row['NO. CUENTA']),
-                        codigo=str(row['NO. CUENTA']),
-                        nombre=str(row['NOMBRE DE LA CUENTA']),
-                        origen=str(row['ORIGEN']) if row['ORIGEN'] else None,
-                        categoria=str(row['CATEGORIA']),
-                        estatus='Activo'
-                    )
-                    
-                    nueva_cuenta.calcular_nivel_y_padre()
-                    db.session.add(nueva_cuenta)
-                    cuentas_creadas += 1
-                    
-                    if cuentas_creadas % 100 == 0:
+                    # Verificar si la cuenta existe
+                    cuenta = ContabilidadCuenta.query.filter_by(numero_cuenta=numero_cuenta).first()
+
+                    if cuenta:
+                        # Actualizar cuenta existente
+                        cuenta.nombre = nombre
+                        cuenta.padre_id = padre_id
+                        cuenta.tipo = tipo
+                        cuenta.categoria = categoria
+                        cuenta.grupo = grupo
+                        cuenta.calcular_nivel_y_padre()
+                        cuentas_actualizadas += 1
+                        logger.info(f"Cuenta actualizada: {numero_cuenta}")
+                    else:
+                        # Crear nueva cuenta
+                        nueva_cuenta = ContabilidadCuenta(
+                            numero_cuenta=numero_cuenta,
+                            codigo=numero_cuenta,
+                            nombre=nombre,
+                            padre_id=padre_id,
+                            tipo=tipo,
+                            categoria=categoria,
+                            grupo=grupo,
+                            estatus='Activo'
+                        )
+                        nueva_cuenta.calcular_nivel_y_padre()
+                        db.session.add(nueva_cuenta)
+                        cuentas_creadas += 1
+                        logger.info(f"Cuenta creada: {numero_cuenta}")
+
+                    # Commit cada 100 registros
+                    if (cuentas_creadas + cuentas_actualizadas) % 100 == 0:
                         db.session.commit()
 
                 except Exception as e:
-                    error_msg = f"Error en línea {index + 2}: {str(e)}"
+                    error_msg = f"Error en fila {index + 2}: {str(e)} - Cuenta: {numero_cuenta}"
                     logger.error(error_msg)
                     errores.append(error_msg)
                     continue
 
-            try:
-                db.session.commit()
-                logger.info(f"Se crearon {cuentas_creadas} cuentas exitosamente")
-            except Exception as e:
-                db.session.rollback()
-                error_msg = f"Error al guardar en la base de datos: {str(e)}"
-                logger.error(error_msg)
-                return jsonify({
-                    'success': False,
-                    'error': error_msg
-                }), 400
+            # Commit final
+            db.session.commit()
 
-            # Preparar vista previa de datos manejando NaN
-            preview_data = []
-            for _, row in df.head().iterrows():
-                preview_row = {}
-                for column in df.columns:
-                    value = row[column]
-                    if pd.isna(value):
-                        preview_row[column] = None
-                    else:
-                        preview_row[column] = str(value)
-                preview_data.append(preview_row)
-
+            logger.info(f"Proceso completado: {cuentas_creadas} creadas, {cuentas_actualizadas} actualizadas")
+            
             return jsonify({
                 'success': True,
-                'message': f"Proceso completado exitosamente.\nCuentas creadas: {cuentas_creadas}",
+                'message': f"Proceso completado exitosamente.\nCuentas creadas: {cuentas_creadas}, actualizadas: {cuentas_actualizadas}",
                 'detalles': {
                     'cuentas_creadas': cuentas_creadas,
+                    'cuentas_actualizadas': cuentas_actualizadas,
                     'errores': errores,
-                    'data_preview': preview_data
+                    'data_preview': df.head().to_dict('records')
                 }
             })
 
@@ -411,65 +361,43 @@ def cargar_catalogo():
 
     return jsonify({'success': False, 'error': 'Tipo de archivo no permitido'}), 400
 
-def validar_formato_excel(df):
-    """Valida que el archivo Excel tenga el formato correcto"""
-    required_columns = ['NO. CUENTA', 'NOMBRE DE LA CUENTA', 'ORIGEN', 'CATEGORIA']
-    
-    # Verificar que todas las columnas requeridas estén presentes
-    missing_columns = [col for col in required_columns if col not in df.columns]
-    if missing_columns:
-        raise ValueError(f"Columnas faltantes en el archivo: {', '.join(missing_columns)}")
-    
-    return True
-
 @contabilidad_bp.route('/api/descargar-catalogo', methods=['GET'])
 def descargar_catalogo():
     try:
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Catálogo de Cuentas"
-
-        # Encabezado
-        ws.merge_cells('A1:D1')
-        ws['A1'] = 'EMPRESA:_____________________________________'
-        ws.merge_cells('A2:D2')
-        ws['A2'] = 'CATALOGO DE CUENTA'
-        
-        # Columnas
-        ws['A4'] = 'NO. CUENTA'
-        ws['B4'] = 'NOMBRE DE LA CUENTA'
-        ws['C4'] = 'ORIGEN'
-        ws['D4'] = 'CATEGORIA'
-
-        # Datos
         cuentas = ContabilidadCuenta.query.order_by(ContabilidadCuenta.numero_cuenta).all()
-        row = 5
-        for cuenta in cuentas:
-            ws[f'A{row}'] = cuenta.numero_cuenta
-            ws[f'B{row}'] = cuenta.nombre
-            ws[f'C{row}'] = cuenta.origen
-            ws[f'D{row}'] = cuenta.categoria
-            row += 1
+        
+        df = pd.DataFrame([{
+            'No. Cue': cuenta.numero_cuenta,
+            'Nombre': cuenta.nombre,
+            'Cuenta': cuenta.padre_id,
+            'Tipo': cuenta.tipo,
+            'Catego': cuenta.categoria,
+            'Grupo': cuenta.grupo
+        } for cuenta in cuentas])
 
-        # Formato
-        ws.column_dimensions['A'].width = 15
-        ws.column_dimensions['B'].width = 50
-        ws.column_dimensions['C'].width = 15
-        ws.column_dimensions['D'].width = 15
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Catálogo de Cuentas')
+            
+            # Ajustar el ancho de las columnas
+            worksheet = writer.sheets['Catálogo de Cuentas']
+            for idx, col in enumerate(df):
+                max_length = max(df[col].astype(str).map(len).max(), len(col))
+                worksheet.column_dimensions[chr(65 + idx)].width = max_length + 2
 
-        excel_file = BytesIO()
-        wb.save(excel_file)
-        excel_file.seek(0)
+        output.seek(0)
 
         return send_file(
-            excel_file,
+            output,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
             download_name='catalogo_cuentas.xlsx'
         )
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error al descargar el catálogo: {str(e)}")
+        
+        return jsonify({'success': False, 'error': f"Error al descargar el catálogo: {str(e)}"}), 500
 
 # Manejo de errores global
 @contabilidad_bp.errorhandler(404)
@@ -486,3 +414,237 @@ def internal_error(error):
         'success': False,
         'error': 'Error interno del servidor'
     }), 500
+
+# Rutas adicionales para manejar otras funcionalidades contables
+
+@contabilidad_bp.route('/api/asientos', methods=['POST'])
+@login_required
+def crear_asiento():
+    try:
+        data = request.json
+        validar_asiento(data)
+        
+        asiento = AsientoDiario(
+            fecha=format_date(data['fecha']),
+            descripcion=data['descripcion'],
+            usuario_id=current_user.id
+        )
+        
+        for detalle in data['detalle']:
+            asiento.detalles.append(AsientoDiarioDetalle(
+                cuenta_id=detalle['cuenta_id'],
+                debe=format_number(detalle['debe']),
+                haber=format_number(detalle['haber'])
+            ))
+        
+        db.session.add(asiento)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Asiento creado exitosamente',
+            'asiento_id': asiento.id
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+@contabilidad_bp.route('/api/asientos', methods=['GET'])
+def listar_asientos():
+    try:
+        asientos = AsientoDiario.query.order_by(AsientoDiario.fecha.desc()).all()
+        return jsonify({
+            'success': True,
+            'asientos': [asiento.to_dict() for asiento in asientos]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@contabilidad_bp.route('/api/mayor-general', methods=['GET'])
+def obtener_mayor_general():
+    try:
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        
+        if not fecha_inicio or not fecha_fin:
+            return jsonify({
+                'success': False,
+                'error': 'Se requieren fechas de inicio y fin'
+            }), 400
+        
+        fecha_inicio = format_date(fecha_inicio)
+        fecha_fin = format_date(fecha_fin)
+        
+        mayor_general = MayorGeneral.query.filter(
+            MayorGeneral.fecha.between(fecha_inicio, fecha_fin)
+        ).order_by(MayorGeneral.cuenta_id, MayorGeneral.fecha).all()
+        
+        return jsonify({
+            'success': True,
+            'mayor_general': [entrada.to_dict() for entrada in mayor_general]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@contabilidad_bp.route('/api/balanza-comprobacion', methods=['GET'])
+def obtener_balanza_comprobacion():
+    try:
+        fecha = request.args.get('fecha')
+        
+        if not fecha:
+            return jsonify({
+                'success': False,
+                'error': 'Se requiere una fecha'
+            }), 400
+        
+        fecha = format_date(fecha)
+        
+        balanza = BalanzaComprobacion.query.filter_by(fecha=fecha).all()
+        
+        return jsonify({
+            'success': True,
+            'balanza_comprobacion': [entrada.to_dict() for entrada in balanza]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@contabilidad_bp.route('/api/estado-resultados', methods=['GET'])
+def obtener_estado_resultados():
+    try:
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        
+        if not fecha_inicio or not fecha_fin:
+            return jsonify({
+                'success': False,
+                'error': 'Se requieren fechas de inicio y fin'
+            }), 400
+        
+        fecha_inicio = format_date(fecha_inicio)
+        fecha_fin = format_date(fecha_fin)
+        
+        estado_resultados = EstadoResultados.query.filter(
+            EstadoResultados.fecha.between(fecha_inicio, fecha_fin)
+        ).order_by(EstadoResultados.fecha).all()
+        
+        return jsonify({
+            'success': True,
+            'estado_resultados': [entrada.to_dict() for entrada in estado_resultados]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@contabilidad_bp.route('/api/balance-general', methods=['GET'])
+def obtener_balance_general():
+    try:
+        fecha = request.args.get('fecha')
+        
+        if not fecha:
+            return jsonify({
+                'success': False,
+                'error': 'Se requiere una fecha'
+            }), 400
+        
+        fecha = format_date(fecha)
+        
+        balance = BalanceGeneral.query.filter_by(fecha=fecha).first()
+        
+        if not balance:
+            return jsonify({
+                'success': False,
+                'error': 'No se encontró un balance general para la fecha especificada'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'balance_general': balance.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@contabilidad_bp.route('/api/configuraciones', methods=['GET', 'POST'])
+@login_required
+def manejar_configuraciones():
+    if request.method == 'GET':
+        try:
+            configuraciones = Configuraciones.query.first()
+            return jsonify({
+                'success': True,
+                'configuraciones': configuraciones.to_dict() if configuraciones else {}
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500
+    elif request.method == 'POST':
+        try:
+            data = request.json
+            configuraciones = Configuraciones.query.first()
+            
+            if not configuraciones:
+                configuraciones = Configuraciones()
+                db.session.add(configuraciones)
+            
+            for key, value in data.items():
+                setattr(configuraciones, key, value)
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Configuraciones actualizadas exitosamente'
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 400
+
+@contabilidad_bp.route('/api/flujo-caja', methods=['GET'])
+def obtener_flujo_caja():
+    try:
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        
+        if not fecha_inicio or not fecha_fin:
+            return jsonify({
+                'success': False,
+                'error': 'Se requieren fechas de inicio y fin'
+            }), 400
+        
+        fecha_inicio = format_date(fecha_inicio)
+        fecha_fin = format_date(fecha_fin)
+        
+        flujo_caja = FlujoCaja.query.filter(
+            FlujoCaja.fecha.between(fecha_inicio, fecha_fin)
+        ).order_by(FlujoCaja.fecha).all()
+        
+        return jsonify({
+            'success': True,
+            'flujo_caja': [entrada.to_dict() for entrada in flujo_caja]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
