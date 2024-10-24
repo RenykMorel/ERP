@@ -6,6 +6,14 @@ from extensions import db
 from . import facturacion_bp
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
+from .facturas_models import Facturacion, PreFactura, NotaCredito, NotaDebito, Cliente
+from common.models import ItemFactura, ItemPreFactura, MovimientoInventario
+
+
+
+
+
+
 
 @facturacion_bp.route('/')
 @facturacion_bp.route('/facturas')

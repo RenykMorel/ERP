@@ -10,6 +10,15 @@
         content: " *";
         color: #ef4444;
     }
+    .green-border {
+        border: 2px solid #10B981;
+    }
+    #itemModal .green-border {
+        border-color: #10B981;
+    }
+    #itemModal input, #itemModal select, #itemModal textarea {
+        border: 2px solid #10B981;
+    }
 </style>
 {% endblock %}
 
@@ -62,7 +71,7 @@
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full green-border">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
                     Crear/Editar Item
@@ -71,228 +80,123 @@
                 <form id="item-form" class="space-y-6">
                     <input type="hidden" id="item-id" name="id">
                     
-                    <!-- Información Básica del Ítem -->
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="text-md font-medium text-gray-700 mb-3">Información Básica</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="item-tipo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Tipo de Ítem</label>
-                                <select id="item-tipo" name="tipo" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option value="">Seleccione un tipo</option>
-                                    <option value="producto">Producto</option>
-                                    <option value="servicio">Servicio</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="item-codigo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Código o SKU</label>
-                                <input type="text" id="item-codigo" name="codigo" required class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-nombre" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nombre del Ítem</label>
-                                <input type="text" id="item-nombre" name="nombre" required class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                                <textarea id="item-descripcion" name="descripcion" rows="3" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
-                            </div>
-                            <div>
-                                <label for="item-categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-                                <input type="text" id="item-categoria" name="categoria" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-proveedor" class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
-                                <input type="text" id="item-proveedor" name="proveedor" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-marca" class="block text-sm font-medium text-gray-700 mb-1">Marca/Modelo</label>
-                                <input type="text" id="item-marca" name="marca" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-qr" class="flex items-center">
-                                    <input type="checkbox" id="item-qr" name="generar_qr" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
-                                    <span class="ml-2 text-sm text-gray-700">Generar QR</span>
-                                </label>
-                            </div>
+                    <!-- Campos obligatorios -->
+                    <div class="space-y-4">
+                        <div>
+                            <label for="item-nombre" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nombre del Item</label>
+                            <input type="text" id="item-nombre" name="nombre" required class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+
+                        <div>
+                            <label for="item-tipo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Tipo de Item</label>
+                            <select id="item-tipo" name="tipo" required class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                <option value="producto">Producto</option>
+                                <option value="servicio">Servicio</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div id="nuevo-tipo-container" class="hidden">
+                            <label for="item-nuevo-tipo" class="block text-sm font-medium text-gray-700 mb-1">Nuevo Tipo de Item</label>
+                            <input type="text" id="item-nuevo-tipo" name="nuevo_tipo" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+
+                        <div>
+                            <label for="item-costo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Costo</label>
+                            <input type="number" id="item-costo" name="costo" required step="0.01" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+
+                        <div>
+                            <label for="item-itbis" class="block text-sm font-medium text-gray-700 mb-1 required-field">ITBIS (%)</label>
+                            <input type="number" id="item-itbis" name="itbis" required step="0.01" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+
+                        <div>
+                            <label for="item-margen" class="block text-sm font-medium text-gray-700 mb-1 required-field">Margen de Ganancia (%)</label>
+                            <input type="number" id="item-margen" name="margen" required step="0.01" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+
+                        <div>
+                            <label for="item-precio-final" class="block text-sm font-medium text-gray-700 mb-1">Precio Final</label>
+                            <input type="number" id="item-precio-final" name="precio_final" step="0.01" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <p class="mt-1 text-sm text-gray-500">Observación: El precio final está basado en el margen de ganancia.</p>
                         </div>
                     </div>
 
-                    <!-- Precios y Fiscalidad -->
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="text-md font-medium text-gray-700 mb-3">Precios y Fiscalidad</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="item-precio-con-impuesto" class="block text-sm font-medium text-gray-700 mb-1 required-field">Precio con Impuesto</label>
-                                <input type="number" step="0.01" id="item-precio-con-impuesto" name="precio_con_impuesto" required class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-precio-sin-impuesto" class="block text-sm font-medium text-gray-700 mb-1">Precio sin Impuesto</label>
-                                <input type="number" step="0.01" id="item-precio-sin-impuesto" name="precio_sin_impuesto" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-tasa-impuesto" class="block text-sm font-medium text-gray-700 mb-1">Tasa de Impuesto</label>
-                                <select id="item-tasa-impuesto" name="tasa_impuesto" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option value="">Seleccione una tasa</option>
-                                    <option value="18">ITBIS 18%</option>
-                                    <option value="16">16%</option>
-                                    <option value="0">Exento</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="item-precio-compra" class="block text-sm font-medium text-gray-700 mb-1">Precio de Compra</label>
-                                <input type="number" step="0.01" id="item-precio-compra" name="precio_compra" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-moneda" class="block text-sm font-medium text-gray-700 mb-1 required-field">Moneda</label>
-                                <select id="item-moneda" name="moneda" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option value="DOP">DOP</option>
-                                    <option value="USD">USD</option>
-                                    <option value="EUR">EUR</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="item-unidad-medida" class="block text-sm font-medium text-gray-700 mb-1">Unidad de Medida</label>
-                                <input type="text" id="item-unidad-medida" name="unidad_medida" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Inventario (para productos) -->
-                    <div id="inventario-section" class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="text-md font-medium text-gray-700 mb-3">Inventario</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="item-stock-inicial" class="block text-sm font-medium text-gray-700 mb-1">Stock Inicial</label>
-                                <input type="number" id="item-stock-inicial" name="stock_inicial" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-stock-minimo" class="block text-sm font-medium text-gray-700 mb-1">Stock Mínimo</label>
-                                <input type="number" id="item-stock-minimo" name="stock_minimo" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-stock-maximo" class="block text-sm font-medium text-gray-700 mb-1">Stock Máximo</label>
-                                <input type="number" id="item-stock-maximo" name="stock_maximo" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300  rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-almacen" class="block text-sm font-medium text-gray-700 mb-1">Almacén</label>
-                                <select id="item-almacen" name="almacen" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option value="">Seleccione un almacén</option>
-                                    <!-- Opciones de almacén se cargarán dinámicamente -->
-                                </select>
-                            </div>
-                            <div>
-                                <label for="item-lote" class="block text-sm font-medium text-gray-700 mb-1">Lote o Serie</label>
-                                <input type="text" id="item-lote" name="lote" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-fecha-vencimiento" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Vencimiento</label>
-                                <input type="date" id="item-fecha-vencimiento" name="fecha_vencimiento" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-costo-almacenaje" class="block text-sm font-medium text-gray-700 mb-1">Costos de Almacenaje</label>
-                                <input type="number" step="0.01" id="item-costo-almacenaje" name="costo_almacenaje" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-unidad-empaque" class="block text-sm font-medium text-gray-700 mb-1">Unidad de Empaque</label>
-                                <input type="text" id="item-unidad-empaque" name="unidad_empaque" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-costo-produccion" class="block text-sm font-medium text-gray-700 mb-1">Costo de Producción</label>
-                                <input type="number" step="0.01" id="item-costo-produccion" name="costo_produccion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Gestión Contable -->
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="text-md font-medium text-gray-700 mb-3">Gestión Contable</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="item-cuenta-ingresos" class="block text-sm font-medium text-gray-700 mb-1">Cuenta de Ingresos</label>
-                                <select id="item-cuenta-ingresos" name="cuenta_ingresos" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option value="">Seleccione una cuenta</option>
-                                    <!-- Opciones de cuentas se cargarán dinámicamente -->
-                                </select>
-                            </div>
-                            <div>
-                                <label for="item-cuenta-gastos" class="block text-sm font-medium text-gray-700 mb-1">Cuenta de Gastos</label>
-                                <select id="item-cuenta-gastos" name="cuenta_gastos" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option value="">Seleccione una cuenta</option>
-                                    <!-- Opciones de cuentas se cargarán dinámicamente -->
-                                </select>
-                            </div>
-                            <div>
-                                <label for="item-impuesto-aplicable" class="block text-sm font-medium text-gray-700 mb-1">Impuesto Aplicable</label>
-                                <select id="item-impuesto-aplicable" name="impuesto_aplicable" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option value="ITBIS">ITBIS</option>
-                                    <option value="Exento">Exento</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="item-centro-costo" class="block text-sm font-medium text-gray-700 mb-1">Centro de Costo</label>
-                                <select id="item-centro-costo" name="centro_costo" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option value="">Seleccione un centro de costo</option>
-                                    <!-- Opciones de centros de costo se cargarán dinámicamente -->
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Otros Atributos -->
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="text-md font-medium text-gray-700 mb-3">Otros Atributos</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="item-estatus" class="block text-sm font-medium text-gray-700 mb-1 required-field">Estatus del Ítem</label>
-                                <select id="item-estatus" name="estatus" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option value="Activo">Activo</option>
-                                    <option value="Inactivo">Inactivo</option>
-                                    <option value="Obsoleto">Obsoleto</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="item-imagen" class="block text-sm font-medium text-gray-700 mb-1">Imagen del Producto</label>
-                                <input type="file" id="item-imagen" name="imagen" accept="image/*" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-garantia" class="block text-sm font-medium text-gray-700 mb-1">Garantía</label>
-                                <input type="text" id="item-garantia" name="garantia" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-ubicacion" class="block text-sm font-medium text-gray-700 mb-1">Ubicación en Almacén</label>
-                                <input type="text" id="item-ubicacion" name="ubicacion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-costo-transporte" class="block text-sm font-medium text-gray-700 mb-1">Costo de Transporte</label>
-                                <input type="number" step="0.01" id="item-costo-transporte" name="costo_transporte" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Información Específica para Servicios -->
-                    <div id="servicios-section" class="bg-gray-50 p-4 rounded-lg hidden">
-                        <h4 class="text-md font-medium text-gray-700 mb-3">Información de Servicios</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="item-duracion-servicio" class="block text-sm font-medium text-gray-700 mb-1">Duración del Servicio</label>
-                                <input type="text" id="item-duracion-servicio" name="duracion_servicio" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="item-frecuencia-servicio" class="block text-sm font-medium text-gray-700 mb-1">Frecuencia</label>
-                                <select id="item-frecuencia-servicio" name="frecuencia_servicio" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                    <option value="unica">Única</option>
-                                    <option value="diaria">Diaria</option>
-                                    <option value="semanal">Semanal</option>
-                                    <option value="mensual">Mensual</option>
-                                    <option value="anual">Anual</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="item-condiciones-servicio" class="block text-sm font-medium text-gray-700 mb-1">Condiciones del Servicio</label>
-                                <textarea id="item-condiciones-servicio" name="condiciones_servicio" rows="3" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
-                            </div>
-                            <div>
-                                <label for="item-responsable-servicio" class="block text-sm font-medium text-gray-700 mb-1">Responsable del Servicio</label>
-                                <input type="text" id="item-responsable-servicio" name="responsable_servicio" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <!-- Secciones colapsables para información adicional -->
+                    <div class="space-y-4">
+                        <div x-data="{ open: false }">
+                            <button @click="open = !open" type="button" class="flex justify-between w-full px-4 py-2 text-sm font-medium text-left text-blue-500 bg-blue-100 rounded-lg hover:bg-blue-200 focus:outline-none focus-visible:ring focus-visible:ring-blue-500 focus-visible:ring-opacity-50">
+                                <span>Información Adicional</span>
+                                <svg :class="{'transform rotate-180': open}" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <div x-show="open" class="mt-2 space-y-4">
+                                <div>
+                                    <label for="item-descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                                    <textarea id="item-descripcion" name="descripcion" rows="3" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                                </div>
+                                <div>
+                                    <label for="item-categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                                    <input type="text" id="item-categoria" name="categoria" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="item-proveedor" class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                                    <input type="text" id="item-proveedor" name="proveedor" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="item-marca" class="block text-sm font-medium text-gray-700 mb-1">Marca/Modelo</label>
+                                    <input type="text" id="item-marca" name="marca" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="item-unidad-medida" class="block text-sm font-medium text-gray-700 mb-1">Unidad de Medida</label>
+                                    <input type="text" id="item-unidad-medida" name="unidad_medida" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="item-stock-inicial" class="block text-sm font-medium text-gray-700 mb-1">Stock Inicial</label>
+                                    <input type="number" id="item-stock-inicial" name="stock_inicial" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="item-stock-minimo" class="block text-sm font-medium text-gray-700 mb-1">Stock Mínimo</label>
+                                    <input type="number" id="item-stock-minimo" name="stock_minimo" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="item-stock-maximo" class="block text-sm font-medium text-gray-700 mb-1">Stock Máximo</label>
+                                    <input type="number" id="item-stock-maximo" name="stock_maximo" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="item-almacen" class="block text-sm font-medium text-gray-700 mb-1">Almacén</label>
+                                    <select id="item-almacen" name="almacen" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <option value="">Seleccione un almacén</option>
+                                        <!-- Opciones de almacén se cargarán dinámicamente -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="item-cuenta-ingresos" class="block text-sm font-medium text-gray-700 mb-1">Cuenta de Ingresos</label>
+                                    <select id="item-cuenta-ingresos" name="cuenta_ingresos" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500  focus:border-blue-500 sm:text-sm">
+                                        <option  value="">Seleccione una cuenta</option>
+                                        <!-- Opciones de cuentas se cargarán  dinámicamente -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="item-cuenta-gastos" class="block text-sm font-medium text-gray-700 mb-1">Cuenta de Gastos</label>
+                                    <select id="item-cuenta-gastos" name="cuenta_gastos" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <option value="">Seleccione una cuenta</option>
+                                        <!-- Opciones de cuentas se cargarán dinámicamente -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="item-centro-costo" class="block text-sm font-medium text-gray-700 mb-1">Centro de Costo</label>
+                                    <select id="item-centro-costo" name="centro_costo" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <option value="">Seleccione un centro de costo</option>
+                                        <!-- Opciones de centros de costo se cargarán dinámicamente -->
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="item-imagen" class="block text-sm font-medium text-gray-700 mb-1">Imagen del Producto</label>
+                                    <input type="file" id="item-imagen" name="imagen" accept="image/*" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -315,6 +219,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const crearItemBtn = document.getElementById('crear-item-btn');
@@ -324,14 +229,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const itemModal = document.getElementById('itemModal');
     const itemForm = document.getElementById('item-form');
     const itemTipo = document.getElementById('item-tipo');
-    const inventarioSection = document.getElementById('inventario-section');
-    const serviciosSection = document.getElementById('servicios-section');
+    const nuevoTipoContainer = document.getElementById('nuevo-tipo-container');
+    const costoInput = document.getElementById('item-costo');
+    const itbisInput = document.getElementById('item-itbis');
+    const margenInput = document.getElementById('item-margen');
+    const precioFinalInput = document.getElementById('item-precio-final');
 
     crearItemBtn.addEventListener('click', () => mostrarModalItem());
     guardarItemBtn.addEventListener('click', guardarItem);
     cerrarModalBtn.addEventListener('click', () => itemModal.classList.add('hidden'));
     eliminarItemBtn.addEventListener('click', () => eliminarItem(itemForm.id.value));
-    itemTipo.addEventListener('change', toggleSections);
+    itemTipo.addEventListener('change', toggleNuevoTipo);
+    precioFinalInput.addEventListener('input', actualizarMargen);
+
+    costoInput.addEventListener('input', calcularPrecioFinal);
+    itbisInput.addEventListener('input', calcularPrecioFinal);
+    margenInput.addEventListener('input', calcularPrecioFinal);
 
     cargarItems();
     cargarOpciones();
@@ -344,206 +257,150 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('modal-title').textContent = 'Crear Nuevo Item';
             eliminarItemBtn.classList.add('hidden');
         }
-        toggleSections();
+        toggleNuevoTipo();
         itemModal.classList.remove('hidden');
     }
 
-    function toggleSections() {
-        if (itemTipo.value === 'producto') {
-            inventarioSection.classList.remove('hidden');
-            serviciosSection.classList.add('hidden');
-        } else if (itemTipo.value === 'servicio') {
-            inventarioSection.classList.add('hidden');
-            serviciosSection.classList.remove('hidden');
+    function toggleNuevoTipo() {
+        if (itemTipo.value === 'otro') {
+            nuevoTipoContainer.classList.remove('hidden');
         } else {
-            inventarioSection.classList.add('hidden');
-            serviciosSection.classList.add('hidden');
+            nuevoTipoContainer.classList.add('hidden');
         }
     }
 
-    function cargarItems() {
-        fetch('/inventario/api/items')
-            .then(response => response.json())
-            .then(data => actualizarTablaItems(data))
-            .catch(error => {
-                console.error('Error:', error);
-                mostrarNotificacion('Ocurrió un error al cargar los items', 'error');
-            });
+    function calcularPrecioFinal() {
+        const costo = parseFloat(costoInput.value) || 0;
+        const itbis = parseFloat(itbisInput.value) || 0;
+        const margen = parseFloat(margenInput.value) || 0;
+
+        const costoConItbis = costo * (1 + itbis / 100);
+        const precioFinal = costoConItbis / (1 - margen / 100);
+
+        precioFinalInput.value = precioFinal.toFixed(2);
     }
 
-    function actualizarTablaItems(items) {
-        const tbody = document.getElementById('items-tbody');
-        tbody.innerHTML = '';
-        items.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.codigo}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.nombre}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.tipo}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.categoria}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.precio_con_impuesto.toFixed(2)} ${item.moneda}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.tipo === 'producto' ? item.stock_inicial : 'N/A'}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <button class="text-blue-600 hover:text-blue-900 mr-2 editar-item" data-id="${item.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="text-red-600 hover:text-red-900 eliminar-item" data-id="${item.id}">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+    function actualizarMargen() {
+        const costo = parseFloat(costoInput.value) || 0;
+        const itbis = parseFloat(itbisInput.value) || 0;
+        const precioFinal = parseFloat(precioFinalInput.value) || 0;
 
-        document.querySelectorAll('.editar-item').forEach(btn => {
-            btn.addEventListener('click', (e) => mostrarModalItem(e.target.closest('button').dataset.id));
-        });
-        document.querySelectorAll('.eliminar-item').forEach(btn => {
-            btn.addEventListener('click', (e) => eliminarItem(e.target.closest('button').dataset.id));
-        });
+        const costoConItbis = costo * (1 + itbis / 100);
+        const nuevoMargen = ((precioFinal - costoConItbis) / precioFinal) * 100;
+
+        margenInput.value = nuevoMargen.toFixed(2);
+    }
+
+    function cargarItems() {
+        fetch('/api/items')
+            .then(response => response.json())
+            .then(items => {
+                const tbody = document.getElementById('items-tbody');
+                tbody.innerHTML = '';
+                items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">${item.codigo}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">${item.nombre}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">${item.tipo}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">${item.categoria || '-'}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">${item.precio_con_impuesto} ${item.moneda}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">${item.stock_inicial || '-'}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <button class="text-blue-600 hover:text-blue-900 editar-item" data-id="${item.id}">Editar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                document.querySelectorAll('.editar-item').forEach(btn => {
+                    btn.addEventListener('click', (e) => mostrarModalItem(e.target.dataset.id));
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function cargarDatosItem(id) {
+        fetch(`/api/items/${id}`)
+            .then(response => response.json())
+            .then(item => {
+                document.getElementById('modal-title').textContent = 'Editar Item';
+                eliminarItemBtn.classList.remove('hidden');
+                for (const [key, value] of Object.entries(item)) {
+                    const field = document.getElementById(`item-${key}`);
+                    if (field) {
+                        field.value = value;
+                    }
+                }
+                toggleNuevoTipo();
+            })
+            .catch(error => console.error('Error:', error));
     }
 
     function guardarItem() {
         const formData = new FormData(itemForm);
-        const itemData = Object.fromEntries(formData);
-        const itemId = itemData.id;
-        const url = itemId ? `/inventario/api/items/${itemId}` : '/inventario/api/items';
-        const method = itemId ? 'PUT' : 'POST';
+        const itemData = Object.fromEntries(formData.entries());
+        const method = itemData.id ? 'PUT' : 'POST';
+        const url = itemData.id ? `/api/items/${itemData.id}` : '/api/items';
 
         fetch(url, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
             },
-            body: JSON.stringify(itemData)
+            body: JSON.stringify(itemData),
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                mostrarNotificacion(itemId ? 'Item actualizado correctamente' : 'Item creado correctamente', 'success');
-                itemModal.classList.add('hidden');
-                cargarItems();
-            } else {
-                mostrarNotificacion(data.message || 'Ocurrió un error al guardar el item', 'error');
-            }
+            itemModal.classList.add('hidden');
+            cargarItems();
         })
-        .catch(error => {
-            console.error('Error:', error);
-            mostrarNotificacion('Ocurrió un error al guardar el item', 'error');
-        });
-    }
-
-    function cargarDatosItem(id) {
-        fetch(`/inventario/api/items/${id}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('modal-title').textContent = 'Editar Item';
-                eliminarItemBtn.classList.remove('hidden');
-                for (const [key, value] of Object.entries(data)) {
-                    const input = document.getElementById(`item-${key}`);
-                    if (input) {
-                        if (input.type === 'checkbox') {
-                            input.checked = value;
-                        } else {
-                            input.value = value;
-                        }
-                    }
-                }
-                toggleSections();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                mostrarNotificacion('Error al cargar los datos del item', 'error');
-            });
+        .catch(error => console.error('Error:', error));
     }
 
     function eliminarItem(id) {
-        if (confirm('¿Estás seguro de que quieres eliminar este item?')) {
-            fetch(`/inventario/api/items/${id}`, {
+        if (confirm('¿Está seguro de que desea eliminar este item?')) {
+            fetch(`/api/items/${id}`, {
                 method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    mostrarNotificacion('Item eliminado correctamente', 'success');
+            .then(response => {
+                if (response.ok) {
                     itemModal.classList.add('hidden');
                     cargarItems();
-                } else {
-                    mostrarNotificacion(data.message || 'Ocurrió un error al eliminar el item', 'error');
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                mostrarNotificacion('Ocurrió un error al eliminar el item', 'error');
-            });
+            .catch(error => console.error('Error:', error));
         }
     }
 
     function cargarOpciones() {
-        // Cargar opciones para almacenes
-        fetch('/inventario/api/almacenes')
+        // Aquí se cargarían las opciones para los selects (almacenes, cuentas, etc.)
+        // Por ejemplo:
+        fetch('/api/almacenes')
             .then(response => response.json())
-            .then(data => {
+            .then(almacenes => {
                 const select = document.getElementById('item-almacen');
-                data.forEach(almacen => {
+                almacenes.forEach(almacen => {
                     const option = document.createElement('option');
                     option.value = almacen.id;
                     option.textContent = almacen.nombre;
                     select.appendChild(option);
                 });
-            });
+            })
+            .catch(error => console.error('Error:', error));
 
-        // Cargar opciones para cuentas contables
-        fetch('/contabilidad/api/cuentas')
-            .then(response => response.json())
-            .then(data => {
-                const selectIngresos = document.getElementById('item-cuenta-ingresos');
-                const selectGastos = document.getElementById('item-cuenta-gastos');
-                data.forEach(cuenta => {
-                    const option = document.createElement('option');
-                    option.value = cuenta.id;
-                    option.textContent = cuenta.nombre;
-                    if (cuenta.tipo === 'ingreso') {
-                        selectIngresos.appendChild(option.cloneNode(true));
-                    } else if (cuenta.tipo === 'gasto') {
-                        selectGastos.appendChild(option.cloneNode(true));
-                    }
-                });
-            });
-
-        // Cargar opciones para centros de costo
-        fetch('/contabilidad/api/centros-costo')
-            .then(response => response.json())
-            .then(data => {
-                const select = document.getElementById('item-centro-costo');
-                data.forEach(centro => {
-                    const option = document.createElement('option');
-                    option.value = centro.id;
-                    option.textContent = centro.nombre;
-                    select.appendChild(option);
-                });
-            });
-    }
-
-    function mostrarNotificacion(mensaje, tipo) {
-        // Implementar lógica para mostrar notificaciones
-        alert(mensaje);
+        // Repite este proceso para otros selects como cuentas, centros de costo, etc.
     }
 });
 </script>

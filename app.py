@@ -51,6 +51,8 @@ import xlsxwriter
 import base64
 import csv
 from reportlab.lib import colors
+from common.models import ItemFactura, ItemPreFactura, MovimientoInventario
+
 
 # Importar el nuevo módulo de marketing
 from marketing.routes import marketing
@@ -389,6 +391,12 @@ def create_app():
     
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://postgres:0001@localhost:5432/calculai_db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    from common.models import ItemFactura, ItemPreFactura, MovimientoInventario
+    
+    from inventario.inventario_models import InventarioItem
+    from facturas.facturas_models import Facturacion, PreFactura, NotaCredito, NotaDebito, Cliente
+        
     
     from facturas import facturacion_bp
     app.register_blueprint(facturacion_bp, url_prefix='/facturacion')

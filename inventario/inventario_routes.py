@@ -7,6 +7,13 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import io
 import csv
+from flask import render_template, request, jsonify, current_app
+from .inventario_models import InventarioItem
+from common.models import MovimientoInventario, ItemFactura
+
+
+
+
 
 @inventario_bp.route('/')
 @login_required

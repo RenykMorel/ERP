@@ -1,0 +1,1 @@
+from .inventory_invoice_manager import InventoryInvoiceManager
