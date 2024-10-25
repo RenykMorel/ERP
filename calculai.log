@@ -25,3 +25,16 @@
 2024-10-24 12:38:01,083 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
 2024-10-24 16:35:28,646 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\inventario\inventario_routes.py:316]
 2024-10-24 16:37:02,412 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\inventario\inventario_routes.py:316]
+2024-10-24 17:43:13,684 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 17:43:17,049 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 17:44:26,986 ERROR: Unhandled exception: Entity namespace for "campaign" has no property "user_id" [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 17:44:38,080 ERROR: Unhandled exception: 'user_id' is an invalid keyword argument for Campaign [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 17:44:38,101 ERROR: Unhandled exception: Entity namespace for "campaign" has no property "user_id" [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 21:37:09,909 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 22:07:22,830 ERROR: Error al obtener items: (psycopg2.errors.UndefinedColumn) no existe la columna items_inventario.costo
+LINE 1: ...ventario.categoria AS items_inventario_categoria, items_inve...
+                                                             ^
+
+[SQL: SELECT items_inventario.id AS items_inventario_id, items_inventario.codigo AS items_inventario_codigo, items_inventario.nombre AS items_inventario_nombre, items_inventario.descripcion AS items_inventario_descripcion, items_inventario.tipo AS items_inventario_tipo, items_inventario.categoria AS items_inventario_categoria, items_inventario.costo AS items_inventario_costo, items_inventario.precio AS items_inventario_precio, items_inventario.itbis AS items_inventario_itbis, items_inventario.margen AS items_inventario_margen, items_inventario.stock AS items_inventario_stock, items_inventario.stock_minimo AS items_inventario_stock_minimo, items_inventario.stock_maximo AS items_inventario_stock_maximo, items_inventario.unidad_medida AS items_inventario_unidad_medida, items_inventario.proveedor AS items_inventario_proveedor, items_inventario.marca AS items_inventario_marca, items_inventario.fecha_creacion AS items_inventario_fecha_creacion, items_inventario.fecha_actualizacion AS items_inventario_fecha_actualizacion 
+FROM items_inventario]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\inventario\inventario_routes.py:36]

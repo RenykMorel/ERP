@@ -6,74 +6,90 @@
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-    .required-field::after {
-        content: " *";
-        color: #ef4444;
-    }
-    .green-border {
-        border: 2px solid #10B981;
-    }
-    #itemModal .green-border {
-        border-color: #10B981;
-    }
-    #itemModal input, #itemModal select, #itemModal textarea {
-        border: 2px solid #10B981;
-    }
+   .required-field::after {
+       content: " *";
+       color: #ef4444;
+   }
+   .green-border {
+       border: 2px solid #10B981;
+   }
+   #itemModal .green-border {
+       border-color: #10B981;
+   }
+   #itemModal input, #itemModal select, #itemModal textarea {
+       border: 2px solid #10B981;
+   }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Gestión de Inventario</h1>
+  <h1 class="text-3xl font-bold mb-6 text-gray-800">Gestión de Inventario</h1>
 
-    <div class="mb-6">
-        <button id="crear-item-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-            <i class="fas fa-plus mr-2"></i>Crear Nuevo Item
-        </button>
-    </div>
+  <div class="mb-6 flex flex-wrap justify-between gap-2">
+      <div class="flex space-x-2">
+          <button id="crear-item-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+              <i class="fas fa-plus mr-2"></i>Crear Nuevo Item
+          </button>
+          <button id="crear-tipo-item-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded">
+              <i class="fas fa-tags mr-2"></i>Crear Tipo de Item
+          </button>
+      </div>
+      <div class="flex space-x-2">
+          <button id="ajuste-inventario-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+              <i class="fas fa-balance-scale mr-2"></i>Ajuste de Inventario
+          </button>
+          <button id="ajuste-precio-masivo-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded">
+              <i class="fas fa-dollar-sign mr-2"></i>Ajuste de Precios Masivo
+          </button>
+          <button id="importar-precios-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded">
+              <i class="fas fa-file-import mr-2"></i>Importar Precios
+          </button>
+      </div>
+  </div>
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
-        <table class="min-w-full leading-normal">
-            <thead>
-                <tr>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Código
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Nombre
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Tipo
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Categoría
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Precio con Impuesto
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Stock Actual
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Acciones
-                    </th>
-                </tr>
-            </thead>
-            <tbody id="items-tbody">
-                <!-- Los items se cargarán aquí dinámicamente -->
-            </tbody>
-        </table>
-    </div>
+  <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <table class="min-w-full leading-normal">
+          <thead>
+              <tr>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Código
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Nombre
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Tipo
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Categoría
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Precio
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Stock Actual
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Acciones
+                  </th>
+              </tr>
+          </thead>
+          <tbody id="items-tbody">
+              <!-- Los items se cargarán aquí dinámicamente -->
+          </tbody>
+      </table>
+  </div>
 </div>
 
 <!-- Modal para crear/editar item -->
 <div id="itemModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full green-border">
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border-4 border-green-500">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-4 border-b-2 border-green-500 pb-2" id="modal-title">
                     Crear/Editar Item
                 </h3>
                 <p class="text-sm text-gray-500 mb-4">Los campos marcados con <span class="text-red-500">*</span> son obligatorios.</p>
@@ -84,41 +100,31 @@
                     <div class="space-y-4">
                         <div>
                             <label for="item-nombre" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nombre del Item</label>
-                            <input type="text" id="item-nombre" name="nombre" required class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <input type="text" id="item-nombre" name="nombre" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                         </div>
-
                         <div>
                             <label for="item-tipo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Tipo de Item</label>
-                            <select id="item-tipo" name="tipo" required class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <select id="item-tipo" name="tipo" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 <option value="producto">Producto</option>
                                 <option value="servicio">Servicio</option>
                                 <option value="otro">Otro</option>
                             </select>
                         </div>
-
-                        <div id="nuevo-tipo-container" class="hidden">
-                            <label for="item-nuevo-tipo" class="block text-sm font-medium text-gray-700 mb-1">Nuevo Tipo de Item</label>
-                            <input type="text" id="item-nuevo-tipo" name="nuevo_tipo" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-
                         <div>
                             <label for="item-costo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Costo</label>
-                            <input type="number" id="item-costo" name="costo" required step="0.01" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <input type="number" id="item-costo" name="costo" required step="0.01" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                         </div>
-
                         <div>
                             <label for="item-itbis" class="block text-sm font-medium text-gray-700 mb-1 required-field">ITBIS (%)</label>
-                            <input type="number" id="item-itbis" name="itbis" required step="0.01" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <input type="number" id="item-itbis" name="itbis" required step="0.01" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                         </div>
-
                         <div>
                             <label for="item-margen" class="block text-sm font-medium text-gray-700 mb-1 required-field">Margen de Ganancia (%)</label>
-                            <input type="number" id="item-margen" name="margen" required step="0.01" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <input type="number" id="item-margen" name="margen" required step="0.01" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                         </div>
-
                         <div>
-                            <label for="item-precio-final" class="block text-sm font-medium text-gray-700 mb-1">Precio Final</label>
-                            <input type="number" id="item-precio-final" name="precio_final" step="0.01" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <label for="item-precio" class="block text-sm font-medium text-gray-700 mb-1">Precio Final</label>
+                            <input type="number" id="item-precio" name="precio" step="0.01" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                             <p class="mt-1 text-sm text-gray-500">Observación: El precio final está basado en el margen de ganancia.</p>
                         </div>
                     </div>
@@ -126,7 +132,7 @@
                     <!-- Secciones colapsables para información adicional -->
                     <div class="space-y-4">
                         <div x-data="{ open: false }">
-                            <button @click="open = !open" type="button" class="flex justify-between w-full px-4 py-2 text-sm font-medium text-left text-blue-500 bg-blue-100 rounded-lg hover:bg-blue-200 focus:outline-none focus-visible:ring focus-visible:ring-blue-500 focus-visible:ring-opacity-50">
+                            <button @click="open = !open" type="button" class="flex justify-between w-full px-4 py-2 text-sm font-medium text-left text-green-700 bg-green-100 rounded-lg hover:bg-green-200 focus:outline-none focus-visible:ring focus-visible:ring-green-500 focus-visible:ring-opacity-50">
                                 <span>Información Adicional</span>
                                 <svg :class="{'transform rotate-180': open}" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -134,87 +140,375 @@
                             </button>
                             <div x-show="open" class="mt-2 space-y-4">
                                 <div>
+                                    <label for="item-codigo" class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                                    <input type="text" id="item-codigo" name="codigo" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                </div>
+                                <div>
                                     <label for="item-descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                                    <textarea id="item-descripcion" name="descripcion" rows="3" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                                    <textarea id="item-descripcion" name="descripcion" rows="3" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50"></textarea>
                                 </div>
                                 <div>
                                     <label for="item-categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-                                    <input type="text" id="item-categoria" name="categoria" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <input type="text" id="item-categoria" name="categoria" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
                                 <div>
                                     <label for="item-proveedor" class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
-                                    <input type="text" id="item-proveedor" name="proveedor" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <input type="text" id="item-proveedor" name="proveedor" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
                                 <div>
                                     <label for="item-marca" class="block text-sm font-medium text-gray-700 mb-1">Marca/Modelo</label>
-                                    <input type="text" id="item-marca" name="marca" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <input type="text" id="item-marca" name="marca" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
                                 <div>
                                     <label for="item-unidad-medida" class="block text-sm font-medium text-gray-700 mb-1">Unidad de Medida</label>
-                                    <input type="text" id="item-unidad-medida" name="unidad_medida" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <input type="text" id="item-unidad-medida" name="unidad_medida" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
                                 <div>
-                                    <label for="item-stock-inicial" class="block text-sm font-medium text-gray-700 mb-1">Stock Inicial</label>
-                                    <input type="number" id="item-stock-inicial" name="stock_inicial" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <label for="item-stock" class="block text-sm font-medium text-gray-700 mb-1">Stock Actual</label>
+                                    <input type="number" id="item-stock" name="stock" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
                                 <div>
                                     <label for="item-stock-minimo" class="block text-sm font-medium text-gray-700 mb-1">Stock Mínimo</label>
-                                    <input type="number" id="item-stock-minimo" name="stock_minimo" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <input type="number" id="item-stock-minimo" name="stock_minimo" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
                                 <div>
                                     <label for="item-stock-maximo" class="block text-sm font-medium text-gray-700 mb-1">Stock Máximo</label>
-                                    <input type="number" id="item-stock-maximo" name="stock_maximo" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                </div>
-                                <div>
-                                    <label for="item-almacen" class="block text-sm font-medium text-gray-700 mb-1">Almacén</label>
-                                    <select id="item-almacen" name="almacen" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                        <option value="">Seleccione un almacén</option>
-                                        <!-- Opciones de almacén se cargarán dinámicamente -->
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="item-cuenta-ingresos" class="block text-sm font-medium text-gray-700 mb-1">Cuenta de Ingresos</label>
-                                    <select id="item-cuenta-ingresos" name="cuenta_ingresos" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500  focus:border-blue-500 sm:text-sm">
-                                        <option  value="">Seleccione una cuenta</option>
-                                        <!-- Opciones de cuentas se cargarán  dinámicamente -->
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="item-cuenta-gastos" class="block text-sm font-medium text-gray-700 mb-1">Cuenta de Gastos</label>
-                                    <select id="item-cuenta-gastos" name="cuenta_gastos" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                        <option value="">Seleccione una cuenta</option>
-                                        <!-- Opciones de cuentas se cargarán dinámicamente -->
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="item-centro-costo" class="block text-sm font-medium text-gray-700 mb-1">Centro de Costo</label>
-                                    <select id="item-centro-costo" name="centro_costo" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                        <option value="">Seleccione un centro de costo</option>
-                                        <!-- Opciones de centros de costo se cargarán dinámicamente -->
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="item-imagen" class="block text-sm font-medium text-gray-700 mb-1">Imagen del Producto</label>
-                                    <input type="file" id="item-imagen" name="imagen" accept="image/*" class="mt-1 block w-full green-border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <input type="number" id="item-stock-maximo" name="stock_maximo" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-item-btn">
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t-2 border-green-500">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="guardar-item-btn">
                     Guardar
                 </button>
-                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cerrar-modal-btn">
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="cerrar-modal-btn">
                     Cancelar
                 </button>
-                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="eliminar-item-btn">
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="eliminar-item-btn">
                     Eliminar
                 </button>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Modal para ajuste de inventario -->
+<div id="ajusteModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border-4 border-green-500">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-4 border-b-2 border-green-500 pb-2" id="ajuste-modal-title">
+                    Ajuste de Inventario
+                </h3>
+                <form id="ajuste-form" class="space-y-6">
+                    <div>
+                        <label for="ajuste-item" class="block text-sm font-medium text-gray-700 mb-1 required-field">Item</label>
+                        <select id="ajuste-item" name="item_id" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                            <!-- Opciones se cargarán dinámicamente -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ajuste-cantidad" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nueva Cantidad</label>
+                        <input type="number" id="ajuste-cantidad" name="cantidad_nueva" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                    </div>
+                    <div>
+                        <label for="ajuste-motivo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Motivo</label>
+                        <textarea id="ajuste-motivo" name="motivo" required rows="3" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t-2 border-green-500">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="guardar-ajuste-btn">
+                    Guardar Ajuste
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="cerrar-ajuste-modal-btn">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear tipo de item -->
+<div id="crearTipoItemModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border-4 border-green-500">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-4 border-b-2 border-green-500 pb-2" id="crear-tipo-item-modal-title">
+                    Crear Nuevo Tipo de Item
+                </h3>
+                <form id="crear-tipo-item-form" class="space-y-6">
+                    <div>
+                        <label for="nuevo-tipo-item-nombre" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nombre</label>
+                        <input type="text" id="nuevo-tipo-item-nombre" name="nombre" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                    </div>
+                    <div>
+                        <label for="nuevo-tipo-item-descripcion" class="block text-sm font-medium text-gray-700 mb-1 required-field">Descripción</label>
+                        <textarea id="nuevo-tipo-item-descripcion" name="descripcion" required rows="3" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="nuevo-tipo-item-estatus" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+                            <select id="nuevo-tipo-item-estatus" name="estatus" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                <option value="activo" selected>Activo</option>
+                                <option value="inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                            <div class="mt-2 space-x-4 flex">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="tipo" value="servicio" class="form-radio text-green-600">
+                                    <span class="ml-2">Servicio</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="tipo" value="bien" class="form-radio text-green-600">
+                                    <span class="ml-2">Bien</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="tipo" value="cargo" class="form-radio text-green-600">
+                                    <span class="ml-2">Cargo</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-700 mb-2 border-b border-green-300 pb-1">Configuración para la Venta</h4>
+                            <div class="space-y-2">
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="es_vendible" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Es Vendible</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="usa_itbis" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Usa ITBIS</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="modifica_precio" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Modifica Precio</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="modifica_impuestos" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Modifica Impuestos</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="le_aplica_descuento" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Le Aplica Descuento</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="precio_negativo" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Precio Negativo</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="usa_margen_ganancia" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Usa Margen de Ganancia</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="usa_precio_moneda" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Usa Precio Moneda</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="no_venta_costo_pp" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">No Venta Costo/PP</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="gasto_incurrido_para_el_cliente" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Gasto Incurrido para el Cliente</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-700 mb-2 border-b border-green-300 pb-1">Configuración para la Compra</h4>
+                            <div class="space-y-2">
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="es_comprable" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Es Comprable</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="proporcionalidad_del_itbis" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Proporcionalidad del ITBIS</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="itbis" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">ITBIS</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="otros_impuestos" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Otros Impuestos</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="no_modifica_precio" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">No Modifica Precio</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" name="modifica_costo" class="form-checkbox text-green-600">
+                                    <span class="ml-2 text-sm">Modifica Costo</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t-2 border-green-500">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="guardar-tipo-item-btn">
+                    Guardar Nuevo Tipo
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="cerrar-tipo-item-modal-btn">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ajuste masivo de precios -->
+<div id="ajusteMasivoModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border-4 border-green-500">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-4 border-b-2 border-green-500 pb-2">Ajuste Masivo de Precios</h3>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tipo de Ajuste</label>
+                            <select id="tipo-ajuste" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                <option value="porcentaje">Porcentaje</option>
+                                <option value="monto">Monto Fijo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Valor</label>
+                            <input type="number" id="valor-ajuste" step="0.01" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Operación</label>
+                            <select id="operacion-ajuste" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                <option value="incremento">Incremento</option>
+                                <option value="decremento">Decremento</option>
+                                <option value="reemplazo">Reemplazo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="max-h-96 overflow-y-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-green-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                            <input type="checkbox" id="seleccionar-todos" class="rounded border-green-300 text-green-600 focus:ring-green-500">
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio Actual</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nuevo Precio</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="items-ajuste-masivo">
+                                    <!-- Items se cargarán dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t-2 border-green-500">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="aplicar-ajuste-masivo">
+                    Aplicar Ajuste
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="cerrar-ajuste-masivo-modal-btn">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para importar precios -->
+<div id="importarPreciosModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border-4 border-green-500">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-4 border-b-2 border-green-500 pb-2">Importar Precios</h3>
+                <div class="space-y-4">
+                    <button id="descargar-plantilla" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                        <i class="fas fa-download mr-2"></i>Descargar Plantilla
+                    </button>
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-600 mb-2">La plantilla Excel incluye los siguientes campos:</p>
+                        <ul class="list-disc list-inside text-sm text-gray-600 mb-4">
+                            <li>Id</li>
+                            <li>Nombre</li>
+                            <li>Es Oferta</li>
+                            <li>Precio Nuevo</li>
+                        </ul>
+                        <label class="block text-sm font-medium text-gray-700">Subir archivo completado</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-green-300 border-dashed rounded-md">
+                            <div class="space-y-1 text-center">
+                                <i class="fas fa-file-upload text-green-400 text-3xl mb-2"></i>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                                        <span>Subir archivo</span>
+                                        <input id="file-upload" name="file" type="file" class="sr-only" accept=".xlsx,.xls">
+                                    </label>
+                                    <p class="pl-1">o arrastrar y soltar</p>
+                                </div>
+                                <p class="text-xs text-gray-500">Excel (.xlsx, .xls)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t-2 border-green-500">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="procesar-importacion">
+                    Procesar Importación
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="cerrar-importar-precios-modal-btn">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear tipo de item -->
+<div id="crearTipoItemModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="crear-tipo-item-modal-title">
+                  Crear Nuevo Tipo de Item
+              </h3>
+              <form id="crear-tipo-item-form" class="space-y-6">
+                  <div>
+                      <label for="nuevo-tipo-item" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nombre del Nuevo Tipo</label>
+                      <input type="text" id="nuevo-tipo-item" name="nuevo_tipo" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                  </div>
+              </form>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-tipo-item-btn">
+                  Guardar Nuevo Tipo
+              </button>
+              <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cerrar-tipo-item-modal-btn">
+                  Cancelar
+              </button>
+          </div>
+      </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -222,186 +516,371 @@
 <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const crearItemBtn = document.getElementById('crear-item-btn');
-    const guardarItemBtn = document.getElementById('guardar-item-btn');
-    const cerrarModalBtn = document.getElementById('cerrar-modal-btn');
-    const eliminarItemBtn = document.getElementById('eliminar-item-btn');
-    const itemModal = document.getElementById('itemModal');
-    const itemForm = document.getElementById('item-form');
-    const itemTipo = document.getElementById('item-tipo');
-    const nuevoTipoContainer = document.getElementById('nuevo-tipo-container');
-    const costoInput = document.getElementById('item-costo');
-    const itbisInput = document.getElementById('item-itbis');
-    const margenInput = document.getElementById('item-margen');
-    const precioFinalInput = document.getElementById('item-precio-final');
+   const crearItemBtn = document.getElementById('crear-item-btn');
+   const guardarItemBtn = document.getElementById('guardar-item-btn');
+   const cerrarModalBtn = document.getElementById('cerrar-modal-btn');
+   const eliminarItemBtn = document.getElementById('eliminar-item-btn');
+   const itemModal = document.getElementById('itemModal');
+   const itemForm = document.getElementById('item-form');
+   const itemTipo = document.getElementById('item-tipo');
+   const costoInput = document.getElementById('item-costo');
+   const itbisInput = document.getElementById('item-itbis');
+   const margenInput = document.getElementById('item-margen');
+   const precioInput = document.getElementById('item-precio');
+   
+   const ajusteInventarioBtn = document.getElementById('ajuste-inventario-btn');
+   const ajusteModal = document.getElementById('ajusteModal');
+   const guardarAjusteBtn = document.getElementById('guardar-ajuste-btn');
+   const cerrarAjusteModalBtn = document.getElementById('cerrar-ajuste-modal-btn');
+   const ajusteForm = document.getElementById('ajuste-form');
 
-    crearItemBtn.addEventListener('click', () => mostrarModalItem());
-    guardarItemBtn.addEventListener('click', guardarItem);
-    cerrarModalBtn.addEventListener('click', () => itemModal.classList.add('hidden'));
-    eliminarItemBtn.addEventListener('click', () => eliminarItem(itemForm.id.value));
-    itemTipo.addEventListener('change', toggleNuevoTipo);
-    precioFinalInput.addEventListener('input', actualizarMargen);
+   const ajustePrecioMasivoBtn = document.getElementById('ajuste-precio-masivo-btn');
+   const ajusteMasivoModal = document.getElementById('ajusteMasivoModal');
+   const aplicarAjusteMasivoBtn = document.getElementById('aplicar-ajuste-masivo');
+   const cerrarAjusteMasivoModalBtn = document.getElementById('cerrar-ajuste-masivo-modal-btn');
 
-    costoInput.addEventListener('input', calcularPrecioFinal);
-    itbisInput.addEventListener('input', calcularPrecioFinal);
-    margenInput.addEventListener('input', calcularPrecioFinal);
+   const importarPreciosBtn = document.getElementById('importar-precios-btn');
+   const importarPreciosModal = document.getElementById('importarPreciosModal');
+   const procesarImportacionBtn = document.getElementById('procesar-importacion');
+   const cerrarImportarPreciosModalBtn = document.getElementById('cerrar-importar-precios-modal-btn');
+   const descargarPlantillaBtn = document.getElementById('descargar-plantilla');
 
-    cargarItems();
-    cargarOpciones();
+   const crearTipoItemBtn = document.getElementById('crear-tipo-item-btn');
+   const crearTipoItemModal = document.getElementById('crearTipoItemModal');
+   const guardarTipoItemBtn = document.getElementById('guardar-tipo-item-btn');
+   const cerrarTipoItemModalBtn = document.getElementById('cerrar-tipo-item-modal-btn');
+   const crearTipoItemForm = document.getElementById('crear-tipo-item-form');
 
-    function mostrarModalItem(id = null) {
-        itemForm.reset();
-        if (id) {
-            cargarDatosItem(id);
-        } else {
-            document.getElementById('modal-title').textContent = 'Crear Nuevo Item';
-            eliminarItemBtn.classList.add('hidden');
-        }
-        toggleNuevoTipo();
-        itemModal.classList.remove('hidden');
-    }
+   crearItemBtn.addEventListener('click', () => mostrarModalItem());
+   guardarItemBtn.addEventListener('click', guardarItem);
+   cerrarModalBtn.addEventListener('click', () => itemModal.classList.add('hidden'));
+   eliminarItemBtn.addEventListener('click', () => eliminarItem(itemForm.id.value));
+   itemTipo.addEventListener('change', toggleCamposInventario);
+   precioInput.addEventListener('input', actualizarMargen);
 
-    function toggleNuevoTipo() {
-        if (itemTipo.value === 'otro') {
-            nuevoTipoContainer.classList.remove('hidden');
-        } else {
-            nuevoTipoContainer.classList.add('hidden');
-        }
-    }
+   costoInput.addEventListener('input', calcularPrecioFinal);
+   itbisInput.addEventListener('input', calcularPrecioFinal);
+   margenInput.addEventListener('input', calcularPrecioFinal);
 
-    function calcularPrecioFinal() {
-        const costo = parseFloat(costoInput.value) || 0;
-        const itbis = parseFloat(itbisInput.value) || 0;
-        const margen = parseFloat(margenInput.value) || 0;
+   ajusteInventarioBtn.addEventListener('click', mostrarModalAjuste);
+   guardarAjusteBtn.addEventListener('click', guardarAjuste);
+   cerrarAjusteModalBtn.addEventListener('click', () => ajusteModal.classList.add('hidden'));
 
-        const costoConItbis = costo * (1 + itbis / 100);
-        const precioFinal = costoConItbis / (1 - margen / 100);
+   ajustePrecioMasivoBtn.addEventListener('click', () => {
+       cargarItemsParaAjusteMasivo();
+       ajusteMasivoModal.classList.remove('hidden');
+   });
+   aplicarAjusteMasivoBtn.addEventListener('click', aplicarAjusteMasivo);
+   cerrarAjusteMasivoModalBtn.addEventListener('click', () => ajusteMasivoModal.classList.add('hidden'));
 
-        precioFinalInput.value = precioFinal.toFixed(2);
-    }
+   importarPreciosBtn.addEventListener('click', () => importarPreciosModal.classList.remove('hidden'));
+   procesarImportacionBtn.addEventListener('click', procesarImportacionPrecios);
+   cerrarImportarPreciosModalBtn.addEventListener('click', () => importarPreciosModal.classList.add('hidden'));
+   descargarPlantillaBtn.addEventListener('click', descargarPlantillaExcel);
 
-    function actualizarMargen() {
-        const costo = parseFloat(costoInput.value) || 0;
-        const itbis = parseFloat(itbisInput.value) || 0;
-        const precioFinal = parseFloat(precioFinalInput.value) || 0;
+   crearTipoItemBtn.addEventListener('click', () => crearTipoItemModal.classList.remove('hidden'));
+   guardarTipoItemBtn.addEventListener('click', guardarNuevoTipoItem);
+   cerrarTipoItemModalBtn.addEventListener('click', () => crearTipoItemModal.classList.add('hidden'));
 
-        const costoConItbis = costo * (1 + itbis / 100);
-        const nuevoMargen = ((precioFinal - costoConItbis) / precioFinal) * 100;
+   cargarItems();
 
-        margenInput.value = nuevoMargen.toFixed(2);
-    }
+   function mostrarModalItem(id = null) {
+       itemForm.reset();
+       if (id) {
+           cargarDatosItem(id);
+       } else {
+           document.getElementById('modal-title').textContent = 'Crear Nuevo Item';
+           eliminarItemBtn.classList.add('hidden');
+       }
+       toggleCamposInventario();
+       itemModal.classList.remove('hidden');
+   }
 
-    function cargarItems() {
-        fetch('/api/items')
-            .then(response => response.json())
-            .then(items => {
-                const tbody = document.getElementById('items-tbody');
-                tbody.innerHTML = '';
-                items.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">${item.codigo}</p>
-                        </td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">${item.nombre}</p>
-                        </td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">${item.tipo}</p>
-                        </td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">${item.categoria || '-'}</p>
-                        </td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">${item.precio_con_impuesto} ${item.moneda}</p>
-                        </td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">${item.stock_inicial || '-'}</p>
-                        </td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <button class="text-blue-600 hover:text-blue-900 editar-item" data-id="${item.id}">Editar</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-                document.querySelectorAll('.editar-item').forEach(btn => {
-                    btn.addEventListener('click', (e) => mostrarModalItem(e.target.dataset.id));
-                });
-            })
-            .catch(error => console.error('Error:', error));
-    }
+   function toggleCamposInventario() {
+       const tipoItem = itemTipo.value;
+       const camposInventario = document.querySelectorAll('.campo-inventario');
+       camposInventario.forEach(campo => {
+           if (tipoItem === 'producto') {
+               campo.classList.remove('hidden');
+           } else {
+               campo.classList.add('hidden');
+           }
+       });
+   }
 
-    function cargarDatosItem(id) {
-        fetch(`/api/items/${id}`)
-            .then(response => response.json())
-            .then(item => {
-                document.getElementById('modal-title').textContent = 'Editar Item';
-                eliminarItemBtn.classList.remove('hidden');
-                for (const [key, value] of Object.entries(item)) {
-                    const field = document.getElementById(`item-${key}`);
-                    if (field) {
-                        field.value = value;
-                    }
-                }
-                toggleNuevoTipo();
-            })
-            .catch(error => console.error('Error:', error));
-    }
+   function calcularPrecioFinal() {
+       const costo = parseFloat(costoInput.value) || 0;
+       const itbis = parseFloat(itbisInput.value) || 0;
+       const margen = parseFloat(margenInput.value) || 0;
 
-    function guardarItem() {
-        const formData = new FormData(itemForm);
-        const itemData = Object.fromEntries(formData.entries());
-        const method = itemData.id ? 'PUT' : 'POST';
-        const url = itemData.id ? `/api/items/${itemData.id}` : '/api/items';
+       const costoConItbis = costo * (1 + itbis / 100);
+       const precioFinal = costoConItbis / (1 - margen / 100);
 
-        fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(itemData),
-        })
-        .then(response => response.json())
-        .then(data => {
-            itemModal.classList.add('hidden');
-            cargarItems();
-        })
-        .catch(error => console.error('Error:', error));
-    }
+       precioInput.value = precioFinal.toFixed(2);
+   }
 
-    function eliminarItem(id) {
-        if (confirm('¿Está seguro de que desea eliminar este item?')) {
-            fetch(`/api/items/${id}`, {
-                method: 'DELETE',
-            })
-            .then(response => {
-                if (response.ok) {
-                    itemModal.classList.add('hidden');
-                    cargarItems();
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-    }
+   function actualizarMargen() {
+       const costo = parseFloat(costoInput.value) || 0;
+       const itbis = parseFloat(itbisInput.value) || 0;
+       const precioFinal = parseFloat(precioInput.value) || 0;
 
-    function cargarOpciones() {
-        // Aquí se cargarían las opciones para los selects (almacenes, cuentas, etc.)
-        // Por ejemplo:
-        fetch('/api/almacenes')
-            .then(response => response.json())
-            .then(almacenes => {
-                const select = document.getElementById('item-almacen');
-                almacenes.forEach(almacen => {
-                    const option = document.createElement('option');
-                    option.value = almacen.id;
-                    option.textContent = almacen.nombre;
-                    select.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error:', error));
+       const costoConItbis = costo * (1 + itbis / 100);
+       const nuevoMargen = ((precioFinal - costoConItbis) / precioFinal) * 100;
 
-        // Repite este proceso para otros selects como cuentas, centros de costo, etc.
-    }
+       margenInput.value = nuevoMargen.toFixed(2);
+   }
+
+   function cargarItems() {
+       fetch('/api/items')
+           .then(response => response.json())
+           .then(items => {
+               const tbody = document.getElementById('items-tbody');
+               tbody.innerHTML = '';
+               items.forEach(item => {
+                   const tr = document.createElement('tr');
+                   tr.innerHTML = `
+                       <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                           <p class="text-gray-900 whitespace-no-wrap">${item.codigo}</p>
+                       </td>
+                       <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                           <p class="text-gray-900 whitespace-no-wrap">${item.nombre}</p>
+                       </td>
+                       <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                           <p class="text-gray-900 whitespace-no-wrap">${item.tipo}</p>
+                       </td>
+                       <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                           <p class="text-gray-900 whitespace-no-wrap">${item.categoria || '-'}</p>
+                       </td>
+                       <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                           <p class="text-gray-900 whitespace-no-wrap">${item.precio}</p>
+                       </td>
+                       <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                           <p class="text-gray-900 whitespace-no-wrap">${item.stock || '-'}</p>
+                       </td>
+                       <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                           <button class="text-blue-600 hover:text-blue-900 editar-item" data-id="${item.id}">Editar</button>
+                       </td>
+                   `;
+                   tbody.appendChild(tr);
+               });
+               document.querySelectorAll('.editar-item').forEach(btn => {
+                   btn.addEventListener('click', (e) => mostrarModalItem(e.target.dataset.id));
+               });
+           })
+           .catch(error => console.error('Error:', error));
+   }
+
+   function cargarDatosItem(id) {
+       fetch(`/api/items/${id}`)
+           .then(response => response.json())
+           .then(item => {
+               document.getElementById('modal-title').textContent = 'Editar Item';
+               eliminarItemBtn.classList.remove('hidden');
+               for (const [key, value] of Object.entries(item)) {
+                   const field = document.getElementById(`item-${key}`);
+                   if (field) {
+                       field.value = value;
+                   }
+               }
+               toggleCamposInventario();
+           })
+           .catch(error => console.error('Error:', error));
+   }
+
+   function guardarItem() {
+       const formData = new FormData(itemForm);
+       const itemData = Object.fromEntries(formData.entries());
+       const method = itemData.id ? 'PUT' : 'POST';
+       const url = itemData.id ? `/api/items/${itemData.id}` : '/api/items';
+
+       fetch(url, {
+           method: method,
+           headers: {
+               'Content-Type': 'application/json',
+           },
+           body: JSON.stringify(itemData),
+       })
+       .then(response => response.json())
+       .then(data => {
+           itemModal.classList.add('hidden');
+           cargarItems();
+       })
+       .catch(error => console.error('Error:', error));
+   }
+
+   function eliminarItem(id) {
+       if (confirm('¿Está seguro de que desea eliminar este item?')) {
+           fetch(`/api/items/${id}`, {
+               method: 'DELETE',
+           })
+           .then(response => {
+               if (response.ok) {
+                   itemModal.classList.add('hidden');
+                   cargarItems();
+               }
+           })
+           .catch(error => console.error('Error:', error));
+       }
+   }
+
+   function mostrarModalAjuste() {
+       ajusteForm.reset();
+       cargarOpcionesItems('ajuste-item');
+       ajusteModal.classList.remove('hidden');
+   }
+
+   function guardarAjuste() {
+       const formData = new FormData(ajusteForm);
+       const ajusteData = Object.fromEntries(formData.entries());
+
+       fetch('/api/ajustes', {
+           method: 'POST',
+           headers: {
+               'Content-Type': 'application/json',
+           },
+           body: JSON.stringify(ajusteData),
+       })
+       .then(response => response.json())
+       .then(data => {
+           ajusteModal.classList.add('hidden');
+           cargarItems();
+       })
+       .catch(error => console.error('Error:', error));
+   }
+
+   function cargarItemsParaAjusteMasivo() {
+       fetch('/api/items')
+           .then(response => response.json())
+           .then(items => {
+               const tbody = document.getElementById('items-ajuste-masivo');
+               tbody.innerHTML = '';
+               items.forEach(item => {
+                   const tr = document.createElement('tr');
+                   tr.innerHTML = `
+                       <td><input type="checkbox" class="item-checkbox" value="${item.id}"></td>
+                       <td>${item.codigo}</td>
+                       <td>${item.nombre}</td>
+                       <td>${item.precio}</td>
+                       <td class="nuevo-precio"></td>
+                   `;
+                   tbody.appendChild(tr);
+               });
+           })
+           .catch(error => console.error('Error:', error));
+   }
+
+   function aplicarAjusteMasivo() {
+       const tipoAjuste = document.getElementById('tipo-ajuste').value;
+       const valorAjuste = parseFloat(document.getElementById('valor-ajuste').value);
+       const operacionAjuste = document.getElementById('operacion-ajuste').value;
+       const itemsSeleccionados = Array.from(document.querySelectorAll('.item-checkbox:checked')).map(cb => cb.value);
+
+       const ajusteData = {
+           tipo_ajuste: tipoAjuste,
+           valor_ajuste: valorAjuste,
+           operacion_ajuste: operacionAjuste,
+           items: itemsSeleccionados
+       };
+
+       fetch('/api/ajuste-masivo', {
+           method: 'POST',
+           headers: {
+               'Content-Type': 'application/json',
+           },
+           body: JSON.stringify(ajusteData),
+       })
+       .then(response => response.json())
+       .then(data => {
+           ajusteMasivoModal.classList.add('hidden');
+           cargarItems();
+           alert('Ajuste masivo de precios aplicado con éxito');
+       })
+       .catch(error => {
+           console.error('Error:', error);
+           alert('Error al aplicar el ajuste masivo de precios');
+       });
+   }
+
+   function procesarImportacionPrecios() {
+       const fileInput = document.getElementById('file-upload');
+       const formData = new FormData();
+       formData.append('file', fileInput.files[0]);
+
+       fetch('/api/importar-precios', {
+           method: 'POST',
+           body: formData,
+       })
+       .then(response => response.json())
+       .then(data => {
+           importarPreciosModal.classList.add('hidden');
+           cargarItems();
+           alert('Importación de precios procesada con éxito');
+       })
+       .catch(error => {
+           console.error('Error:', error);
+           alert('Error al procesar la importación de precios');
+       });
+   }
+
+   function descargarPlantillaExcel() {
+       fetch('/api/descargar-plantilla-precios')
+           .then(response => response.blob())
+           .then(blob => {
+               const url = window.URL.createObjectURL(blob);
+               const a = document.createElement('a');
+               a.style.display = 'none';
+               a.href = url;
+               a.download = 'plantilla_importacion_precios.xlsx';
+               document.body.appendChild(a);
+               a.click();
+               window.URL.revokeObjectURL(url);
+           })
+           .catch(error => console.error('Error:', error));
+   }
+
+   function guardarNuevoTipoItem() {
+       const formData = new FormData(crearTipoItemForm);
+       const nuevoTipoData = Object.fromEntries(formData.entries());
+
+       fetch('/api/tipos-item', {
+           method: 'POST',
+           headers: {
+               'Content-Type': 'application/json',
+           },
+           body: JSON.stringify(nuevoTipoData),
+       })
+       .then(response => response.json())
+       .then(data => {
+           crearTipoItemModal.classList.add('hidden');
+           // Actualizar la lista de tipos de item en el formulario principal
+           const nuevoTipo = data.nuevo_tipo;
+           const option = document.createElement('option');
+           option.value = nuevoTipo;
+           option.textContent = nuevoTipo;
+           itemTipo.appendChild(option);
+           alert('Nuevo tipo de item creado con éxito');
+       })
+       .catch(error => {
+           console.error('Error:', error);
+           alert('Error al crear el nuevo tipo de item');
+       });
+   }
+
+   function cargarOpcionesItems(selectId) {
+       fetch('/api/items')
+           .then(response => response.json())
+           .then(items => {
+               const select = document.getElementById(selectId);
+               select.innerHTML = '<option value="">Seleccione un item</option>';
+               items.forEach(item => {
+                   const option = document.createElement('option');
+                   option.value = item.id;
+                   option.textContent = `${item.codigo} - ${item.nombre}`;
+                   select.appendChild(option);
+               });
+           })
+           .catch(error => console.error('Error:', error));
+   }
 });
 </script>
 {% endblock %}
