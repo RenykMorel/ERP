@@ -401,8 +401,7 @@ def create_app():
     from facturas import facturacion_bp
     app.register_blueprint(facturacion_bp, url_prefix='/facturacion')
     
-    from inventario import inventario_bp
-    app.register_blueprint(inventario_bp, url_prefix='/inventario')
+    
     
     from marketing.routes import marketing
     app.register_blueprint(marketing, url_prefix='/marketing')
@@ -591,15 +590,7 @@ def create_app():
     def gestion_clientes():
         return render_template('facturacion/gestion_de_clientes.html')
     
-    @app.route('/inventario/')
-    @login_required
-    def inventario_index():
-        return render_template('inventario/index.html')
-
-    @app.route('/inventario/items')
-    @login_required
-    def inventario_items():
-        return render_template('inventario/items.html')
+    
 
     @app.route('/inventario/entrada-almacen')
     @login_required

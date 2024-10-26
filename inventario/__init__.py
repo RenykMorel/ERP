@@ -1,11 +1,11 @@
-
 from flask import Blueprint
 
-inventario_bp = Blueprint('inventario', __name__)
+inventario_bp = Blueprint('inventario', __name__, url_prefix='/inventario')
 
 def init_app(app):
-    # Inicialización específica para el módulo de inventario
-    pass
+    # Importamos las rutas aquí para evitar importaciones circulares
+    app.register_blueprint(inventario_bp)
 
-from . import inventario_models
+# Importamos las rutas después de crear el blueprint
 from . import inventario_routes
+from . import inventario_models

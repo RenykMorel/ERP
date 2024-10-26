@@ -3,38 +3,106 @@ from sqlalchemy.orm import validates
 from datetime import datetime
 from common.models import ItemFactura, ItemPreFactura, MovimientoInventario
 
+class TipoItem(db.Model):
+    __tablename__ = 'tipos_item'
+    __table_args__ = {'extend_existing': True}
+    
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), unique=True, nullable=False)
+    descripcion = db.Column(db.Text)
+    tipo = db.Column(db.String(50))  # 'servicio', 'bien', 'cargo'
+    estatus = db.Column(db.String(20), default='activo')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Configuración para la venta
+    es_vendible = db.Column(db.Boolean, default=True)
+    usa_itbis = db.Column(db.Boolean, default=True)
+    modifica_precio = db.Column(db.Boolean, default=False)
+    modifica_impuestos = db.Column(db.Boolean, default=False)
+    le_aplica_descuento = db.Column(db.Boolean, default=True)
+    precio_negativo = db.Column(db.Boolean, default=False)
+    usa_margen_ganancia = db.Column(db.Boolean, default=True)
+    usa_precio_moneda = db.Column(db.Boolean, default=False)
+    no_venta_costo_pp = db.Column(db.Boolean, default=False)
+    gasto_incurrido_para_el_cliente = db.Column(db.Boolean, default=False)
+    
+    # Configuración para la compra
+    es_comprable = db.Column(db.Boolean, default=True)
+    proporcionalidad_del_itbis = db.Column(db.Boolean, default=False)
+    itbis = db.Column(db.Boolean, default=True)
+    otros_impuestos = db.Column(db.Boolean, default=False)
+    no_modifica_precio = db.Column(db.Boolean, default=False)
+    modifica_costo = db.Column(db.Boolean, default=True)
+
+    # Relación con InventarioItem
+    items = db.relationship('InventarioItem', backref='tipo_item_rel', lazy=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre,
+            'descripcion': self.descripcion,
+            'tipo': self.tipo,
+            'estatus': self.estatus,
+            'es_vendible': self.es_vendible,
+            'usa_itbis': self.usa_itbis,
+            'modifica_precio': self.modifica_precio,
+            'modifica_impuestos': self.modifica_impuestos,
+            'le_aplica_descuento': self.le_aplica_descuento,
+            'precio_negativo': self.precio_negativo,
+            'usa_margen_ganancia': self.usa_margen_ganancia,
+            'usa_precio_moneda': self.usa_precio_moneda,
+            'no_venta_costo_pp': self.no_venta_costo_pp,
+            'gasto_incurrido_para_el_cliente': self.gasto_incurrido_para_el_cliente,
+            'es_comprable': self.es_comprable,
+            'proporcionalidad_del_itbis': self.proporcionalidad_del_itbis,
+            'itbis': self.itbis,
+            'otros_impuestos': self.otros_impuestos,
+            'no_modifica_precio': self.no_modifica_precio,
+            'modifica_costo': self.modifica_costo,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+    def __repr__(self):
+        return f'<TipoItem {self.nombre}>'
+
 class InventarioItem(db.Model):
     __tablename__ = 'items_inventario'
     
     id = db.Column(db.Integer, primary_key=True)
-    codigo = db.Column(db.String(50), unique=True, nullable=False)
+    codigo = db.Column(db.String(50), unique=True)  # Permitir NULL
     nombre = db.Column(db.String(100), nullable=False)
-    descripcion = db.Column(db.Text)
+    descripcion = db.Column(db.Text, nullable=True)
     tipo = db.Column(db.String(20), nullable=False)
-    categoria = db.Column(db.String(50))
+    categoria = db.Column(db.String(50), nullable=True)
     costo = db.Column(db.Float, nullable=False)
     precio = db.Column(db.Float, nullable=False)
     itbis = db.Column(db.Float, nullable=False)
     margen = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=0)
     stock_minimo = db.Column(db.Integer, default=0)
-    stock_maximo = db.Column(db.Integer)
-    unidad_medida = db.Column(db.String(20))
-    proveedor = db.Column(db.String(100))
-    marca = db.Column(db.String(50))
+    stock_maximo = db.Column(db.Integer, nullable=True)
+    unidad_medida = db.Column(db.String(20), nullable=True)
+    proveedor = db.Column(db.String(100), nullable=True)
+    marca = db.Column(db.String(50), nullable=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relaciones
+    # Nueva relación con TipoItem
+    tipo_item_id = db.Column(db.Integer, db.ForeignKey('tipos_item.id'))
+
+    # Mantenemos las relaciones existentes que ya están definidas en common.models
     items_facturas = db.relationship('ItemFactura', back_populates='item')
     items_pre_factura = db.relationship('ItemPreFactura', back_populates='item_inv')
     movimientos = db.relationship('MovimientoInventario', back_populates='item')
-    ajustes = db.relationship('AjusteInventario', backref=db.backref('item'))
+    ajustes = db.relationship('AjusteInventario', backref='item')
 
     @validates('codigo')
     def validate_codigo(self, key, codigo):
-        if not codigo:
-            raise ValueError('El código no puede estar vacío')
+        if codigo == '':
+            return None
         return codigo
 
     @validates('tipo')
@@ -50,12 +118,10 @@ class InventarioItem(db.Model):
         return valor
 
     @validates('stock', 'stock_minimo', 'stock_maximo')
-    def validate_stock(self, key, stock):
-        if self.tipo == 'servicio' and stock != 0:
-            raise ValueError('Los servicios no pueden tener stock')
-        if stock < 0:
-            raise ValueError(f'El {key} no puede ser negativo')
-        return stock
+    def validate_stock(self, key, value):
+        if value is None or value == '':
+            return 0 if key != 'stock_maximo' else None
+        return value
 
     def to_dict(self):
         return {
@@ -64,6 +130,8 @@ class InventarioItem(db.Model):
             'nombre': self.nombre,
             'descripcion': self.descripcion,
             'tipo': self.tipo,
+            'tipo_item_id': self.tipo_item_id,
+            'tipo_item': self.tipo_item_rel.to_dict() if self.tipo_item_rel else None,
             'categoria': self.categoria,
             'costo': self.costo,
             'precio': self.precio,
@@ -89,6 +157,8 @@ class InventarioItem(db.Model):
 
 class AjusteInventario(db.Model):
     __tablename__ = 'ajustes_inventario'
+    __table_args__ = {'extend_existing': True}
+    
     id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, db.ForeignKey('items_inventario.id'), nullable=False)
     cantidad_anterior = db.Column(db.Integer, nullable=False)
@@ -105,9 +175,6 @@ class AjusteInventario(db.Model):
             raise ValueError('La cantidad nueva no puede ser negativa')
         return cantidad
 
-    def __repr__(self):
-        return f'<AjusteInventario de {self.item.nombre}: {self.cantidad_anterior} a {self.cantidad_nueva}>'
-
     def to_dict(self):
         return {
             'id': self.id,
@@ -118,6 +185,9 @@ class AjusteInventario(db.Model):
             'fecha': self.fecha.isoformat() if self.fecha else None,
             'usuario_id': self.usuario_id
         }
+
+    def __repr__(self):
+        return f'<AjusteInventario de {self.item.nombre}: {self.cantidad_anterior} a {self.cantidad_nueva}>'
 
 def init_db():
     db.create_all()

@@ -5,15 +5,34 @@
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .form-input, .form-select, .form-textarea {
+        border: 2px solid #10B981;
+        border-radius: 0.375rem;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        border-color: #059669;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+    .green-border {
+        border: 4px solid #10B981;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6 text-gray-800">Entrada de Almacén</h1>
 
-    <div class="mb-6">
+    <div class="mb-6 flex space-x-4">
         <button id="nueva-entrada-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded shadow">
             <i class="fas fa-plus mr-2"></i>Nueva Entrada
+        </button>
+        <button id="nuevo-almacen-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fas fa-warehouse mr-2"></i>Crear Almacén
+        </button>
+        <button id="ver-almacenes-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fas fa-list mr-2"></i>Ver Almacenes
         </button>
     </div>
 
@@ -53,31 +72,106 @@
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full green-border">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
                     Nueva Entrada de Almacén
                 </h3>
                 <form id="entrada-form" class="space-y-4">
-                    <input type="hidden" id="entrada-id" name="id">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label for="orden-compra" class="block text-sm font-medium text-gray-700 mb-1">Orden de Compra</label>
+                            <div class="flex">
+                                <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="orden-compra" name="orden_compra">
+                                <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="factura" class="block text-sm font-medium text-gray-700 mb-1">Factura</label>
+                            <div class="flex">
+                                <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="factura" name="factura">
+                                <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="expediente" class="block text-sm font-medium text-gray-700 mb-1">Expediente</label>
+                            <div class="flex">
+                                <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="expediente" name="expediente">
+                                <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label for="almacen" class="block text-sm font-medium text-gray-700 mb-1">Almacén</label>
+                            <select class="form-select mt-1 block w-full" id="almacen" name="almacen">
+                                <!-- Options will be dynamically populated -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                            <input type="date" class="form-input mt-1 block w-full" id="fecha" name="fecha">
+                        </div>
+                        <div>
+                            <label for="moneda" class="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+                            <select class="form-select mt-1 block w-full" id="moneda" name="moneda">
+                                <option value="peso-dominicano">Peso Dominicano</option>
+                                <option value="dolar-estadounidense">Dólar Estadounidense</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label for="entrada-numero" class="block text-sm font-medium text-gray-700 mb-1">Número de Entrada</label>
-                            <input type="text" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" id="entrada-numero" name="numero" required>
+                            <label for="documento" class="block text-sm font-medium text-gray-700 mb-1">Documento</label>
+                            <input type="text" class="form-input mt-1 block w-full" id="documento" name="documento">
                         </div>
                         <div>
-                            <label for="entrada-fecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                            <input type="date" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" id="entrada-fecha" name="fecha" required>
+                            <label for="referencia" class="block text-sm font-medium text-gray-700 mb-1">Referencia</label>
+                            <input type="text" class="form-input mt-1 block w-full" id="referencia" name="referencia">
                         </div>
                     </div>
                     <div>
-                        <label for="entrada-proveedor" class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
-                        <input type="text" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" id="entrada-proveedor" name="proveedor" required>
+                        <label for="nota" class="block text-sm font-medium text-gray-700 mb-1">Nota</label>
+                        <textarea class="form-textarea mt-1 block w-full" id="nota" name="nota" rows="3"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="concepto" class="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
+                            <select class="form-select mt-1 block w-full" id="concepto" name="concepto">
+                                <option value="compra">Compra</option>
+                                <option value="devolucion">Devolución</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="estatus" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+                            <select class="form-select mt-1 block w-full" id="estatus" name="estatus">
+                                <option value="en-almacen">En Almacén</option>
+                                <option value="pendiente">Pendiente</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
-                        <h6 class="text-sm font-medium text-gray-700 mb-2">Items</h6>
-                        <div id="items-container" class="space-y-2">
-                            <!-- Aquí se agregarán dinámicamente los campos para los items -->
+                        <h6 class="text-sm font-medium text-gray-700 mb-2">Productos</h6>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="items-container" class="bg-white divide-y divide-gray-200">
+                                    <!-- Aquí se agregarán dinámicamente los campos para los items -->
+                                </tbody>
+                            </table>
                         </div>
                         <button type="button" id="agregar-item-btn" class="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             <i class="fas fa-plus mr-2"></i>Agregar Item
@@ -87,57 +181,186 @@
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-entrada-btn">
+                    Grabar
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="limpiar-btn">
+                    Limpiar
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancelar-btn">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear almacén -->
+<div id="almacenModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span  class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    Crear Nuevo Almacén
+                </h3>
+                <form id="almacen-form" class="space-y-4">
+                    <div>
+                        <label for="nombre-almacen" class="block text-sm font-medium text-gray-700">Nombre del Almacén</label>
+                        <input type="text" id="nombre-almacen" name="nombre" class="form-input mt-1 block w-full" required>
+                    </div>
+                    <div>
+                        <label for="ubicacion-almacen" class="block text-sm font-medium text-gray-700">Ubicación</label>
+                        <input type="text" id="ubicacion-almacen" name="ubicacion" class="form-input mt-1 block w-full" required>
+                    </div>
+                    <div>
+                        <label for="capacidad-almacen" class="block text-sm font-medium text-gray-700">Capacidad (m²)</label>
+                        <input type="number" id="capacidad-almacen" name="capacidad" class="form-input mt-1 block w-full" required>
+                    </div>
+                    <div>
+                        <label for="cuenta-inventario" class="block text-sm font-medium text-gray-700">Cuenta de Inventario</label>
+                        <input type="text" id="cuenta-inventario" name="cuenta_inventario" class="form-input mt-1 block w-full" required>
+                    </div>
+                    <div>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="almacen-principal" name="es_principal" class="form-checkbox">
+                            <span class="ml-2">Es Almacén Principal</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label for="descripcion-almacen" class="block text-sm font-medium text-gray-700">Descripción</label>
+                        <textarea id="descripcion-almacen" name="descripcion" rows="3" class="form-textarea mt-1 block w-full"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-almacen-btn">
                     Guardar
                 </button>
-                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cerrar-modal-btn">
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancelar-almacen-btn">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver almacenes -->
+<div id="verAlmacenesModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    Almacenes Registrados
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacidad</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta de Inventario</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Principal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="almacenes-list" class="bg-white divide-y divide-gray-200">
+                            <!-- Los almacenes se cargarán aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm" id="cerrar-ver-almacenes-btn">
                     Cerrar
                 </button>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const nuevaEntradaBtn = document.getElementById('nueva-entrada-btn');
+    const nuevoAlmacenBtn = document.getElementById('nuevo-almacen-btn');
+    const verAlmacenesBtn = document.getElementById('ver-almacenes-btn');
     const guardarEntradaBtn = document.getElementById('guardar-entrada-btn');
-    const cerrarModalBtn = document.getElementById('cerrar-modal-btn');
+    const limpiarBtn = document.getElementById('limpiar-btn');
+    const cancelarBtn = document.getElementById('cancelar-btn');
     const entradaModal = document.getElementById('entradaModal');
+    const almacenModal = document.getElementById('almacenModal');
+    const verAlmacenesModal = document.getElementById('verAlmacenesModal');
     const entradaForm = document.getElementById('entrada-form');
+    const almacenForm = document.getElementById('almacen-form');
     const agregarItemBtn = document.getElementById('agregar-item-btn');
     const itemsContainer = document.getElementById('items-container');
+    const guardarAlmacenBtn = document.getElementById('guardar-almacen-btn');
+    const cancelarAlmacenBtn = document.getElementById('cancelar-almacen-btn');
+    const cerrarVerAlmacenesBtn = document.getElementById('cerrar-ver-almacenes-btn');
+
+    // Array para almacenar los almacenes (simulando una base de datos)
+    let almacenes = [];
 
     nuevaEntradaBtn.addEventListener('click', () => mostrarModalEntrada());
+    nuevoAlmacenBtn.addEventListener('click', () => {
+        almacenModal.classList.remove('hidden');
+        almacenForm.reset();
+    });
+    verAlmacenesBtn.addEventListener('click', () => {
+        verAlmacenesModal.classList.remove('hidden');
+        cargarAlmacenes();
+    });
     guardarEntradaBtn.addEventListener('click', guardarEntrada);
-    cerrarModalBtn.addEventListener('click', () => entradaModal.classList.add('hidden'));
+    limpiarBtn.addEventListener('click', limpiarFormulario);
+    cancelarBtn.addEventListener('click', () => entradaModal.classList.add('hidden'));
     agregarItemBtn.addEventListener('click', agregarItemCampo);
+    guardarAlmacenBtn.addEventListener('click', guardarAlmacen);
+    cancelarAlmacenBtn.addEventListener('click', () => almacenModal.classList.add('hidden'));
+    cerrarVerAlmacenesBtn.addEventListener('click', () => verAlmacenesModal.classList.add('hidden'));
 
     cargarEntradas();
+    actualizarSelectAlmacenes();
 
     function mostrarModalEntrada(id = null) {
         entradaForm.reset();
         if (id) {
             cargarDatosEntrada(id);
+        } else {
+            document.getElementById('modal-title').textContent = 'Nueva Entrada de Almacén';
+            itemsContainer.innerHTML = '';
+            agregarItemCampo();
         }
         entradaModal.classList.remove('hidden');
     }
 
     function agregarItemCampo() {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'flex space-x-2';
-        itemDiv.innerHTML = `
-            <input type="text" class="flex-grow px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" name="item_nombre[]" placeholder="Nombre del item" required>
-            <input type="number" class="w-24 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" name="item_cantidad[]" placeholder="Cantidad" required>
-            <button type="button" class="eliminar-item-btn px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-                <i class="fas fa-trash-alt"></i>
-            </button>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">
+                <input type="text" class="form-input block w-full" name="item_nombre[]" required>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <input type="number" class="form-input block w-full" name="item_cantidad[]" required>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <input type="number" class="form-input block w-full" name="item_costo[]" step="0.01" required>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <button type="button" class="eliminar-item-btn text-red-600 hover:text-red-900">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </td>
         `;
-        itemsContainer.appendChild(itemDiv);
+        itemsContainer.appendChild(tr);
 
-        itemDiv.querySelector('.eliminar-item-btn').addEventListener('click', function() {
-            itemDiv.remove();
+        tr.querySelector('.eliminar-item-btn').addEventListener('click', function() {
+            tr.remove();
         });
     }
 
@@ -196,12 +419,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function guardarEntrada() {
         const formData = new FormData(entradaForm);
         const entradaData = Object.fromEntries(formData);
-        const entradaId = entradaData.id;
 
         // Aquí iría la lógica para enviar los datos al servidor
         console.log('Datos de la entrada:', entradaData);
 
-        alert(entradaId ? 'Entrada actualizada correctamente' : 'Entrada creada correctamente');
+        alert('Entrada guardada correctamente');
         entradaModal.classList.add('hidden');
         cargarEntradas(); // Recargar la lista de entradas
     }
@@ -214,24 +436,24 @@ document.addEventListener('DOMContentLoaded', function() {
             fecha: '2023-05-0' + id,
             proveedor: 'Proveedor ' + id,
             items: [
-                { nombre: 'Item 1', cantidad: 10 },
-                { nombre: 'Item 2', cantidad: 5 },
+                { nombre: 'Item 1', cantidad: 10, costo: 100 },
+                { nombre: 'Item 2', cantidad: 5, costo: 50 },
             ]
         };
 
-        document.getElementById('entrada-id').value = entradaSimulada.id;
-        document.getElementById('entrada-numero').value = entradaSimulada.numero;
-        document.getElementByI
-
-d('entrada-fecha').value = entradaSimulada.fecha;
-        document.getElementById('entrada-proveedor').value = entradaSimulada.proveedor;
+        document.getElementById('orden-compra').value = entradaSimulada.numero;
+        document.getElementById('fecha').value = entradaSimulada.fecha;
+        // Asumiendo que hay un campo para el proveedor, si no, elimina esta línea
+        // document.getElementById('proveedor').value = entradaSimulada.proveedor;
 
         itemsContainer.innerHTML = '';
         entradaSimulada.items.forEach(item => {
             agregarItemCampo();
-            const itemInputs = itemsContainer.lastElementChild.querySelectorAll('input');
-            itemInputs[0].value = item.nombre;
-            itemInputs[1].value = item.cantidad;
+            const lastRow = itemsContainer.lastElementChild;
+            const inputs = lastRow.querySelectorAll('input');
+            inputs[0].value = item.nombre;
+            inputs[1].value = item.cantidad;
+            inputs[2].value = item.costo;
         });
     }
 
@@ -243,6 +465,83 @@ d('entrada-fecha').value = entradaSimulada.fecha;
             cargarEntradas(); // Recargar la lista de entradas
         }
     }
+
+    function limpiarFormulario() {
+        entradaForm.reset();
+        itemsContainer.innerHTML = '';
+        agregarItemCampo();
+    }
+
+    function guardarAlmacen() {
+        const formData = new FormData(almacenForm);
+        const almacenData = Object.fromEntries(formData);
+        
+        // Agregar ID único al almacén
+        almacenData.id = Date.now().toString();
+        
+        // Convertir el checkbox a booleano
+        almacenData.es_principal = almacenData.es_principal === 'on';
+        
+        // Guardar el almacén
+        almacenes.push(almacenData);
+        
+        // Actualizar el select de almacenes en el formulario de entrada
+        actualizarSelectAlmacenes();
+        
+        // Cerrar el modal y mostrar mensaje
+        almacenModal.classList.add('hidden');
+        alert('Almacén guardado correctamente');
+    }
+
+    function cargarAlmacenes() {
+        const tbody = document.getElementById('almacenes-list');
+        tbody.innerHTML = '';
+        
+        almacenes.forEach(almacen => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${almacen.nombre}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${almacen.ubicacion}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${almacen.capacidad} m²</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${almacen.cuenta_inventario}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${almacen.es_principal ? 'Sí' : 'No'}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button class="text-blue-600 hover:text-blue-900 mr-3 editar-almacen" data-id="${almacen.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-600 hover:text-red-900 eliminar-almacen" data-id="${almacen.id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function actualizarSelectAlmacenes() {
+        const select = document.getElementById('almacen');
+        select.innerHTML = '';
+        
+        almacenes.forEach(almacen => {
+            const option = document.createElement('option');
+            option.value = almacen.id;
+            option.textContent = almacen.nombre;
+            select.appendChild(option);
+        });
+    }
+
+    // Inicializar el select de almacenes
+    actualizarSelectAlmacenes();
 });
 </script>
 {% endblock %}

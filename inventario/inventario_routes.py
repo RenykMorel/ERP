@@ -1,26 +1,19 @@
-from flask import render_template, request, jsonify, current_app, send_file
+from flask import render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
-from . import inventario_bp
-from .inventario_models import InventarioItem, MovimientoInventario
-from extensions import db
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-import io
-import csv
-from flask import render_template, request, jsonify, current_app
-from .inventario_models import InventarioItem
-from common.models import MovimientoInventario, ItemFactura
+from . import inventario_bp
+from .inventario_models import InventarioItem, MovimientoInventario, AjusteInventario
+from extensions import db
+import logging
 
-
-
-
+logger = logging.getLogger(__name__)
 
 @inventario_bp.route('/')
 @login_required
 def index():
     return render_template('inventario/index.html')
 
-# Rutas para Items
 @inventario_bp.route('/items')
 @login_required
 def items():
@@ -33,28 +26,66 @@ def get_items():
         items = InventarioItem.query.all()
         return jsonify([item.to_dict() for item in items])
     except Exception as e:
-        current_app.logger.error(f"Error al obtener items: {str(e)}")
+        logger.error(f"Error al obtener items: {str(e)}")
         return jsonify({"error": "Error interno del servidor"}), 500
 
 @inventario_bp.route('/api/items', methods=['POST'])
 @login_required
 def create_item():
-    data = request.json
     try:
-        new_item = InventarioItem(**data)
+        if not request.is_json:
+            return jsonify({"error": "Se requiere JSON"}), 400
+            
+        data = request.get_json()
+        logger.info(f"Datos recibidos para crear item: {data}")
+        
+        # Convertir campos numéricos vacíos a None o 0 según corresponda
+        stock = int(data.get('stock')) if data.get('stock') and data.get('stock').strip() else 0
+        stock_minimo = int(data.get('stock_minimo')) if data.get('stock_minimo') and data.get('stock_minimo').strip() else 0
+        stock_maximo = int(data.get('stock_maximo')) if data.get('stock_maximo') and data.get('stock_maximo').strip() else None
+        
+        # Validar campos requeridos
+        if not all([data.get('nombre'), data.get('tipo'), data.get('costo'), 
+                   data.get('itbis'), data.get('margen'), data.get('precio')]):
+            return jsonify({"error": "Faltan campos requeridos"}), 400
+
+        new_item = InventarioItem(
+            codigo=data.get('codigo') if data.get('codigo') else None,
+            nombre=data['nombre'],
+            tipo=data['tipo'],
+            costo=float(data['costo']),
+            itbis=float(data['itbis']),
+            margen=float(data['margen']),
+            precio=float(data['precio']),
+            descripcion=data.get('descripcion') or None,
+            categoria=data.get('categoria') or None,
+            proveedor=data.get('proveedor') or None,
+            marca=data.get('marca') or None,
+            unidad_medida=data.get('unidad_medida') or None,
+            stock=stock,
+            stock_minimo=stock_minimo,
+            stock_maximo=stock_maximo
+        )
+
         db.session.add(new_item)
         db.session.commit()
+        
+        logger.info(f"Item creado exitosamente: {new_item.id}")
         return jsonify(new_item.to_dict()), 201
+        
+    except ValueError as e:
+        db.session.rollback()
+        logger.error(f"Error de validación: {str(e)}")
+        return jsonify({"error": "Error en los datos proporcionados. Verifique los campos numéricos."}), 400
+        
     except IntegrityError as e:
         db.session.rollback()
-        current_app.logger.error(f"Error de integridad al crear item: {str(e)}")
+        logger.error(f"Error de integridad: {str(e)}")
         return jsonify({"error": "Ya existe un item con ese código"}), 400
-    except ValueError as e:
-        current_app.logger.error(f"Error de validación al crear item: {str(e)}")
-        return jsonify({"error": str(e)}), 400
+        
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error inesperado al crear item: {str(e)}")
+        logger.error(f"Error al crear item: {str(e)}")
         return jsonify({"error": "Error interno del servidor"}), 500
 
 @inventario_bp.route('/api/items/<int:item_id>', methods=['PUT'])
