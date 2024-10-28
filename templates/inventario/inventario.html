@@ -1,91 +1,168 @@
 {% extends "base.html" %}
 
-{% block title %}Current Inventory - ERP Accounting System{% endblock %}
+{% block title %}Inventario Actual - CalculAI{% endblock %}
 
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .stock-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .stock-low { background-color: #FEF2F2; color: #991B1B; }
+    .stock-normal { background-color: #F0FDF4; color: #166534; }
+    .stock-high { background-color: #EFF6FF; color: #1E40AF; }
+    .modal-border { border: 4px solid #10B981; }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Current Inventory</h1>
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Inventario Actual</h1>
 
-    <div class="mb-6">
-        <div class="relative">
-            <input type="text" id="search-item" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Search item...">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-search text-gray-400"></i>
+    <div class="mb-6 flex flex-wrap gap-4">
+        <!-- Búsqueda -->
+        <div class="flex-1">
+            <div class="relative">
+                <input type="text" id="search-item" 
+                       class="w-full pl-10 pr-4 py-2 rounded-lg border-2 border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" 
+                       placeholder="Buscar por código, nombre o categoría...">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-green-500"></i>
+                </div>
             </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="flex gap-2">
+            <select id="category-filter" class="rounded-lg border-2 border-green-300 focus:border-green-500 focus:ring focus:ring-green-200">
+                <option value="">Todas las categorías</option>
+            </select>
+            <select id="stock-status-filter" class="rounded-lg border-2 border-green-300 focus:border-green-500 focus:ring focus:ring-green-200">
+                <option value="">Todos los estados</option>
+                <option value="low">Stock Bajo</option>
+                <option value="normal">Stock Normal</option>
+                <option value="high">Stock Alto</option>
+            </select>
         </div>
     </div>
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
-        <table class="min-w-full leading-normal">
-            <thead>
-                <tr>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Code
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Name
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Category
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Current Stock
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Unit Price
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Total Value
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Actions
-                    </th>
-                </tr>
-            </thead>
-            <tbody id="inventory-tbody">
-                <!-- Inventory items will be loaded here dynamically -->
-            </tbody>
-        </table>
+    <!-- Tabla de Inventario -->
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden border-2 border-green-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-green-200">
+                <thead>
+                    <tr class="bg-green-50">
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Código</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Nombre</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Categoría</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Stock Actual</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Precio</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Valor Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-green-800 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-tbody" class="bg-white divide-y divide-green-100">
+                    <!-- El contenido se cargará dinámicamente -->
+                </tbody>
+                <tfoot class="bg-green-50">
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-right text-sm font-bold text-green-800">
+                            Valor Total del Inventario:
+                        </td>
+                        <td colspan="2" class="px-6 py-4 text-left text-sm font-bold text-green-800" id="total-value">
+                            
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+        <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-400">
+            <h3 class="text-lg font-semibold text-gray-800">Items con Stock Bajo</h3>
+            <p class="text-2xl font-bold text-yellow-600" id="low-stock-count">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-400">
+            <h3 class="text-lg font-semibold text-gray-800">Items con Stock Normal</h3>
+            <p class="text-2xl font-bold text-green-600" id="normal-stock-count">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-400">
+            <h3 class="text-lg font-semibold text-gray-800">Items con Stock Alto</h3>
+            <p class="text-2xl font-bold text-blue-600" id="high-stock-count">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-red-400">
+            <h3 class="text-lg font-semibold text-gray-800">Items sin Stock</h3>
+            <p class="text-2xl font-bold text-red-600" id="no-stock-count">0</p>
+        </div>
     </div>
 </div>
 
-<!-- Modal for stock adjustment -->
-<div id="adjustStockModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+<!-- Modal de Detalle de Item -->
+<div id="itemDetailModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full modal-border">
+            <div class="bg-white px-8 pt-6 pb-6 sm:p-8">
+                <!-- El contenido se llenará dinámicamente -->
+            </div>
+            <div class="bg-gray-50 px-8 py-4 sm:px-8 sm:flex sm:flex-row-reverse">
+                <button type="button" class="cerrar-modal-btn w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-6 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:w-auto sm:text-sm">
+                    Salir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Ajuste de Stock -->
+<div id="adjustStockModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full modal-border">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
-                    Adjust Stock
-                </h3>
+                <h3 class="text-lg leading-6 font-bold text-gray-900 mb-4">Ajuste de Stock</h3>
                 <form id="adjust-stock-form" class="space-y-4">
                     <input type="hidden" id="item-id" name="item_id">
                     <div>
-                        <label for="current-stock" class="block text-sm font-medium text-gray-700 mb-1">Current Stock</label>
-                        <input type="number" id="current-stock" class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" readonly>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stock Actual</label>
+                        <input type="number" id="current-stock" class="mt-1 block w-full px-3 py-2 bg-gray-100 border-2 border-green-200 rounded-md" readonly>
                     </div>
                     <div>
-                        <label for="adjustment-quantity" class="block text-sm font-medium text-gray-700 mb-1">Adjustment Quantity</label>
-                        <input type="number" id="adjustment-quantity" name="quantity" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nueva Cantidad</label>
+                        <input type="number" id="adjustment-quantity" name="cantidad_nueva" class="mt-1 block w-full px-3 py-2 border-2 border-green-200 rounded-md" required>
                     </div>
                     <div>
-                        <label for="adjustment-reason" class="block text-sm font-medium text-gray-700 mb-1">Adjustment Reason</label>
-                        <textarea id="adjustment-reason" name="reason" rows="3" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" required></textarea>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Motivo del Ajuste</label>
+                        <select id="adjustment-type" name="tipo_ajuste" class="mt-1 block w-full px-3 py-2 border-2 border-green-200 rounded-md" required>
+                            <option value="">Seleccione un motivo...</option>
+                            <option value="inventario_fisico">Inventario Físico</option>
+                            <option value="merma">Merma</option>
+                            <option value="robo">Robo</option>
+                            <option value="danio">Daño</option>
+                            <option value="error_sistema">Error de Sistema</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                        <textarea id="adjustment-reason" name="motivo" rows="3" class="mt-1 block w-full px-3 py-2 border-2 border-green-200 rounded-md" required></textarea>
                     </div>
                 </form>
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" id="save-adjustment-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Save Adjustment
+                <button type="button" id="save-adjustment-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Guardar Ajuste
                 </button>
-                <button type="button" id="close-modal-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                    Close
+                <button type="button" id="close-adjustment-modal-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancelar
                 </button>
             </div>
         </div>
@@ -96,113 +173,480 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Elementos del DOM
     const searchItemInput = document.getElementById('search-item');
     const inventoryTbody = document.getElementById('inventory-tbody');
+    const categoryFilter = document.getElementById('category-filter');
+    const stockStatusFilter = document.getElementById('stock-status-filter');
     const adjustStockModal = document.getElementById('adjustStockModal');
     const adjustStockForm = document.getElementById('adjust-stock-form');
-    const saveAdjustmentBtn = document.getElementById('save-adjustment-btn');
-    const closeModalBtn = document.getElementById('close-modal-btn');
+    const itemDetailModal = document.getElementById('itemDetailModal');
 
+    // Event Listeners
+    searchItemInput.addEventListener('input', debounce(filterInventory, 300));
+    categoryFilter.addEventListener('change', filterInventory);
+    stockStatusFilter.addEventListener('change', filterInventory);
+    
+    document.getElementById('save-adjustment-btn').addEventListener('click', saveStockAdjustment);
+    document.getElementById('close-adjustment-modal-btn').addEventListener('click', () => adjustStockModal.classList.add('hidden'));
+
+    // Cerrar modales con el botón de cerrar
+    document.querySelectorAll('.cerrar-modal-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.fixed').classList.add('hidden');
+        });
+    });
+
+    // Variable global para almacenar los datos del inventario
+    window.inventoryData = [];
+
+    // Cargar inventario inicial
     loadInventory();
-    searchItemInput.addEventListener('input', loadInventory);
-    saveAdjustmentBtn.addEventListener('click', saveStockAdjustment);
-    closeModalBtn.addEventListener('click', () => adjustStockModal.classList.add('hidden'));
 
     function loadInventory() {
-        const search = searchItemInput.value;
-        fetch(`/inventory/items?search=${search}`)
-            .then(response => response.json())
-            .then(data => updateInventoryTable(data))
+        showLoading();
+        fetch('/inventario/api/inventario-actual')
+            .then(async response => {
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    console.error('Respuesta no JSON recibida:', text);
+                    
+                    throw new Error('Respuesta del servidor no es JSON');
+                }
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Inventario cargado:', data);
+                if (!Array.isArray(data)) {
+                    console.warn('Los datos recibidos no son un array:', data);
+                    data = [];
+                }
+                window.inventoryData = data;
+                inventoryData = data;
+                updateCategoryFilter(data);
+                filterInventory();
+            })
             .catch(error => {
                 console.error('Error:', error);
-                showNotification('An error occurred while loading the inventory', 'error');
+                showError(`Error al cargar el inventario: ${error.message || 'Error desconocido'}`);
             });
+    }
+
+    function updateCategoryFilter(items) {
+        const categories = [...new Set(items.map(item => item.categoria).filter(Boolean))];
+        categoryFilter.innerHTML = '<option value="">Todas las categorías</option>';
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categoryFilter.appendChild(option);
+        });
+    }
+
+    function filterInventory() {
+        const searchTerm = searchItemInput.value.toLowerCase();
+        const categoryValue = categoryFilter.value;
+        const stockStatus = stockStatusFilter.value;
+
+        const filteredItems = inventoryData.filter(item => {
+            const matchesSearch = (
+                (item.codigo?.toLowerCase().includes(searchTerm) || '') ||
+                item.nombre.toLowerCase().includes(searchTerm) ||
+                (item.categoria?.toLowerCase().includes(searchTerm) || '')
+            );
+
+            const matchesCategory = !categoryValue || item.categoria === categoryValue;
+            
+            const matchesStatus = !stockStatus || getStockStatus(item) === stockStatus;
+
+            return matchesSearch && matchesCategory && matchesStatus;
+        });
+
+        updateInventoryTable(filteredItems);
+        updateStatistics(filteredItems);
     }
 
     function updateInventoryTable(items) {
         inventoryTbody.innerHTML = '';
+        const totalValue = items.reduce((sum, item) => sum + (item.stock_actual * item.costo), 0);
+
         items.forEach(item => {
+            const stockStatus = getStockStatus(item);
             const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50';
             tr.innerHTML = `
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.code}</p>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm font-medium text-gray-900">${item.codigo || '-'}</span>
                 </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.name}</p>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm font-medium text-gray-900">${item.nombre}</span>
                 </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.category}</p>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm text-gray-500">${item.categoria || '-'}</span>
                 </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.stock}</p>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <span class="stock-badge ${getStockBadgeClass(stockStatus)}">
+                            ${item.stock_actual}
+                        </span>
+                        ${getStockIcon(stockStatus)}
+                    </div>
+                    <span class="text-xs text-gray-500">
+                        Mín: ${item.stock_minimo} | Máx: ${item.stock_maximo || '∞'}
+                    </span>
                 </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">$${item.price.toFixed(2)}</p>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm text-gray-900">${formatCurrency(item.precio)}</span>
+                    <br>
+                    <span class="text-xs text-gray-500">Costo: ${formatCurrency(item.costo)}</span>
                 </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">$${(item.stock * item.price).toFixed(2)}</p>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm font-medium text-gray-900">
+                        ${formatCurrency(item.stock_actual * item.costo)}
+                    </span>
                 </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline adjust-stock" data-id="${item.id}" data-stock="${item.stock}">
-                        Adjust Stock
-                    </button>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <div class="flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-900 ver-detalle" data-id="${item.id}" title="Ver Detalle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="text-green-600 hover:text-green-900 ajustar-stock" data-id="${item.id}" data-stock="${item.stock_actual}" title="Ajustar Stock">
+                            <i class="fas fa-balance-scale"></i>
+                        </button>
+                        <button class="text-purple-600 hover:text-purple-900 ver-movimientos" data-id="${item.id}" title="Ver Movimientos">
+                            <i class="fas fa-history"></i>
+                        </button>
+                    </div>
                 </td>
             `;
             inventoryTbody.appendChild(tr);
         });
 
-        document.querySelectorAll('.adjust-stock').forEach(btn => {
+        document.getElementById('total-value').textContent = formatCurrency(totalValue);
+        
+        // Agregar event listeners para los botones
+        document.querySelectorAll('.ver-detalle').forEach(btn => {
+            btn.addEventListener('click', (e) => showItemDetail(parseInt(e.currentTarget.dataset.id)));
+        });
+
+        document.querySelectorAll('.ajustar-stock').forEach(btn => {
             btn.addEventListener('click', showAdjustStockModal);
         });
+
+        document.querySelectorAll('.ver-movimientos').forEach(btn => {
+            btn.addEventListener('click', (e) => showMovements(parseInt(e.currentTarget.dataset.id)));
+        });
+    }
+
+    function updateStatistics(items) {
+        const stats = {
+            low: 0,
+            normal: 0,
+            high: 0,
+            none: 0
+        };
+
+        items.forEach(item => {
+            const status = getStockStatus(item);
+            stats[status]++;
+        });
+
+        document.getElementById('low-stock-count').textContent = stats.low;
+        document.getElementById('normal-stock-count').textContent = stats.normal;
+        document.getElementById('high-stock-count').textContent = stats.high;
+        document.getElementById('no-stock-count').textContent = stats.none;
+    }
+
+    function getStockStatus(item) {
+        if (item.stock_actual <= 0) return 'none';
+        if (item.stock_actual <= item.stock_minimo) return 'low';
+        if (item.stock_maximo && item.stock_actual >= item.stock_maximo) return 'high';
+        return 'normal';
+    }
+
+    function getStockBadgeClass(status) {
+        switch (status) {
+            case 'none': return 'bg-red-100 text-red-800';
+            case 'low': return 'bg-yellow-100 text-yellow-800';
+            case 'high': return 'bg-blue-100 text-blue-800';
+            default: return 'bg-green-100 text-green-800';
+        }
+    }
+
+    function getStockIcon(status) {
+        const icons = {
+            none: '<i class="fas fa-exclamation-circle text-red-500 ml-2"></i>',
+            low: '<i class="fas fa-exclamation-triangle text-yellow-500 ml-2"></i>',
+            high: '<i class="fas fa-info-circle text-blue-500 ml-2"></i>',
+            normal: '<i class="fas fa-check-circle text-green-500 ml-2"></i>'
+        };
+        return icons[status] || '';
     }
 
     function showAdjustStockModal(event) {
-        const itemId = event.target.dataset.id;
-        const currentStock = event.target.dataset.stock;
+        const button = event.currentTarget;
+        const itemId = button.dataset.id;
+        const currentStock = button.dataset.stock;
+
         document.getElementById('item-id').value = itemId;
         document.getElementById('current-stock').value = currentStock;
-        document.getElementById('adjustment-quantity').value = '';
+        document.getElementById('adjustment-quantity').value = currentStock;
         document.getElementById('adjustment-reason').value = '';
+        document.getElementById('adjustment-type').value = '';
+
         adjustStockModal.classList.remove('hidden');
     }
 
-    function saveStockAdjustment() {
+    function saveStockAdjustment(e) {
+        e.preventDefault();
         const formData = new FormData(adjustStockForm);
         const adjustmentData = Object.fromEntries(formData);
-        
-        fetch(`/inventory/adjustments`, {
+
+        fetch('/inventario/api/ajustes', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
             },
             body: JSON.stringify(adjustmentData)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Error al guardar el ajuste');
+            return response.json();
+        })
         .then(data => {
-            if (data.message) {
-                showNotification('Stock adjusted successfully', 'success');
-                adjustStockModal.classList.add('hidden');
-                loadInventory();
-            } else {
-                showNotification(data.error || 'An error occurred while adjusting the stock', 'error');
-            }
+            showNotification('Ajuste guardado exitosamente', 'success');
+            adjustStockModal.classList.add('hidden');
+            loadInventory();
         })
         .catch(error => {
             console.error('Error:', error);
-            showNotification('An error occurred while adjusting the stock', 'error');
+            showNotification('Error al guardar el ajuste', 'error');
         });
+    }
+
+    function showLoading() {
+        inventoryTbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-4 text-center">
+                    <div class="flex justify-center items-center space-x-2">
+                        <i class="fas fa-spinner fa-spin text-green-500"></i>
+                        <span class="text-gray-500">Cargando inventario...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    function showError(message) {
+        inventoryTbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-4 text-center">
+                    <div class="flex justify-center items-center space-x-2 text-red-500">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>${message}</span>
+                    </div>
+                </td>
+            </tr>
+        `;
     }
 
     function showNotification(message, type) {
         const notification = document.createElement('div');
-        notification.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-        notification.textContent = message;
+        notification.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`;
+        notification.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
         document.body.appendChild(notification);
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
+        setTimeout(() => notification.remove(), 3000);
     }
+
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('es-DO', {
+            style: 'currency',
+            currency: 'DOP'
+        }).format(amount);
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Agregar event listener para cerrar modales al hacer clic fuera de ellos
+    [itemDetailModal, adjustStockModal].forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    });
+
+    // Agregar event listener para la tecla Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            itemDetailModal.classList.add('hidden');
+            adjustStockModal.classList.add('hidden');
+        }
+    });
 });
+
+// Funciones auxiliares para el manejo de movimientos (a implementar)
+async function fetchMovements(itemId) {
+   try {
+       const response = await fetch(`/inventario/api/movimientos/${itemId}`);
+       if (!response.ok) throw new Error('Error al obtener movimientos');
+       return await response.json();
+   } catch (error) {
+       console.error('Error:', error);
+       throw error;
+   }
+}
+
+// Función para renderizar la tabla de movimientos (a implementar)
+function renderMovementsTable(movements) {
+   return `
+       <div class="overflow-x-auto">
+           <table class="min-w-full divide-y divide-gray-200">
+               <thead class="bg-gray-50">
+                   <tr>
+                       <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                       <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                       <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cantidad</th>
+                       <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
+                   </tr>
+               </thead>
+               <tbody class="bg-white divide-y divide-gray-200">
+                   ${movements.map(movement => `
+                       <tr>
+                           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                               ${new Date(movement.fecha).toLocaleString()}
+                           </td>
+                           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                               ${movement.tipo}
+                           </td>
+                           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                               ${movement.cantidad}
+                           </td>
+                           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                               ${movement.usuario}
+                           </td>
+                       </tr>
+                   `).join('')}
+               </tbody>
+           </table>
+       </div>
+   `;
+}
+
+// Inicializar tooltips y otros plugins si los usas
+document.addEventListener('DOMContentLoaded', function() {
+   // Aquí puedes inicializar cualquier plugin adicional que necesites
+   console.log('Inventario inicializado correctamente');
+});
+
+// Funciones en el scope global
+window.showItemDetail = function(itemId) {
+    const item = window.inventoryData.find(i => i.id === itemId);
+    if (!item) return;
+
+    const itemDetailModal = document.getElementById('itemDetailModal');
+    const content = `
+        <div class="space-y-8">
+            <div class="border-b pb-6 flex flex-col items-center relative">
+                <button class="cerrar-modal-btn text-gray-400 hover:text-gray-500 text-2xl absolute" style="top: 10px; right: 25px;">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="text-2xl font-bold text-gray-900 mt-4">${item.nombre}</h3>
+                <p class="text-sm text-gray-500 mt-1">Código: ${item.codigo || 'No especificado'}</p>
+            </div>
+
+            
+            <div class="grid grid-cols-2 gap-8">
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h4 class="font-semibold text-lg text-gray-700 mb-4">Información General</h4>
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Categoría</dt>
+                            <dd class="mt-1 text-base text-gray-900">${item.categoria || 'No especificada'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Stock Actual</dt>
+                            <dd class="mt-1 text-base text-gray-900">${item.stock_actual}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Stock Mínimo</dt>
+                            <dd class="mt-1 text-base text-gray-900">${item.stock_minimo}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Stock Máximo</dt>
+                            <dd class="mt-1 text-base text-gray-900">${item.stock_maximo || 'No especificado'}</dd>
+                        </div>
+                    </dl>
+                </div>
+                
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h4 class="font-semibold text-lg text-gray-700 mb-4">Información de Precios</h4>
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Precio de Venta</dt>
+                            <dd class="mt-1 text-base text-gray-900">${formatCurrency(item.precio)}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Costo</dt>
+                            <dd class="mt-1 text-base text-gray-900">${formatCurrency(item.costo)}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Valor Total en Inventario</dt>
+                            <dd class="mt-1 text-base text-gray-900">${formatCurrency(item.stock_actual * item.costo)}</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const modalContent = itemDetailModal.querySelector('.bg-white');
+    modalContent.innerHTML = content;
+    itemDetailModal.classList.remove('hidden');
+
+    // Event listeners for closing the modal
+    const closeButtons = itemDetailModal.querySelectorAll('.cerrar-modal-btn');
+    closeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            itemDetailModal.classList.add('hidden');
+        });
+    });
+};
+
+window.showMovements = function(itemId) {
+    console.log('Mostrando movimientos para item:', itemId);
+    // Implementar la lógica para mostrar movimientos
+    alert('Funcionalidad de movimientos en desarrollo');
+};
+
+// Función global para formatear moneda
+window.formatCurrency = function(amount) {
+    return new Intl.NumberFormat('es-DO', {
+        style: 'currency',
+        currency: 'DOP'
+    }).format(amount);
+};
 </script>
 {% endblock %}

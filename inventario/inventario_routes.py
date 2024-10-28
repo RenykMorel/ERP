@@ -13,6 +13,8 @@ import csv
 
 logger = logging.getLogger(__name__)
 
+
+
 @inventario_bp.route('/')
 @login_required
 def index():
@@ -781,7 +783,48 @@ def crear_categoria_item():
         logger.error(f"Error al crear categoría: {str(e)}")
         return jsonify({"error": str(e)}), 500 
     
-    
+@inventario_bp.route('/api/inventario-actual')
+@login_required
+def get_inventario_actual():
+    try:
+        # Simplificar la consulta inicialmente para verificar si funciona
+        items = InventarioItem.query.all()
+        
+        # Agregar logging para debug
+        logger.info(f"Encontrados {len(items)} items en inventario")
+        
+        inventario = []
+        for item in items:
+            # Calcular stock actual usando la tabla de movimientos
+            stock_actual = item.stock  # Usar el stock base del item
+            
+            # Obtener movimientos
+            movimientos = MovimientoInventario.query.filter_by(item_id=item.id).all()
+            for mov in movimientos:
+                if mov.tipo == 'entrada':
+                    stock_actual += mov.cantidad
+                elif mov.tipo == 'salida':
+                    stock_actual -= mov.cantidad
+            
+            inventario.append({
+                'id': item.id,
+                'codigo': item.codigo,
+                'nombre': item.nombre,
+                'categoria': item.categoria,
+                'stock_actual': stock_actual,
+                'stock_minimo': item.stock_minimo,
+                'stock_maximo': item.stock_maximo,
+                'costo': float(item.costo),
+                'precio': float(item.precio),
+                'valor_total': float(item.costo * stock_actual)
+            })
+            
+        logger.info(f"Procesados {len(inventario)} items con éxito")
+        return jsonify(inventario)
+        
+    except Exception as e:
+        logger.error(f"Error al obtener inventario actual: {str(e)}")
+        return jsonify({"error": f"Error al obtener inventario: {str(e)}"}), 500   
 
 # Manejo de errores
 @inventario_bp.errorhandler(404)
