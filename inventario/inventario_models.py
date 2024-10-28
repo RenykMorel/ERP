@@ -68,6 +68,30 @@ class TipoItem(db.Model):
     def __repr__(self):
         return f'<TipoItem {self.nombre}>'
 
+class CategoriaItem(db.Model):
+    __tablename__ = 'categoria_item'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    descripcion = db.Column(db.Text, nullable=True)
+    estatus = db.Column(db.String(20), default='activo')
+    
+    def __init__(self, nombre, descripcion=None, estatus='activo'):
+        self.nombre = nombre
+        self.descripcion = descripcion
+        self.estatus = estatus
+    
+    def __repr__(self):
+        return f'<CategoriaItem {self.nombre}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre,
+            'descripcion': self.descripcion,
+            'estatus': self.estatus
+        }
+
 class InventarioItem(db.Model):
     __tablename__ = 'items_inventario'
     

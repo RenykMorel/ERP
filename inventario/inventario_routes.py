@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import distinct  
 from datetime import datetime
 from . import inventario_bp
-from .inventario_models import InventarioItem, MovimientoInventario, AjusteInventario, TipoItem, Almacen
+from .inventario_models import InventarioItem, MovimientoInventario, AjusteInventario, TipoItem, CategoriaItem, Almacen
 from extensions import db
 import logging
 import io  
@@ -392,7 +392,29 @@ def crear_almacen():
 def get_tipos_item():
     try:
         tipos = TipoItem.query.all()
-        return jsonify([tipo.to_dict() for tipo in tipos])
+        return jsonify([{
+            'id': tipo.id,
+            'nombre': tipo.nombre,
+            'tipo': tipo.tipo,
+            'estatus': tipo.estatus,
+            'descripcion': tipo.descripcion,
+            'es_vendible': tipo.es_vendible,
+            'usa_itbis': tipo.usa_itbis,
+            'modifica_precio': tipo.modifica_precio,
+            'modifica_impuestos': tipo.modifica_impuestos,
+            'le_aplica_descuento': tipo.le_aplica_descuento,
+            'precio_negativo': tipo.precio_negativo,
+            'usa_margen_ganancia': tipo.usa_margen_ganancia,
+            'usa_precio_moneda': tipo.usa_precio_moneda,
+            'no_venta_costo_pp': tipo.no_venta_costo_pp,
+            'gasto_incurrido_para_el_cliente': tipo.gasto_incurrido_para_el_cliente,
+            'es_comprable': tipo.es_comprable,
+            'proporcionalidad_del_itbis': tipo.proporcionalidad_del_itbis,
+            'itbis': tipo.itbis,
+            'otros_impuestos': tipo.otros_impuestos,
+            'no_modifica_precio': tipo.no_modifica_precio,
+            'modifica_costo': tipo.modifica_costo
+        } for tipo in tipos])
     except Exception as e:
         logger.error(f"Error al obtener tipos de item: {str(e)}")
         return jsonify({"error": "Error interno del servidor"}), 500
@@ -401,18 +423,20 @@ def get_tipos_item():
 @login_required
 def crear_tipo_item():
     try:
+        if not request.is_json:
+            return jsonify({"error": "Se requiere contenido JSON"}), 400
+            
         data = request.get_json()
+        logger.debug(f"Datos recibidos para tipo: {data}")
         
-        # Validar campos requeridos
         if not data.get('nombre'):
             return jsonify({"error": "El nombre es requerido"}), 400
 
         nuevo_tipo = TipoItem(
             nombre=data['nombre'],
             descripcion=data.get('descripcion'),
-            tipo=data.get('tipo'),  # 'servicio', 'bien', 'cargo'
+            tipo=data.get('tipo', 'bien'),
             estatus=data.get('estatus', 'activo'),
-            # Configuración para la venta
             es_vendible=data.get('es_vendible', True),
             usa_itbis=data.get('usa_itbis', True),
             modifica_precio=data.get('modifica_precio', False),
@@ -423,7 +447,6 @@ def crear_tipo_item():
             usa_precio_moneda=data.get('usa_precio_moneda', False),
             no_venta_costo_pp=data.get('no_venta_costo_pp', False),
             gasto_incurrido_para_el_cliente=data.get('gasto_incurrido_para_el_cliente', False),
-            # Configuración para la compra
             es_comprable=data.get('es_comprable', True),
             proporcionalidad_del_itbis=data.get('proporcionalidad_del_itbis', False),
             itbis=data.get('itbis', True),
@@ -435,12 +458,14 @@ def crear_tipo_item():
         db.session.add(nuevo_tipo)
         db.session.commit()
         
-        # Retornar el nuevo tipo creado
+        logger.info(f"Tipo de item creado exitosamente: {nuevo_tipo.id}")
+        
         return jsonify(nuevo_tipo.to_dict()), 201
 
-    except IntegrityError:
+    except ValueError as e:
         db.session.rollback()
-        return jsonify({"error": "Ya existe un tipo de item con ese nombre"}), 400
+        logger.error(f"Error de validación: {str(e)}")
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error al crear tipo de item: {str(e)}")
@@ -640,7 +665,11 @@ def crear_ajuste():
 @login_required
 def get_categorias_item():
     try:
-        categorias = TipoItem.query.all()
+        # Asegurarse de que la consulta funcione incluso si la tabla está vacía
+        categorias = CategoriaItem.query.all()
+        # Añadir logging para debug
+        logger.info(f"Categorías encontradas: {len(categorias)}")
+        
         return jsonify([{
             'id': categoria.id,
             'nombre': categoria.nombre,
@@ -663,68 +692,94 @@ def get_categoria_item(categoria_id):
 
 @inventario_bp.route('/api/categorias-item/<int:categoria_id>', methods=['DELETE'])
 @login_required
-def delete_categoria_item(categoria_id):
+def eliminar_categoria_item(categoria_id):
     try:
-        categoria = TipoItem.query.get_or_404(categoria_id)
+        categoria = CategoriaItem.query.get_or_404(categoria_id)
         db.session.delete(categoria)
         db.session.commit()
         return '', 204
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error al eliminar categoría {categoria_id}: {str(e)}")
-        return jsonify({"error": "Error interno del servidor"}), 500       
+        return jsonify({"error": "Error interno del servidor"}), 500     
+    
+@inventario_bp.route('/api/categorias-item/<int:categoria_id>', methods=['PUT'])
+@login_required
+def actualizar_categoria_item(categoria_id):
+    try:
+        categoria = CategoriaItem.query.get_or_404(categoria_id)
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"error": "No se recibieron datos"}), 400
+            
+        # Actualizar los campos
+        if 'nombre' in data:
+            categoria.nombre = data['nombre']
+        if 'descripcion' in data:
+            categoria.descripcion = data['descripcion']
+        if 'estatus' in data:
+            categoria.estatus = data['estatus']
+            
+        db.session.commit()
+        
+        return jsonify(categoria.to_dict())
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al actualizar categoría {categoria_id}: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500   
     
 @inventario_bp.route('/api/categorias-item', methods=['POST'])
 @login_required
 def crear_categoria_item():
     try:
-        if not request.is_json:
-            return jsonify({"error": "Se requiere contenido JSON"}), 400
-            
         data = request.get_json()
-        logger.debug(f"Datos recibidos: {data}")
+        logger.info(f"Datos recibidos para nueva categoría: {data}")
         
-        if not data.get('nombre'):
+        if not data or not data.get('nombre'):
+            logger.error("Datos inválidos: falta el nombre")
             return jsonify({"error": "El nombre es requerido"}), 400
 
-        nueva_categoria = TipoItem(
+        # Verificar si ya existe una categoría con ese nombre
+        existe = CategoriaItem.query.filter_by(nombre=data['nombre']).first()
+        if existe:
+            logger.error(f"Ya existe una categoría con el nombre: {data['nombre']}")
+            return jsonify({"error": "Ya existe una categoría con ese nombre"}), 400
+
+        # Crear nueva categoría
+        nueva_categoria = CategoriaItem(
             nombre=data['nombre'],
             descripcion=data.get('descripcion'),
-            tipo=data.get('tipo', 'bien'),
-            estatus=data.get('estatus', 'activo'),
-            es_vendible=data.get('es_vendible', True),
-            usa_itbis=data.get('usa_itbis', True),
-            modifica_precio=data.get('modifica_precio', False),
-            modifica_impuestos=data.get('modifica_impuestos', False),
-            le_aplica_descuento=data.get('le_aplica_descuento', True),
-            precio_negativo=data.get('precio_negativo', False),
-            usa_margen_ganancia=data.get('usa_margen_ganancia', True),
-            usa_precio_moneda=data.get('usa_precio_moneda', False),
-            no_venta_costo_pp=data.get('no_venta_costo_pp', False),
-            gasto_incurrido_para_el_cliente=data.get('gasto_incurrido_para_el_cliente', False),
-            es_comprable=data.get('es_comprable', True),
-            proporcionalidad_del_itbis=data.get('proporcionalidad_del_itbis', False),
-            itbis=data.get('itbis', True),
-            otros_impuestos=data.get('otros_impuestos', False),
-            no_modifica_precio=data.get('no_modifica_precio', False),
-            modifica_costo=data.get('modifica_costo', True)
+            estatus=data.get('estatus', 'activo')
         )
-
+        
+        # Log antes de guardar
+        logger.info(f"Intentando guardar categoría: {nueva_categoria.nombre}")
+        
+        # Guardar en la base de datos
         db.session.add(nueva_categoria)
+        db.session.flush()  # Para obtener el ID antes del commit
+        
+        # Log después de flush
+        logger.info(f"Categoría en sesión con ID: {nueva_categoria.id}")
+        
+        # Commit final
         db.session.commit()
         
-        logger.info(f"Categoría creada exitosamente: {nueva_categoria.id}")
+        # Log después de commit
+        logger.info(f"Categoría guardada exitosamente: {nueva_categoria.to_dict()}")
         
+        # Retornar la categoría creada
         return jsonify(nueva_categoria.to_dict()), 201
 
-    except ValueError as e:
+    except IntegrityError as e:
         db.session.rollback()
-        logger.error(f"Error de validación: {str(e)}")
-        return jsonify({"error": str(e)}), 400
+        logger.error(f"Error de integridad: {str(e)}")
+        return jsonify({"error": "Ya existe una categoría con ese nombre"}), 400
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error al crear categoría: {str(e)}")
-        return jsonify({"error": "Error interno del servidor"}), 500  
+        return jsonify({"error": str(e)}), 500 
     
     
 

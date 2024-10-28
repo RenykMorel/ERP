@@ -177,9 +177,7 @@
                         <div>
                             <label for="item-tipo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Tipo de Item</label>
                             <select id="item-tipo" name="tipo" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
-                                <option value="producto">Producto</option>
-                                <option value="servicio">Servicio</option>
-                                <option value="otro">Otro</option>
+                                <option value="">Seleccione un tipo...</option>
                             </select>
                         </div>
                         <div>
@@ -1258,32 +1256,44 @@ function guardarAjuste(e) {
 
 // Agregar esta función para cargar las categorías en el select
 function cargarCategoriasSelect() {
-    fetch('/inventario/api/categorias-item')
-        .then(response => response.json())
-        .then(categorias => {
-            const selectCategoria = document.getElementById('item-categoria');
-            // Mantener solo la primera opción (Seleccione una categoría)
-            selectCategoria.innerHTML = '<option value="">Seleccione una categoría</option>';
-            
-            categorias.forEach(categoria => {
-                if (categoria.estatus === 'activo') { // Solo mostrar categorías activas
-                    const option = document.createElement('option');
-                    option.value = categoria.nombre;
-                    option.textContent = categoria.nombre;
-                    selectCategoria.appendChild(option);
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Error al cargar categorías:', error);
-            alert('Error al cargar las categorías');
+    return fetch('/inventario/api/categorias-item', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(categorias => {
+        const selectCategoria = document.getElementById('item-categoria');
+        selectCategoria.innerHTML = '<option value="">Seleccione una categoría</option>';
+        
+        categorias.forEach(categoria => {
+            if (categoria.estatus === 'activo') {
+                const option = document.createElement('option');
+                option.value = categoria.nombre;  // Asegúrate que este sea el valor correcto
+                option.textContent = categoria.nombre;
+                selectCategoria.appendChild(option);
+            }
         });
+    })
+    .catch(error => {
+        console.error('Error al cargar categorías:', error);
+        const selectCategoria = document.getElementById('item-categoria');
+        selectCategoria.innerHTML = '<option value="">Error al cargar categorías</option>';
+    });
 }
 
 // Modificar la función mostrarModalItem para incluir la carga de categorías
 function mostrarModalItem(id = null) {
     itemForm.reset();
     cargarCategoriasSelect(); // Agregar esta línea
+    cargarTiposItemSelect(); // Agregar esta línea
     
     if (id) {
         cargarDatosItem(id);
@@ -1297,25 +1307,28 @@ function mostrarModalItem(id = null) {
 
 // Modificar la función cargarDatosItem para asegurar que se seleccione la categoría correcta
 function cargarDatosItem(id) {
-    fetch(`/api/items/${id}`)
+    fetch(`/inventario/api/items/${id}`)  // Asegúrate que esta ruta sea correcta
         .then(response => response.json())
         .then(item => {
             document.getElementById('modal-title').textContent = 'Editar Item';
             eliminarItemBtn.classList.remove('hidden');
             
-            // Primero cargar las categorías y luego establecer los valores
-            cargarCategoriasSelect();
-            
-            // Esperar un momento para asegurar que las categorías se hayan cargado
-            setTimeout(() => {
-                for (const [key, value] of Object.entries(item)) {
-                    const field = document.getElementById(`item-${key}`);
-                    if (field) {
-                        field.value = value;
+            // Primero cargar las categorías y tipos
+            Promise.all([
+                cargarCategoriasSelect(),
+                cargarTiposItemSelect()
+            ]).then(() => {
+                // Esperar un momento para asegurar que todo se haya cargado
+                setTimeout(() => {
+                    for (const [key, value] of Object.entries(item)) {
+                        const field = document.getElementById(`item-${key}`);
+                        if (field) {
+                            field.value = value;
+                        }
                     }
-                }
-                toggleCamposInventario();
-            }, 100);
+                    toggleCamposInventario();
+                }, 100);
+            });
         })
         .catch(error => console.error('Error:', error));
 }
@@ -1326,19 +1339,34 @@ document.addEventListener('DOMContentLoaded', function() {
     
     cargarItems();
     cargarCategoriasSelect(); // Agregar esta línea
+    cargarTiposItemSelect(); // Agregar esta línea
     
     // ... (resto del código existente) ...
 });   
 
    // Agregar esta función para cargar las categorías
-function cargarCategorias() {
+   function cargarCategorias() {
+    console.log('Iniciando carga de categorías'); // Debug log
+
     fetch('/inventario/api/categorias-item')
-        .then(response => response.json())
+        .then(response => {
+            console.log('Respuesta del servidor:', response.status); // Debug log
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Datos de categorías recibidos:', data); // Debug log
             const tbody = document.getElementById('categorias-list');
+            if (!tbody) {
+                console.error('No se encontró el elemento categorias-list');
+                return;
+            }
+            
             tbody.innerHTML = '';
             
-            if (!data || data.length === 0) {
+            if (!Array.isArray(data) || data.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
@@ -1353,12 +1381,12 @@ function cargarCategorias() {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${categoria.nombre}
+                        ${categoria.nombre || 'Sin nombre'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                             ${categoria.estatus === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                            ${categoria.estatus}
+                            ${categoria.estatus || 'desconocido'}
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -1373,7 +1401,7 @@ function cargarCategorias() {
                 tbody.appendChild(tr);
             });
 
-            // Agregar event listeners para los botones de acción
+            // Agregar event listeners para los botones
             document.querySelectorAll('.editar-categoria').forEach(btn => {
                 btn.addEventListener('click', (e) => editarCategoria(e.target.closest('button').dataset.id));
             });
@@ -1384,39 +1412,294 @@ function cargarCategorias() {
         .catch(error => {
             console.error('Error al cargar categorías:', error);
             const tbody = document.getElementById('categorias-list');
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="3" class="px-6 py-4 text-center text-sm text-red-500">
-                        Error al cargar las categorías
-                    </td>
-                </tr>
-            `;
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-sm text-red-500">
+                            Error al cargar las categorías: ${error.message}
+                        </td>
+                    </tr>
+                `;
+            }
         });
 }
 
 // Modificar la función guardarNuevaCategoriaItem
+// Función para guardar nueva categoría
 function guardarNuevaCategoriaItem(e) {
     e.preventDefault();
-    const formData = new FormData(crearCategoriaItemForm);
-    const nuevaCategoriaData = Object.fromEntries(formData.entries());
+    console.log('Iniciando guardado de categoría');
 
+    const form = document.getElementById('crear-categoria-item-form');
+    const formData = new FormData(form);
+    
+    const nuevaCategoriaData = {
+        nombre: formData.get('nombre'),
+        descripcion: formData.get('descripcion'),
+        estatus: formData.get('estatus') || 'activo'
+    };
+
+    console.log('Datos a enviar:', nuevaCategoriaData);
+
+    // Mostrar spinner o indicador de carga aquí si lo deseas
+    
     fetch('/inventario/api/categorias-item', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
         },
         body: JSON.stringify(nuevaCategoriaData),
+        credentials: 'same-origin'
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Respuesta del servidor:', response.status);
+        return response.json().then(data => {
+            if (!response.ok) throw data;
+            return data;
+        });
+    })
     .then(data => {
-        crearCategoriaItemForm.reset();
-        cargarCategorias(); // Recargar la lista de categorías
-        alert('Nueva categoría de item creada con éxito');
+        console.log('Categoría creada exitosamente:', data);
+        form.reset();
+        
+        // Recargar la lista de categorías
+        return cargarCategorias();
+    })
+    .then(() => {
+        // Cerrar el modal
+        document.getElementById('crearCategoriaItemModal').classList.add('hidden');
+        
+        // Mostrar mensaje de éxito
+        alert('Categoría creada exitosamente');
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Error al crear la nueva categoría de item');
+        console.error('Error al crear categoría:', error);
+        alert('Error al crear la categoría: ' + (error.error || 'Error desconocido'));
     });
+}
+
+// Función para cargar categorías
+function cargarCategorias() {
+    console.log('Iniciando carga de categorías');
+    const tbody = document.getElementById('categorias-list');
+    
+    // Mostrar indicador de carga
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+                    Cargando categorías...
+                </td>
+            </tr>
+        `;
+    }
+
+    return fetch('/inventario/api/categorias-item', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        console.log('Respuesta del servidor:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(categorias => {
+        console.log('Categorías recibidas:', categorias);
+        
+        if (!tbody) {
+            console.error('No se encontró el elemento categorias-list');
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        if (!Array.isArray(categorias) || categorias.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+                        No hay categorías registradas
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        categorias.forEach(categoria => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${categoria.nombre || 'Sin nombre'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        ${categoria.estatus === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${categoria.estatus || 'desconocido'}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <button class="text-indigo-600 hover:text-indigo-900 mr-2 editar-categoria" data-id="${categoria.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-600 hover:text-red-900 eliminar-categoria" data-id="${categoria.id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Actualizar event listeners
+        document.querySelectorAll('.editar-categoria').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.dataset.id;
+                editarCategoria(id);
+            });
+        });
+        
+        document.querySelectorAll('.eliminar-categoria').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.dataset.id;
+                eliminarCategoria(id);
+            });
+        });
+    })
+    .catch(error => {
+        console.error('Error al cargar categorías:', error);
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="px-6 py-4 text-center text-sm text-red-500">
+                        Error al cargar las categorías: ${error.message}
+                    </td>
+                </tr>
+            `;
+        }
+    });
+}
+
+// Asegurarse de que los event listeners estén configurados
+document.addEventListener('DOMContentLoaded', function() {
+    const crearCategoriaItemBtn = document.getElementById('crear-categoria-item-btn');
+    const guardarCategoriaItemBtn = document.getElementById('guardar-categoria-item-btn');
+    
+    if (crearCategoriaItemBtn) {
+        crearCategoriaItemBtn.addEventListener('click', () => {
+            document.getElementById('crearCategoriaItemModal').classList.remove('hidden');
+            cargarCategorias(); // Recargar al abrir el modal
+        });
+    }
+    
+    if (guardarCategoriaItemBtn) {
+        guardarCategoriaItemBtn.addEventListener('click', guardarNuevaCategoriaItem);
+    }
+    
+    // Cargar categorías inicialmente
+    cargarCategorias();
+});
+
+// Nueva función para mostrar errores
+function mostrarErrorCategorias(mensaje) {
+    const tbody = document.getElementById('categorias-list');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="px-6 py-4 text-center text-sm text-red-500">
+                    Error al cargar las categorías: ${mensaje}
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Event listeners actualizados
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Inicializando manejadores de eventos para categorías');
+
+    const crearCategoriaItemBtn = document.getElementById('crear-categoria-item-btn');
+    const guardarCategoriaItemBtn = document.getElementById('guardar-categoria-item-btn');
+    const cerrarCategoriaItemModalBtn = document.getElementById('cerrar-categoria-item-modal-btn');
+    const limpiarCategoriaItemBtn = document.getElementById('limpiar-categoria-item-btn');
+
+    if (crearCategoriaItemBtn) {
+        crearCategoriaItemBtn.addEventListener('click', () => {
+            document.getElementById('crearCategoriaItemModal').classList.remove('hidden');
+            cargarCategorias();
+        });
+    }
+
+    if (guardarCategoriaItemBtn) {
+        guardarCategoriaItemBtn.addEventListener('click', guardarNuevaCategoriaItem);
+    }
+
+    if (cerrarCategoriaItemModalBtn) {
+        cerrarCategoriaItemModalBtn.addEventListener('click', () => {
+            document.getElementById('crearCategoriaItemModal').classList.add('hidden');
+            cargarCategorias(); // Recargar al cerrar el modal
+        });
+    }
+
+    if (limpiarCategoriaItemBtn) {
+        limpiarCategoriaItemBtn.addEventListener('click', () => {
+            document.getElementById('crear-categoria-item-form').reset();
+        });
+    }
+
+    // Cargar categorías al iniciar
+    cargarCategorias();
+});
+
+// Event listeners actualizados
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Cargado - Configurando event listeners'); // Debug log
+
+    const crearCategoriaItemBtn = document.getElementById('crear-categoria-item-btn');
+    const guardarCategoriaItemBtn = document.getElementById('guardar-categoria-item-btn');
+    const cerrarCategoriaItemModalBtn = document.getElementById('cerrar-categoria-item-modal-btn');
+    const limpiarCategoriaItemBtn = document.getElementById('limpiar-categoria-item-btn');
+
+    if (crearCategoriaItemBtn) {
+        crearCategoriaItemBtn.addEventListener('click', () => {
+            console.log('Abriendo modal de categoría'); // Debug log
+            document.getElementById('crearCategoriaItemModal').classList.remove('hidden');
+            cargarCategorias();
+        });
+    }
+
+    if (guardarCategoriaItemBtn) {
+        guardarCategoriaItemBtn.addEventListener('click', guardarNuevaCategoriaItem);
+    }
+
+    if (cerrarCategoriaItemModalBtn) {
+        cerrarCategoriaItemModalBtn.addEventListener('click', () => {
+            document.getElementById('crearCategoriaItemModal').classList.add('hidden');
+        });
+    }
+
+    if (limpiarCategoriaItemBtn) {
+        limpiarCategoriaItemBtn.addEventListener('click', () => {
+            document.getElementById('crear-categoria-item-form').reset();
+        });
+    }
+
+    // Cargar categorías al iniciar
+    cargarCategorias();
+});
+
+function verificarCategorias() {
+    fetch('/inventario/api/categorias-item')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Verificación de categorías:', data);
+        })
+        .catch(error => {
+            console.error('Error al verificar categorías:', error);
+        });
 }
 
 // Agregar funciones para editar y eliminar categorías
@@ -1673,6 +1956,40 @@ function eliminarTipoItem(id) {
             alert('Error al eliminar el tipo de item');
         });
     }
+}
+
+function cargarTiposItemSelect() {
+    return fetch('/inventario/api/tipos-item', {  // Asegúrate que esta ruta sea diferente
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(tipos => {
+        const selectTipo = document.getElementById('item-tipo');
+        selectTipo.innerHTML = '<option value="">Seleccione un tipo...</option>';
+        
+        tipos.forEach(tipo => {
+            if (tipo.estatus === 'activo') {
+                const option = document.createElement('option');
+                option.value = tipo.tipo;  // O tipo.nombre, dependiendo de tu estructura de datos
+                option.textContent = tipo.nombre;
+                selectTipo.appendChild(option);
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Error al cargar tipos:', error);
+        const selectTipo = document.getElementById('item-tipo');
+        selectTipo.innerHTML = '<option value="">Error al cargar tipos</option>';
+    });
 }
 
 // Modificar el event listener del botón de ajuste
