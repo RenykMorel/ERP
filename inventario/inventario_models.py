@@ -191,3 +191,33 @@ class AjusteInventario(db.Model):
 
 def init_db():
     db.create_all()
+    
+class Almacen(db.Model):
+    __tablename__ = 'almacenes'
+    __table_args__ = {'extend_existing': True}
+    
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    ubicacion = db.Column(db.String(200))
+    capacidad = db.Column(db.Float)  # en metros cuadrados
+    cuenta_inventario = db.Column(db.String(50))
+    es_principal = db.Column(db.Boolean, default=False)
+    descripcion = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nombre': self.nombre,
+            'ubicacion': self.ubicacion,
+            'capacidad': self.capacidad,
+            'cuenta_inventario': self.cuenta_inventario,
+            'es_principal': self.es_principal,
+            'descripcion': self.descripcion,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+    def __repr__(self):
+        return f'<Almacen {self.nombre}>'   

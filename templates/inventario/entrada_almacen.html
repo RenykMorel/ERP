@@ -6,280 +6,280 @@
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-    .form-input, .form-select, .form-textarea {
-        border: 2px solid #10B981;
-        border-radius: 0.375rem;
-    }
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-        border-color: #059669;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-    }
-    .green-border {
-        border: 4px solid #10B981;
-    }
+  .form-input, .form-select, .form-textarea {
+      border: 2px solid #10B981;
+      border-radius: 0.375rem;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  }
+  .green-border {
+      border: 4px solid #10B981;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Entrada de Almacén</h1>
+  <h1 class="text-3xl font-bold mb-6 text-gray-800">Entrada de Almacén</h1>
 
-    <div class="mb-6 flex space-x-4">
-        <button id="nueva-entrada-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded shadow">
-            <i class="fas fa-plus mr-2"></i>Nueva Entrada
-        </button>
-        <button id="nuevo-almacen-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow">
-            <i class="fas fa-warehouse mr-2"></i>Crear Almacén
-        </button>
-        <button id="ver-almacenes-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded shadow">
-            <i class="fas fa-list mr-2"></i>Ver Almacenes
-        </button>
-    </div>
+  <div class="mb-6 flex space-x-4">
+      <button id="nueva-entrada-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded shadow">
+          <i class="fas fa-plus mr-2"></i>Nueva Entrada
+      </button>
+      <button id="nuevo-almacen-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow">
+          <i class="fas fa-warehouse mr-2"></i>Crear Almacén
+      </button>
+      <button id="ver-almacenes-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded shadow">
+          <i class="fas fa-list mr-2"></i>Ver Almacenes
+      </button>
+  </div>
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
-        <table class="min-w-full leading-normal">
-            <thead>
-                <tr>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Número de Entrada
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Fecha
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Proveedor
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Total Items
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Estado
-                    </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Acciones
-                    </th>
-                </tr>
-            </thead>
-            <tbody id="entradas-tbody">
-                <!-- Las entradas se cargarán aquí dinámicamente -->
-            </tbody>
-        </table>
-    </div>
+  <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <table class="min-w-full leading-normal">
+          <thead>
+              <tr>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Número de Entrada
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Fecha
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Proveedor
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Total Items
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Estado
+                  </th>
+                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Acciones
+                  </th>
+              </tr>
+          </thead>
+          <tbody id="entradas-tbody">
+              <!-- Las entradas se cargarán aquí dinámicamente -->
+          </tbody>
+      </table>
+  </div>
 </div>
 
 <!-- Modal para crear/editar entrada -->
 <div id="entradaModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full green-border">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
-                    Nueva Entrada de Almacén
-                </h3>
-                <form id="entrada-form" class="space-y-4">
-                    <div class="grid grid-cols-3 gap-4">
-                        <div>
-                            <label for="orden-compra" class="block text-sm font-medium text-gray-700 mb-1">Orden de Compra</label>
-                            <div class="flex">
-                                <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="orden-compra" name="orden_compra">
-                                <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <label for="factura" class="block text-sm font-medium text-gray-700 mb-1">Factura</label>
-                            <div class="flex">
-                                <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="factura" name="factura">
-                                <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <label for="expediente" class="block text-sm font-medium text-gray-700 mb-1">Expediente</label>
-                            <div class="flex">
-                                <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="expediente" name="expediente">
-                                <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div>
-                            <label for="almacen" class="block text-sm font-medium text-gray-700 mb-1">Almacén</label>
-                            <select class="form-select mt-1 block w-full" id="almacen" name="almacen">
-                                <!-- Options will be dynamically populated -->
-                            </select>
-                        </div>
-                        <div>
-                            <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                            <input type="date" class="form-input mt-1 block w-full" id="fecha" name="fecha">
-                        </div>
-                        <div>
-                            <label for="moneda" class="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
-                            <select class="form-select mt-1 block w-full" id="moneda" name="moneda">
-                                <option value="peso-dominicano">Peso Dominicano</option>
-                                <option value="dolar-estadounidense">Dólar Estadounidense</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="documento" class="block text-sm font-medium text-gray-700 mb-1">Documento</label>
-                            <input type="text" class="form-input mt-1 block w-full" id="documento" name="documento">
-                        </div>
-                        <div>
-                            <label for="referencia" class="block text-sm font-medium text-gray-700 mb-1">Referencia</label>
-                            <input type="text" class="form-input mt-1 block w-full" id="referencia" name="referencia">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="nota" class="block text-sm font-medium text-gray-700 mb-1">Nota</label>
-                        <textarea class="form-textarea mt-1 block w-full" id="nota" name="nota" rows="3"></textarea>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="concepto" class="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
-                            <select class="form-select mt-1 block w-full" id="concepto" name="concepto">
-                                <option value="compra">Compra</option>
-                                <option value="devolucion">Devolución</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="estatus" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
-                            <select class="form-select mt-1 block w-full" id="estatus" name="estatus">
-                                <option value="en-almacen">En Almacén</option>
-                                <option value="pendiente">Pendiente</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <h6 class="text-sm font-medium text-gray-700 mb-2">Productos</h6>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="items-container" class="bg-white divide-y divide-gray-200">
-                                    <!-- Aquí se agregarán dinámicamente los campos para los items -->
-                                </tbody>
-                            </table>
-                        </div>
-                        <button type="button" id="agregar-item-btn" class="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <i class="fas fa-plus mr-2"></i>Agregar Item
-                        </button>
-                    </div>
-                </form>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-entrada-btn">
-                    Grabar
-                </button>
-                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="limpiar-btn">
-                    Limpiar
-                </button>
-                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancelar-btn">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full green-border">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                  Nueva Entrada de Almacén
+              </h3>
+              <form id="entrada-form" class="space-y-4">
+                  <div class="grid grid-cols-3 gap-4">
+                      <div>
+                          <label for="orden-compra" class="block text-sm font-medium text-gray-700 mb-1">Orden de Compra</label>
+                          <div class="flex">
+                              <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="orden-compra" name="orden_compra">
+                              <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                  <i class="fas fa-search"></i>
+                              </button>
+                          </div>
+                      </div>
+                      <div>
+                          <label for="factura" class="block text-sm font-medium text-gray-700 mb-1">Factura</label>
+                          <div class="flex">
+                              <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="factura" name="factura">
+                              <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                  <i class="fas fa-search"></i>
+                              </button>
+                          </div>
+                      </div>
+                      <div>
+                          <label for="expediente" class="block text-sm font-medium text-gray-700 mb-1">Expediente</label>
+                          <div class="flex">
+                              <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="expediente" name="expediente">
+                              <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                  <i class="fas fa-search"></i>
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="grid grid-cols-3 gap-4">
+                      <div>
+                          <label for="almacen" class="block text-sm font-medium text-gray-700 mb-1">Almacén</label>
+                          <select class="form-select mt-1 block w-full" id="almacen" name="almacen">
+                              <!-- Options will be dynamically populated -->
+                          </select>
+                      </div>
+                      <div>
+                          <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                          <input type="date" class="form-input mt-1 block w-full" id="fecha" name="fecha">
+                      </div>
+                      <div>
+                          <label for="moneda" class="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+                          <select class="form-select mt-1 block w-full" id="moneda" name="moneda">
+                              <option value="peso-dominicano">Peso Dominicano</option>
+                              <option value="dolar-estadounidense">Dólar Estadounidense</option>
+                          </select>
+                      </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                      <div>
+                          <label for="documento" class="block text-sm font-medium text-gray-700 mb-1">Documento</label>
+                          <input type="text" class="form-input mt-1 block w-full" id="documento" name="documento">
+                      </div>
+                      <div>
+                          <label for="referencia" class="block text-sm font-medium text-gray-700 mb-1">Referencia</label>
+                          <input type="text" class="form-input mt-1 block w-full" id="referencia" name="referencia">
+                      </div>
+                  </div>
+                  <div>
+                      <label for="nota" class="block text-sm font-medium text-gray-700 mb-1">Nota</label>
+                      <textarea class="form-textarea mt-1 block w-full" id="nota" name="nota" rows="3"></textarea>
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                      <div>
+                          <label for="concepto" class="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
+                          <select class="form-select mt-1 block w-full" id="concepto" name="concepto">
+                              <option value="compra">Compra</option>
+                              <option value="devolucion">Devolución</option>
+                          </select>
+                      </div>
+                      <div>
+                          <label for="estatus" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+                          <select class="form-select mt-1 block w-full" id="estatus" name="estatus">
+                              <option value="en-almacen">En Almacén</option>
+                              <option value="pendiente">Pendiente</option>
+                          </select>
+                      </div>
+                  </div>
+                  <div>
+                      <h6 class="text-sm font-medium text-gray-700 mb-2">Productos</h6>
+                      <div class="overflow-x-auto">
+                          <table class="min-w-full divide-y divide-gray-200">
+                              <thead class="bg-gray-50">
+                                  <tr>
+                                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
+                                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                  </tr>
+                              </thead>
+                              <tbody id="items-container" class="bg-white divide-y divide-gray-200">
+                                  <!-- Aquí se agregarán dinámicamente los campos para los items -->
+                              </tbody>
+                          </table>
+                      </div>
+                      <button type="button" id="agregar-item-btn" class="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                          <i class="fas fa-plus mr-2"></i>Agregar Item
+                      </button>
+                  </div>
+              </form>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-entrada-btn">
+                  Grabar
+              </button>
+              <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="limpiar-btn">
+                  Limpiar
+              </button>
+              <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancelar-btn">
+                  Cancelar
+              </button>
+          </div>
+      </div>
+  </div>
 </div>
 
 <!-- Modal para crear almacén -->
 <div id="almacenModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <span  class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Crear Nuevo Almacén
-                </h3>
-                <form id="almacen-form" class="space-y-4">
-                    <div>
-                        <label for="nombre-almacen" class="block text-sm font-medium text-gray-700">Nombre del Almacén</label>
-                        <input type="text" id="nombre-almacen" name="nombre" class="form-input mt-1 block w-full" required>
-                    </div>
-                    <div>
-                        <label for="ubicacion-almacen" class="block text-sm font-medium text-gray-700">Ubicación</label>
-                        <input type="text" id="ubicacion-almacen" name="ubicacion" class="form-input mt-1 block w-full" required>
-                    </div>
-                    <div>
-                        <label for="capacidad-almacen" class="block text-sm font-medium text-gray-700">Capacidad (m²)</label>
-                        <input type="number" id="capacidad-almacen" name="capacidad" class="form-input mt-1 block w-full" required>
-                    </div>
-                    <div>
-                        <label for="cuenta-inventario" class="block text-sm font-medium text-gray-700">Cuenta de Inventario</label>
-                        <input type="text" id="cuenta-inventario" name="cuenta_inventario" class="form-input mt-1 block w-full" required>
-                    </div>
-                    <div>
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" id="almacen-principal" name="es_principal" class="form-checkbox">
-                            <span class="ml-2">Es Almacén Principal</span>
-                        </label>
-                    </div>
-                    <div>
-                        <label for="descripcion-almacen" class="block text-sm font-medium text-gray-700">Descripción</label>
-                        <textarea id="descripcion-almacen" name="descripcion" rows="3" class="form-textarea mt-1 block w-full"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-almacen-btn">
-                    Guardar
-                </button>
-                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancelar-almacen-btn">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+      <span  class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl  transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  Crear Nuevo Almacén
+              </h3>
+              <form id="almacen-form" class="space-y-4">
+                  <div>
+                      <label for="nombre-almacen" class="block text-sm font-medium text-gray-700">Nombre del Almacén</label>
+                      <input type="text" id="nombre-almacen" name="nombre" class="form-input mt-1 block w-full" required>
+                  </div>
+                  <div>
+                      <label for="ubicacion-almacen" class="block text-sm font-medium text-gray-700">Ubicación</label>
+                      <input type="text" id="ubicacion-almacen" name="ubicacion" class="form-input mt-1 block w-full" required>
+                  </div>
+                  <div>
+                      <label for="capacidad-almacen" class="block text-sm font-medium text-gray-700">Capacidad (m²)</label>
+                      <input type="number" id="capacidad-almacen" name="capacidad" class="form-input mt-1 block w-full" required>
+                  </div>
+                  <div>
+                      <label for="cuenta-inventario" class="block text-sm font-medium text-gray-700">Cuenta de Inventario</label>
+                      <input type="text" id="cuenta-inventario" name="cuenta_inventario" class="form-input mt-1 block w-full" required>
+                  </div>
+                  <div>
+                      <label class="inline-flex items-center">
+                          <input type="checkbox" id="almacen-principal" name="es_principal" class="form-checkbox">
+                          <span class="ml-2">Es Almacén Principal</span>
+                      </label>
+                  </div>
+                  <div>
+                      <label for="descripcion-almacen" class="block text-sm font-medium text-gray-700">Descripción</label>
+                      <textarea id="descripcion-almacen" name="descripcion" rows="3" class="form-textarea mt-1 block w-full"></textarea>
+                  </div>
+              </form>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-almacen-btn">
+                  Guardar
+              </button>
+              <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancelar-almacen-btn">
+                  Cancelar
+              </button>
+          </div>
+      </div>
+  </div>
 </div>
 
 <!-- Modal para ver almacenes -->
 <div id="verAlmacenesModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    Almacenes Registrados
-                </h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacidad</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta de Inventario</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Principal</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="almacenes-list" class="bg-white divide-y divide-gray-200">
-                            <!-- Los almacenes se cargarán aquí dinámicamente -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm" id="cerrar-ver-almacenes-btn">
-                    Cerrar
-                </button>
-            </div>
-        </div>
-    </div>
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  Almacenes Registrados
+              </h3>
+              <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                      <thead class="bg-gray-50">
+                          <tr>
+                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacidad</th>
+                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta de Inventario</th>
+                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Principal</th>
+                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                          </tr>
+                      </thead>
+                      <tbody id="almacenes-list" class="bg-white divide-y divide-gray-200">
+                          <!-- Los almacenes se cargarán aquí dinámicamente -->
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm" id="cerrar-ver-almacenes-btn">
+                  Cerrar
+              </button>
+          </div>
+      </div>
+  </div>
 </div>
 
 {% endblock %}
@@ -304,15 +304,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const cancelarAlmacenBtn = document.getElementById('cancelar-almacen-btn');
     const cerrarVerAlmacenesBtn = document.getElementById('cerrar-ver-almacenes-btn');
 
-    // Array para almacenar los almacenes (simulando una base de datos)
-    let almacenes = [];
-
+    // Event Listeners
     nuevaEntradaBtn.addEventListener('click', () => mostrarModalEntrada());
     nuevoAlmacenBtn.addEventListener('click', () => {
+        console.log('Abriendo modal nuevo almacén');
         almacenModal.classList.remove('hidden');
         almacenForm.reset();
     });
     verAlmacenesBtn.addEventListener('click', () => {
+        console.log('Abriendo modal ver almacenes');
         verAlmacenesModal.classList.remove('hidden');
         cargarAlmacenes();
     });
@@ -320,12 +320,132 @@ document.addEventListener('DOMContentLoaded', function() {
     limpiarBtn.addEventListener('click', limpiarFormulario);
     cancelarBtn.addEventListener('click', () => entradaModal.classList.add('hidden'));
     agregarItemBtn.addEventListener('click', agregarItemCampo);
-    guardarAlmacenBtn.addEventListener('click', guardarAlmacen);
+    guardarAlmacenBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        guardarAlmacen();
+    });
     cancelarAlmacenBtn.addEventListener('click', () => almacenModal.classList.add('hidden'));
     cerrarVerAlmacenesBtn.addEventListener('click', () => verAlmacenesModal.classList.add('hidden'));
 
+    // Cargar datos iniciales
     cargarEntradas();
-    actualizarSelectAlmacenes();
+    cargarAlmacenes();
+    cargarItemsInventario();
+
+
+    // Función para guardar almacén
+    function guardarAlmacen() {
+        const formData = new FormData(almacenForm);
+        const almacenData = {
+            nombre: formData.get('nombre'),
+            ubicacion: formData.get('ubicacion'),
+            capacidad: parseFloat(formData.get('capacidad')),
+            cuenta_inventario: formData.get('cuenta_inventario'),
+            es_principal: formData.get('es_principal') === 'on',
+            descripcion: formData.get('descripcion')
+        };
+        
+        fetch('/inventario/api/almacenes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(almacenData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Almacén guardado:', data);
+            almacenModal.classList.add('hidden');
+            almacenForm.reset();
+            cargarAlmacenes();
+            alert('Almacén guardado correctamente');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al guardar el almacén: ' + (error.error || error.message || 'Error desconocido'));
+        });
+    }
+
+    // Función para cargar almacenes
+    function cargarAlmacenes() {
+        console.log('Cargando almacenes...');
+        fetch('/inventario/api/almacenes')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Almacenes cargados:', data);
+                const tbody = document.getElementById('almacenes-list');
+                tbody.innerHTML = '';
+                
+                data.forEach(almacen => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${almacen.nombre}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${almacen.ubicacion || '-'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${almacen.capacidad} m²</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${almacen.cuenta_inventario || '-'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${almacen.es_principal ? 'Sí' : 'No'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3 editar-almacen" data-id="${almacen.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 eliminar-almacen" data-id="${almacen.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                // Actualizar el select de almacenes
+                actualizarSelectAlmacenes(data);
+            })
+            .catch(error => {
+                console.error('Error al cargar almacenes:', error);
+                alert('Error al cargar los almacenes');
+            });
+    }
+    
+    // Función auxiliar para actualizar el select de almacenes
+    function actualizarSelectAlmacenes(almacenes) {
+        const select = document.getElementById('almacen');
+        select.innerHTML = '';
+        
+        almacenes.forEach(almacen => {
+            const option = document.createElement('option');
+            option.value = almacen.id;
+            option.textContent = almacen.nombre;
+            select.appendChild(option);
+        });
+    }
+
+    // Función para actualizar el select de almacenes
+    function actualizarSelectAlmacenes(almacenes) {
+        const select = document.getElementById('almacen');
+        select.innerHTML = '';
+        
+        almacenes.forEach(almacen => {
+            const option = document.createElement('option');
+            option.value = almacen.id;
+            option.textContent = almacen.nombre;
+            select.appendChild(option);
+        });
+    }
 
     function mostrarModalEntrada(id = null) {
         entradaForm.reset();
@@ -339,38 +459,109 @@ document.addEventListener('DOMContentLoaded', function() {
         entradaModal.classList.remove('hidden');
     }
 
-    function agregarItemCampo() {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap">
-                <input type="text" class="form-input block w-full" name="item_nombre[]" required>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <input type="number" class="form-input block w-full" name="item_cantidad[]" required>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <input type="number" class="form-input block w-full" name="item_costo[]" step="0.01" required>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <button type="button" class="eliminar-item-btn text-red-600 hover:text-red-900">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </td>
-        `;
-        itemsContainer.appendChild(tr);
-
-        tr.querySelector('.eliminar-item-btn').addEventListener('click', function() {
-            tr.remove();
-        });
-    }
+    
 
     function cargarEntradas() {
-        // Simulación de carga de entradas
-        const entradas = [
-            { id: 1, numero: 'ENT-001', fecha: '2023-05-01', proveedor: 'Proveedor A', totalItems: 5, estado: 'Completado' },
-            { id: 2, numero: 'ENT-002', fecha: '2023-05-02', proveedor: 'Proveedor B', totalItems: 3, estado: 'Pendiente' },
-        ];
-        actualizarTablaEntradas(entradas);
+        console.log('Cargando entradas...');
+        
+        fetch('/inventario/api/entradas', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'  // Importante para las cookies de sesión
+        })
+        .then(async response => {
+            console.log('Respuesta del servidor:', response);
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                // Si la respuesta no es JSON, leer como texto
+                const text = await response.text();
+                console.error('Respuesta no JSON recibida:', text);
+                throw new Error('Respuesta del servidor no es JSON');
+            }
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Entradas cargadas:', data);
+            if (!Array.isArray(data)) {
+                console.warn('Los datos recibidos no son un array:', data);
+                data = [];  // Asegurar que siempre sea un array
+            }
+            actualizarTablaEntradas(data);
+        })
+        .catch(error => {
+            console.error('Error al cargar entradas:', error);
+            const tbody = document.getElementById('entradas-tbody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                        <p class="text-red-500">Error al cargar las entradas: ${error.message || 'Error desconocido'}</p>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    
+    function actualizarTablaEntradas(entradas) {
+        const tbody = document.getElementById('entradas-tbody');
+        tbody.innerHTML = '';
+        
+        if (!entradas || entradas.length === 0) {
+            // Mostrar mensaje cuando no hay entradas
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td colspan="6" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                    <p class="text-gray-500">No hay entradas registradas</p>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            return;
+        }
+    
+        entradas.forEach(entrada => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${entrada.numero || '-'}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${entrada.fecha || '-'}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${entrada.proveedor || '-'}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">${entrada.totalItems || 0}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        entrada.estado === 'Completado' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }">${entrada.estado || 'Pendiente'}</span>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <button class="text-blue-600 hover:text-blue-900 mr-2 editar-entrada" data-id="${entrada.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-600 hover:text-red-900 eliminar-entrada" data-id="${entrada.id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    
+        // Agregar event listeners a los botones
+        document.querySelectorAll('.editar-entrada').forEach(btn => {
+            btn.addEventListener('click', (e) => mostrarModalEntrada(e.target.closest('button').dataset.id));
+        });
+        document.querySelectorAll('.eliminar-entrada').forEach(btn => {
+            btn.addEventListener('click', (e) => eliminarEntrada(e.target.closest('button').dataset.id));
+        });
     }
 
     function actualizarTablaEntradas(entradas) {
@@ -416,54 +607,272 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function guardarEntrada() {
+    function guardarEntrada(e) {
+        e.preventDefault();
+        console.log('Guardando entrada...');
         const formData = new FormData(entradaForm);
         const entradaData = Object.fromEntries(formData);
-
-        // Aquí iría la lógica para enviar los datos al servidor
+    
+        // Procesar los items
+        entradaData.items = [];
+        const itemIds = formData.getAll('item_id[]');
+        const itemCantidades = formData.getAll('item_cantidad[]');
+        const itemCostos = formData.getAll('item_costo[]');
+        
+        for (let i = 0; i < itemIds.length; i++) {
+            if (itemIds[i]) { // Solo agregar si se seleccionó un item
+                const itemSeleccionado = itemsInventario.find(item => item.id === parseInt(itemIds[i]));
+                entradaData.items.push({
+                    id: parseInt(itemIds[i]),
+                    nombre: itemSeleccionado.nombre,
+                    cantidad: parseInt(itemCantidades[i]),
+                    costo: parseFloat(itemCostos[i])
+                });
+            }
+        }
+    
         console.log('Datos de la entrada:', entradaData);
+    
+        fetch('/inventario/api/entradas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(entradaData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Entrada guardada:', data);
+            entradaModal.classList.add('hidden');
+            cargarEntradas();
+            alert('Entrada guardada correctamente');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al guardar la entrada: ' + (error.error || 'Error desconocido'));
+        });
+    }
+    
+    function cargarDatosEntrada(id) {
+        console.log('Cargando datos de la entrada:', id);
+        fetch(`/inventario/api/entradas/${id}`)
+            .then(response => response.json())
+            .then(entrada => {
+                console.log('Datos de la entrada cargados:', entrada);
+                
+                // Actualizar todos los campos del formulario
+                document.getElementById('modal-title').textContent = 'Editar Entrada de Almacén';
+                document.getElementById('orden-compra').value = entrada.orden_compra || '';
+                document.getElementById('factura').value = entrada.factura || '';
+                document.getElementById('expediente').value = entrada.expediente || '';
+                document.getElementById('almacen').value = entrada.almacen_id || '';
+                document.getElementById('fecha').value = entrada.fecha || '';
+                document.getElementById('moneda').value = entrada.moneda || 'peso-dominicano';
+                document.getElementById('documento').value = entrada.documento || '';
+                document.getElementById('referencia').value = entrada.referencia || '';
+                document.getElementById('nota').value = entrada.nota || '';
+                document.getElementById('concepto').value = entrada.concepto || 'compra';
+                document.getElementById('estatus').value = entrada.estatus || 'en-almacen';
+    
+                // Limpiar y volver a cargar los items
+                itemsContainer.innerHTML = '';
+                if (entrada.items && entrada.items.length > 0) {
+                    entrada.items.forEach(item => {
+                        agregarItemCampo();
+                        const lastRow = itemsContainer.lastElementChild;
+                        const select = lastRow.querySelector('.item-select');
+                        const inputCantidad = lastRow.querySelector('input[name="item_cantidad[]"]');
+                        const inputCosto = lastRow.querySelector('input[name="item_costo[]"]');
+                        
+                        // Asegurar que itemsInventario esté cargado antes de establecer el valor
+                        if (itemsInventario.length > 0) {
+                            select.value = item.id;
+                            const itemSeleccionado = itemsInventario.find(i => i.id === item.id);
+                            if (itemSeleccionado) {
+                                select.value = itemSeleccionado.id;
+                                inputCosto.value = itemSeleccionado.costo;
+                            }
+                        }
+                        
+                        inputCantidad.value = item.cantidad || 0;
+                    });
+                } else {
+                    agregarItemCampo();
+                }
+    
+                // Mostrar el modal
+                entradaModal.classList.remove('hidden');
+    
+                // Agregar el ID de la entrada como un atributo de datos al formulario
+                entradaForm.dataset.entradaId = id;
+            })
+            .catch(error => {
+                console.error('Error al cargar los datos de la entrada:', error);
+                alert('Error al cargar los datos de la entrada: ' + (error.message || 'Error desconocido'));
+                entradaModal.classList.add('hidden');
+            });
+    }
+    
+    // Funciones auxiliares necesarias
+    let itemsInventario = []; // Variable global para almacenar los items
 
-        alert('Entrada guardada correctamente');
-        entradaModal.classList.add('hidden');
-        cargarEntradas(); // Recargar la lista de entradas
+// Función para cargar los items del inventario
+    function cargarItemsInventario() {
+        fetch('/inventario/api/items-select')
+            .then(response => response.json())
+            .then(data => {
+                itemsInventario = data;
+                // Actualizar los selects existentes si hay alguno
+                document.querySelectorAll('.item-select').forEach(select => {
+                    actualizarOptionItems(select);
+                });
+            })
+            .catch(error => {
+                console.error('Error al cargar items:', error);
+            });
     }
 
-    function cargarDatosEntrada(id) {
-        // Simulación de carga de datos de una entrada específica
-        const entradaSimulada = {
-            id: id,
-            numero: 'ENT-00' + id,
-            fecha: '2023-05-0' + id,
-            proveedor: 'Proveedor ' + id,
-            items: [
-                { nombre: 'Item 1', cantidad: 10, costo: 100 },
-                { nombre: 'Item 2', cantidad: 5, costo: 50 },
-            ]
-        };
-
-        document.getElementById('orden-compra').value = entradaSimulada.numero;
-        document.getElementById('fecha').value = entradaSimulada.fecha;
-        // Asumiendo que hay un campo para el proveedor, si no, elimina esta línea
-        // document.getElementById('proveedor').value = entradaSimulada.proveedor;
-
-        itemsContainer.innerHTML = '';
-        entradaSimulada.items.forEach(item => {
-            agregarItemCampo();
-            const lastRow = itemsContainer.lastElementChild;
-            const inputs = lastRow.querySelectorAll('input');
-            inputs[0].value = item.nombre;
-            inputs[1].value = item.cantidad;
-            inputs[2].value = item.costo;
+    function actualizarOptionItems(select) {
+        select.innerHTML = '<option value="">Seleccione un item...</option>';
+        itemsInventario.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = `${item.codigo ? `[${item.codigo}] ` : ''}${item.nombre} - Costo: ${item.costo}`;
+            option.dataset.costo = item.costo;
+            select.appendChild(option);
+        });
+    }
+    
+    // Función auxiliar para agregar una fila de item (se necesita para el código anterior)
+    function agregarItemCampo() {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">
+                <select class="form-select block w-full item-select" name="item_id[]" required>
+                    <option value="">Seleccione un item...</option>
+                </select>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <input type="number" class="form-input block w-full" name="item_cantidad[]" min="1" required>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <input type="number" class="form-input block w-full item-costo" name="item_costo[]" step="0.01" min="0" required readonly>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <button type="button" class="eliminar-item-btn text-red-600 hover:text-red-900">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </td>
+        `;
+        itemsContainer.appendChild(tr);
+    
+        // Obtener el select recién creado y actualizarlo
+        const select = tr.querySelector('.item-select');
+        actualizarOptionItems(select);
+    
+        // Agregar evento para actualizar el costo cuando se selecciona un item
+        select.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const costoInput = tr.querySelector('.item-costo');
+            if (selectedOption.dataset.costo) {
+                costoInput.value = selectedOption.dataset.costo;
+            } else {
+                costoInput.value = '';
+            }
+        });
+    
+        // Agregar event listener para el botón de eliminar
+        tr.querySelector('.eliminar-item-btn').addEventListener('click', function() {
+            tr.remove();
         });
     }
 
     function eliminarEntrada(id) {
         if (confirm('¿Estás seguro de que quieres eliminar esta entrada?')) {
-            // Aquí iría la lógica para eliminar la entrada en el servidor
-            console.log('Eliminando entrada con ID:', id);
-            alert('Entrada eliminada correctamente');
-            cargarEntradas(); // Recargar la lista de entradas
+            console.log('Eliminando entrada:', id);
+            fetch(`/inventario/api/entradas/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Si la respuesta no es ok, intentamos obtener el mensaje de error
+                    return response.json().then(err => Promise.reject(err));
+                }
+                // Si la respuesta es vacía (código 204) o es JSON válido
+                return response.status === 204 ? null : response.json();
+            })
+            .then(() => {
+                console.log('Entrada eliminada correctamente');
+                // Refrescar la tabla de entradas
+                cargarEntradas();
+                // Mostrar mensaje de éxito
+                alert('Entrada eliminada correctamente');
+                
+                // Si hay un modal abierto, lo cerramos
+                const modal = document.getElementById('entradaModal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    modal.classList.add('hidden');
+                }
+    
+                // Opcionalmente, actualizar cualquier contador o resumen en la página
+                actualizarResumenEntradas();
+            })
+            .catch(error => {
+                console.error('Error al eliminar la entrada:', error);
+                let mensajeError = 'Error al eliminar la entrada';
+                
+                // Manejar diferentes tipos de errores
+                if (error.error) {
+                    mensajeError += ': ' + error.error;
+                } else if (error.message) {
+                    mensajeError += ': ' + error.message;
+                } else if (typeof error === 'string') {
+                    mensajeError += ': ' + error;
+                } else {
+                    mensajeError += '. Por favor, inténtelo de nuevo.';
+                }
+                
+                alert(mensajeError);
+            });
         }
+    }
+    
+    // Función auxiliar para actualizar el resumen de entradas (opcional)
+    function actualizarResumenEntradas() {
+        // Esta función podría actualizar contadores, totales u otros elementos de resumen en la página
+        console.log('Actualizando resumen de entradas...');
+        
+        // Ejemplo: Actualizar contador de entradas si existe
+        const contadorEntradas = document.getElementById('contador-entradas');
+        if (contadorEntradas) {
+            fetch('/inventario/api/entradas/count')
+                .then(response => response.json())
+                .then(data => {
+                    contadorEntradas.textContent = data.count || '0';
+                })
+                .catch(error => {
+                    console.error('Error al actualizar contador:', error);
+                });
+        }
+    }
+    
+    // Función para agregar event listeners a los botones de eliminar (llamar después de cargar/actualizar la tabla)
+    function agregarEventListenersEliminar() {
+        document.querySelectorAll('.eliminar-entrada').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = e.target.closest('button').dataset.id;
+                eliminarEntrada(id);
+            });
+        });
     }
 
     function limpiarFormulario() {
@@ -471,77 +880,6 @@ document.addEventListener('DOMContentLoaded', function() {
         itemsContainer.innerHTML = '';
         agregarItemCampo();
     }
-
-    function guardarAlmacen() {
-        const formData = new FormData(almacenForm);
-        const almacenData = Object.fromEntries(formData);
-        
-        // Agregar ID único al almacén
-        almacenData.id = Date.now().toString();
-        
-        // Convertir el checkbox a booleano
-        almacenData.es_principal = almacenData.es_principal === 'on';
-        
-        // Guardar el almacén
-        almacenes.push(almacenData);
-        
-        // Actualizar el select de almacenes en el formulario de entrada
-        actualizarSelectAlmacenes();
-        
-        // Cerrar el modal y mostrar mensaje
-        almacenModal.classList.add('hidden');
-        alert('Almacén guardado correctamente');
-    }
-
-    function cargarAlmacenes() {
-        const tbody = document.getElementById('almacenes-list');
-        tbody.innerHTML = '';
-        
-        almacenes.forEach(almacen => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">${almacen.nombre}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">${almacen.ubicacion}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">${almacen.capacidad} m²</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">${almacen.cuenta_inventario}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm text-gray-900">${almacen.es_principal ? 'Sí' : 'No'}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button class="text-blue-600 hover:text-blue-900 mr-3 editar-almacen" data-id="${almacen.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="text-red-600 hover:text-red-900 eliminar-almacen" data-id="${almacen.id}">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function actualizarSelectAlmacenes() {
-        const select = document.getElementById('almacen');
-        select.innerHTML = '';
-        
-        almacenes.forEach(almacen => {
-            const option = document.createElement('option');
-            option.value = almacen.id;
-            option.textContent = almacen.nombre;
-            select.appendChild(option);
-        });
-    }
-
-    // Inicializar el select de almacenes
-    actualizarSelectAlmacenes();
 });
 </script>
 {% endblock %}

@@ -433,6 +433,8 @@ def create_app():
         
     from activos_fijos.routes import activos_fijos_bp
     app.register_blueprint(activos_fijos_bp) 
+
+    
     
     db.init_app(app)
     migrate.init_app(app, db)

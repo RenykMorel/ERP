@@ -1,11 +1,16 @@
-from flask import render_template, request, jsonify, current_app
+from flask import render_template, request, jsonify, current_app, send_file
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import distinct  
 from datetime import datetime
 from . import inventario_bp
-from .inventario_models import InventarioItem, MovimientoInventario, AjusteInventario
+from .inventario_models import InventarioItem, MovimientoInventario, AjusteInventario, TipoItem, Almacen
 from extensions import db
 import logging
+import io  
+import csv  
+from . import inventario_bp
+
 
 logger = logging.getLogger(__name__)
 
@@ -330,6 +335,266 @@ def exportar_excel():
     except Exception as e:
         current_app.logger.error(f"Error al exportar reporte: {str(e)}")
         return jsonify({"error": "Error interno del servidor"}), 500
+    
+# inventario/inventario_routes.py
+
+@inventario_bp.route('/api/almacenes', methods=['GET'])
+@login_required
+def get_almacenes():
+    try:
+        almacenes = Almacen.query.all()
+        return jsonify([almacen.to_dict() for almacen in almacenes])
+    except Exception as e:
+        logger.error(f"Error al obtener almacenes: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@inventario_bp.route('/api/almacenes', methods=['POST'])
+@login_required
+def crear_almacen():
+    logger.info("Intento de crear un nuevo almacén")
+    try:
+        if not request.is_json:
+            return jsonify({"error": "Se requiere contenido JSON"}), 400
+            
+        data = request.get_json()
+        logger.debug(f"Datos recibidos: {data}")
+        
+        if not data.get('nombre'):
+            return jsonify({"error": "El nombre es requerido"}), 400
+
+        nuevo_almacen = Almacen(
+            nombre=data['nombre'],
+            ubicacion=data.get('ubicacion'),
+            capacidad=float(data.get('capacidad', 0)),
+            cuenta_inventario=data.get('cuenta_inventario'),
+            es_principal=data.get('es_principal', False),
+            descripcion=data.get('descripcion')
+        )
+
+        db.session.add(nuevo_almacen)
+        db.session.commit()
+        logger.info(f"Almacén creado exitosamente: {nuevo_almacen.id}")
+        
+        return jsonify(nuevo_almacen.to_dict()), 201
+
+    except ValueError as e:
+        db.session.rollback()
+        logger.error(f"Error de validación: {str(e)}")
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al crear almacén: {str(e)}")
+        return jsonify({"error": "Error al crear el almacén"}), 500 
+
+# Agregar estas rutas a inventario_routes.py
+
+@inventario_bp.route('/api/tipos-item', methods=['GET'])
+@login_required
+def get_tipos_item():
+    try:
+        tipos = TipoItem.query.all()
+        return jsonify([tipo.to_dict() for tipo in tipos])
+    except Exception as e:
+        logger.error(f"Error al obtener tipos de item: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@inventario_bp.route('/api/tipos-item', methods=['POST'])
+@login_required
+def crear_tipo_item():
+    try:
+        data = request.get_json()
+        
+        # Validar campos requeridos
+        if not data.get('nombre'):
+            return jsonify({"error": "El nombre es requerido"}), 400
+
+        nuevo_tipo = TipoItem(
+            nombre=data['nombre'],
+            descripcion=data.get('descripcion'),
+            tipo=data.get('tipo'),  # 'servicio', 'bien', 'cargo'
+            estatus=data.get('estatus', 'activo'),
+            # Configuración para la venta
+            es_vendible=data.get('es_vendible', True),
+            usa_itbis=data.get('usa_itbis', True),
+            modifica_precio=data.get('modifica_precio', False),
+            modifica_impuestos=data.get('modifica_impuestos', False),
+            le_aplica_descuento=data.get('le_aplica_descuento', True),
+            precio_negativo=data.get('precio_negativo', False),
+            usa_margen_ganancia=data.get('usa_margen_ganancia', True),
+            usa_precio_moneda=data.get('usa_precio_moneda', False),
+            no_venta_costo_pp=data.get('no_venta_costo_pp', False),
+            gasto_incurrido_para_el_cliente=data.get('gasto_incurrido_para_el_cliente', False),
+            # Configuración para la compra
+            es_comprable=data.get('es_comprable', True),
+            proporcionalidad_del_itbis=data.get('proporcionalidad_del_itbis', False),
+            itbis=data.get('itbis', True),
+            otros_impuestos=data.get('otros_impuestos', False),
+            no_modifica_precio=data.get('no_modifica_precio', False),
+            modifica_costo=data.get('modifica_costo', True)
+        )
+
+        db.session.add(nuevo_tipo)
+        db.session.commit()
+        
+        # Retornar el nuevo tipo creado
+        return jsonify(nuevo_tipo.to_dict()), 201
+
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Ya existe un tipo de item con ese nombre"}), 400
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al crear tipo de item: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+    
+
+
+# Remover la ruta duplicada si existe
+# @inventario_bp.route('/api/entrada-almacen', methods=['POST'])
+
+# Rutas para Entradas
+@inventario_bp.route('/api/entradas', methods=['GET'])
+@login_required
+def get_entradas():
+    try:
+        movimientos = MovimientoInventario.query.filter_by(tipo='entrada').all()
+        
+        if not movimientos:
+            return jsonify([]), 200  # Retorna lista vacía si no hay entradas
+            
+        entradas = []
+        for movimiento in movimientos:
+            entrada = {
+                'id': movimiento.id,
+                'numero': f'ENT-{movimiento.id:04d}',
+                'fecha': movimiento.fecha.strftime('%Y-%m-%d'),
+                'proveedor': movimiento.item.proveedor if movimiento.item else 'N/A',
+                'totalItems': 1,
+                'estado': 'Completado'
+            }
+            entradas.append(entrada)
+        
+        return jsonify(entradas), 200
+        
+    except Exception as e:
+        logger.error(f"Error al obtener entradas: {str(e)}")
+        return jsonify({"error": "Error al obtener las entradas"}), 500
+
+@inventario_bp.route('/api/entradas', methods=['POST'])
+@login_required
+def crear_entrada():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No se recibieron datos"}), 400
+            
+        logger.info(f"Datos recibidos para crear entrada: {data}")
+        
+        # Validar items
+        if not data.get('items'):
+            return jsonify({"error": "Se requiere al menos un item"}), 400
+            
+        # Crear los movimientos de entrada
+        for item_data in data['items']:
+            # Aquí deberías buscar el item por nombre o código según tu lógica
+            item = InventarioItem.query.filter_by(nombre=item_data['nombre']).first()
+            if not item:
+                return jsonify({"error": f"Item no encontrado: {item_data['nombre']}"}), 404
+            
+            movimiento = MovimientoInventario(
+                item_id=item.id,
+                tipo='entrada',
+                cantidad=item_data['cantidad'],
+                fecha=datetime.utcnow(),
+                usuario_id=current_user.id
+            )
+            db.session.add(movimiento)
+            
+            # Actualizar stock
+            item.stock += item_data['cantidad']
+        
+        db.session.commit()
+        return jsonify({"mensaje": "Entrada creada exitosamente"}), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al crear entrada: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@inventario_bp.route('/api/entradas/<int:entrada_id>', methods=['GET'])
+@login_required
+def get_entrada(entrada_id):
+    try:
+        movimiento = MovimientoInventario.query.get_or_404(entrada_id)
+        entrada = {
+            'id': movimiento.id,
+            'numero': f'ENT-{movimiento.id:04d}',
+            'fecha': movimiento.fecha.strftime('%Y-%m-%d'),
+            'proveedor': movimiento.item.proveedor if movimiento.item else 'N/A',
+            'orden_compra': '',
+            'factura': '',
+            'expediente': '',
+            'almacen_id': '',
+            'documento': '',
+            'referencia': '',
+            'nota': '',
+            'concepto': 'compra',
+            'estatus': 'en-almacen',
+            'items': [{
+                'nombre': movimiento.item.nombre if movimiento.item else '',
+                'cantidad': movimiento.cantidad,
+                'costo': movimiento.item.costo if movimiento.item else 0
+            }]
+        }
+        return jsonify(entrada)
+    except Exception as e:
+        logger.error(f"Error al obtener entrada {entrada_id}: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@inventario_bp.route('/api/entradas/<int:entrada_id>', methods=['DELETE'])
+@login_required
+def eliminar_entrada(entrada_id):
+    try:
+        movimiento = MovimientoInventario.query.get_or_404(entrada_id)
+        
+        # Revertir el cambio en el stock
+        if movimiento.item:
+            movimiento.item.stock -= movimiento.cantidad
+        
+        db.session.delete(movimiento)
+        db.session.commit()
+        
+        return jsonify({"mensaje": "Entrada eliminada exitosamente"}), 200
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al eliminar entrada {entrada_id}: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@inventario_bp.route('/api/entradas/count', methods=['GET'])
+@login_required
+def get_entradas_count():
+    try:
+        count = MovimientoInventario.query.filter_by(tipo='entrada').count()
+        return jsonify({"count": count})
+    except Exception as e:
+        logger.error(f"Error al obtener conteo de entradas: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500    
+    
+@inventario_bp.route('/api/items-select', methods=['GET'])
+@login_required
+def get_items_select():
+    try:
+        items = InventarioItem.query.filter_by(tipo='producto').all()
+        return jsonify([{
+            'id': item.id,
+            'nombre': item.nombre,
+            'codigo': item.codigo,
+            'precio': item.precio,
+            'costo': item.costo
+        } for item in items])
+    except Exception as e:
+        logger.error(f"Error al obtener items: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500    
 
 # Manejo de errores
 @inventario_bp.errorhandler(404)

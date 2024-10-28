@@ -3,9 +3,14 @@ from flask import Blueprint
 inventario_bp = Blueprint('inventario', __name__, url_prefix='/inventario')
 
 def init_app(app):
-    # Importamos las rutas aquí para evitar importaciones circulares
+    # Importar las rutas
+    from . import inventario_routes
+    # Importar los modelos
+    from . import inventario_models
+    
+    # Registrar el blueprint
     app.register_blueprint(inventario_bp)
-
-# Importamos las rutas después de crear el blueprint
-from . import inventario_routes
-from . import inventario_models
+    
+    # Inicializar la base de datos si es necesario
+    with app.app_context():
+        inventario_models.init_db()
