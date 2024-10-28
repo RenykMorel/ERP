@@ -34,6 +34,9 @@
           <button id="crear-tipo-item-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded">
               <i class="fas fa-tags mr-2"></i>Crear Tipo de Item
           </button>
+          <button id="crear-categoria-item-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+            <i class="fas fa-folder-plus mr-2"></i>Crear Categoría de Item
+        </button>
       </div>
       <div class="flex space-x-2">
           <button id="ajuste-inventario-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
@@ -80,6 +83,75 @@
           </tbody>
       </table>
   </div>
+</div>
+
+<!-- Modal para crear categoría de item -->
+<div id="crearCategoriaItemModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border-4 border-green-500">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <!-- Formulario y Lista en un grid de dos columnas -->
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- Columna del formulario -->
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="crear-categoria-item-modal-title">
+                            Crear Nueva Categoría de Item
+                        </h3>
+                        <form id="crear-categoria-item-form" class="space-y-6">
+                            <div>
+                                <label for="nombre-categoria-item" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nombre</label>
+                                <input type="text" id="nombre-categoria-item" name="nombre" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                            </div>
+                            <div>
+                                <label for="descripcion-categoria-item" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                                <textarea id="descripcion-categoria-item" name="descripcion" rows="3" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50"></textarea>
+                            </div>
+                            <div>
+                                <label for="estatus-categoria-item" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+                                <select id="estatus-categoria-item" name="estatus" class="mt-1 block w-40 rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                    <option value="activo" selected>Activo</option>
+                                    <option value="inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- Columna de la tabla de categorías -->
+                    <div>
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            Categorías Existentes
+                        </h3>
+                        <div class="max-h-96 overflow-y-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categorias-list" class="bg-white divide-y divide-gray-200">
+                                    <!-- Las categorías se cargarán aquí dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t-2 border-green-500">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-categoria-item-btn">
+                    Grabar
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="limpiar-categoria-item-btn">
+                    Limpiar
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cerrar-categoria-item-modal-btn">
+                    Volver
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal para crear/editar item -->
@@ -149,7 +221,10 @@
                                 </div>
                                 <div>
                                     <label for="item-categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-                                    <input type="text" id="item-categoria" name="categoria" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                    <select id="item-categoria" name="categoria" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                        <option value="">Seleccione una categoría</option>
+                                        <!-- Las categorías se cargarán dinámicamente aquí -->
+                                    </select>
                                 </div>
                                 <div>
                                     <label for="item-proveedor" class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
@@ -208,25 +283,76 @@
                 <form id="ajuste-form" class="space-y-6">
                     <div>
                         <label for="ajuste-item" class="block text-sm font-medium text-gray-700 mb-1 required-field">Item</label>
-                        <select id="ajuste-item" name="item_id" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
-                            <!-- Opciones se cargarán dinámicamente -->
+                        <select id="ajuste-item" name="item_id" required 
+                                class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                            <option value="">Seleccione un item...</option>
                         </select>
+                        <div id="item-details" class="mt-2 text-sm text-gray-600 hidden">
+                            <p class="font-medium">Detalles del Item:</p>
+                            <div class="grid grid-cols-2 gap-4 mt-1">
+                                <div>
+                                    <span class="font-medium">Stock Actual:</span>
+                                    <span id="stock-actual" class="ml-2">0</span>
+                                </div>
+                                <div>
+                                    <span class="font-medium">Código:</span>
+                                    <span id="codigo-item" class="ml-2">-</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label for="ajuste-cantidad" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nueva Cantidad</label>
-                        <input type="number" id="ajuste-cantidad" name="cantidad_nueva" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                        <input type="number" id="ajuste-cantidad" name="cantidad_nueva" required min="0"
+                               class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                        <div id="cantidad-diff" class="mt-1 text-sm hidden">
+                            <span class="font-medium">Diferencia:</span>
+                            <span id="diff-valor" class="ml-2"></span>
+                        </div>
                     </div>
                     <div>
-                        <label for="ajuste-motivo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Motivo</label>
-                        <textarea id="ajuste-motivo" name="motivo" required rows="3" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50"></textarea>
+                        <label for="tipo-ajuste" class="block text-sm font-medium text-gray-700 mb-1 required-field">Tipo de Ajuste</label>
+                        <select id="tipo-ajuste" name="tipo_ajuste" required
+                                class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                            <option value="">Seleccione tipo de ajuste...</option>
+                            <option value="inventario_fisico">Inventario Físico</option>
+                            <option value="merma">Merma</option>
+                            <option value="robo">Robo</option>
+                            <option value="danio">Daño</option>
+                            <option value="error_sistema">Error de Sistema</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ajuste-motivo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Motivo Detallado</label>
+                        <textarea id="ajuste-motivo" name="motivo" required rows="3" 
+                                  class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50"
+                                  placeholder="Describa el motivo detallado del ajuste..."></textarea>
+                    </div>
+                    <div class="bg-yellow-50 rounded-md p-4 mt-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-800">Información Importante</h3>
+                                <div class="mt-2 text-sm text-yellow-700">
+                                    <p>Los ajustes de inventario son irreversibles y quedarán registrados en el sistema. Asegúrese de verificar la información antes de guardar.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t-2 border-green-500">
-                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="guardar-ajuste-btn">
+                <button type="button" 
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" 
+                        id="guardar-ajuste-btn">
                     Guardar Ajuste
                 </button>
-                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="cerrar-ajuste-modal-btn">
+                <button type="button" 
+                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" 
+                        id="cerrar-ajuste-modal-btn">
                     Cancelar
                 </button>
             </div>
@@ -239,123 +365,148 @@
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border-4 border-green-500">
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-7xl sm:w-full border-4 border-green-500">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-4 border-b-2 border-green-500 pb-2" id="crear-tipo-item-modal-title">
-                    Crear Nuevo Tipo de Item
-                </h3>
-                <form id="crear-tipo-item-form" class="space-y-6">
+                <!-- Grid de dos columnas -->
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- Columna del formulario -->
                     <div>
-                        <label for="nuevo-tipo-item-nombre" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nombre</label>
-                        <input type="text" id="nuevo-tipo-item-nombre" name="nombre" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                        <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-4 border-b-2 border-green-500 pb-2" id="crear-tipo-item-modal-title">
+                            Crear Nuevo Tipo de Item
+                        </h3>
+                        <form id="crear-tipo-item-form" class="space-y-6">
+                            <div>
+                                <label for="nuevo-tipo-item-nombre" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nombre</label>
+                                <input type="text" id="nuevo-tipo-item-nombre" name="nombre" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                            </div>
+                            <div>
+                                <label for="nuevo-tipo-item-descripcion" class="block text-sm font-medium text-gray-700 mb-1 required-field">Descripción</label>
+                                <textarea id="nuevo-tipo-item-descripcion" name="descripcion" required rows="3" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50"></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="nuevo-tipo-item-estatus" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+                                    <select id="nuevo-tipo-item-estatus" name="estatus" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                        <option value="activo" selected>Activo</option>
+                                        <option value="inactivo">Inactivo</option>
+                                    </select>
+                                </div>
+                                <div class="mt-2 space-x-4 flex">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="tipo" value="servicio" class="form-radio text-green-600" checked>
+                                        <span class="ml-2">Servicio</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="tipo" value="bien" class="form-radio text-green-600">
+                                        <span class="ml-2">Bien</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="tipo" value="cargo" class="form-radio text-green-600">
+                                        <span class="ml-2">Cargo</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2 border-b border-green-300 pb-1">Configuración para la Venta</h4>
+                                    <div class="space-y-2">
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="es_vendible" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Es Vendible</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="usa_itbis" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Usa ITBIS</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="modifica_precio" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Modifica Precio</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="modifica_impuestos" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Modifica Impuestos</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="le_aplica_descuento" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Le Aplica Descuento</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="precio_negativo" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Precio Negativo</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="usa_margen_ganancia" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Usa Margen de Ganancia</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="usa_precio_moneda" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Usa Precio Moneda</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="no_venta_costo_pp" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">No Venta Costo/PP</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="gasto_incurrido_para_el_cliente" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Gasto Incurrido para el Cliente</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2 border-b border-green-300 pb-1">Configuración para la Compra</h4>
+                                    <div class="space-y-2">
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="es_comprable" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Es Comprable</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="proporcionalidad_del_itbis" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Proporcionalidad del ITBIS</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="itbis" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">ITBIS</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="otros_impuestos" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Otros Impuestos</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="no_modifica_precio" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">No Modifica Precio</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="modifica_costo" class="form-checkbox text-green-600">
+                                            <span class="ml-2 text-sm">Modifica Costo</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
+                    
+                    <!-- Nueva columna para la tabla -->
                     <div>
-                        <label for="nuevo-tipo-item-descripcion" class="block text-sm font-medium text-gray-700 mb-1 required-field">Descripción</label>
-                        <textarea id="nuevo-tipo-item-descripcion" name="descripcion" required rows="3" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50"></textarea>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="nuevo-tipo-item-estatus" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
-                            <select id="nuevo-tipo-item-estatus" name="estatus" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
-                                <option value="activo" selected>Activo</option>
-                                <option value="inactivo">Inactivo</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                            <div class="mt-2 space-x-4 flex">
-                                <label class="inline-flex items-center">
-                                    <input type="radio" name="tipo" value="servicio" class="form-radio text-green-600">
-                                    <span class="ml-2">Servicio</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="radio" name="tipo" value="bien" class="form-radio text-green-600">
-                                    <span class="ml-2">Bien</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="radio" name="tipo" value="cargo" class="form-radio text-green-600">
-                                    <span class="ml-2">Cargo</span>
-                                </label>
-                            </div>
+                        <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-4 border-b-2 border-green-500 pb-2">
+                            Tipos de Item Existentes
+                        </h3>
+                        <div class="overflow-y-auto max-h-96">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tipos-item-list" class="bg-white divide-y divide-gray-200">
+                                    <!-- Los tipos se cargarán aquí dinámicamente -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-700 mb-2 border-b border-green-300 pb-1">Configuración para la Venta</h4>
-                            <div class="space-y-2">
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="es_vendible" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Es Vendible</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="usa_itbis" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Usa ITBIS</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="modifica_precio" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Modifica Precio</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="modifica_impuestos" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Modifica Impuestos</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="le_aplica_descuento" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Le Aplica Descuento</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="precio_negativo" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Precio Negativo</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="usa_margen_ganancia" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Usa Margen de Ganancia</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="usa_precio_moneda" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Usa Precio Moneda</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="no_venta_costo_pp" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">No Venta Costo/PP</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="gasto_incurrido_para_el_cliente" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Gasto Incurrido para el Cliente</span>
-                                </label>
-                            </div>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-700 mb-2 border-b border-green-300 pb-1">Configuración para la Compra</h4>
-                            <div class="space-y-2">
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="es_comprable" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Es Comprable</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="proporcionalidad_del_itbis" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Proporcionalidad del ITBIS</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="itbis" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">ITBIS</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="otros_impuestos" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Otros Impuestos</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="no_modifica_precio" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">No Modifica Precio</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="checkbox" name="modifica_costo" class="form-checkbox text-green-600">
-                                    <span class="ml-2 text-sm">Modifica Costo</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </form>
+                </div>
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t-2 border-green-500">
                 <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 ease-in-out" id="guardar-tipo-item-btn">
@@ -482,34 +633,7 @@
     </div>
 </div>
 
-<!-- Modal para crear tipo de item -->
-<div id="crearTipoItemModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="crear-tipo-item-modal-title">
-                  Crear Nuevo Tipo de Item
-              </h3>
-              <form id="crear-tipo-item-form" class="space-y-6">
-                  <div>
-                      <label for="nuevo-tipo-item" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nombre del Nuevo Tipo</label>
-                      <input type="text" id="nuevo-tipo-item" name="nuevo_tipo" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                  </div>
-              </form>
-          </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm: text-sm" id="guardar-tipo-item-btn">
-                  Guardar Nuevo Tipo
-              </button>
-              <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cerrar-tipo-item-modal-btn">
-                  Cancelar
-              </button>
-          </div>
-      </div>
-  </div>
-</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -551,6 +675,12 @@ document.addEventListener('DOMContentLoaded', function() {
    const cerrarTipoItemModalBtn = document.getElementById('cerrar-tipo-item-modal-btn');
    const crearTipoItemForm = document.getElementById('crear-tipo-item-form');
 
+   const crearCategoriaItemBtn = document.getElementById('crear-categoria-item-btn');
+   const crearCategoriaItemModal = document.getElementById('crearCategoriaItemModal');
+   const guardarCategoriaItemBtn = document.getElementById('guardar-categoria-item-btn');
+   const cerrarCategoriaItemModalBtn = document.getElementById('cerrar-categoria-item-modal-btn');
+   const crearCategoriaItemForm = document.getElementById('crear-categoria-item-form');
+
    crearItemBtn.addEventListener('click', () => mostrarModalItem());
    guardarItemBtn.addEventListener('click', guardarItem);
    cerrarModalBtn.addEventListener('click', () => itemModal.classList.add('hidden'));
@@ -583,6 +713,33 @@ document.addEventListener('DOMContentLoaded', function() {
    cerrarTipoItemModalBtn.addEventListener('click', () => crearTipoItemModal.classList.add('hidden'));
 
    cargarItems();
+
+   crearCategoriaItemBtn.addEventListener('click', () => crearCategoriaItemModal.classList.remove('hidden'));
+   guardarCategoriaItemBtn.addEventListener('click', guardarNuevaCategoriaItem);
+   cerrarCategoriaItemModalBtn.addEventListener('click', () => crearCategoriaItemModal.classList.add('hidden'));
+
+   function guardarNuevaCategoriaItem() {
+    const formData = new FormData(crearCategoriaItemForm);
+    const nuevaCategoriaData = Object.fromEntries(formData.entries());
+
+    // Cambiar esta URL
+    fetch('/inventario/api/categorias-item', { // Añadir el prefijo /inventario
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(nuevaCategoriaData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        crearCategoriaItemModal.classList.add('hidden');
+        alert('Nueva categoría de item creada con éxito');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al crear la nueva categoría de item');
+    });
+}
 
    function mostrarModalItem(id = null) {
        itemForm.reset();
@@ -926,48 +1083,637 @@ function formatNumber(number) {
    }
 
    function guardarNuevoTipoItem() {
-       const formData = new FormData(crearTipoItemForm);
-       const nuevoTipoData = Object.fromEntries(formData.entries());
+    const formData = new FormData(crearTipoItemForm);
+    const nuevoTipoData = {
+        nombre: formData.get('nombre'),
+        descripcion: formData.get('descripcion'),
+        tipo: formData.get('tipo'),
+        estatus: formData.get('estatus'),
+        // Configuración para la venta
+        es_vendible: formData.get('es_vendible') === 'on',
+        usa_itbis: formData.get('usa_itbis') === 'on',
+        modifica_precio: formData.get('modifica_precio') === 'on',
+        modifica_impuestos: formData.get('modifica_impuestos') === 'on',
+        le_aplica_descuento: formData.get('le_aplica_descuento') === 'on',
+        precio_negativo: formData.get('precio_negativo') === 'on',
+        usa_margen_ganancia: formData.get('usa_margen_ganancia') === 'on',
+        usa_precio_moneda: formData.get('usa_precio_moneda') === 'on',
+        no_venta_costo_pp: formData.get('no_venta_costo_pp') === 'on',
+        gasto_incurrido_para_el_cliente: formData.get('gasto_incurrido_para_el_cliente') === 'on',
+        // Configuración para la compra
+        es_comprable: formData.get('es_comprable') === 'on',
+        proporcionalidad_del_itbis: formData.get('proporcionalidad_del_itbis') === 'on',
+        itbis: formData.get('itbis') === 'on',
+        otros_impuestos: formData.get('otros_impuestos') === 'on',
+        no_modifica_precio: formData.get('no_modifica_precio') === 'on',
+        modifica_costo: formData.get('modifica_costo') === 'on'
+    };
 
-       fetch('/api/tipos-item', {
-           method: 'POST',
-           headers: {
-               'Content-Type': 'application/json',
-           },
-           body: JSON.stringify(nuevoTipoData),
-       })
-       .then(response => response.json())
-       .then(data => {
-           crearTipoItemModal.classList.add('hidden');
-           // Actualizar la lista de tipos de item en el formulario principal
-           const nuevoTipo = data.nuevo_tipo;
-           const option = document.createElement('option');
-           option.value = nuevoTipo;
-           option.textContent = nuevoTipo;
-           itemTipo.appendChild(option);
-           alert('Nuevo tipo de item creado con éxito');
-       })
-       .catch(error => {
-           console.error('Error:', error);
-           alert('Error al crear el nuevo tipo de item');
-       });
-   }
+    fetch('/inventario/api/tipos-item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(nuevoTipoData),
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Respuesta:', data);
+        crearTipoItemForm.reset();
+        cargarTiposItem(); // Recargar la lista
+        alert('Nuevo tipo de item creado con éxito');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al crear el nuevo tipo de item: ' + (error.error || 'Error desconocido'));
+    });
+}
 
-   function cargarOpcionesItems(selectId) {
-       fetch('/api/items')
-           .then(response => response.json())
-           .then(items => {
-               const select = document.getElementById(selectId);
-               select.innerHTML = '<option value="">Seleccione un item</option>';
-               items.forEach(item => {
-                   const option = document.createElement('option');
-                   option.value = item.id;
-                   option.textContent = `${item.codigo} - ${item.nombre}`;
-                   select.appendChild(option);
-               });
-           })
-           .catch(error => console.error('Error:', error));
-   }
+// Agregar estas funciones al script existente
+function initAjusteModal() {
+    const ajusteItem = document.getElementById('ajuste-item');
+    const ajusteCantidad = document.getElementById('ajuste-cantidad');
+    const itemDetails = document.getElementById('item-details');
+    const cantidadDiff = document.getElementById('cantidad-diff');
+    const stockActual = document.getElementById('stock-actual');
+    const codigoItem = document.getElementById('codigo-item');
+    const diffValor = document.getElementById('diff-valor');
+
+    // Manejar cambio de item seleccionado
+    ajusteItem.addEventListener('change', function() {
+        if (!this.value) {
+            itemDetails.classList.add('hidden');
+            return;
+        }
+
+        fetch(`/inventario/api/items-select`)
+            .then(response => response.json())
+            .then(items => {
+                const selectedItem = items.find(item => item.id === parseInt(this.value));
+                if (selectedItem) {
+                    itemDetails.classList.remove('hidden');
+                    stockActual.textContent = selectedItem.stock;
+                    codigoItem.textContent = selectedItem.codigo || '-';
+                    ajusteCantidad.value = ''; // Limpiar cantidad
+                    cantidadDiff.classList.add('hidden');
+                } else {
+                    itemDetails.classList.add('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                itemDetails.classList.add('hidden');
+            });
+    });
+
+    // Manejar cambio en la cantidad
+    ajusteCantidad.addEventListener('input', function() {
+        const selectedItemId = ajusteItem.value;
+        if (!selectedItemId || !this.value) {
+            cantidadDiff.classList.add('hidden');
+            return;
+        }
+
+        fetch(`/inventario/api/items-select`)
+            .then(response => response.json())
+            .then(items => {
+                const selectedItem = items.find(item => item.id === parseInt(selectedItemId));
+                if (selectedItem) {
+                    const nuevaCantidad = parseInt(this.value);
+                    const diferencia = nuevaCantidad - selectedItem.stock;
+                    cantidadDiff.classList.remove('hidden');
+                    diffValor.textContent = `${diferencia > 0 ? '+' : ''}${diferencia}`;
+                    diffValor.className = `ml-2 ${diferencia > 0 ? 'text-green-600' : 'text-red-600'}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                cantidadDiff.classList.add('hidden');
+            });
+    });
+}
+
+// Modificar la función mostrarModalAjuste
+function mostrarModalAjuste() {
+    ajusteForm.reset();
+    document.getElementById('item-details').classList.add('hidden');
+    document.getElementById('cantidad-diff').classList.add('hidden');
+    cargarOpcionesItems('ajuste-item');
+    ajusteModal.classList.remove('hidden');
+}
+
+// Asegúrate de llamar a initAjusteModal cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // ... (código existente)
+    initAjusteModal();
+});
+
+// Modificar la función guardarAjuste para incluir el tipo de ajuste
+function guardarAjuste(e) {
+    e.preventDefault();
+    const formData = new FormData(ajusteForm);
+    
+    if (!formData.get('item_id') || !formData.get('cantidad_nueva') || 
+        !formData.get('tipo_ajuste') || !formData.get('motivo')) {
+        alert('Por favor complete todos los campos requeridos');
+        return;
+    }
+
+    const ajusteData = {
+        item_id: formData.get('item_id'),
+        cantidad_nueva: formData.get('cantidad_nueva'),
+        tipo_ajuste: formData.get('tipo_ajuste'),
+        motivo: formData.get('motivo')
+    };
+
+    fetch('/inventario/api/ajustes', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(ajusteData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+    })
+    .then(data => {
+        ajusteModal.classList.add('hidden');
+        cargarItems();
+        alert('Ajuste realizado con éxito');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al realizar el ajuste: ' + (error.error || 'Error desconocido'));
+    });
+}   
+
+// Agregar esta función para cargar las categorías en el select
+function cargarCategoriasSelect() {
+    fetch('/inventario/api/categorias-item')
+        .then(response => response.json())
+        .then(categorias => {
+            const selectCategoria = document.getElementById('item-categoria');
+            // Mantener solo la primera opción (Seleccione una categoría)
+            selectCategoria.innerHTML = '<option value="">Seleccione una categoría</option>';
+            
+            categorias.forEach(categoria => {
+                if (categoria.estatus === 'activo') { // Solo mostrar categorías activas
+                    const option = document.createElement('option');
+                    option.value = categoria.nombre;
+                    option.textContent = categoria.nombre;
+                    selectCategoria.appendChild(option);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar categorías:', error);
+            alert('Error al cargar las categorías');
+        });
+}
+
+// Modificar la función mostrarModalItem para incluir la carga de categorías
+function mostrarModalItem(id = null) {
+    itemForm.reset();
+    cargarCategoriasSelect(); // Agregar esta línea
+    
+    if (id) {
+        cargarDatosItem(id);
+    } else {
+        document.getElementById('modal-title').textContent = 'Crear Nuevo Item';
+        eliminarItemBtn.classList.add('hidden');
+    }
+    toggleCamposInventario();
+    itemModal.classList.remove('hidden');
+}
+
+// Modificar la función cargarDatosItem para asegurar que se seleccione la categoría correcta
+function cargarDatosItem(id) {
+    fetch(`/api/items/${id}`)
+        .then(response => response.json())
+        .then(item => {
+            document.getElementById('modal-title').textContent = 'Editar Item';
+            eliminarItemBtn.classList.remove('hidden');
+            
+            // Primero cargar las categorías y luego establecer los valores
+            cargarCategoriasSelect();
+            
+            // Esperar un momento para asegurar que las categorías se hayan cargado
+            setTimeout(() => {
+                for (const [key, value] of Object.entries(item)) {
+                    const field = document.getElementById(`item-${key}`);
+                    if (field) {
+                        field.value = value;
+                    }
+                }
+                toggleCamposInventario();
+            }, 100);
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+// También deberías cargar las categorías cuando se inicia la página
+document.addEventListener('DOMContentLoaded', function() {
+    // ... (código existente) ...
+    
+    cargarItems();
+    cargarCategoriasSelect(); // Agregar esta línea
+    
+    // ... (resto del código existente) ...
+});   
+
+   // Agregar esta función para cargar las categorías
+function cargarCategorias() {
+    fetch('/inventario/api/categorias-item')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('categorias-list');
+            tbody.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No hay categorías registradas
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            data.forEach(categoria => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${categoria.nombre}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${categoria.estatus === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${categoria.estatus}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button class="text-indigo-600 hover:text-indigo-900 mr-2 editar-categoria" data-id="${categoria.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="text-red-600 hover:text-red-900 eliminar-categoria" data-id="${categoria.id}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Agregar event listeners para los botones de acción
+            document.querySelectorAll('.editar-categoria').forEach(btn => {
+                btn.addEventListener('click', (e) => editarCategoria(e.target.closest('button').dataset.id));
+            });
+            document.querySelectorAll('.eliminar-categoria').forEach(btn => {
+                btn.addEventListener('click', (e) => eliminarCategoria(e.target.closest('button').dataset.id));
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar categorías:', error);
+            const tbody = document.getElementById('categorias-list');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="px-6 py-4 text-center text-sm text-red-500">
+                        Error al cargar las categorías
+                    </td>
+                </tr>
+            `;
+        });
+}
+
+// Modificar la función guardarNuevaCategoriaItem
+function guardarNuevaCategoriaItem(e) {
+    e.preventDefault();
+    const formData = new FormData(crearCategoriaItemForm);
+    const nuevaCategoriaData = Object.fromEntries(formData.entries());
+
+    fetch('/inventario/api/categorias-item', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(nuevaCategoriaData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        crearCategoriaItemForm.reset();
+        cargarCategorias(); // Recargar la lista de categorías
+        alert('Nueva categoría de item creada con éxito');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al crear la nueva categoría de item');
+    });
+}
+
+// Agregar funciones para editar y eliminar categorías
+function editarCategoria(id) {
+    fetch(`/inventario/api/categorias-item/${id}`)
+        .then(response => response.json())
+        .then(categoria => {
+            document.getElementById('nombre-categoria-item').value = categoria.nombre;
+            document.getElementById('descripcion-categoria-item').value = categoria.descripcion;
+            document.getElementById('estatus-categoria-item').value = categoria.estatus;
+            crearCategoriaItemForm.dataset.editingId = id;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los datos de la categoría');
+        });
+}
+
+function eliminarCategoria(id) {
+    if (confirm('¿Está seguro de que desea eliminar esta categoría?')) {
+        fetch(`/inventario/api/categorias-item/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (response.ok) {
+                cargarCategorias();
+                alert('Categoría eliminada con éxito');
+            } else {
+                throw new Error('Error al eliminar la categoría');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar la categoría');
+        });
+    }
+}
+
+// Modificar el event listener para el botón de crear categoría
+crearCategoriaItemBtn.addEventListener('click', () => {
+    crearCategoriaItemModal.classList.remove('hidden');
+    cargarCategorias(); // Cargar las categorías al abrir el modal
+});
+
+// Agregar event listener para el botón de limpiar
+document.getElementById('limpiar-categoria-item-btn').addEventListener('click', () => {
+    crearCategoriaItemForm.reset();
+    delete crearCategoriaItemForm.dataset.editingId;
+});
+
+crearTipoItemBtn.addEventListener('click', () => {
+    crearTipoItemForm.reset();
+    crearTipoItemModal.classList.remove('hidden');
+    cargarTiposItem(); // Agregar esta línea
+});
+
+// Modificar la función mostrarModalAjuste 
+function mostrarModalAjuste() {
+    ajusteForm.reset();
+    document.getElementById('item-details').classList.add('hidden');
+    document.getElementById('cantidad-diff').classList.add('hidden');
+    cargarOpcionesItems('ajuste-item');
+    ajusteModal.classList.remove('hidden');
+}
+
+// Asegurarse de que estos event listeners estén configurados
+document.addEventListener('DOMContentLoaded', function() {
+    const ajusteInventarioBtn = document.getElementById('ajuste-inventario-btn');
+    const ajusteModal = document.getElementById('ajusteModal');
+    const guardarAjusteBtn = document.getElementById('guardar-ajuste-btn');
+    const cerrarAjusteModalBtn = document.getElementById('cerrar-ajuste-modal-btn');
+    
+    ajusteInventarioBtn.addEventListener('click', mostrarModalAjuste);
+    guardarAjusteBtn.addEventListener('click', guardarAjuste);
+    cerrarAjusteModalBtn.addEventListener('click', () => ajusteModal.classList.add('hidden'));
+    
+    // Configurar el evento input para la cantidad nueva
+    const ajusteCantidad = document.getElementById('ajuste-cantidad');
+    ajusteCantidad.addEventListener('input', function() {
+        const itemSelect = document.getElementById('ajuste-item');
+        const selectedItemId = parseInt(itemSelect.value);
+        const cantidadNueva = parseInt(this.value) || 0;
+        
+        fetch('/inventario/api/items-select')
+            .then(response => response.json())
+            .then(items => {
+                const selectedItem = items.find(item => item.id === selectedItemId);
+                if (selectedItem) {
+                    const diferencia = cantidadNueva - selectedItem.stock;
+                    const cantidadDiff = document.getElementById('cantidad-diff');
+                    const diffValor = document.getElementById('diff-valor');
+                    
+                    cantidadDiff.classList.remove('hidden');
+                    diffValor.textContent = `${diferencia > 0 ? '+' : ''}${diferencia}`;
+                    diffValor.className = `ml-2 ${diferencia > 0 ? 'text-green-600' : 'text-red-600'}`;
+                }
+            });
+    });
+});
+
+
+// Modificar la función guardarAjuste
+function guardarAjuste(e) {
+    e.preventDefault();
+    const formData = new FormData(ajusteForm);
+    const ajusteData = {
+        item_id: formData.get('item_id'),
+        cantidad_nueva: formData.get('cantidad_nueva'),
+        motivo: formData.get('motivo')
+    };
+
+    fetch('/inventario/api/ajustes', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(ajusteData),
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+    })
+    .then(data => {
+        ajusteModal.classList.add('hidden');
+        cargarItems(); // Recargar la lista de items
+        alert('Ajuste realizado con éxito');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al realizar el ajuste: ' + (error.error || 'Error desconocido'));
+    });
+}
+
+function cargarTiposItem() {
+    fetch('/inventario/api/tipos-item', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(tipos => {
+        console.log('Tipos cargados:', tipos); // Para debug
+        const tbody = document.getElementById('tipos-item-list');
+        tbody.innerHTML = '';
+        
+        if (!tipos || tipos.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                        No hay tipos de item registrados
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tipos.forEach(tipo => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${tipo.nombre}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${tipo.tipo}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        ${tipo.estatus === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${tipo.estatus}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <button class="text-indigo-600 hover:text-indigo-900 mr-2 editar-tipo" data-id="${tipo.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-600 hover:text-red-900 eliminar-tipo" data-id="${tipo.id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Agregar event listeners para los botones
+        document.querySelectorAll('.editar-tipo').forEach(btn => {
+            btn.addEventListener('click', (e) => editarTipoItem(e.target.closest('button').dataset.id));
+        });
+        document.querySelectorAll('.eliminar-tipo').forEach(btn => {
+            btn.addEventListener('click', (e) => eliminarTipoItem(e.target.closest('button').dataset.id));
+        });
+    })
+    .catch(error => {
+        console.error('Error al cargar tipos:', error);
+        const tbody = document.getElementById('tipos-item-list');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="px-6 py-4 text-center text-sm text-red-500">
+                    Error al cargar los tipos de item
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function editarTipoItem(id) {
+    fetch(`/inventario/api/tipos-item/${id}`)
+        .then(response => response.json())
+        .then(tipo => {
+            document.getElementById('nuevo-tipo-item-nombre').value = tipo.nombre;
+            document.getElementById('nuevo-tipo-item-descripcion').value = tipo.descripcion;
+            document.getElementById('nuevo-tipo-item-estatus').value = tipo.estatus;
+            
+            // Marcar el radio button correspondiente
+            const radioTipo = document.querySelector(`input[name="tipo"][value="${tipo.tipo}"]`);
+            if (radioTipo) radioTipo.checked = true;
+            
+            // Marcar los checkboxes según los valores
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = tipo[checkbox.name] || false;
+            });
+            
+            crearTipoItemForm.dataset.editingId = id;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los datos del tipo de item');
+        });
+}
+
+function eliminarTipoItem(id) {
+    if (confirm('¿Está seguro de que desea eliminar este tipo de item?')) {
+        fetch(`/inventario/api/tipos-item/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (response.ok) {
+                cargarTiposItem();
+                alert('Tipo de item eliminado con éxito');
+            } else {
+                throw new Error('Error al eliminar el tipo de item');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar el tipo de item');
+        });
+    }
+}
+
+// Modificar el event listener del botón de ajuste
+document.getElementById('guardar-ajuste-btn').addEventListener('click', guardarAjuste);
+
+function cargarOpcionesItems(selectId) {
+    fetch('/inventario/api/items-select', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(items => {
+        console.log('Items cargados:', items); // Para debug
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Seleccione un item...</option>';
+        
+        items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            const displayText = item.codigo 
+                ? `[${item.codigo}] ${item.nombre} - Stock: ${item.stock}`
+                : `${item.nombre} - Stock: ${item.stock}`;
+            option.textContent = displayText;
+            select.appendChild(option);
+        });
+    })
+    .catch(error => {
+        console.error('Error al cargar items:', error);
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Error al cargar items</option>';
+        alert('Error al cargar los items. Por favor, revise la consola para más detalles.');
+    });
+}
 });
 </script>
 {% endblock %}

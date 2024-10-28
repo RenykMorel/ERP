@@ -8,8 +8,7 @@ from .inventario_models import InventarioItem, MovimientoInventario, AjusteInven
 from extensions import db
 import logging
 import io  
-import csv  
-from . import inventario_bp
+import csv
 
 
 logger = logging.getLogger(__name__)
@@ -584,17 +583,150 @@ def get_entradas_count():
 @login_required
 def get_items_select():
     try:
-        items = InventarioItem.query.filter_by(tipo='producto').all()
+        # Filtrar solo por productos activos si es necesario
+        items = InventarioItem.query.all()
         return jsonify([{
             'id': item.id,
             'nombre': item.nombre,
             'codigo': item.codigo,
             'precio': item.precio,
-            'costo': item.costo
+            'costo': item.costo,
+            'stock': item.stock
         } for item in items])
     except Exception as e:
         logger.error(f"Error al obtener items: {str(e)}")
-        return jsonify({"error": "Error interno del servidor"}), 500    
+        return jsonify({"error": "Error interno del servidor"}), 500
+    
+@inventario_bp.route('/api/ajustes', methods=['POST'])
+@login_required
+def crear_ajuste():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No se recibieron datos"}), 400
+            
+        item_id = data.get('item_id')
+        cantidad_nueva = data.get('cantidad_nueva')
+        motivo = data.get('motivo')
+        
+        if not all([item_id, cantidad_nueva, motivo]):
+            return jsonify({"error": "Faltan datos requeridos"}), 400
+
+        item = InventarioItem.query.get_or_404(item_id)
+        
+        # Crear el ajuste
+        ajuste = AjusteInventario(
+            item_id=item_id,
+            cantidad_anterior=item.stock,
+            cantidad_nueva=int(cantidad_nueva),
+            motivo=motivo,
+            usuario_id=current_user.id
+        )
+        
+        # Actualizar el stock del item
+        item.stock = int(cantidad_nueva)
+        
+        db.session.add(ajuste)
+        db.session.commit()
+        
+        return jsonify({"mensaje": "Ajuste realizado exitosamente"}), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al crear ajuste: {str(e)}")
+        return jsonify({"error": str(e)}), 500    
+    
+@inventario_bp.route('/api/categorias-item', methods=['GET'])
+@login_required
+def get_categorias_item():
+    try:
+        categorias = TipoItem.query.all()
+        return jsonify([{
+            'id': categoria.id,
+            'nombre': categoria.nombre,
+            'estatus': categoria.estatus,
+            'descripcion': categoria.descripcion
+        } for categoria in categorias])
+    except Exception as e:
+        logger.error(f"Error al obtener categorías: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@inventario_bp.route('/api/categorias-item/<int:categoria_id>', methods=['GET'])
+@login_required
+def get_categoria_item(categoria_id):
+    try:
+        categoria = TipoItem.query.get_or_404(categoria_id)
+        return jsonify(categoria.to_dict())
+    except Exception as e:
+        logger.error(f"Error al obtener categoría {categoria_id}: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@inventario_bp.route('/api/categorias-item/<int:categoria_id>', methods=['DELETE'])
+@login_required
+def delete_categoria_item(categoria_id):
+    try:
+        categoria = TipoItem.query.get_or_404(categoria_id)
+        db.session.delete(categoria)
+        db.session.commit()
+        return '', 204
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al eliminar categoría {categoria_id}: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500       
+    
+@inventario_bp.route('/api/categorias-item', methods=['POST'])
+@login_required
+def crear_categoria_item():
+    try:
+        if not request.is_json:
+            return jsonify({"error": "Se requiere contenido JSON"}), 400
+            
+        data = request.get_json()
+        logger.debug(f"Datos recibidos: {data}")
+        
+        if not data.get('nombre'):
+            return jsonify({"error": "El nombre es requerido"}), 400
+
+        nueva_categoria = TipoItem(
+            nombre=data['nombre'],
+            descripcion=data.get('descripcion'),
+            tipo=data.get('tipo', 'bien'),
+            estatus=data.get('estatus', 'activo'),
+            es_vendible=data.get('es_vendible', True),
+            usa_itbis=data.get('usa_itbis', True),
+            modifica_precio=data.get('modifica_precio', False),
+            modifica_impuestos=data.get('modifica_impuestos', False),
+            le_aplica_descuento=data.get('le_aplica_descuento', True),
+            precio_negativo=data.get('precio_negativo', False),
+            usa_margen_ganancia=data.get('usa_margen_ganancia', True),
+            usa_precio_moneda=data.get('usa_precio_moneda', False),
+            no_venta_costo_pp=data.get('no_venta_costo_pp', False),
+            gasto_incurrido_para_el_cliente=data.get('gasto_incurrido_para_el_cliente', False),
+            es_comprable=data.get('es_comprable', True),
+            proporcionalidad_del_itbis=data.get('proporcionalidad_del_itbis', False),
+            itbis=data.get('itbis', True),
+            otros_impuestos=data.get('otros_impuestos', False),
+            no_modifica_precio=data.get('no_modifica_precio', False),
+            modifica_costo=data.get('modifica_costo', True)
+        )
+
+        db.session.add(nueva_categoria)
+        db.session.commit()
+        
+        logger.info(f"Categoría creada exitosamente: {nueva_categoria.id}")
+        
+        return jsonify(nueva_categoria.to_dict()), 201
+
+    except ValueError as e:
+        db.session.rollback()
+        logger.error(f"Error de validación: {str(e)}")
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al crear categoría: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500  
+    
+    
 
 # Manejo de errores
 @inventario_bp.errorhandler(404)

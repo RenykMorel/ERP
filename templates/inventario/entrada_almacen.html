@@ -6,279 +6,330 @@
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-  .form-input, .form-select, .form-textarea {
-      border: 2px solid #10B981;
-      border-radius: 0.375rem;
-  }
-  .form-input:focus, .form-select:focus, .form-textarea:focus {
-      border-color: #059669;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-  }
-  .green-border {
-      border: 4px solid #10B981;
-  }
+.form-input, .form-select, .form-textarea {
+    border: 2px solid #10B981;
+    border-radius: 0.375rem;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+.green-border {
+    border: 4px solid #10B981;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold mb-6 text-gray-800">Entrada de Almacén</h1>
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Entrada de Almacén</h1>
 
-  <div class="mb-6 flex space-x-4">
-      <button id="nueva-entrada-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded shadow">
-          <i class="fas fa-plus mr-2"></i>Nueva Entrada
-      </button>
-      <button id="nuevo-almacen-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow">
-          <i class="fas fa-warehouse mr-2"></i>Crear Almacén
-      </button>
-      <button id="ver-almacenes-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded shadow">
-          <i class="fas fa-list mr-2"></i>Ver Almacenes
-      </button>
-  </div>
+    <div class="mb-6 flex space-x-4">
+        <button id="nueva-entrada-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fas fa-plus mr-2"></i>Nueva Entrada
+        </button>
+        <button id="nuevo-almacen-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fas fa-warehouse mr-2"></i>Crear Almacén
+        </button>
+        <button id="ver-almacenes-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fas fa-list mr-2"></i>Ver Almacenes
+        </button>
+    </div>
 
-  <div class="bg-white shadow-md rounded-lg overflow-hidden">
-      <table class="min-w-full leading-normal">
-          <thead>
-              <tr>
-                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Número de Entrada
-                  </th>
-                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Fecha
-                  </th>
-                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Proveedor
-                  </th>
-                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Total Items
-                  </th>
-                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Estado
-                  </th>
-                  <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Acciones
-                  </th>
-              </tr>
-          </thead>
-          <tbody id="entradas-tbody">
-              <!-- Las entradas se cargarán aquí dinámicamente -->
-          </tbody>
-      </table>
-  </div>
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full leading-normal">
+            <thead>
+                <tr>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Número de Entrada
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Fecha
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Proveedor
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Total Items
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Estado
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Acciones
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="entradas-tbody">
+                <!-- Las entradas se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Modal para crear/editar entrada -->
 <div id="entradaModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full green-border">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
-                  Nueva Entrada de Almacén
-              </h3>
-              <form id="entrada-form" class="space-y-4">
-                  <div class="grid grid-cols-3 gap-4">
-                      <div>
-                          <label for="orden-compra" class="block text-sm font-medium text-gray-700 mb-1">Orden de Compra</label>
-                          <div class="flex">
-                              <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="orden-compra" name="orden_compra">
-                              <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                  <i class="fas fa-search"></i>
-                              </button>
-                          </div>
-                      </div>
-                      <div>
-                          <label for="factura" class="block text-sm font-medium text-gray-700 mb-1">Factura</label>
-                          <div class="flex">
-                              <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="factura" name="factura">
-                              <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                  <i class="fas fa-search"></i>
-                              </button>
-                          </div>
-                      </div>
-                      <div>
-                          <label for="expediente" class="block text-sm font-medium text-gray-700 mb-1">Expediente</label>
-                          <div class="flex">
-                              <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="expediente" name="expediente">
-                              <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                  <i class="fas fa-search"></i>
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="grid grid-cols-3 gap-4">
-                      <div>
-                          <label for="almacen" class="block text-sm font-medium text-gray-700 mb-1">Almacén</label>
-                          <select class="form-select mt-1 block w-full" id="almacen" name="almacen">
-                              <!-- Options will be dynamically populated -->
-                          </select>
-                      </div>
-                      <div>
-                          <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                          <input type="date" class="form-input mt-1 block w-full" id="fecha" name="fecha">
-                      </div>
-                      <div>
-                          <label for="moneda" class="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
-                          <select class="form-select mt-1 block w-full" id="moneda" name="moneda">
-                              <option value="peso-dominicano">Peso Dominicano</option>
-                              <option value="dolar-estadounidense">Dólar Estadounidense</option>
-                          </select>
-                      </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-4">
-                      <div>
-                          <label for="documento" class="block text-sm font-medium text-gray-700 mb-1">Documento</label>
-                          <input type="text" class="form-input mt-1 block w-full" id="documento" name="documento">
-                      </div>
-                      <div>
-                          <label for="referencia" class="block text-sm font-medium text-gray-700 mb-1">Referencia</label>
-                          <input type="text" class="form-input mt-1 block w-full" id="referencia" name="referencia">
-                      </div>
-                  </div>
-                  <div>
-                      <label for="nota" class="block text-sm font-medium text-gray-700 mb-1">Nota</label>
-                      <textarea class="form-textarea mt-1 block w-full" id="nota" name="nota" rows="3"></textarea>
-                  </div>
-                  <div class="grid grid-cols-2 gap-4">
-                      <div>
-                          <label for="concepto" class="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
-                          <select class="form-select mt-1 block w-full" id="concepto" name="concepto">
-                              <option value="compra">Compra</option>
-                              <option value="devolucion">Devolución</option>
-                          </select>
-                      </div>
-                      <div>
-                          <label for="estatus" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
-                          <select class="form-select mt-1 block w-full" id="estatus" name="estatus">
-                              <option value="en-almacen">En Almacén</option>
-                              <option value="pendiente">Pendiente</option>
-                          </select>
-                      </div>
-                  </div>
-                  <div>
-                      <h6 class="text-sm font-medium text-gray-700 mb-2">Productos</h6>
-                      <div class="overflow-x-auto">
-                          <table class="min-w-full divide-y divide-gray-200">
-                              <thead class="bg-gray-50">
-                                  <tr>
-                                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
-                                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
-                                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                                  </tr>
-                              </thead>
-                              <tbody id="items-container" class="bg-white divide-y divide-gray-200">
-                                  <!-- Aquí se agregarán dinámicamente los campos para los items -->
-                              </tbody>
-                          </table>
-                      </div>
-                      <button type="button" id="agregar-item-btn" class="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                          <i class="fas fa-plus mr-2"></i>Agregar Item
-                      </button>
-                  </div>
-              </form>
-          </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-entrada-btn">
-                  Grabar
-              </button>
-              <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="limpiar-btn">
-                  Limpiar
-              </button>
-              <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancelar-btn">
-                  Cancelar
-              </button>
-          </div>
-      </div>
-  </div>
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full green-border">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                    Nueva Entrada de Almacén
+                </h3>
+                <form id="entrada-form" class="space-y-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label for="orden-compra" class="block text-sm font-medium text-gray-700 mb-1">Orden de Compra</label>
+                            <div class="flex">
+                                <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="orden-compra" name="orden_compra">
+                                <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="factura" class="block text-sm font-medium text-gray-700 mb-1">Factura</label>
+                            <div class="flex">
+                                <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="factura" name="factura">
+                                <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="expediente" class="block text-sm font-medium text-gray-700 mb-1">Expediente</label>
+                            <div class="flex">
+                                <input type="text" class="form-input mt-1 block w-full rounded-r-none" id="expediente" name="expediente">
+                                <button type="button" class="bg-gray-200 text-gray-700 px-3 rounded-r-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label for="almacen" class="block text-sm font-medium text-gray-700 mb-1">Almacén</label>
+                            <select class="form-select mt-1 block w-full" id="almacen" name="almacen">
+                                <!-- Options will be dynamically populated -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                            <input type="date" class="form-input mt-1 block w-full" id="fecha" name="fecha">
+                        </div>
+                        <div>
+                            <label for="moneda" class="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+                            <select class="form-select mt-1 block w-full" id="moneda" name="moneda">
+                                <option value="peso-dominicano">Peso Dominicano</option>
+                                <option value="dolar-estadounidense">Dólar Estadounidense</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="documento" class="block text-sm font-medium text-gray-700 mb-1">Documento</label>
+                            <input type="text" class="form-input mt-1 block w-full" id="documento" name="documento">
+                        </div>
+                        <div>
+                            <label for="referencia" class="block text-sm font-medium text-gray-700 mb-1">Referencia</label>
+                            <input type="text" class="form-input mt-1 block w-full" id="referencia" name="referencia">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="nota" class="block text-sm font-medium text-gray-700 mb-1">Nota</label>
+                        <textarea class="form-textarea mt-1 block w-full" id="nota" name="nota" rows="3"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="concepto" class="block text-sm font-medium text-gray-700 mb-1">Concepto</label>
+                            <select class="form-select mt-1 block w-full" id="concepto" name="concepto">
+                                <option value="compra">Compra</option>
+                                <option value="devolucion">Devolución</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="estatus" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+                            <select class="form-select mt-1 block w-full" id="estatus" name="estatus">
+                                <option value="en-almacen">En Almacén</option>
+                                <option value="pendiente">Pendiente</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <h6 class="text-sm font-medium text-gray-700 mb-2">Productos</h6>
+                        <button type="button" id="open-item-selector" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                            Seleccionar Items
+                        </button>
+                        <div class="mt-4 overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Costo</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="items-container" class="bg-white divide-y divide-gray-200">
+                                    <!-- Los items seleccionados se agregarán aquí dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-entrada-btn">
+                    Grabar
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="limpiar-btn">
+                    Limpiar
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium  text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancelar-btn">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal para crear almacén -->
-<div id="almacenModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-      <span  class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl  transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  Crear Nuevo Almacén
-              </h3>
-              <form id="almacen-form" class="space-y-4">
-                  <div>
-                      <label for="nombre-almacen" class="block text-sm font-medium text-gray-700">Nombre del Almacén</label>
-                      <input type="text" id="nombre-almacen" name="nombre" class="form-input mt-1 block w-full" required>
-                  </div>
-                  <div>
-                      <label for="ubicacion-almacen" class="block text-sm font-medium text-gray-700">Ubicación</label>
-                      <input type="text" id="ubicacion-almacen" name="ubicacion" class="form-input mt-1 block w-full" required>
-                  </div>
-                  <div>
-                      <label for="capacidad-almacen" class="block text-sm font-medium text-gray-700">Capacidad (m²)</label>
-                      <input type="number" id="capacidad-almacen" name="capacidad" class="form-input mt-1 block w-full" required>
-                  </div>
-                  <div>
-                      <label for="cuenta-inventario" class="block text-sm font-medium text-gray-700">Cuenta de Inventario</label>
-                      <input type="text" id="cuenta-inventario" name="cuenta_inventario" class="form-input mt-1 block w-full" required>
-                  </div>
-                  <div>
-                      <label class="inline-flex items-center">
-                          <input type="checkbox" id="almacen-principal" name="es_principal" class="form-checkbox">
-                          <span class="ml-2">Es Almacén Principal</span>
-                      </label>
-                  </div>
-                  <div>
-                      <label for="descripcion-almacen" class="block text-sm font-medium text-gray-700">Descripción</label>
-                      <textarea id="descripcion-almacen" name="descripcion" rows="3" class="form-textarea mt-1 block w-full"></textarea>
-                  </div>
-              </form>
-          </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-almacen-btn">
-                  Guardar
-              </button>
-              <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancelar-almacen-btn">
-                  Cancelar
-              </button>
-          </div>
-      </div>
-  </div>
+<div  id="almacenModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span  class="hidden sm:inline-block sm:align-middle  sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl  transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    Crear Nuevo Almacén
+                </h3>
+                <form id="almacen-form" class="space-y-4">
+                    <div>
+                        <label for="nombre-almacen" class="block text-sm font-medium text-gray-700">Nombre del Almacén</label>
+                        <input type="text" id="nombre-almacen" name="nombre" class="form-input mt-1 block w-full" required>
+                    </div>
+                    <div>
+                        <label for="ubicacion-almacen" class="block text-sm font-medium text-gray-700">Ubicación</label>
+                        <input type="text" id="ubicacion-almacen" name="ubicacion" class="form-input mt-1 block w-full" required>
+                    </div>
+                    <div>
+                        <label for="capacidad-almacen" class="block text-sm font-medium text-gray-700">Capacidad (m²)</label>
+                        <input type="number" id="capacidad-almacen" name="capacidad" class="form-input mt-1 block w-full" required>
+                    </div>
+                    <div>
+                        <label for="cuenta-inventario" class="block text-sm font-medium text-gray-700">Cuenta de Inventario</label>
+                        <input type="text" id="cuenta-inventario" name="cuenta_inventario" class="form-input mt-1 block w-full" required>
+                    </div>
+                    <div>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="almacen-principal" name="es_principal" class="form-checkbox">
+                            <span class="ml-2">Es Almacén Principal</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label for="descripcion-almacen" class="block text-sm font-medium text-gray-700">Descripción</label>
+                        <textarea id="descripcion-almacen" name="descripcion" rows="3" class="form-textarea mt-1 block w-full"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm" id="guardar-almacen-btn">
+                    Guardar
+                </button>
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancelar-almacen-btn">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal para ver almacenes -->
 <div id="verAlmacenesModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    Almacenes Registrados
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacidad</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta de Inventario</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Principal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="almacenes-list" class="bg-white divide-y divide-gray-200">
+                            <!-- Los almacenes se cargarán aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm" id="cerrar-ver-almacenes-btn">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Item Selector Modal -->
+<div id="item-selector" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="item-selector-title" role="dialog" aria-modal="true">
   <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  Almacenes Registrados
-              </h3>
-              <div class="overflow-x-auto">
-                  <table class="min-w-full divide-y divide-gray-200">
-                      <thead class="bg-gray-50">
-                          <tr>
-                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
-                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacidad</th>
-                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta de Inventario</th>
-                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Principal</th>
-                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                          </tr>
-                      </thead>
-                      <tbody id="almacenes-list" class="bg-white divide-y divide-gray-200">
-                          <!-- Los almacenes se cargarán aquí dinámicamente -->
-                      </tbody>
-                  </table>
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="item-selector-title">
+          Seleccionar Items
+        </h3>
+        <div class="mb-4">
+          <input type="text" id="item-search" class="form-input w-full" placeholder="Buscar items...">
+        </div>
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div class="bg-gray-100 p-4 rounded-lg">
+            <h4 class="font-semibold mb-2">Categorías</h4>
+            <div id="category-filters" class="space-y-2">
+              <!-- Categories will be dynamically added here -->
+            </div>
+          </div>
+          <div class="col-span-2">
+            <div class="bg-gray-100 p-4 rounded-lg mb-4">
+              <h4 class="font-semibold mb-2">Vista Rápida</h4>
+              <div id="quick-view" class="grid grid-cols-3 gap-2">
+                <!-- Most used or recently added items will appear here -->
               </div>
+            </div>
+            <div id="item-list" class="grid grid-cols-2 gap-4">
+              <!-- Items will be dynamically added here -->
+            </div>
           </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm" id="cerrar-ver-almacenes-btn">
-                  Cerrar
-              </button>
-          </div>
+        </div>
+        <div id="selected-items" class="bg-gray-100 p-4 rounded-lg">
+          <h4 class="font-semibold mb-2">Items Seleccionados</h4>
+          <ul id="selected-items-list" class="space-y-2">
+            <!-- Selected items will be added here -->
+          </ul>
+        </div>
       </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" id="confirm-selection">
+          Confirmar Selección
+        </button>
+        <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancel-selection">
+          Cancelar
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -298,11 +349,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const verAlmacenesModal = document.getElementById('verAlmacenesModal');
     const entradaForm = document.getElementById('entrada-form');
     const almacenForm = document.getElementById('almacen-form');
-    const agregarItemBtn = document.getElementById('agregar-item-btn');
     const itemsContainer = document.getElementById('items-container');
     const guardarAlmacenBtn = document.getElementById('guardar-almacen-btn');
     const cancelarAlmacenBtn = document.getElementById('cancelar-almacen-btn');
     const cerrarVerAlmacenesBtn = document.getElementById('cerrar-ver-almacenes-btn');
+    const openItemSelectorBtn = document.getElementById('open-item-selector');
+
+    let itemsInventario = []; // Variable global para almacenar los items
+    let selectedItems = []; // Variable global para almacenar los items seleccionados
 
     // Event Listeners
     nuevaEntradaBtn.addEventListener('click', () => mostrarModalEntrada());
@@ -319,133 +373,18 @@ document.addEventListener('DOMContentLoaded', function() {
     guardarEntradaBtn.addEventListener('click', guardarEntrada);
     limpiarBtn.addEventListener('click', limpiarFormulario);
     cancelarBtn.addEventListener('click', () => entradaModal.classList.add('hidden'));
-    agregarItemBtn.addEventListener('click', agregarItemCampo);
     guardarAlmacenBtn.addEventListener('click', function(e) {
         e.preventDefault();
         guardarAlmacen();
     });
     cancelarAlmacenBtn.addEventListener('click', () => almacenModal.classList.add('hidden'));
     cerrarVerAlmacenesBtn.addEventListener('click', () => verAlmacenesModal.classList.add('hidden'));
+    openItemSelectorBtn.addEventListener('click', openItemSelector);
 
     // Cargar datos iniciales
     cargarEntradas();
     cargarAlmacenes();
     cargarItemsInventario();
-
-
-    // Función para guardar almacén
-    function guardarAlmacen() {
-        const formData = new FormData(almacenForm);
-        const almacenData = {
-            nombre: formData.get('nombre'),
-            ubicacion: formData.get('ubicacion'),
-            capacidad: parseFloat(formData.get('capacidad')),
-            cuenta_inventario: formData.get('cuenta_inventario'),
-            es_principal: formData.get('es_principal') === 'on',
-            descripcion: formData.get('descripcion')
-        };
-        
-        fetch('/inventario/api/almacenes', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(almacenData)
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => Promise.reject(err));
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Almacén guardado:', data);
-            almacenModal.classList.add('hidden');
-            almacenForm.reset();
-            cargarAlmacenes();
-            alert('Almacén guardado correctamente');
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al guardar el almacén: ' + (error.error || error.message || 'Error desconocido'));
-        });
-    }
-
-    // Función para cargar almacenes
-    function cargarAlmacenes() {
-        console.log('Cargando almacenes...');
-        fetch('/inventario/api/almacenes')
-            .then(response => response.json())
-            .then(data => {
-                console.log('Almacenes cargados:', data);
-                const tbody = document.getElementById('almacenes-list');
-                tbody.innerHTML = '';
-                
-                data.forEach(almacen => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${almacen.nombre}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${almacen.ubicacion || '-'}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${almacen.capacidad} m²</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${almacen.cuenta_inventario || '-'}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${almacen.es_principal ? 'Sí' : 'No'}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3 editar-almacen" data-id="${almacen.id}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-red-600 hover:text-red-900 eliminar-almacen" data-id="${almacen.id}">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-                
-                // Actualizar el select de almacenes
-                actualizarSelectAlmacenes(data);
-            })
-            .catch(error => {
-                console.error('Error al cargar almacenes:', error);
-                alert('Error al cargar los almacenes');
-            });
-    }
-    
-    // Función auxiliar para actualizar el select de almacenes
-    function actualizarSelectAlmacenes(almacenes) {
-        const select = document.getElementById('almacen');
-        select.innerHTML = '';
-        
-        almacenes.forEach(almacen => {
-            const option = document.createElement('option');
-            option.value = almacen.id;
-            option.textContent = almacen.nombre;
-            select.appendChild(option);
-        });
-    }
-
-    // Función para actualizar el select de almacenes
-    function actualizarSelectAlmacenes(almacenes) {
-        const select = document.getElementById('almacen');
-        select.innerHTML = '';
-        
-        almacenes.forEach(almacen => {
-            const option = document.createElement('option');
-            option.value = almacen.id;
-            option.textContent = almacen.nombre;
-            select.appendChild(option);
-        });
-    }
 
     function mostrarModalEntrada(id = null) {
         entradaForm.reset();
@@ -454,12 +393,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             document.getElementById('modal-title').textContent = 'Nueva Entrada de Almacén';
             itemsContainer.innerHTML = '';
-            agregarItemCampo();
         }
         entradaModal.classList.remove('hidden');
     }
-
-    
 
     function cargarEntradas() {
         console.log('Cargando entradas...');
@@ -470,13 +406,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            credentials: 'same-origin'  // Importante para las cookies de sesión
+            credentials: 'same-origin'
         })
         .then(async response => {
             console.log('Respuesta del servidor:', response);
             const contentType = response.headers.get("content-type");
             if (!contentType || !contentType.includes("application/json")) {
-                // Si la respuesta no es JSON, leer como texto
                 const text = await response.text();
                 console.error('Respuesta no JSON recibida:', text);
                 throw new Error('Respuesta del servidor no es JSON');
@@ -490,13 +425,13 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Entradas cargadas:', data);
             if (!Array.isArray(data)) {
                 console.warn('Los datos recibidos no son un array:', data);
-                data = [];  // Asegurar que siempre sea un array
+                data = [];
             }
             actualizarTablaEntradas(data);
         })
         .catch(error => {
             console.error('Error al cargar entradas:', error);
-            const tbody = document.getElementById('entradas-tbody');
+            const tbody = document.getElementById('ent radas-tbody');
             tbody.innerHTML = `
                 <tr>
                     <td colspan="6" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
@@ -512,7 +447,6 @@ document.addEventListener('DOMContentLoaded', function() {
         tbody.innerHTML = '';
         
         if (!entradas || entradas.length === 0) {
-            // Mostrar mensaje cuando no hay entradas
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td colspan="6" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
@@ -555,81 +489,199 @@ document.addEventListener('DOMContentLoaded', function() {
             tbody.appendChild(tr);
         });
     
-        // Agregar event listeners a los botones
         document.querySelectorAll('.editar-entrada').forEach(btn => {
-            btn.addEventListener('click', (e) => mostrarModalEntrada(e.target.closest('button').dataset.id));
+            btn.addEventListener('click', (e) => mostrarModalEntrada(e.target.dataset.id));
         });
+    
         document.querySelectorAll('.eliminar-entrada').forEach(btn => {
-            btn.addEventListener('click', (e) => eliminarEntrada(e.target.closest('button').dataset.id));
+            btn.addEventListener('click', (e) => confirmarEliminarEntrada(e.target.dataset.id));
         });
     }
-
-    function actualizarTablaEntradas(entradas) {
-        const tbody = document.getElementById('entradas-tbody');
+    
+    function cargarDatosEntrada(id) {
+        console.log('Cargando datos de la entrada:', id);
+        fetch(`/inventario/api/entradas/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Datos de la entrada cargados:', data);
+                document.getElementById('modal-title').textContent = 'Editar Entrada de Almacén';
+                // Aquí debes rellenar el formulario con los datos recibidos
+                document.getElementById('orden-compra').value = data.ordenCompra || '';
+                document.getElementById('factura').value = data.factura || '';
+                document.getElementById('expediente').value = data.expediente || '';
+                document.getElementById('almacen').value = data.almacen || '';
+                document.getElementById('fecha').value = data.fecha || '';
+                document.getElementById('moneda').value = data.moneda || '';
+                document.getElementById('documento').value = data.documento || '';
+                document.getElementById('referencia').value = data.referencia || '';
+                document.getElementById('nota').value = data.nota || '';
+                document.getElementById('concepto').value = data.concepto || '';
+                document.getElementById('estatus').value = data.estatus || '';
+                
+                // Cargar los items
+                selectedItems = data.items || [];
+                renderSelectedItems();
+            })
+            .catch(error => {
+                console.error('Error al cargar los datos de la entrada:', error);
+                alert('Error al cargar los datos de la entrada');
+            });
+    }
+    
+    function confirmarEliminarEntrada(id) {
+        if (confirm('¿Estás seguro de que quieres eliminar esta entrada?')) {
+            eliminarEntrada(id);
+        }
+    }
+    
+    function eliminarEntrada(id) {
+        console.log('Eliminando entrada:', id);
+        fetch(`/inventario/api/entradas/${id}`, {
+            method: 'DELETE',
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Entrada eliminada:', data);
+            cargarEntradas(); // Recargar la lista de entradas
+        })
+        .catch(error => {
+            console.error('Error al eliminar la entrada:', error);
+            alert('Error al eliminar la entrada');
+        });
+    }
+    
+    function cargarAlmacenes() {
+        console.log('Cargando almacenes...');
+        fetch('/inventario/api/almacenes')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Almacenes cargados:', data);
+                const selectAlmacen = document.getElementById('almacen');
+                selectAlmacen.innerHTML = '<option value="">Seleccione un almacén</option>';
+                data.forEach(almacen => {
+                    const option = document.createElement('option');
+                    option.value = almacen.id;
+                    option.textContent = almacen.nombre;
+                    selectAlmacen.appendChild(option);
+                });
+                actualizarTablaAlmacenes(data);
+            })
+            .catch(error => {
+                console.error('Error al cargar almacenes:', error);
+            });
+    }
+    
+    function actualizarTablaAlmacenes(almacenes) {
+        const tbody = document.getElementById('almacenes-list');
         tbody.innerHTML = '';
-        entradas.forEach(entrada => {
+        almacenes.forEach(almacen => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${entrada.numero}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${entrada.fecha}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${entrada.proveedor}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${entrada.totalItems}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        entrada.estado === 'Completado' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }">${entrada.estado}</span>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <button class="text-blue-600 hover:text-blue-900 mr-2 editar-entrada" data-id="${entrada.id}">
+                <td class="px-6 py-4 whitespace-nowrap">${almacen.nombre}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${almacen.ubicacion}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${almacen.capacidad} m²</td>
+                <td class="px-6 py-4 whitespace-nowrap">${almacen.cuenta_inventario}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${almacen.es_principal ? 'Sí' : 'No'}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <button class="text-blue-600 hover:text-blue-900 mr-2 editar-almacen" data-id="${almacen.id}">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="text-red-600 hover:text-red-900 eliminar-entrada" data-id="${entrada.id}">
+                    <button class="text-red-600 hover:text-red-900 eliminar-almacen" data-id="${almacen.id}">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
-
-        document.querySelectorAll('.editar-entrada').forEach(btn => {
-            btn.addEventListener('click', (e) => mostrarModalEntrada(e.target.closest('button').dataset.id));
+    
+        // Agregar event listeners para editar y eliminar almacenes
+        document.querySelectorAll('.editar-almacen').forEach(btn => {
+            btn.addEventListener('click', (e) => editarAlmacen(e.target.dataset.id));
         });
-        document.querySelectorAll('.eliminar-entrada').forEach(btn => {
-            btn.addEventListener('click', (e) => eliminarEntrada(e.target.closest('button').dataset.id));
+        document.querySelectorAll('.eliminar-almacen').forEach(btn => {
+            btn.addEventListener('click', (e) => confirmarEliminarAlmacen(e.target.dataset.id));
         });
     }
-
+    
+    function editarAlmacen(id) {
+        console.log('Editando almacén:', id);
+        // Implementar la lógica para editar un almacén
+    }
+    
+    function confirmarEliminarAlmacen(id) {
+        if (confirm('¿Estás seguro de que quieres eliminar este almacén?')) {
+            eliminarAlmacen(id);
+        }
+    }
+    
+    function eliminarAlmacen(id) {
+        console.log('Eliminando almacén:', id);
+        fetch(`/inventario/api/almacenes/${id}`, {
+            method: 'DELETE',
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Almacén eliminado:', data);
+            cargarAlmacenes(); // Recargar la lista de almacenes
+        })
+        .catch(error => {
+            console.error('Error al eliminar el almacén:', error);
+            alert('Error al eliminar el almacén');
+        });
+    }
+    
+    function guardarAlmacen() {
+        const formData = new FormData(almacenForm);
+        const almacenData = Object.fromEntries(formData);
+        almacenData.es_principal = almacenForm.querySelector('#almacen-principal').checked;
+    
+        console.log('Guardando almacén:', almacenData);
+    
+        fetch('/inventario/api/almacenes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(almacenData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Almacén guardado:', data);
+            almacenModal.classList.add('hidden');
+            cargarAlmacenes();
+        })
+        .catch(error => {
+            console.error('Error al guardar el almacén:', error);
+            alert('Error al guardar el almacén');
+        });
+    }
+    
+    function cargarItemsInventario() {
+        console.log('Cargando items del inventario...');
+        fetch('/inventario/api/items')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Items cargados:', data);
+                itemsInventario = data;
+            })
+            .catch(error => {
+                console.error('Error al cargar items:', error);
+            });
+    }
+    
     function guardarEntrada(e) {
         e.preventDefault();
         console.log('Guardando entrada...');
         const formData = new FormData(entradaForm);
         const entradaData = Object.fromEntries(formData);
     
-        // Procesar los items
-        entradaData.items = [];
-        const itemIds = formData.getAll('item_id[]');
-        const itemCantidades = formData.getAll('item_cantidad[]');
-        const itemCostos = formData.getAll('item_costo[]');
-        
-        for (let i = 0; i < itemIds.length; i++) {
-            if (itemIds[i]) { // Solo agregar si se seleccionó un item
-                const itemSeleccionado = itemsInventario.find(item => item.id === parseInt(itemIds[i]));
-                entradaData.items.push({
-                    id: parseInt(itemIds[i]),
-                    nombre: itemSeleccionado.nombre,
-                    cantidad: parseInt(itemCantidades[i]),
-                    costo: parseFloat(itemCostos[i])
-                });
-            }
-        }
+        // Usar los items seleccionados
+        entradaData.items = selectedItems.map(item => ({
+            id: item.id,
+            nombre: item.nombre,
+            cantidad: item.cantidad,
+            costo: item.costo
+        }));
     
         console.log('Datos de la entrada:', entradaData);
     
@@ -638,248 +690,206 @@ document.addEventListener('DOMContentLoaded', function() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(entradaData)
+            body: JSON.stringify(entradaData),
         })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => Promise.reject(err));
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             console.log('Entrada guardada:', data);
             entradaModal.classList.add('hidden');
             cargarEntradas();
-            alert('Entrada guardada correctamente');
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Error al guardar la entrada: ' + (error.error || 'Error desconocido'));
+            console.error('Error al guardar la entrada:', error);
+            alert('Error al guardar la entrada');
         });
     }
     
-    function cargarDatosEntrada(id) {
-        console.log('Cargando datos de la entrada:', id);
-        fetch(`/inventario/api/entradas/${id}`)
-            .then(response => response.json())
-            .then(entrada => {
-                console.log('Datos de la entrada cargados:', entrada);
-                
-                // Actualizar todos los campos del formulario
-                document.getElementById('modal-title').textContent = 'Editar Entrada de Almacén';
-                document.getElementById('orden-compra').value = entrada.orden_compra || '';
-                document.getElementById('factura').value = entrada.factura || '';
-                document.getElementById('expediente').value = entrada.expediente || '';
-                document.getElementById('almacen').value = entrada.almacen_id || '';
-                document.getElementById('fecha').value = entrada.fecha || '';
-                document.getElementById('moneda').value = entrada.moneda || 'peso-dominicano';
-                document.getElementById('documento').value = entrada.documento || '';
-                document.getElementById('referencia').value = entrada.referencia || '';
-                document.getElementById('nota').value = entrada.nota || '';
-                document.getElementById('concepto').value = entrada.concepto || 'compra';
-                document.getElementById('estatus').value = entrada.estatus || 'en-almacen';
-    
-                // Limpiar y volver a cargar los items
-                itemsContainer.innerHTML = '';
-                if (entrada.items && entrada.items.length > 0) {
-                    entrada.items.forEach(item => {
-                        agregarItemCampo();
-                        const lastRow = itemsContainer.lastElementChild;
-                        const select = lastRow.querySelector('.item-select');
-                        const inputCantidad = lastRow.querySelector('input[name="item_cantidad[]"]');
-                        const inputCosto = lastRow.querySelector('input[name="item_costo[]"]');
-                        
-                        // Asegurar que itemsInventario esté cargado antes de establecer el valor
-                        if (itemsInventario.length > 0) {
-                            select.value = item.id;
-                            const itemSeleccionado = itemsInventario.find(i => i.id === item.id);
-                            if (itemSeleccionado) {
-                                select.value = itemSeleccionado.id;
-                                inputCosto.value = itemSeleccionado.costo;
-                            }
-                        }
-                        
-                        inputCantidad.value = item.cantidad || 0;
-                    });
-                } else {
-                    agregarItemCampo();
-                }
-    
-                // Mostrar el modal
-                entradaModal.classList.remove('hidden');
-    
-                // Agregar el ID de la entrada como un atributo de datos al formulario
-                entradaForm.dataset.entradaId = id;
-            })
-            .catch(error => {
-                console.error('Error al cargar los datos de la entrada:', error);
-                alert('Error al cargar los datos de la entrada: ' + (error.message || 'Error desconocido'));
-                entradaModal.classList.add('hidden');
-            });
-    }
-    
-    // Funciones auxiliares necesarias
-    let itemsInventario = []; // Variable global para almacenar los items
-
-// Función para cargar los items del inventario
-    function cargarItemsInventario() {
-        fetch('/inventario/api/items-select')
-            .then(response => response.json())
-            .then(data => {
-                itemsInventario = data;
-                // Actualizar los selects existentes si hay alguno
-                document.querySelectorAll('.item-select').forEach(select => {
-                    actualizarOptionItems(select);
-                });
-            })
-            .catch(error => {
-                console.error('Error al cargar items:', error);
-            });
-    }
-
-    function actualizarOptionItems(select) {
-        select.innerHTML = '<option value="">Seleccione un item...</option>';
-        itemsInventario.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.id;
-            option.textContent = `${item.codigo ? `[${item.codigo}] ` : ''}${item.nombre} - Costo: ${item.costo}`;
-            option.dataset.costo = item.costo;
-            select.appendChild(option);
-        });
-    }
-    
-    // Función auxiliar para agregar una fila de item (se necesita para el código anterior)
-    function agregarItemCampo() {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap">
-                <select class="form-select block w-full item-select" name="item_id[]" required>
-                    <option value="">Seleccione un item...</option>
-                </select>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <input type="number" class="form-input block w-full" name="item_cantidad[]" min="1" required>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <input type="number" class="form-input block w-full item-costo" name="item_costo[]" step="0.01" min="0" required readonly>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <button type="button" class="eliminar-item-btn text-red-600 hover:text-red-900">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </td>
-        `;
-        itemsContainer.appendChild(tr);
-    
-        // Obtener el select recién creado y actualizarlo
-        const select = tr.querySelector('.item-select');
-        actualizarOptionItems(select);
-    
-        // Agregar evento para actualizar el costo cuando se selecciona un item
-        select.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const costoInput = tr.querySelector('.item-costo');
-            if (selectedOption.dataset.costo) {
-                costoInput.value = selectedOption.dataset.costo;
-            } else {
-                costoInput.value = '';
-            }
-        });
-    
-        // Agregar event listener para el botón de eliminar
-        tr.querySelector('.eliminar-item-btn').addEventListener('click', function() {
-            tr.remove();
-        });
-    }
-
-    function eliminarEntrada(id) {
-        if (confirm('¿Estás seguro de que quieres eliminar esta entrada?')) {
-            console.log('Eliminando entrada:', id);
-            fetch(`/inventario/api/entradas/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    // Si la respuesta no es ok, intentamos obtener el mensaje de error
-                    return response.json().then(err => Promise.reject(err));
-                }
-                // Si la respuesta es vacía (código 204) o es JSON válido
-                return response.status === 204 ? null : response.json();
-            })
-            .then(() => {
-                console.log('Entrada eliminada correctamente');
-                // Refrescar la tabla de entradas
-                cargarEntradas();
-                // Mostrar mensaje de éxito
-                alert('Entrada eliminada correctamente');
-                
-                // Si hay un modal abierto, lo cerramos
-                const modal = document.getElementById('entradaModal');
-                if (modal && !modal.classList.contains('hidden')) {
-                    modal.classList.add('hidden');
-                }
-    
-                // Opcionalmente, actualizar cualquier contador o resumen en la página
-                actualizarResumenEntradas();
-            })
-            .catch(error => {
-                console.error('Error al eliminar la entrada:', error);
-                let mensajeError = 'Error al eliminar la entrada';
-                
-                // Manejar diferentes tipos de errores
-                if (error.error) {
-                    mensajeError += ': ' + error.error;
-                } else if (error.message) {
-                    mensajeError += ': ' + error.message;
-                } else if (typeof error === 'string') {
-                    mensajeError += ': ' + error;
-                } else {
-                    mensajeError += '. Por favor, inténtelo de nuevo.';
-                }
-                
-                alert(mensajeError);
-            });
-        }
-    }
-    
-    // Función auxiliar para actualizar el resumen de entradas (opcional)
-    function actualizarResumenEntradas() {
-        // Esta función podría actualizar contadores, totales u otros elementos de resumen en la página
-        console.log('Actualizando resumen de entradas...');
-        
-        // Ejemplo: Actualizar contador de entradas si existe
-        const contadorEntradas = document.getElementById('contador-entradas');
-        if (contadorEntradas) {
-            fetch('/inventario/api/entradas/count')
-                .then(response => response.json())
-                .then(data => {
-                    contadorEntradas.textContent = data.count || '0';
-                })
-                .catch(error => {
-                    console.error('Error al actualizar contador:', error);
-                });
-        }
-    }
-    
-    // Función para agregar event listeners a los botones de eliminar (llamar después de cargar/actualizar la tabla)
-    function agregarEventListenersEliminar() {
-        document.querySelectorAll('.eliminar-entrada').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const id = e.target.closest('button').dataset.id;
-                eliminarEntrada(id);
-            });
-        });
-    }
-
     function limpiarFormulario() {
         entradaForm.reset();
-        itemsContainer.innerHTML = '';
-        agregarItemCampo();
+        selectedItems = [];
+        renderSelectedItems();
     }
+
+    // New Item Selector Functions
+    const itemSelector = document.getElementById('item-selector');
+    const itemSearch = document.getElementById('item-search');
+    const categoryFilters = document.getElementById('category-filters');
+    const quickView = document.getElementById('quick-view');
+    const itemList = document.getElementById('item-list');
+    const selectedItemsList = document.getElementById('selected-items-list');
+    const confirmSelection = document.getElementById('confirm-selection');
+    const cancelSelection = document.getElementById('cancel-selection');
+
+    function openItemSelector() {
+        itemSelector.classList.remove('hidden');
+        fetchItems();
+    }
+
+    function fetchItems() {
+        // We'll use the already loaded itemsInventario instead of fetching again
+        renderItems(itemsInventario);
+        renderCategories();
+        renderQuickView();
+    }
+
+    function renderItems(itemsToRender) {
+        itemList.innerHTML = '';
+        itemsToRender.forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'bg-white p-4 rounded-lg shadow';
+            itemElement.innerHTML = `
+                <h5 class="font-semibold">${item.nombre}</h5>
+                <p class="text-sm text-gray-600">${item.codigo}</p>
+                <p class="text-sm">Cantidad: ${item.cantidad}</p>
+                <button class="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 select-item" data-id="${item.id}">
+                    Seleccionar
+                </button>
+            `;
+            itemList.appendChild(itemElement);
+        });
+
+        // Add event listeners to select buttons
+        document.querySelectorAll('.select-item').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-id');
+                const item = itemsInventario.find(i => i.id == itemId);
+                if (item && !selectedItems.some(i => i.id == itemId)) {
+                    selectedItems.push({...item, cantidad: 1});
+                    renderSelectedItems();
+                }
+            });
+        });
+    }
+
+    function renderCategories() {
+        const categories = [...new Set(itemsInventario.map(item => item.categoria))];
+        categoryFilters.innerHTML = categories.map(category => `
+            <label class="flex items-center">
+                <input type="checkbox" class="form-checkbox category-filter" value="${category}">
+                <span class="ml-2">${category}</span>
+            </label>
+        `).join('');
+
+        // Add event listeners to category checkboxes
+        document.querySelectorAll('.category-filter').forEach(checkbox => {
+            checkbox.addEventListener('change', filterItems);
+        });
+    }
+
+    function renderQuickView() {
+        // This could be your most used or recently added items
+        const quickViewItems = itemsInventario.slice(0, 6); // Just an example, adjust as needed
+        quickView.innerHTML = quickViewItems.map(item => `
+            <div class="bg-white p-2 rounded shadow text-center">
+                <p class="font-semibold text-sm">${item.nombre}</p>
+                <button class="mt-1 px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 quick-select" data-id="${item.id}">
+                    Agregar
+                </button>
+            </div>
+        `).join('');
+
+        // Add event listeners to quick select buttons
+        document.querySelectorAll('.quick-select').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-id');
+                const item = itemsInventario.find(i => i.id == itemId);
+                if (item && !selectedItems.some(i => i.id == itemId)) {
+                    selectedItems.push({...item, cantidad: 1});
+                    renderSelectedItems();
+                }
+            });
+        });
+    }
+
+    function renderSelectedItems() {
+        selectedItemsList.innerHTML = selectedItems.map(item => `
+            <li class="flex justify-between items-center">
+                <span>${item.nombre} (${item.codigo})</span>
+                <div>
+                    <input type="number" class="form-input w-16 mr-2 item-quantity" data-id="${item.id}" value="${item.cantidad}" min="1">
+                    <button class="text-red-500 hover:text-red-700 remove-item" data-id="${item.id}">
+                        Remover
+                    </button>
+                </div>
+            </li>
+        `).join('');
+
+        // Add event listeners to remove buttons and quantity inputs
+        document.querySelectorAll('.remove-item').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-id');
+                selectedItems = selectedItems.filter(item => item.id != itemId);
+                renderSelectedItems();
+            });
+        });
+
+        document.querySelectorAll('.item-quantity').forEach(input => {
+            input.addEventListener('change', function() {
+                const itemId = this.getAttribute('data-id');
+                const newQuantity = parseInt(this.value);
+                if (newQuantity > 0) {
+                    const itemIndex = selectedItems.findIndex(item => item.id == itemId);
+                    if (itemIndex !== -1) {
+                        selectedItems[itemIndex].cantidad = newQuantity;
+                    }
+                }
+            });
+        });
+
+        // Update the main form's items container
+        updateItemsContainer();
+    }
+
+    function updateItemsContainer() {
+        itemsContainer.innerHTML = selectedItems.map(item => `
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap">${item.nombre}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <input type="number" class="form-input block w-full" name="item_cantidad[]" value="${item.cantidad}" min="1" required>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <input type="number" class="form-input block w-full item-costo" name="item_costo[]" value="${item.costo || ''}" step="0.01" min="0" required>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <button type="button" class="eliminar-item-btn text-red-600 hover:text-red-900" data-id="${item.id}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        // Add event listeners to the new buttons in the main form
+        document.querySelectorAll('.eliminar-item-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-id');
+                selectedItems = selectedItems.filter(item => item.id != itemId);
+                renderSelectedItems();
+            });
+        });
+    }
+
+    function filterItems() {
+        const searchTerm = itemSearch.value.toLowerCase();
+        const selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(cb => cb.value);
+        
+        const filteredItems = itemsInventario.filter(item => 
+            (item.nombre.toLowerCase().includes(searchTerm) || item.codigo.toLowerCase().includes(searchTerm)) &&
+            (selectedCategories.length === 0 || selectedCategories.includes(item.categoria))
+        );
+
+        renderItems(filteredItems);
+    }
+
+    itemSearch.addEventListener('input', filterItems);
+
+    confirmSelection.addEventListener('click', function() {
+        itemSelector.classList.add('hidden');
+        updateItemsContainer();
+    });
+
+    cancelSelection.addEventListener('click', function() {
+        itemSelector.classList.add('hidden');
+    });
 });
 </script>
 {% endblock %}
