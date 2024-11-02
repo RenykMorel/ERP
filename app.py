@@ -198,6 +198,10 @@ def get_assistant_context():
             "usuario_count": usuario_count,
         }    
 
+def verificar_items():
+    items = InventarioItem.query.order_by(InventarioItem.id).all()
+    for item in items:
+        print(f"ID: {item.id}, Código: {item.codigo}, Nombre: {item.nombre}")
 
 class AsistenteVirtual:
     def __init__(self, api_key, get_context_func):
@@ -507,6 +511,7 @@ def create_app():
     
     from facturas import facturacion_bp
     app.register_blueprint(facturacion_bp, url_prefix='/facturacion')
+    
     
     
     

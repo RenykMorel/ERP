@@ -12,7 +12,7 @@ class EmpresaMarketing(db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     # Agrega aquí otros campos que necesites para la empresa
 
-class Prospecto(db.Model):
+class Prospecto(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre_usuario = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -33,8 +33,6 @@ class Prospecto(db.Model):
 
     def __repr__(self):
         return f'<Prospecto {self.nombre_usuario}>'
-
-# ... (el resto de tus modelos permanecen sin cambios)
 
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -81,6 +79,28 @@ class Campaign(db.Model):
             'subject': self.subject,
             'content': self.content,
             'sent_at': self.sent_at.isoformat() if self.sent_at else None,
+            'created_at': self.created_at.isoformat()
+        }
+
+class CampaignImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
+    filepath = db.Column(db.String(255), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('prospecto.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    campaign = db.relationship('Campaign', backref=db.backref('images', lazy=True))
+    prospecto = db.relationship('Prospecto', backref=db.backref('created_images', lazy=True))
+
+    def __repr__(self):
+        return f'<CampaignImage {self.id}>'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'campaign_id': self.campaign_id,
+            'filepath': self.filepath,
+            'created_by': self.created_by,
             'created_at': self.created_at.isoformat()
         }
 

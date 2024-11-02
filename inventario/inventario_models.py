@@ -96,7 +96,7 @@ class InventarioItem(db.Model):
     __tablename__ = 'items_inventario'
     
     id = db.Column(db.Integer, primary_key=True)
-    codigo = db.Column(db.String(50), unique=True)  # Permitir NULL
+    codigo = db.Column(db.String(50), unique=True)
     nombre = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.Text, nullable=True)
     tipo = db.Column(db.String(20), nullable=False)
@@ -114,19 +114,29 @@ class InventarioItem(db.Model):
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Nueva relación con TipoItem
     tipo_item_id = db.Column(db.Integer, db.ForeignKey('tipos_item.id'))
 
-    # Mantenemos las relaciones existentes que ya están definidas en common.models
     items_facturas = db.relationship('ItemFactura', back_populates='item')
     items_pre_factura = db.relationship('ItemPreFactura', back_populates='item_inv')
     movimientos = db.relationship('MovimientoInventario', back_populates='item')
     ajustes = db.relationship('AjusteInventario', backref='item')
 
+    def __init__(self, **kwargs):
+        super(InventarioItem, self).__init__(**kwargs)
+        # El código se asignará después de que se guarde el item
+        self.codigo = None
+
+    @classmethod
+    def generar_siguiente_codigo(cls):
+        """Genera el siguiente código basado en el último ID"""
+        ultimo_item = cls.query.order_by(cls.id.desc()).first()
+        if ultimo_item:
+            return str(ultimo_item.id + 1)
+        return "1"
+
     @validates('codigo')
     def validate_codigo(self, key, codigo):
-        if codigo == '':
-            return None
+        # Permitir que el código sea None inicialmente
         return codigo
 
     @validates('tipo')
@@ -150,7 +160,7 @@ class InventarioItem(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'codigo': self.codigo,
+            'codigo': str(self.id) if self.id else None,  # El código será igual al ID
             'nombre': self.nombre,
             'descripcion': self.descripcion,
             'tipo': self.tipo,
@@ -173,11 +183,23 @@ class InventarioItem(db.Model):
 
     def update_from_dict(self, data):
         for key, value in data.items():
-            if hasattr(self, key):
+            if hasattr(self, key) and key != 'codigo':  # No permitir actualizar el código directamente
                 setattr(self, key, value)
 
     def __repr__(self):
-        return f'<InventarioItem {self.codigo}: {self.nombre}>'
+        return f'<InventarioItem {self.id}: {self.nombre}>'
+
+# Evento para asignar el código después de crear el item
+@db.event.listens_for(InventarioItem, 'after_insert')
+def asignar_codigo(mapper, connection, target):
+    """Asigna el código igual al ID después de que se crea el item"""
+    if not target.codigo:
+        # Usar el ID como código
+        connection.execute(
+            InventarioItem.__table__.update().
+            where(InventarioItem.id == target.id).
+            values(codigo=str(target.id))
+        )
 
 class AjusteInventario(db.Model):
     __tablename__ = 'ajustes_inventario'

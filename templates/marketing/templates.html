@@ -89,6 +89,58 @@
         </div>
     </div>
 
+    <!-- Generador de Imágenes con IA -->
+    <div class="mt-8 bg-white shadow-xl rounded-lg overflow-hidden">
+        <div class="bg-indigo-600 text-white py-4 px-6">
+            <h2 class="text-xl font-semibold">Generador de Imágenes con IA</h2>
+        </div>
+        <div class="p-6 space-y-6">
+            <div>
+                <label for="image-prompt" class="block text-sm font-medium text-gray-700 mb-1">Descripción de la imagen deseada</label>
+                <textarea id="image-prompt" name="image-prompt" rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Describe la imagen que deseas generar..."></textarea>
+            </div>
+            <div>
+                <button type="button" id="generate-image" class="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Generar Imagen
+                </button>
+            </div>
+            <div class="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800">Nota sobre límites de generación</h3>
+                        <div class="mt-2 text-sm text-yellow-700">
+                            <p>
+                                Existe un límite en el número de imágenes que se pueden generar por minuto. Si recibes un error de límite excedido, por favor espera un momento antes de intentarlo de nuevo.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="generated-image-container" class="hidden">
+                <img id="generated-image" src="" alt="Imagen generada" class="w-full rounded-lg shadow-lg">
+                <div class="mt-4 flex justify-end space-x-4">
+                    <button type="button" id="use-image" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                        Usar en plantilla
+                    </button>
+                    <button type="button" id="regenerate-image" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                        Generar otra
+                    </button>
+                </div>
+            </div>
+            <div id="image-error" class="hidden text-red-500 text-sm"></div>
+        </div>
+    </div>
+
     <!-- Modal de vista previa -->
     <div id="preview-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
         <div class="bg-white w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 rounded-lg shadow-2xl overflow-hidden">
@@ -115,13 +167,20 @@
     document.addEventListener('DOMContentLoaded', function() {
         const templateList = document.getElementById('template-list');
         const templateForm = document.getElementById('template-form');
-        const templateName = document.getElementById('template-name');
+        const templateName  = document.getElementById('template-name');
         const aiPrompt = document.getElementById('ai-prompt');
         const generateAiContent = document.getElementById('generate-ai-content');
         const previewButton = document.getElementById('preview-button');
         const previewModal = document.getElementById('preview-modal');
         const previewContent = document.getElementById('preview-content');
         const closePreview = document.getElementById('close-preview');
+        const generateImageBtn = document.getElementById('generate-image');
+        const imagePrompt = document.getElementById('image-prompt');
+        const generatedImageContainer = document.getElementById('generated-image-container');
+        const generatedImage = document.getElementById('generated-image');
+        const useImageBtn = document.getElementById('use-image');
+        const regenerateImageBtn = document.getElementById('regenerate-image');
+        const imageError = document.getElementById('image-error');
 
         // Inicializar CodeMirror
         const editor = CodeMirror.fromTextArea(document.getElementById('template-content'), {
@@ -133,7 +192,7 @@
 
         // Cargar plantillas existentes
         function loadTemplates() {
-            fetch('/api/email-templates')
+            fetch('/marketing/api/email-templates')
                 .then(response => response.json())
                 .then(templates => {
                     templateList.innerHTML = '';
@@ -142,8 +201,10 @@
                         li.innerHTML = `
                             <div class="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer">
                                 <span class="text-indigo-600 font-medium">${template.name}</span>
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" 
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 5l7 7-7 7"></path>
                                 </svg>
                             </div>
                         `;
@@ -156,7 +217,7 @@
 
         // Cargar una plantilla específica
         function loadTemplate(id) {
-            fetch(`/api/email-templates/${id}`)
+            fetch(`/marketing/api/email-templates/${id}`)
                 .then(response => response.json())
                 .then(template => {
                     templateName.value = template.name;
@@ -168,11 +229,12 @@
         // Guardar o actualizar una plantilla
         templateForm.onsubmit = function(e) {
             e.preventDefault();
-            const templateData = {name: templateName.value,
+            const templateData = {
+                name: templateName.value,
                 content: editor.getValue()
             };
 
-            fetch('/api/email-templates', {
+            fetch('/marketing/api/email-templates', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -203,7 +265,7 @@
             generateAiContent.disabled = true;
             generateAiContent.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generando...';
 
-            fetch('/api/generar-contenido-email', {
+            fetch('/marketing/api/generar-contenido-email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -232,13 +294,6 @@
         // Funcionalidad de vista previa
         previewButton.onclick = function() {
             const content = editor.getValue();
-            previewContent.innerHTML = content;
-            previewModal.classList.remove('hidden');
-        };
-
-        // Funcionalidad de vista previa
-        previewButton.onclick = function() {
-            const content = editor.getValue();
             // Reemplazar los placeholders de imagen con imágenes reales
             const updatedContent = content.replace(/https:\/\/placehold\.co\/(\d+)x(\d+)\?text=([^"]+)/g, 
                 (match, width, height, text) => {
@@ -259,6 +314,70 @@
                 previewModal.classList.add('hidden');
             }
         };
+
+        // Generar imagen con IA
+        generateImageBtn.addEventListener('click', generateImage);
+        useImageBtn.addEventListener('click', useGeneratedImage);
+        regenerateImageBtn.addEventListener('click', generateImage);
+
+        async function generateImage() {
+            const prompt = imagePrompt.value.trim();
+            if (!prompt) {
+                showError('Por favor, proporciona una descripción para la imagen');
+                return;
+            }
+
+            // Show loading state
+            generateImageBtn.disabled = true;
+            generateImageBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generando...';
+
+            try {
+                const response = await fetch('/marketing/api/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: prompt }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error desconocido al generar la imagen');
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Show the generated image
+                generatedImage.src = data.image;
+                generatedImageContainer.classList.remove('hidden');
+                imageError.classList.add('hidden');
+
+            } catch (error) {
+                console.error('Error al generar la imagen:', error);
+                showError('Error al generar la imagen: ' + error.message);
+            } finally {
+                // Reset button state
+                generateImageBtn.disabled = false;
+                generateImageBtn.innerHTML = '<svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>Generar Imagen';
+            }
+        }
+
+        function useGeneratedImage() {
+            const imageUrl = generatedImage.src;
+            // Insert the image URL into the template editor at cursor position
+            const imageHtml = `<img src="${imageUrl}" alt="Generated image" style="max-width: 100%; height: auto;">`;
+            editor.replaceSelection(imageHtml);
+        }
+
+        function showError(message) {
+            imageError.textContent = message;
+            imageError.classList.remove('hidden');
+            generatedImageContainer.classList.add('hidden');
+        }
 
         // Función para mostrar notificaciones
         function showNotification(message, type) {

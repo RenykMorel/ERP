@@ -1,10 +1,17 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, current_app
 from flask_login import login_required, current_user
-from .models import Contact, Campaign, CampaignMetrics
+from .models import Contact, Campaign, CampaignMetrics, CampaignImage
 from extensions import db
 from datetime import datetime
 from mailjet_rest import Client
 import os
+import requests
+import base64
+import time
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 marketing = Blueprint('marketing', __name__)
 
@@ -156,4 +163,107 @@ def get_marketing_submodulos():
     ]
     return jsonify(submodulos)
 
-# Aquí puedes agregar más rutas API para manejar plantillas, reportes, segmentación, etc.
+@marketing.route('/api/generate-image', methods=['POST'])
+@login_required
+def generate_image():
+    try:
+        data = request.json
+        prompt = data.get('prompt')
+        
+        if not prompt:
+            return jsonify({'error': 'No prompt provided'}), 400
+
+        # Hugging Face API endpoint for Stable Diffusion 3.5
+        API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3.5-large"
+        headers = {
+            "Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_TOKEN')}",
+            "Content-Type": "application/json"
+        }
+
+        max_retries = 3
+        retry_delay = 5  # seconds
+
+        for attempt in range(max_retries):
+            # Make request to Hugging Face API
+            response = requests.post(
+                API_URL,
+                headers=headers,
+                json={"inputs": prompt}
+            )
+
+            if response.status_code == 200:
+                # The response will be the binary image data
+                # We'll send it back as base64 so it can be displayed in the frontend
+                image_bytes = response.content
+                base64_image = base64.b64encode(image_bytes).decode('utf-8')
+
+                return jsonify({
+                    'success': True,
+                    'image': f'data:image/jpeg;base64,{base64_image}'
+                })
+            elif response.status_code == 429:
+                if attempt < max_retries - 1:
+                    current_app.logger.warning(f"Rate limit hit, retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    current_app.logger.error("Max retries reached for rate limit error")
+                    return jsonify({'error': 'Rate limit exceeded. Please try again later.'}), 429
+            else:
+                current_app.logger.error(f"Hugging Face API error: {response.status_code} - {response.text}")
+                return jsonify({
+                    'error': 'Error generating image',
+                    'details': response.text
+                }), response.status_code
+
+    except requests.RequestException as e:
+        current_app.logger.error(f"Network error when calling Hugging Face API: {str(e)}")
+        return jsonify({'error': 'Network error occurred. Please try again.'}), 503
+
+    except Exception as e:
+        current_app.logger.error(f"Unexpected error generating image: {str(e)}")
+        return jsonify({'error': 'An unexpected error occurred. Please try again.'}), 500
+
+@marketing.route('/api/save-generated-image', methods=['POST'])
+@login_required
+def save_generated_image():
+    try:
+        data = request.json
+        image_data = data.get('image')
+        campaign_id = data.get('campaign_id')
+        
+        if not image_data or not campaign_id:
+            return jsonify({'error': 'Missing required data'}), 400
+
+        # Remove the data URL prefix to get just the base64 data
+        base64_data = image_data.replace('data:image/jpeg;base64,', '')
+        
+        # Create a directory for campaign images if it doesn't exist
+        campaign_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], f'campaign_{campaign_id}')
+        os.makedirs(campaign_dir, exist_ok=True)
+        
+        # Generate a unique filename
+        filename = f'generated_image_{int(time.time())}.jpg'
+        filepath = os.path.join(campaign_dir, filename)
+        
+        # Save the image
+        with open(filepath, 'wb') as f:
+            f.write(base64.b64decode(base64_data))
+        
+        # Save the image reference in your database
+        image = CampaignImage(
+            campaign_id=campaign_id,
+            filepath=filepath,
+            created_by=current_user.id
+        )
+        db.session.add(image)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'filepath': filepath
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"Error saving generated image: {str(e)}")
+        return jsonify({'error': str(e)}), 500
