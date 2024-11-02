@@ -1,68 +1,61 @@
-2024-10-20 00:47:36,597 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 00:47:38,902 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 00:50:50,289 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 01:04:17,071 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 01:14:30,953 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 01:28:23,719 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 01:28:29,539 ERROR: Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:467]
-2024-10-20 01:28:43,877 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 14:57:23,092 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 14:58:50,100 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 14:59:53,794 INFO: Intentando eliminar divisa con ID: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:398]
-2024-10-20 14:59:53,795 INFO: Detalles de la divisa: {'id': 9, 'codigo': 'KIP', 'nombre': 'kip', 'tasa_cambio': 23.0, 'fecha_actualizacion': '2024-10-20T14:46:14.650011', 'abreviatura': 'X', 'simbolo': 'E', 'cuenta_por_cobrar': '', 'cuenta_por_pagar': '', 'prima_cxc': '', 'prima_cxp': '', 'ganancia_diferencia_cambiaria': '', 'perdida_diferencia_cambiaria': '', 'anticipo': '', 'anticipo_prima': '', 'anticipo_cxp': '', 'anticipo_cxp_prima': '', 'caja': '', 'caja_prima': '', 'nota_credito': '', 'nota_credito_prima': '', 'moneda_funcional': False, 'desglose': ''} [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:399]
-2024-10-20 14:59:53,809 ERROR: Error de base de datos al eliminar divisa: (psycopg2.errors.UndefinedColumn) no existe la columna depositos.divisa_id
-LINE 2: ..._fecha, depositos.banco_id AS depositos_banco_id, depositos....
+2024-10-24 12:04:34,010 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:04:37,129 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:04:41,205 ERROR: Unhandled exception: Error creating backref 'items_factura' on relationship 'ItemFactura.item': property of that name exists on mapper 'Mapper[InventarioItem(items_inventario)]' [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 12:17:39,243 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:17:44,676 ERROR: Unhandled exception: Multiple classes found for path "MovimientoInventario" in the registry of this declarative base. Please use a fully module-qualified path. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 12:18:47,626 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:18:54,613 ERROR: Unhandled exception: Multiple classes found for path "ItemFactura" in the registry of this declarative base. Please use a fully module-qualified path. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 12:19:36,856 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:19:43,971 ERROR: Unhandled exception: Multiple classes found for path "ItemFactura" in the registry of this declarative base. Please use a fully module-qualified path. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 12:22:17,196 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:23:14,422 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:23:17,648 ERROR: Unhandled exception: Multiple classes found for path "ItemFactura" in the registry of this declarative base. Please use a fully module-qualified path. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 12:24:08,518 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:26:54,018 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:27:04,767 ERROR: Unhandled exception: Error creating backref 'items_facturas' on relationship 'ItemFactura.item': property of that name exists on mapper 'Mapper[InventarioItem(items_inventario)]' [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 12:28:24,963 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:28:26,133 ERROR: Unhandled exception: Error creating backref 'items_facturas' on relationship 'ItemFactura.item': property of that name exists on mapper 'Mapper[InventarioItem(items_inventario)]' [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 12:29:34,692 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:29:43,551 ERROR: Unhandled exception: Error creating backref 'factura' on relationship 'Facturacion.items': property of that name exists on mapper 'Mapper[ItemFactura(items_facturas)]' [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 12:35:16,452 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:35:35,054 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:35:38,031 ERROR: Unhandled exception: Error creating backref 'item' on relationship 'InventarioItem.items_pre_factura': property of that name exists on mapper 'Mapper[ItemPreFactura(items_pre_factura)]' [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 12:36:40,563 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:37:20,902 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 12:38:01,083 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 16:35:28,646 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\inventario\inventario_routes.py:316]
+2024-10-24 16:37:02,412 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\inventario\inventario_routes.py:316]
+2024-10-24 17:43:13,684 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 17:43:17,049 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 17:44:26,986 ERROR: Unhandled exception: Entity namespace for "campaign" has no property "user_id" [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 17:44:38,080 ERROR: Unhandled exception: 'user_id' is an invalid keyword argument for Campaign [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 17:44:38,101 ERROR: Unhandled exception: Entity namespace for "campaign" has no property "user_id" [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:475]
+2024-10-24 21:37:09,909 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-24 22:07:22,830 ERROR: Error al obtener items: (psycopg2.errors.UndefinedColumn) no existe la columna items_inventario.costo
+LINE 1: ...ventario.categoria AS items_inventario_categoria, items_inve...
                                                              ^
 
-[SQL: SELECT count(*) AS count_1 
-FROM (SELECT depositos.id AS depositos_id, depositos.monto AS depositos_monto, depositos.fecha AS depositos_fecha, depositos.banco_id AS depositos_banco_id, depositos.divisa_id AS depositos_divisa_id, depositos.descripcion AS depositos_descripcion, depositos.cuenta_bancaria AS depositos_cuenta_bancaria, depositos.numero AS depositos_numero, depositos.concepto AS depositos_concepto, depositos.estatus AS depositos_estatus, depositos.referencia AS depositos_referencia, depositos.creador AS depositos_creador, depositos.actualizado_por AS depositos_actualizado_por, depositos.fuente AS depositos_fuente, depositos.fuente_referencia AS depositos_fuente_referencia 
-FROM depositos 
-WHERE depositos.divisa_id = %(divisa_id_1)s) AS anon_1]
-[parameters: {'divisa_id_1': 9}]
-(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:420]
-2024-10-20 15:05:04,039 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 15:05:36,158 INFO: Intentando eliminar divisa con ID: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:397]
-2024-10-20 15:05:36,159 INFO: Detalles de la divisa: {'id': 9, 'codigo': 'KIP', 'nombre': 'kip', 'tasa_cambio': 23.0, 'fecha_actualizacion': '2024-10-20T14:46:14.650011', 'abreviatura': 'X', 'simbolo': 'E', 'cuenta_por_cobrar': '', 'cuenta_por_pagar': '', 'prima_cxc': '', 'prima_cxp': '', 'ganancia_diferencia_cambiaria': '', 'perdida_diferencia_cambiaria': '', 'anticipo': '', 'anticipo_prima': '', 'anticipo_cxp': '', 'anticipo_cxp_prima': '', 'caja': '', 'caja_prima': '', 'nota_credito': '', 'nota_credito_prima': '', 'moneda_funcional': False, 'desglose': ''} [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:398]
-2024-10-20 15:05:36,161 INFO: Ejecutando consulta de conteo para divisa_id: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:401]
-2024-10-20 15:05:36,162 ERROR: Error de base de datos al eliminar divisa: (psycopg2.errors.UndefinedColumn) no existe la columna depositos.divisa_id
-LINE 3: WHERE depositos.divisa_id = 9
-              ^
-
-[SQL: SELECT count(depositos.id) AS count_1 
-FROM depositos 
-WHERE depositos.divisa_id = %(divisa_id_1)s]
-[parameters: {'divisa_id_1': 9}]
-(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:422]
-2024-10-20 21:26:09,256 INFO: Intentando eliminar divisa con ID: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:397]
-2024-10-20 21:26:09,256 INFO: Detalles de la divisa: {'id': 9, 'codigo': 'KIP', 'nombre': 'kip', 'tasa_cambio': 23.0, 'fecha_actualizacion': '2024-10-20T14:46:14.650011', 'abreviatura': 'X', 'simbolo': 'E', 'cuenta_por_cobrar': '', 'cuenta_por_pagar': '', 'prima_cxc': '', 'prima_cxp': '', 'ganancia_diferencia_cambiaria': '', 'perdida_diferencia_cambiaria': '', 'anticipo': '', 'anticipo_prima': '', 'anticipo_cxp': '', 'anticipo_cxp_prima': '', 'caja': '', 'caja_prima': '', 'nota_credito': '', 'nota_credito_prima': '', 'moneda_funcional': False, 'desglose': ''} [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:398]
-2024-10-20 21:26:09,256 INFO: Ejecutando consulta de conteo para divisa_id: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:401]
-2024-10-20 21:26:09,267 ERROR: Error de base de datos al eliminar divisa: (psycopg2.errors.UndefinedColumn) no existe la columna depositos.divisa_id
-LINE 3: WHERE depositos.divisa_id = 9
-              ^
-
-[SQL: SELECT count(depositos.id) AS count_1 
-FROM depositos 
-WHERE depositos.divisa_id = %(divisa_id_1)s]
-[parameters: {'divisa_id_1': 9}]
-(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:422]
-2024-10-20 21:32:01,158 INFO: Intentando eliminar divisa con ID: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:397]
-2024-10-20 21:32:01,166 INFO: Detalles de la divisa: {'id': 9, 'codigo': 'KIP', 'nombre': 'kip', 'tasa_cambio': 23.0, 'fecha_actualizacion': '2024-10-20T14:46:14.650011', 'abreviatura': 'X', 'simbolo': 'E', 'cuenta_por_cobrar': '', 'cuenta_por_pagar': '', 'prima_cxc': '', 'prima_cxp': '', 'ganancia_diferencia_cambiaria': '', 'perdida_diferencia_cambiaria': '', 'anticipo': '', 'anticipo_prima': '', 'anticipo_cxp': '', 'anticipo_cxp_prima': '', 'caja': '', 'caja_prima': '', 'nota_credito': '', 'nota_credito_prima': '', 'moneda_funcional': False, 'desglose': ''} [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:398]
-2024-10-20 21:32:01,166 INFO: Ejecutando consulta de conteo para divisa_id: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:401]
-2024-10-20 21:32:01,172 INFO: Conteo de depósitos para divisa 9: 0 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:404]
-2024-10-20 21:32:01,191 ERROR: Error de base de datos al eliminar divisa: (psycopg2.errors.UndefinedColumn) no existe la columna depositos.cuenta_bancaria
-LINE 1: ..., depositos.descripcion AS depositos_descripcion, depositos....
-                                                             ^
-
-[SQL: SELECT depositos.id AS depositos_id, depositos.monto AS depositos_monto, depositos.fecha AS depositos_fecha, depositos.banco_id AS depositos_banco_id, depositos.divisa_id AS depositos_divisa_id, depositos.descripcion AS depositos_descripcion, depositos.cuenta_bancaria AS depositos_cuenta_bancaria, depositos.numero AS depositos_numero, depositos.concepto AS depositos_concepto, depositos.estatus AS depositos_estatus, depositos.referencia AS depositos_referencia, depositos.creador AS depositos_creador, depositos.actualizado_por AS depositos_actualizado_por, depositos.fuente AS depositos_fuente, depositos.fuente_referencia AS depositos_fuente_referencia 
-FROM depositos 
-WHERE %(param_1)s = depositos.divisa_id]
-[parameters: {'param_1': 9}]
-(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:422]
-2024-10-20 21:34:51,589 INFO: Intentando eliminar divisa con ID: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:397]
-2024-10-20 21:34:51,589 INFO: Detalles de la divisa: {'id': 9, 'codigo': 'KIP', 'nombre': 'kip', 'tasa_cambio': 23.0, 'fecha_actualizacion': '2024-10-20T14:46:14.650011', 'abreviatura': 'X', 'simbolo': 'E', 'cuenta_por_cobrar': '', 'cuenta_por_pagar': '', 'prima_cxc': '', 'prima_cxp': '', 'ganancia_diferencia_cambiaria': '', 'perdida_diferencia_cambiaria': '', 'anticipo': '', 'anticipo_prima': '', 'anticipo_cxp': '', 'anticipo_cxp_prima': '', 'caja': '', 'caja_prima': '', 'nota_credito': '', 'nota_credito_prima': '', 'moneda_funcional': False, 'desglose': ''} [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:398]
-2024-10-20 21:34:51,589 INFO: Ejecutando consulta de conteo para divisa_id: 9 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:401]
-2024-10-20 21:34:51,589 INFO: Conteo de depósitos para divisa 9: 0 [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\banco\routes.py:404]
-2024-10-20 21:44:41,741 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 21:46:29,082 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 21:46:45,055 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
-2024-10-20 21:51:13,536 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:380]
+[SQL: SELECT items_inventario.id AS items_inventario_id, items_inventario.codigo AS items_inventario_codigo, items_inventario.nombre AS items_inventario_nombre, items_inventario.descripcion AS items_inventario_descripcion, items_inventario.tipo AS items_inventario_tipo, items_inventario.categoria AS items_inventario_categoria, items_inventario.costo AS items_inventario_costo, items_inventario.precio AS items_inventario_precio, items_inventario.itbis AS items_inventario_itbis, items_inventario.margen AS items_inventario_margen, items_inventario.stock AS items_inventario_stock, items_inventario.stock_minimo AS items_inventario_stock_minimo, items_inventario.stock_maximo AS items_inventario_stock_maximo, items_inventario.unidad_medida AS items_inventario_unidad_medida, items_inventario.proveedor AS items_inventario_proveedor, items_inventario.marca AS items_inventario_marca, items_inventario.fecha_creacion AS items_inventario_fecha_creacion, items_inventario.fecha_actualizacion AS items_inventario_fecha_actualizacion 
+FROM items_inventario]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\inventario\inventario_routes.py:36]
+2024-10-25 12:19:51,891 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 12:23:25,525 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 12:32:02,148 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 15:14:17,686 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 15:14:20,404 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 15:21:34,147 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 15:21:37,787 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 15:37:47,584 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 15:37:50,119 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 15:42:14,272 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 15:43:40,968 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 15:43:52,836 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 15:44:04,799 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-25 16:56:33,251 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\inventario\inventario_routes.py:347]
+2024-10-25 21:15:42,190 ERROR: Error al obtener categorías: name 'distinct' is not defined [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\inventario\inventario_routes.py:266]
+2024-10-26 14:55:29,885 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-26 14:57:30,738 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-26 15:00:22,751 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\inventario\inventario_routes.py:411]
+2024-10-27 14:09:02,566 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-27 14:09:06,951 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]
+2024-10-27 14:41:40,266 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:382]

@@ -1,66 +1,86 @@
-from flask import Flask, session, render_template, jsonify, request, redirect, url_for, flash, render_template_string, current_app, send_file
+# Flask and Extensions
+from flask import (
+    Flask, session, render_template, jsonify, request, redirect, 
+    url_for, flash, render_template_string, current_app, send_file,
+    Blueprint, send_from_directory, make_response
+)
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required, UserMixin
-from facturas.facturas_models import Facturacion, PreFactura, NotaCredito, NotaDebito, Cliente
-from inventario.inventario_models import InventarioItem, MovimientoInventario, ItemFactura
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect, CSRFError
-from config import Config
-import requests
-import json
-from dotenv import load_dotenv
-import sys
-import os
-from datetime import datetime, date
-from sqlalchemy.exc import IntegrityError
-from werkzeug.security import generate_password_hash, check_password_hash
-import psycopg2
-from psycopg2 import pool
-import threading
-import queue
 from flask_migrate import Migrate
-sys.path.append(os.path.join(os.path.dirname(__file__), 'banco'))
+
+# Database and ORM
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func, desc, and_, or_, case, event, inspect
+from sqlalchemy.orm import joinedload
+from psycopg2 import pool
+import psycopg2
+
+# Models
+from models import (
+    Usuario, Empresa, Rol, Permiso, Modulo, UsuarioModulo,
+    Notificacion, Transaccion, Cuenta, AdminPlanSuscripcion,
+    AdminFactura, AdminConfiguracionSeguridad, AdminReporte
+)
 from banco.banco_models import NuevoBanco as Banco
-from models import (Usuario, Empresa, Rol, Permiso, Modulo, UsuarioModulo, 
-                    Notificacion, Transaccion, Cuenta, AdminPlanSuscripcion, 
-                    AdminFactura, AdminConfiguracionSeguridad, AdminReporte)
-from models import Transaccion, Cuenta
+from facturas.facturas_models import (
+    Facturacion, PreFactura, NotaCredito, NotaDebito, Cliente
+)
+from inventario.inventario_models import (
+    InventarioItem, MovimientoInventario, ItemFactura,
+    TipoItem, CategoriaItem, Almacen, AjusteInventario
+)
+from marketing.models import Contact, Campaign, CampaignMetrics
+from common.models import ItemFactura, ItemPreFactura, MovimientoInventario
+
+# Routes
+from marketing.routes import marketing
+
+# Application Extensions
+from extensions import db, login_manager, limiter, migrate
+from config import Config
+
+# Security
+from werkzeug.security import generate_password_hash, check_password_hash
+
+# Email
 from mailjet_rest import Client
+
+# Utilities
+import os
+import sys
+import json
+import csv
+import base64
 import secrets
 import string
-from logging.config import dictConfig
-from flask import Blueprint
-from extensions import db, login_manager, limiter, migrate
-from blinker import signal
-from sqlalchemy import event
+import requests
+import threading
+import queue
 import logging
+from logging.config import dictConfig
 from logging.handlers import RotatingFileHandler
-from sqlalchemy import inspect
-from sqlalchemy.orm import joinedload
-from typing import Any, Optional
-from typing import Tuple, Dict, Any, List
-from flask import send_from_directory
-from models import Usuario
+from datetime import datetime, date
+from decimal import Decimal
+from dotenv import load_dotenv
+from blinker import signal
+from typing import Any, Optional, Tuple, Dict, List, Union
+
+# Data Processing
 import pandas as pd
+
+# Document Generation
 from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 from docx import Document
-from io import BytesIO, StringIO
-from flask import send_file, make_response, jsonify
 import xlsxwriter
-import base64
-import csv
-from reportlab.lib import colors
-from common.models import ItemFactura, ItemPreFactura, MovimientoInventario
-from asistentes.banco_assistant import AsistenteBancario
-from decimal import Decimal
+from io import BytesIO, StringIO
 
-# Importar el nuevo módulo de marketing
-from marketing.routes import marketing
-
-# Importar la biblioteca de OpenAI
-from openai import OpenAI
+# AI/ML
+from anthropic import Anthropic  # New import for Claude
 
 load_dotenv()
 
@@ -201,249 +221,402 @@ def get_assistant_context():
 
 class AsistenteVirtual:
     def __init__(self, api_key, get_context_func):
-        self.client = OpenAI(api_key=api_key)
-        self.get_context_func = get_context_func
-        self.asistente_bancario = None  # Se inicializará después
-        self.context = """Eres un asistente virtual multifuncional para CalculAI con acceso completo 
-        al módulo bancario. Puedes proporcionar información detallada sobre bancos, cuentas, 
-        transacciones y balances. También puedes ayudar con análisis financiero y 
-        recomendaciones basadas en los datos bancarios."""
-
-    def inicializar_asistente_bancario(self):
-        """Inicializa el componente bancario del asistente"""
-        self.asistente_bancario = AsistenteBancario()
+        try:
+            self.client = Anthropic(api_key=api_key)
+            self.get_context_func = get_context_func
+            self.context = """Eres un asistente virtual multifuncional para CalculAI con acceso completo 
+            a todos los módulos del sistema:
+            
+            - Facturación: Facturas, prefacturas, notas de crédito/débito, clientes
+            - Inventario: Productos, movimientos, tipos de items, categorías, almacenes
+            - Banco: Bancos, transacciones, cuentas
+            - Marketing: Contactos, campañas, métricas
+            - Gestión de usuarios: Usuarios, roles, permisos, módulos
+            
+            Proporciona información precisa basada en los datos reales del sistema."""
+            logger.info("AsistenteVirtual inicializado con acceso completo al sistema")
+        except Exception as e:
+            logger.error(f"Error inicializando AsistenteVirtual: {str(e)}")
+            raise
 
     def object_as_dict(self, obj):
-        def serialize(value):
-            if isinstance(value, datetime):
-                return value.isoformat()
-            return value
-
-        return {c.key: serialize(getattr(obj, c.key))
-                for c in inspect(obj).mapper.column_attrs}
-
-    def get_db_info(self, usuario_id):
-        info = {}
+        """Convierte objetos SQLAlchemy en diccionarios"""
+        if obj is None:
+            return None
         
-        usuario = Usuario.query.get(usuario_id)
-        if usuario:
-            info['usuario'] = self.object_as_dict(usuario)
-            info['empresa'] = self.object_as_dict(usuario.empresa) if usuario.empresa else None
-
-        return info
-
-    def generar_reporte(self, usuario_id, pregunta):
-        # Aquí deberías implementar la lógica para generar el reporte basado en la pregunta
-        # Por ahora, usaremos datos de ejemplo
-        if 'ventas' in pregunta.lower():
-            datos = [
-                ["Producto", "Cantidad", "Precio Unitario", "Total"],
-                ["Producto A", 100, 10.00, 1000.00],
-                ["Producto B", 50, 20.00, 1000.00],
-                ["Producto C", 75, 15.00, 1125.00],
-                ["Producto D", 200, 5.00, 1000.00],
-                ["Producto E", 30, 50.00, 1500.00],
-            ]
-            tipo_reporte = "Reporte de Ventas"
-        elif 'inventario' in pregunta.lower():
-            datos = [
-                ["Producto", "Stock Actual", "Stock Mínimo", "Reorden"],
-                ["Producto A", 500, 100, "No"],
-                ["Producto B", 50, 100, "Sí"],
-                ["Producto C", 750, 500, "No"],
-            ]
-            tipo_reporte = "Reporte de Inventario"
-        else:
-            datos = [
-                ["Campo", "Valor"],
-                ["Dato 1", "Valor 1"],
-                ["Dato 2", "Valor 2"],
-                ["Dato 3", "Valor 3"],
-            ]
-            tipo_reporte = "Reporte General"
-
-        return datos, tipo_reporte
-
-    def responder(self, pregunta: str, usuario_id: int) -> Dict[str, Any]:
         try:
-            # Detectar si la pregunta pide una lista o información tabulada
-            palabras_clave_lista = ['lista', 'listado', 'muestra', 'enumera', 'dame', 'mostrar']
-            es_solicitud_lista = any(palabra in pregunta.lower() for palabra in palabras_clave_lista)
-
-            # Obtener información bancaria relevante
-            info_bancaria = {
-                "bancos": self.asistente_bancario.obtener_info_bancos() if self.asistente_bancario else []
-            }
+            if hasattr(obj, 'to_dict'):
+                return obj.to_dict()
             
-            # Actualizar el contexto con la información bancaria
-            context_updated = f"{self.context}\n\nInformación bancaria actual: {json.dumps(info_bancaria, ensure_ascii=False)}"
+            data = {}
+            for c in obj.__table__.columns:
+                value = getattr(obj, c.name)
+                if isinstance(value, (datetime, date)):
+                    value = value.isoformat()
+                elif isinstance(value, Decimal):
+                    value = float(value)
+                data[c.name] = value
+            return data
+        except Exception as e:
+            logger.error(f"Error al convertir objeto a diccionario: {str(e)}")
+            return None
 
-            response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+    def responder(self, pregunta: str, usuario_id: int) -> Dict:
+        """Procesa la pregunta y responde con datos de la BD"""
+        try:
+            info_db = self.get_db_info(usuario_id)
+            pregunta_lower = pregunta.lower()
+            datos_respuesta = self.procesar_consulta_especifica(pregunta_lower, usuario_id)
+            
+            context_data = f"""
+            INFORMACIÓN DEL SISTEMA:
+            {json.dumps(info_db, indent=2)}
+            
+            DATOS ESPECÍFICOS DE LA CONSULTA:
+            {json.dumps(datos_respuesta, indent=2)}
+            """
+
+            system_prompt = self.context + context_data
+
+            response = self.client.messages.create(
+                model="claude-3-sonnet-20240229",
+                max_tokens=2000,
+                system=system_prompt,  # Usar system como parámetro separado
                 messages=[
-                    {"role": "system", "content": context_updated},
-                    {"role": "user", "content": pregunta}
+                    {
+                        "role": "user",
+                        "content": pregunta
+                    }
                 ]
             )
             
-            respuesta_texto = response.choices[0].message.content
-
-            # Si es una solicitud de lista o contiene información estructurada
-            if es_solicitud_lista or "reporte" in pregunta.lower():
-                datos = self.convertir_respuesta_a_tabla(respuesta_texto, info_bancaria)
-                if datos:  # Solo si se pudo convertir a tabla
-                    return {
-                        "tipo": "lista",
-                        "titulo": self.generar_titulo_lista(pregunta),
-                        "contenido": respuesta_texto,
-                        "datos": datos,
-                        "permite_descarga": True,
-                        "formatos_descarga": ["excel", "pdf", "word"]
-                    }
+            # Extraer la respuesta del asistente
+            respuesta_texto = response.content[0].text if hasattr(response, 'content') and response.content else "No se pudo generar una respuesta."
             
-            # Si no es una lista o no se pudo estructurar, devolver como texto
             return {
                 "tipo": "texto",
-                "respuesta": respuesta_texto
+                "contenido": respuesta_texto,
+                "datos_db": datos_respuesta
             }
 
         except Exception as e:
-            logger.error(f"Error en el asistente: {str(e)}")
+            logger.error(f"Error al procesar consulta: {str(e)}")
             return {
                 "tipo": "texto",
-                "respuesta": "Ha ocurrido un error al procesar tu consulta. Por favor, intenta de nuevo."
+                "contenido": f"Error al acceder a la base de datos: {str(e)}",
+                "datos_db": {}
             }
 
-    def convertir_respuesta_a_tabla(self, respuesta: str, info_bancaria: Dict[str, Any]) -> List[List[str]]:
-        """Convierte una respuesta en texto a formato de tabla"""
-        lineas = respuesta.split('\n')
-        tabla = []
+    def obtener_fuentes_datos(self, datos_respuesta: Dict) -> Dict:
+        """Identifica las fuentes de datos utilizadas en la respuesta"""
+        fuentes = {
+            "modulos_consultados": [],
+            "tablas_accedidas": [],
+            "timestamp_consulta": datetime.now().isoformat()
+        }
         
-        # Si hay líneas que parecen ser una lista
-        if any(linea.strip().startswith(('-', '*', '•', '1.')) for linea in lineas):
-            # Determinar las columnas basadas en el contenido
-            if "banco" in respuesta.lower():
-                encabezados = ["Banco", "Información", "Detalles"]
-            elif "cuenta" in respuesta.lower():
-                encabezados = ["Cuenta", "Balance", "Última Actualización"]
-            elif "transacción" in respuesta.lower():
-                encabezados = ["Fecha", "Tipo", "Monto", "Descripción"]
-            else:
-                encabezados = ["Item", "Descripción", "Valor"]
+        if 'inventario' in datos_respuesta:
+            fuentes["modulos_consultados"].append("Inventario")
+            fuentes["tablas_accedidas"].extend(["InventarioItem", "MovimientoInventario"])
             
-            tabla.append(encabezados)
+        if 'facturacion' in datos_respuesta:
+            fuentes["modulos_consultados"].append("Facturación")
+            fuentes["tablas_accedidas"].extend(["Facturacion", "Cliente"])
             
-            # Procesar cada línea
-            for linea in lineas:
-                linea = linea.strip()
-                if linea and not linea.startswith(('#', '=', '-', '*', '•')):
-                    # Limpiar la línea de marcadores de lista
-                    for marcador in ['-', '*', '•', '1.', '2.', '3.']:
-                        if linea.startswith(marcador):
-                            linea = linea[len(marcador):].strip()
-                    
-                    # Dividir en columnas
-                    partes = linea.split(' - ') if ' - ' in linea else [linea]
-                    # Asegurar que tengamos el número correcto de columnas
-                    while len(partes) < len(encabezados):
-                        partes.append("")
-                    
-                    tabla.append(partes[:len(encabezados)])
+        if 'banco' in datos_respuesta:
+            fuentes["modulos_consultados"].append("Banco")
+            fuentes["tablas_accedidas"].extend(["Banco", "Transaccion"])
             
-            return tabla if len(tabla) > 1 else None  # Retornar None si solo tenemos encabezados
-        
-        return None
+        if 'marketing' in datos_respuesta:
+            fuentes["modulos_consultados"].append("Marketing")
+            fuentes["tablas_accedidas"].extend(["Contact", "Campaign"])
+            
+        return fuentes
 
-    def generar_titulo_lista(self, pregunta: str) -> str:
-        """Genera un título apropiado para la lista basado en la pregunta"""
-        palabras_clave = {
-            "banco": "Información Bancaria",
-            "cuenta": "Listado de Cuentas",
-            "transaccion": "Registro de Transacciones",
-            "balance": "Balance de Cuentas",
-            "movimiento": "Movimientos Bancarios",
+    def get_db_info(self, usuario_id: int) -> Dict:
+        """Obtiene información completa del usuario, empresa y todos los módulos"""
+        try:
+            usuario = db.session.query(Usuario).options(
+                joinedload(Usuario.empresa),
+                joinedload(Usuario.rol),
+                joinedload(Usuario.modulos)
+            ).get(usuario_id)
+
+            if not usuario:
+                logger.error(f"Usuario {usuario_id} no encontrado")
+                return {}
+
+            # Verificar que los atributos existen antes de acceder
+            info = {
+                'usuario': self.object_as_dict(usuario),
+                'empresa': self.object_as_dict(usuario.empresa) if usuario.empresa else None,
+                'rol': usuario.rol.nombre if hasattr(usuario.rol, 'nombre') else None,
+                'permisos': [p.nombre for p in usuario.rol.permisos] if hasattr(usuario.rol, 'permisos') else []
+            }
+
+            if usuario.empresa:
+                empresa_id = usuario.empresa.id
+                info.update(self.get_modulos_info(empresa_id))
+
+            return info
+
+        except Exception as e:
+            logger.error(f"Error al obtener información de DB: {str(e)}")
+            return {}
+
+    def get_modulos_info(self, empresa_id: int) -> Dict:
+        """Obtiene información de todos los módulos para una empresa"""
+        info = {}
+        
+        # Inventario
+        try:
+            info['inventario'] = self.get_inventario_info(empresa_id)
+        except Exception as e:
+            logger.error(f"Error en datos de inventario: {str(e)}")
+            info['inventario'] = {}
+
+        # Facturación
+        try:
+            info['facturacion'] = self.get_facturacion_info(empresa_id)
+        except Exception as e:
+            logger.error(f"Error en datos de facturación: {str(e)}")
+            info['facturacion'] = {}
+
+        # Banco
+        try:
+            info['banco'] = self.get_banco_info(empresa_id)
+        except Exception as e:
+            logger.error(f"Error en datos bancarios: {str(e)}")
+            info['banco'] = {}
+
+        # Marketing
+        try:
+            info['marketing'] = self.get_marketing_info(empresa_id)
+        except Exception as e:
+            logger.error(f"Error en datos de marketing: {str(e)}")
+            info['marketing'] = {}
+
+        return info
+
+    def get_inventario_info(self, empresa_id: int) -> Dict:
+        """Obtiene información del módulo de inventario"""
+        items = InventarioItem.query.filter_by(empresa_id=empresa_id).all()
+        return {
+            'total_productos': len(items),
+            'productos_bajo_stock': len([i for i in items if i.stock < i.stock_minimo]),
+            'valor_total': sum(i.stock * i.costo for i in items if i.stock and i.costo),
+            'categorias': list(set(i.categoria for i in items if i.categoria)),
+            'almacenes': [self.object_as_dict(a) for a in Almacen.query.filter_by(empresa_id=empresa_id).all()]
         }
 
-        for palabra, titulo in palabras_clave.items():
-            if palabra in pregunta.lower():
-                return titulo
+    def get_facturacion_info(self, empresa_id: int) -> Dict:
+        """Obtiene información del módulo de facturación"""
+        facturas = Facturacion.query.join(Cliente).filter(Cliente.empresa_id == empresa_id).all()
+        return {
+            'total_facturas': len(facturas),
+            'facturas_pendientes': len([f for f in facturas if getattr(f, 'estado', '') == 'pendiente']),
+            'total_ventas': sum(getattr(f, 'total', 0) for f in facturas),
+            'clientes': {
+                'total': Cliente.query.filter_by(empresa_id=empresa_id).count(),
+                'activos': Cliente.query.filter_by(empresa_id=empresa_id, estado='activo').count()
+            }
+        }
 
-        return "Información Solicitada"
-
-    def generar_reporte_bancario(self, info_bancaria: Dict[str, Any]) -> list[list[Any]]:
-        """Genera un reporte estructurado con la información bancaria"""
-        reporte = [["Banco", "Número de Cuentas", "Balance Total"]]
+    def get_banco_info(self, empresa_id: int) -> Dict:
+        """Obtiene información del módulo bancario"""
+        transacciones = Transaccion.query.filter_by(empresa_id=empresa_id).order_by(
+            desc(Transaccion.fecha_creacion)
+        ).limit(5).all()
         
-        for banco in info_bancaria["bancos"]:
-            num_cuentas = len([c for c in info_bancaria.get("cuentas", []) if c["banco_id"] == banco["id"]])
-            balance_total = sum(c["balance"] for c in info_bancaria.get("cuentas", []) 
-                              if c["banco_id"] == banco["id"])
-            reporte.append([banco["nombre"], num_cuentas, f"${balance_total:,.2f}"])
+        return {
+            'total_transacciones': len(transacciones),
+            'ultimas_transacciones': [self.object_as_dict(t) for t in transacciones]
+        }
+
+    def get_marketing_info(self, empresa_id: int) -> Dict:
+        """Obtiene información del módulo de marketing"""
+        return {
+            'contactos': Contact.query.filter_by(empresa_id=empresa_id).count(),
+            'campanas_activas': Campaign.query.filter_by(
+                empresa_id=empresa_id,
+                estado='activa'
+            ).count()
+        }
+
+    # Los demás métodos auxiliares permanecen igual...
+
+    def get_marketing_contacts(self) -> List[Dict]:
+        """Obtiene los contactos de marketing"""
+        try:
+            contacts = Contact.query.order_by(
+                Contact.fecha_creacion.desc()
+            ).limit(100).all()
+            return [self.object_as_dict(c) for c in contacts]
+        except Exception as e:
+            logger.error(f"Error al obtener contactos: {str(e)}")
+            return []
+
+    def get_marketing_metrics(self) -> List[Dict]:
+        """Obtiene métricas de las campañas de marketing"""
+        try:
+            metrics = db.session.query(CampaignMetrics).join(
+                Campaign
+            ).order_by(
+                CampaignMetrics.fecha.desc()
+            ).limit(10).all()
+            return [self.object_as_dict(m) for m in metrics]
+        except Exception as e:
+            logger.error(f"Error al obtener métricas: {str(e)}")
+            return []
+
+    def format_movement_response(self, movimientos):
+        """Formatea la respuesta para movimientos de inventario"""
+        if not movimientos:
+            return "No hay movimientos recientes registrados."
+        
+        response = "Últimos movimientos de inventario:\n\n"
+        for mov in movimientos:
+            fecha = mov.get('fecha', 'Fecha no disponible')
+            tipo = mov.get('tipo', 'Tipo no especificado')
+            cantidad = mov.get('cantidad', 0)
+            stock_final = mov.get('stock_final', 0)
             
-        return reporte
+            response += (f"- {fecha}: {tipo.capitalize()} de {cantidad} unidades. "
+                        f"Stock final: {stock_final}\n")
+        return response
 
-    def generar_archivos(self, usuario_id, formato):
-        info = self.get_db_info(usuario_id)
-        if formato == 'pdf':
-            return self.generar_pdf(info)
-        elif formato == 'excel':
-            return self.generar_excel(info)
-        elif formato == 'word':
-            return self.generar_word(info)
-        else:
-            raise ValueError(f"Formato no soportado: {formato}")
+    def procesar_consulta_especifica(self, tipo_consulta: str, usuario_id: int) -> Dict:
+        """Procesa consultas específicas para diferentes módulos"""
+        try:
+            empresa_id = Usuario.query.get(usuario_id).empresa_id
+            
+            if tipo_consulta == 'ventas_recientes':
+                facturas = Facturacion.query.filter_by(empresa_id=empresa_id)\
+                    .order_by(Facturacion.fecha.desc())\
+                    .limit(5)\
+                    .all()
+                return [self.object_as_dict(f) for f in facturas]
+                
+            elif tipo_consulta == 'inventario_bajo':
+                items = InventarioItem.query.filter_by(empresa_id=empresa_id)\
+                    .filter(InventarioItem.stock < InventarioItem.stock_minimo)\
+                    .all()
+                return [self.object_as_dict(i) for i in items]
+                
+            elif tipo_consulta == 'clientes_top':
+                return db.session.query(
+                    Cliente,
+                    func.sum(Facturacion.total).label('total_ventas')
+                ).join(Facturacion)\
+                .filter(Cliente.empresa_id == empresa_id)\
+                .group_by(Cliente.id)\
+                .order_by(desc('total_ventas'))\
+                .limit(5)\
+                .all()
+                
+            elif tipo_consulta == 'transacciones_recientes':
+                trans = Transaccion.query.filter_by(empresa_id=empresa_id)\
+                    .order_by(Transaccion.fecha.desc())\
+                    .limit(10)\
+                    .all()
+                return [self.object_as_dict(t) for t in trans]
+                
+            return []
+        except Exception as e:
+            logger.error(f"Error en consulta específica {tipo_consulta}: {str(e)}")
+            return []
 
-    def generar_pdf(self, info):
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
-        styles = getSampleStyleSheet()
-        elements = []
-        
-        elements.append(Paragraph("Información del Usuario", styles['Title']))
-        data = [["Campo", "Valor"]]
-        for key, value in info['usuario'].items():
-            data.append([key, str(value)])
-        
-        if info['empresa']:
-            elements.append(Paragraph("Información de la Empresa", styles['Title']))
-            for key, value in info['empresa'].items():
-                data.append([key, str(value)])
-        
-        table = Table(data)
-        table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), '#cccccc')]))
-        elements.append(table)
-        
-        doc.build(elements)
-        pdf = buffer.getvalue()
-        buffer.close()
-        return base64.b64encode(pdf).decode('utf-8')
+    def get_estadisticas_avanzadas(self, empresa_id: int) -> Dict:
+        """Obtiene estadísticas avanzadas de la empresa"""
+        try:
+            return {
+                'ventas_totales': db.session.query(
+                    func.sum(Facturacion.total)
+                ).filter_by(empresa_id=empresa_id).scalar() or 0,
+                
+                'promedio_venta': db.session.query(
+                    func.avg(Facturacion.total)
+                ).filter_by(empresa_id=empresa_id).scalar() or 0,
+                
+                'total_clientes_activos': Cliente.query.filter_by(
+                    empresa_id=empresa_id, 
+                    estado='activo'
+                ).count(),
+                
+                'productos_sin_stock': InventarioItem.query.filter_by(
+                    empresa_id=empresa_id
+                ).filter(InventarioItem.stock == 0).count(),
+                
+                'facturas_pendientes': Facturacion.query.filter_by(
+                    empresa_id=empresa_id,
+                    estado='pendiente'
+                ).count()
+            }
+        except Exception as e:
+            logger.error(f"Error al obtener estadísticas avanzadas: {str(e)}")
+            return {}
 
-    def generar_excel(self, info):
-        output = BytesIO()
-        workbook = xlsxwriter.Workbook(output)
-        worksheet = workbook.add_worksheet()
+    def analizar_tendencias(self, empresa_id, periodo='mes'):
+        """Analiza tendencias de ventas y otros indicadores"""
+        try:
+            if periodo == 'mes':
+                fecha_inicio = datetime.now() - timedelta(days=30)
+            elif periodo == 'trimestre':
+                fecha_inicio = datetime.now() - timedelta(days=90)
+            else:
+                fecha_inicio = datetime.now() - timedelta(days=365)
 
-        row = 0
-        worksheet.write(row, 0, "Información del Usuario")
-        row += 1
-        for key, value in info['usuario'].items():
-            worksheet.write(row, 0, key)
-            worksheet.write(row, 1, str(value))
-            row += 1
+            ventas_periodo = db.session.query(
+                func.date_trunc('day', Facturacion.fecha).label('dia'),
+                func.sum(Facturacion.total).label('total')
+            ).filter(
+                Facturacion.empresa_id == empresa_id,
+                Facturacion.fecha >= fecha_inicio
+            ).group_by('dia').order_by('dia').all()
 
-        if info['empresa']:
-            row += 1
-            worksheet.write(row, 0, "Información de la Empresa")
-            row += 1
-            for key, value in info['empresa'].items():
-                worksheet.write(row, 0, key)
-                worksheet.write(row, 1, str(value))
-                row += 1
+            return {
+                'periodo': periodo,
+                'ventas_diarias': [(dia.strftime('%Y-%m-%d'), float(total)) 
+                                 for dia, total in ventas_periodo],
+                'tendencia': 'creciente' if len(ventas_periodo) > 1 and 
+                            ventas_periodo[-1][1] > ventas_periodo[0][1] else 'decreciente'
+            }
+        except Exception as e:
+            logger.error(f"Error al analizar tendencias: {str(e)}")
+            return {}
 
-        workbook.close()
-        excel = output.getvalue()
-        output.close()
-        return base64.b64encode(excel).decode('utf-8')
+    def sugerir_acciones(self, empresa_id):
+        """Sugiere acciones basadas en el análisis de datos"""
+        try:
+            sugerencias = []
+            
+            # Verificar inventario bajo
+            items_bajos = InventarioItem.query.filter_by(empresa_id=empresa_id)\
+                .filter(InventarioItem.stock_actual < InventarioItem.stock_minimo)\
+                .count()
+            if items_bajos > 0:
+                sugerencias.append(f"Hay {items_bajos} productos con stock bajo que requieren reposición")
+
+            # Verificar facturas vencidas
+            facturas_vencidas = Facturacion.query.filter_by(
+                empresa_id=empresa_id,
+                estado='pendiente'
+            ).filter(Facturacion.fecha_vencimiento < datetime.now()).count()
+            if facturas_vencidas > 0:
+                sugerencias.append(f"Existen {facturas_vencidas} facturas vencidas pendientes de cobro")
+
+            # Analizar clientes inactivos
+            clientes_inactivos = Cliente.query.filter_by(
+                empresa_id=empresa_id,
+                estado='inactivo'
+            ).count()
+            if clientes_inactivos > 0:
+                sugerencias.append(f"Hay {clientes_inactivos} clientes inactivos que podrían reactivarse")
+
+            return sugerencias
+        except Exception as e:
+            logger.error(f"Error al generar sugerencias: {str(e)}")
+            return []
 
     def generar_word(self, info):
         doc = Document()
@@ -566,15 +739,13 @@ def create_app():
         from marketing.models import Contact, Campaign, CampaignMetrics
         db.create_all()
         
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-    if not OPENAI_API_KEY:
-        app.logger.error('OpenAI API key is not set. Please check your .env file.')    
+    # Usar la clave de Claude en su lugar
+    CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY')
+    if not CLAUDE_API_KEY:
+        app.logger.error('Claude API key is not set. Please check your .env file.')    
 
     app.config['ASISTENTE_ACTIVO'] = True
-    
-    # Asignar el asistente como atributo de la aplicación
-    app.asistente = AsistenteVirtual(OPENAI_API_KEY, get_assistant_context)
-    app.asistente.inicializar_asistente_bancario()
+    app.asistente = AsistenteVirtual(CLAUDE_API_KEY, get_assistant_context)
 
     # Configurar el logging
     setup_logging(app)
@@ -990,51 +1161,94 @@ def create_app():
     @app.route('/api/asistente', methods=['POST'])
     @login_required
     def consultar_asistente():
-        try:
-            if not app.config['ASISTENTE_ACTIVO'] or not current_user.asistente_activo:
-                return jsonify({
-                    "tipo": "texto",
-                    "respuesta": "El asistente no está activo para tu usuario. Contacta al administrador."
-                }), 403
+        logger.debug(f"Solicitud al asistente recibida. Usuario: {current_user.nombre_usuario}")
+        
+        # Verificar si el asistente está activo para el usuario
+        if not app.config['ASISTENTE_ACTIVO'] or not current_user.asistente_activo:
+            logger.warning(f"Intento de uso del asistente por usuario no autorizado: {current_user.nombre_usuario}")
+            return jsonify({"respuesta": "El asistente no está activo para tu usuario. Contacta al administrador."}), 403
 
-            pregunta = request.json.get('pregunta', '').strip()
-            if not pregunta:
-                return jsonify({
-                    "tipo": "texto",
-                    "respuesta": "Por favor, proporciona una pregunta."
-                }), 400
+        # Obtener y validar la pregunta
+        pregunta = request.json.get('pregunta', '').strip()
+        logger.debug(f"Pregunta recibida: {pregunta}")
+        if not pregunta:
+            return jsonify({"respuesta": "Por favor, proporciona una pregunta."}), 400
+        
+        try:
+            # Verificar mensaje de inactividad y saludo diario
+            last_inactive_message = session.get('last_inactive_message_date')
+            today = date.today().isoformat()
+
+            if not app.config['ASISTENTE_ACTIVO']:
+                if last_inactive_message != today:
+                    session['last_inactive_message_date'] = today
+                    return jsonify({"tipo": "texto", "respuesta": "El asistente no está activo. Por favor, contacta al administrador para activarlo."})
+                else:
+                    return jsonify({"tipo": "texto", "respuesta": "El asistente sigue inactivo. Por favor, espera a que sea activado por un administrador."})
+
+            last_greeting_date = session.get('last_greeting_date')
+            if last_greeting_date != today:
+                session['last_greeting_date'] = today
+                greeting = "¡Hola! Soy tu asistente virtual de CalculAI. ¿En qué puedo ayudarte hoy?"
+                return jsonify({"tipo": "texto", "respuesta": greeting})
+
+            # Procesar diferentes tipos de consultas
+            pregunta_lower = pregunta.lower()
             
-            # Obtener la respuesta del asistente
+            # Detectar si la pregunta pide una lista o reporte
+            palabras_lista = ['lista', 'listado', 'muestra', 'mostrar', 'ver', 'dame', 'cuáles', 'cuales', 'qué', 'que']
+            es_solicitud_lista = any(palabra in pregunta_lower for palabra in palabras_lista)
+            
+            # Si es una solicitud de lista o reporte, siempre usar formato de reporte
+            if es_solicitud_lista or 'reporte' in pregunta_lower:
+                datos, tipo_reporte = app.asistente.generar_reporte(current_user.id, pregunta)
+                if datos and len(datos) > 1:  # Asegurarse de que hay datos además del encabezado
+                    return jsonify({
+                        "tipo": "reporte",
+                        "datos": datos,
+                        "tipo_reporte": tipo_reporte,
+                        "mensaje": "Aquí tienes la información solicitada:"
+                    })
+            
+            # Procesar respuesta normal
             respuesta = app.asistente.responder(pregunta, current_user.id)
+            datos_db = respuesta.get('datos_db', {})
             
-            # Asegurarnos de que la respuesta tenga el formato correcto
-            if isinstance(respuesta, dict):
-                if respuesta.get('tipo') == 'lista':
+            # Si la respuesta contiene datos tabulares, mostrarlos en formato de reporte
+            if datos_db:
+                # Convertir datos_db en formato tabular
+                datos_tabla = []
+                headers = []
+                rows = []
+                
+                for key, value in datos_db.items():
+                    if isinstance(value, list) and value:
+                        headers = ["Campo", "Valor"]
+                        for item in value:
+                            if isinstance(item, dict):
+                                for k, v in item.items():
+                                    rows.append([k, str(v)])
+                
+                if headers and rows:
+                    datos_tabla = [headers] + rows
                     return jsonify({
-                        "tipo": "lista",
-                        "titulo": respuesta.get('titulo', 'Resultados'),
-                        "contenido": respuesta.get('contenido', ''),
-                        "datos": respuesta.get('datos', []),
-                        "permite_descarga": respuesta.get('permite_descarga', True),
-                        "formatos_descarga": respuesta.get('formatos_descarga', ["excel", "pdf", "word"])
-                    })
-                elif respuesta.get('tipo') == 'texto':
-                    return jsonify({
-                        "tipo": "texto",
-                        "respuesta": respuesta.get('respuesta', '')
+                        "tipo": "reporte",
+                        "datos": datos_tabla,
+                        "tipo_reporte": "Listado de Información",
+                        "mensaje": respuesta.get('contenido', 'Aquí tienes la información solicitada:')
                     })
             
-            # Si la respuesta no tiene el formato esperado
+            # Respuesta de texto normal
             return jsonify({
                 "tipo": "texto",
-                "respuesta": str(respuesta)
+                "respuesta": respuesta.get('contenido', str(respuesta))
             })
 
         except Exception as e:
-            logger.error(f"Error en consultar_asistente: {str(e)}")
+            logger.error(f"Error al consultar el asistente: {str(e)}")
             return jsonify({
                 "tipo": "texto",
-                "respuesta": "Ha ocurrido un error inesperado. Por favor, intenta de nuevo más tarde."
+                "respuesta": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde."
             }), 500
 
     @app.route('/api/asistente_status')

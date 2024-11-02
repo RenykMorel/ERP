@@ -1,4 +1,87 @@
-// Inicialización unificada
+// Función para agregar estilos
+function addStyles() {
+    const styles = `
+    .ventana-emergente {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .ventana-contenido {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 80%;
+        max-height: 80vh;
+        overflow: auto;
+    }
+
+    .tabla-container {
+        margin: 15px 0;
+        overflow-x: auto;
+    }
+
+    .tabla-container table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+    }
+
+    .tabla-container th,
+    .tabla-container td {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+
+    .tabla-container th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+    }
+
+    .botones-descarga {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .botones-descarga button {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 4px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+    }
+
+    .boton-cerrar {
+        display: block;
+        width: 100%;
+        padding: 8px;
+        margin-top: 15px;
+        border: none;
+        border-radius: 4px;
+        background-color: #dc3545;
+        color: white;
+        cursor: pointer;
+    }
+    `;
+
+    const styleElement = document.createElement('style');
+    styleElement.textContent = styles;
+    document.head.appendChild(styleElement);
+}
+    // Agregar estilos
+    addStyles();
 document.addEventListener('DOMContentLoaded', function() {
     loadUserInfo();
     loadModules();
@@ -28,9 +111,93 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Función para notificar al asistente virtual
+// Reemplaza la función notificarAsistente existente con esta versión
+// Inicializa el asistente virtual
+function initializeAsistente() {
+    const chatWindow = document.getElementById('chat-window');
+    const chatMessages = document.getElementById('chat-messages');
+    const asistenteInput = document.getElementById('assistant-input');
+    const asistenteEnviar = document.getElementById('assistant-send');
+
+    let conversationHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+    let asistenteActivo = false;
+
+    // Función para cargar el historial de conversación
+    function cargarHistorialConversacion() {
+        chatMessages.innerHTML = ''; // Limpia los mensajes existentes
+        conversationHistory.forEach(entry => {
+            const mensajeElement = document.createElement('p');
+            mensajeElement.className = entry.sender === 'Usuario' ? 'user-message' : 'assistant-message';
+            mensajeElement.textContent = `${entry.sender}: ${entry.message}`;
+            chatMessages.appendChild(mensajeElement);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Comprobar si el asistente está activo
+    fetch('/api/asistente_status')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Estado del asistente:', data);
+            asistenteActivo = data.activo;
+            if (asistenteActivo && conversationHistory.length === 0) {
+                const mensajeBienvenida = "¡Hola! Soy tu asistente virtual de CalculAI. ¿En qué puedo ayudarte hoy?";
+                mostrarMensajeAsistente(mensajeBienvenida);
+            }
+            cargarHistorialConversacion();
+        })
+        .catch(error => {
+            console.error('Error al verificar el estado del asistente:', error);
+            chatWindow.classList.add('asistente-inactivo');
+            mostrarMensajeAsistente("Error al verificar el estado del asistente. Por favor, intente más tarde.");
+        });
+
+    if (asistenteInput && asistenteEnviar) {
+        asistenteEnviar.addEventListener('click', enviarMensaje);
+        asistenteInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                enviarMensaje();
+            }
+        });
+    }
+
+    function enviarMensaje() {
+        const pregunta = asistenteInput.value.trim();
+        if (pregunta) {
+            mostrarMensajeUsuario(pregunta);
+            notificarAsistente(pregunta);
+            asistenteInput.value = '';
+        }
+    }
+
+    function mostrarMensajeUsuario(mensaje) {
+        const nuevoMensaje = document.createElement('p');
+        nuevoMensaje.textContent = `Tú: ${mensaje}`;
+        nuevoMensaje.className = 'user-message';
+        chatMessages.appendChild(nuevoMensaje);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        conversationHistory.push({ sender: 'Usuario', message: mensaje });
+        localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+    }
+
+    function mostrarMensajeAsistente(mensaje) {
+        const nuevoMensaje = document.createElement('p');
+        nuevoMensaje.textContent = `Asistente: ${mensaje}`;
+        nuevoMensaje.className = 'assistant-message';
+        chatMessages.appendChild(nuevoMensaje);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        conversationHistory.push({ sender: 'Asistente', message: mensaje });
+        localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+    }
+
+    // Exponer la función mostrarMensajeAsistente para uso externo
+    window.mostrarMensajeAsistente = mostrarMensajeAsistente;
+}
+
+// Función para notificar al asistente virtual
 function notificarAsistente(mensaje) {
-    const paginaActual = window.location.pathname;
-    
     fetch('/api/asistente', {
         method: 'POST',
         headers: {
@@ -38,18 +205,32 @@ function notificarAsistente(mensaje) {
         },
         body: JSON.stringify({ 
             pregunta: mensaje,
-            pagina_actual: paginaActual
+            pagina_actual: window.location.pathname
         })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.tipo === 'archivos') {
-            mostrarMensajeConArchivos(data.mensaje, data.archivos);
-        } else if (data.tipo === 'texto') {
-            mostrarMensajeAsistente(data.respuesta);
-        } else {
-            console.error('Respuesta inesperada del asistente:', data);
-            mostrarMensajeAsistente("Lo siento, ocurrió un error al procesar tu solicitud.");
+        if (!data) {
+            mostrarMensajeAsistente("Lo siento, no pude procesar tu solicitud.");
+            return;
+        }
+
+        // Manejar diferentes tipos de respuesta
+        switch (data.tipo) {
+            case 'texto':
+                mostrarMensajeAsistente(data.respuesta);
+                break;
+            case 'lista':
+                mostrarMensajeAsistente(data.contenido || "Aquí tienes la información solicitada:");
+                mostrarVentanaEmergente({
+                    titulo: data.titulo,
+                    datos: data.datos,
+                    permiteDescarga: data.permite_descarga,
+                    formatosDescarga: data.formatos_descarga
+                });
+                break;
+            default:
+                mostrarMensajeAsistente(data.respuesta || "No pude procesar tu solicitud.");
         }
     })
     .catch(error => {
@@ -57,6 +238,513 @@ function notificarAsistente(mensaje) {
         mostrarMensajeAsistente("Ocurrió un error al comunicarse con el asistente.");
     });
 }
+
+// Asegúrate de llamar a esta función cuando se carga el documento
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAsistente();
+    // ... otras inicializaciones
+});
+
+// Función para mostrar ventana emergente genérica
+function mostrarVentanaEmergente({ titulo, datos, permiteDescarga = true, formatosDescarga = ['excel', 'pdf', 'word'] }) {
+    // Crear elemento de ventana emergente
+    const ventana = document.createElement('div');
+    ventana.className = 'ventana-emergente';
+    
+    // Crear el contenido
+    const contenido = document.createElement('div');
+    contenido.className = 'ventana-contenido';
+    
+    // Crear encabezado
+    const header = document.createElement('div');
+    header.className = 'ventana-header';
+    
+    const tituloElement = document.createElement('h2');
+    tituloElement.textContent = titulo;
+    header.appendChild(tituloElement);
+    
+    const botonCerrar = document.createElement('button');
+    botonCerrar.innerHTML = '&times;';
+    botonCerrar.className = 'boton-cerrar';
+    botonCerrar.onclick = () => {
+        ventana.classList.add('cerrando');
+        setTimeout(() => ventana.remove(), 300);
+    };
+    header.appendChild(botonCerrar);
+    
+    contenido.appendChild(header);
+    
+    // Crear contenedor principal
+    const mainContent = document.createElement('div');
+    mainContent.className = 'main-content';
+    
+    // Agregar resumen de datos y barra de búsqueda
+    const resumenYBusqueda = document.createElement('div');
+    resumenYBusqueda.className = 'resumen-y-busqueda';
+    
+    const resumen = document.createElement('div');
+    resumen.className = 'resumen';
+    
+    const totalRegistros = datos.length;
+    const resumenText = document.createElement('p');
+    resumenText.innerHTML = `<strong>Total de registros:</strong> ${totalRegistros}`;
+    resumen.appendChild(resumenText);
+    
+    const busqueda = document.createElement('input');
+    busqueda.type = 'search';
+    busqueda.placeholder = 'Buscar...';
+    busqueda.className = 'barra-busqueda';
+    
+    resumenYBusqueda.appendChild(resumen);
+    resumenYBusqueda.appendChild(busqueda);
+    mainContent.appendChild(resumenYBusqueda);
+    
+    // Agregar tabla de datos
+    const tablaContainer = document.createElement('div');
+    tablaContainer.className = 'tabla-container';
+    const tabla = crearTabla(datos);
+    tablaContainer.appendChild(tabla);
+    mainContent.appendChild(tablaContainer);
+    
+    // Agregar paginación
+    const paginacion = document.createElement('div');
+    paginacion.className = 'paginacion';
+    const botonAnterior = document.createElement('button');
+    botonAnterior.textContent = 'Anterior';
+    botonAnterior.className = 'boton-paginacion';
+    const botonSiguiente = document.createElement('button');
+    botonSiguiente.textContent = 'Siguiente';
+    botonSiguiente.className = 'boton-paginacion';
+    paginacion.appendChild(botonAnterior);
+    paginacion.appendChild(botonSiguiente);
+    mainContent.appendChild(paginacion);
+    
+    contenido.appendChild(mainContent);
+    
+    // Agregar sección de acciones
+    const accionesSection = document.createElement('div');
+    accionesSection.className = 'acciones-section';
+    
+    // Agregar botones de descarga si está permitido
+    if (permiteDescarga && formatosDescarga.length > 0) {
+        const botonesDescarga = document.createElement('div');
+        botonesDescarga.className = 'botones-descarga';
+        
+        formatosDescarga.forEach(formato => {
+            const boton = document.createElement('button');
+            boton.className = `boton-descarga boton-${formato}`;
+            boton.innerHTML = `<i class="fas fa-download"></i> ${formato.toUpperCase()}`;
+            boton.onclick = () => descargarReporte(formato, datos);
+            botonesDescarga.appendChild(boton);
+        });
+        
+        accionesSection.appendChild(botonesDescarga);
+    }
+    
+    contenido.appendChild(accionesSection);
+    
+    ventana.appendChild(contenido);
+    document.body.appendChild(ventana);
+    
+    // Implementar funcionalidad de búsqueda
+    let datosFiltrados = [...datos];
+    busqueda.addEventListener('input', (e) => {
+        const terminoBusqueda = e.target.value.toLowerCase();
+        datosFiltrados = datos.filter(item => 
+            Object.values(item).some(val => 
+                val.toString().toLowerCase().includes(terminoBusqueda)
+            )
+        );
+        actualizarTabla(datosFiltrados);
+    });
+    
+    // Implementar paginación
+    let paginaActual = 1;
+    const registrosPorPagina = 10;
+    
+    function actualizarTabla(datos) {
+        const inicio = (paginaActual - 1) * registrosPorPagina;
+        const fin = inicio + registrosPorPagina;
+        const datosPaginados = datos.slice(inicio, fin);
+        
+        while (tabla.tBodies[0].firstChild) {
+            tabla.tBodies[0].removeChild(tabla.tBodies[0].firstChild);
+        }
+        
+        datosPaginados.forEach(item => {
+            const tr = document.createElement('tr');
+            Object.values(item).forEach(value => {
+                const td = document.createElement('td');
+                td.textContent = value;
+                tr.appendChild(td);
+            });
+            tabla.tBodies[0].appendChild(tr);
+        });
+        
+        actualizarBotonesPaginacion();
+    }
+    
+    function actualizarBotonesPaginacion() {
+        const totalPaginas = Math.ceil(datosFiltrados.length / registrosPorPagina);
+        botonAnterior.disabled = paginaActual === 1;
+        botonSiguiente.disabled = paginaActual === totalPaginas;
+    }
+    
+    botonAnterior.onclick = () => {
+        if (paginaActual > 1) {
+            paginaActual--;
+            actualizarTabla(datosFiltrados);
+        }
+    };
+    
+    botonSiguiente.onclick = () => {
+        const totalPaginas = Math.ceil(datosFiltrados.length / registrosPorPagina);
+        if (paginaActual < totalPaginas) {
+            paginaActual++;
+            actualizarTabla(datosFiltrados);
+        }
+    };
+    
+    actualizarTabla(datos);
+    
+    // Agregar estilos
+    const styles = `
+        .ventana-emergente {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .ventana-emergente.cerrando {
+            opacity: 0;
+        }
+        
+        .ventana-contenido {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .ventana-emergente:not(.cerrando) .ventana-contenido {
+            transform: scale(1);
+        }
+        
+        .ventana-header {
+            background: linear-gradient(135deg, #4a90e2, #63b3ed);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ventana-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .boton-cerrar {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .boton-cerrar:hover {
+            transform: scale(1.1);
+        }
+        
+        .main-content {
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .resumen-y-busqueda {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .resumen {
+            background-color: #f0f4f8;
+            border-radius: 6px;
+            padding: 10px 15px;
+        }
+        
+        .resumen p {
+            margin: 0;
+            font-size: 16px;
+            color: #2d3748;
+        }
+        
+        .barra-busqueda {
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 200px;
+        }
+        
+        .tabla-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #edf2f7;
+            font-weight: 600;
+            color: #2d3748;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        
+        .paginacion {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .boton-paginacion {
+            padding: 8px 16px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .boton-paginacion:hover:not(:disabled) {
+            background-color: #3182ce;
+        }
+        
+        .boton-paginacion:disabled {
+            background-color: #cbd5e0;
+            cursor: not-allowed;
+        }
+        
+        .acciones-section {
+            background-color: #f7fafc;
+            padding: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .botones-descarga {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .boton-descarga {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .boton-excel {
+            background-color: #1f9d55;
+            color: white;
+        }
+        
+        .boton-pdf {
+            background-color: #e53e3e;
+            color: white;
+        }
+        
+        .boton-word {
+            background-color: #3182ce;
+            color: white;
+        }
+        
+        .boton-descarga:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .ventana-contenido {
+                width: 95%;
+            }
+            
+            .resumen-y-busqueda {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            
+            .barra-busqueda {
+                width: 100%;
+            }
+            
+            .botones-descarga {
+                flex-direction: column;
+            }
+            
+            .boton-descarga {
+                width: 100%;
+            }
+        }
+    `;
+    
+    const styleElement = document.createElement('style');
+    styleElement.textContent = styles;
+    document.head.appendChild(styleElement);
+    
+    // Aplicar animación de entrada
+    setTimeout(() => {
+        ventana.style.opacity = '1';
+    }, 50);
+}
+
+function crearTabla(datos) {
+    const tabla = document.createElement('table');
+    
+    // Crear encabezados
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    Object.keys(datos[0]).forEach(key => {
+        const th = document.createElement('th');
+        th.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    tabla.appendChild(thead);
+    
+    // Crear cuerpo de la tabla
+    const tbody = document.createElement('tbody');
+    tabla.appendChild(tbody);
+    
+    return tabla;
+}
+
+function descargarReporte(formato, datos) {
+    // Mostrar indicador de carga
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'loading-indicator';
+    loadingIndicator.innerHTML = `
+        <div class="spinner"></div>
+        <p>Descargando ${formato.toUpperCase()}...</p>
+    `;
+    document.body.appendChild(loadingIndicator);
+
+    fetch(`/api/descargar_reporte/${formato}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ datos: datos })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `reporte.${formato}`;
+        
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(error => {
+        console.error('Error al descargar el reporte:', error);
+        alert("Error al descargar el reporte. Por favor, intente nuevamente.");
+    })
+    .finally(() => {
+        // Remover indicador de carga
+        document.body.removeChild(loadingIndicator);
+    });
+}
+
+// Estilos adicionales para el indicador de carga
+const loadingStyles = `
+    .loading-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+    }
+
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-indicator p {
+        margin-top: 10px;
+        color: white;
+        font-size: 18px;
+    }
+`;
+
+const loadingStyleElement = document.createElement('style');
+loadingStyleElement.textContent = loadingStyles;
+document.head.appendChild(loadingStyleElement);
 
 // Función para mostrar mensajes con archivos descargables
 function mostrarMensajeConArchivos(mensaje, archivos) {
