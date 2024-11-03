@@ -30,81 +30,98 @@ def format_date(date):
         return f"{day} {month} {year}"
     return date
 
-def extract_cedula_info(texto_ocr):
-    cedula_pattern = r"(?:CEDULADEIDENTIDAD(?:\s*Y\s*ELECTORAL)?|CEDULA\s*DE\s*IDENTIDAD(?:\s*Y\s*ELECTORAL)?)\s*([\d-]+)"
-    nombre_pattern = r"FECHA(?:\s*DE)?\s*EXPIRACION\s*.*?\n((?:[A-Z]+\s*)+)$"
-    lugar_nacimiento_pattern = r"LUGAR(?:\s*DE)?\s*NACIMIENTO\s*(.+?)(?:\n|$)"
-    fecha_nacimiento_pattern = r"FECHA(?:\s*DE)?\s*NACIMIENTO:?\s*(\d{2}\w+\d{4})"
-
-    cedula_match = re.search(cedula_pattern, texto_ocr, re.IGNORECASE | re.MULTILINE)
-    nombre_match = re.search(nombre_pattern, texto_ocr, re.IGNORECASE | re.MULTILINE | re.DOTALL)
-    lugar_nacimiento_match = re.search(lugar_nacimiento_pattern, texto_ocr, re.IGNORECASE)
-    fecha_nacimiento_match = re.search(fecha_nacimiento_pattern, texto_ocr, re.IGNORECASE)
-
-    if cedula_match and nombre_match and lugar_nacimiento_match and fecha_nacimiento_match:
-        fecha_nacimiento = format_date(fecha_nacimiento_match.group(1).strip())
-        return {
-            "CEDULADEIDENTIDAD": cedula_match.group(1).strip(),
-            "NOMBRE": clean_name(nombre_match.group(1)),
-            "LUGAR DE NACIMIENTO": lugar_nacimiento_match.group(1).strip(),
-            "FECHA DE NACIMIENTO": fecha_nacimiento
-        }
-    return None
 
 def extract_factura_info(texto_ocr):
     """
-    Extrae información específica de una factura a partir del texto OCR.
+    Extrae información específica de una factura con procesamiento línea por línea mejorado.
     """
+    logger.debug("=== INICIO DE PROCESAMIENTO DE FACTURA ===")
     logger.debug(f"Texto OCR recibido:\n{texto_ocr}")
     
-    patterns = {
-        'NCF': r"NCF\.\.\s*(.*?)(?:\n|$)",
-        'Fecha': r"Fecha:\s*(.*?)(?:\n|$)",
-        'RNC': r"RNC:\s*(.*?)(?:\n|$)",
-        'TOTAL': r"TOTAL:\s*\$(.*?)(?:\n|$)",
-        'Itbis': r"Itbis:\s*(.*?)(?:\n|$)"
-    }
-    
     result = {}
-    try:
-        for key, pattern in patterns.items():
-            match = re.search(pattern, texto_ocr, re.IGNORECASE | re.MULTILINE)
-            if match:
-                value = match.group(1).strip()
-                logger.debug(f"Encontrado {key}: {value}")
-                
-                # Procesar valores numéricos
-                if key in ['TOTAL', 'Itbis']:
+    lines = texto_ocr.split('\n')
+    
+    # Buscar NCF
+    for i, line in enumerate(lines):
+        # NCF: Buscar en la línea actual y la siguiente
+        if 'NCF' in line:
+            for j in range(i, min(i + 2, len(lines))):
+                if lines[j].strip().startswith('B'):
+                    result['NCF'] = lines[j].strip()
+                    logger.debug(f"NCF encontrado: {result['NCF']}")
+                    break
+        
+        # RNC: Buscar en cualquier línea que contenga "RNC"
+        if 'RNC' in line and 'n/a' not in line.lower():
+            rnc_matches = re.findall(r'\d{9,11}', line)
+            if rnc_matches:
+                result['RNC'] = rnc_matches[0]
+                logger.debug(f"RNC encontrado: {result['RNC']}")
+        
+        # Fecha: Buscar en la línea actual
+        if 'Fecha:' in line or (i > 0 and 'Fecha:' in lines[i-1]):
+            fecha_match = re.search(r'(\d{2}/\d{2}/\d{4})', line)
+            if fecha_match:
+                result['Fecha'] = fecha_match.group(1)
+                logger.debug(f"Fecha encontrada: {result['Fecha']}")
+        
+        # TOTAL: Buscar al final del documento
+        if 'TOTAL:' in line or 'TOTAL' in line:
+            total_match = re.search(r'\$\s*(\d+\.\d{2})', line)
+            if total_match:
+                try:
+                    result['TOTAL'] = float(total_match.group(1))
+                    logger.debug(f"TOTAL encontrado: {result['TOTAL']}")
+                except ValueError:
+                    logger.warning(f"Error convirtiendo TOTAL: {total_match.group(1)}")
+        
+        # Itbis: Buscar en cualquier línea
+        if 'Itbis:' in line:
+            itbis_match = re.search(r'(\d+\.\d{2})', line)
+            if itbis_match:
+                try:
+                    result['Itbis'] = float(itbis_match.group(1))
+                    logger.debug(f"Itbis encontrado: {result['Itbis']}")
+                except ValueError:
+                    logger.warning(f"Error convirtiendo Itbis: {itbis_match.group(1)}")
+
+    # Segunda pasada para campos que podrían estar en formatos alternativos
+    if 'TOTAL' not in result:
+        for line in lines:
+            if '$' in line and not any(key in line.upper() for key in ['SUBTOTAL', 'ITBIS']):
+                total_match = re.search(r'\$\s*(\d+\.\d{2})', line)
+                if total_match:
                     try:
-                        # Remover el símbolo $ si existe y las comas
-                        value = value.replace('$', '').replace(',', '')
-                        value = float(value)
-                        logger.debug(f"Valor numérico convertido para {key}: {value}")
-                    except ValueError as ve:
-                        logger.warning(f"Error convirtiendo valor numérico para {key}: {value}")
-                        logger.warning(str(ve))
+                        result['TOTAL'] = float(total_match.group(1))
+                        logger.debug(f"TOTAL encontrado (segunda pasada): {result['TOTAL']}")
+                    except ValueError:
                         continue
-                result[key] = value
-            else:
-                logger.warning(f"No se encontró coincidencia para {key}")
-        
-        # Validar campos requeridos
-        required_fields = {'NCF', 'Fecha', 'RNC'}
-        found_fields = set(result.keys())
-        logger.debug(f"Campos encontrados: {found_fields}")
-        
-        if all(field in result for field in required_fields):
-            logger.info("Todos los campos requeridos fueron encontrados")
-            return result
-        else:
-            missing_fields = required_fields - found_fields
-            logger.error(f"Faltan campos requeridos: {missing_fields}")
-            return None
-            
-    except Exception as e:
-        logger.error(f"Error procesando texto OCR: {str(e)}")
-        logger.error(traceback.format_exc())
+
+    if 'RNC' not in result:
+        # Buscar cualquier número de 9-11 dígitos después de la palabra RNC
+        for line in lines:
+            if 'RNC' in line and 'n/a' not in line.lower():
+                rnc_value = ''.join(filter(str.isdigit, line))
+                if len(rnc_value) in [9, 10, 11]:
+                    result['RNC'] = rnc_value
+                    logger.debug(f"RNC encontrado (segunda pasada): {result['RNC']}")
+                    break
+
+    # Validación y logging de resultados
+    logger.debug("=== RESULTADOS ENCONTRADOS ===")
+    for key, value in result.items():
+        logger.debug(f"{key}: {value}")
+
+    # Verificar campos requeridos
+    required_fields = {'NCF', 'Fecha', 'RNC'}
+    found_fields = set(result.keys())
+    missing_fields = required_fields - found_fields
+    
+    if missing_fields:
+        logger.error(f"Faltan campos requeridos: {missing_fields}")
         return None
+    
+    return result
 
 @impuestos_bp.route('/formulario606')
 @login_required
@@ -369,38 +386,28 @@ def api_eliminar_formulario606(id):
 @impuestos_bp.route('/api/ocr', methods=['POST'])
 @login_required
 def api_ocr():
+    """
+    Endpoint para procesar imágenes de facturas usando OCR.
+    """
     try:
-        logger.debug("Iniciando procesamiento OCR")
+        logger.debug("=== INICIANDO PROCESO OCR ===")
         
         if 'image' not in request.files:
-            logger.error("No se encontró archivo en la solicitud")
             return jsonify({"error": "No file part in the request"}), 400
         
         file = request.files['image']
         if file.filename == '':
-            logger.error("Nombre de archivo vacío")
             return jsonify({"error": "No selected file"}), 400
         
-        logger.debug(f"Procesando archivo: {file.filename}")
-        
-        valid_extensions = {'jpg', 'jpeg', 'png'}
-        file_extension = file.filename.rsplit('.', 1)[-1].lower()
-        
-        if file_extension not in valid_extensions:
-            logger.error(f"Extensión de archivo inválida: {file_extension}")
-            return jsonify({"error": "Invalid file type"}), 400
-
         # Leer y procesar la imagen
         image_stream = file.read()
         image_array = np.frombuffer(image_stream, np.uint8)
         image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
         
         if image is None:
-            logger.error("No se pudo decodificar la imagen")
             return jsonify({"error": "Could not decode image"}), 400
 
         # Preprocesamiento
-        logger.debug("Iniciando preprocesamiento de imagen")
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
         # Mejora de contraste
@@ -411,34 +418,34 @@ def api_ocr():
         enhanced = cv2.merge((cl,a,b))
         enhanced = cv2.cvtColor(enhanced, cv2.COLOR_LAB2RGB)
 
-        # OCR
-        logger.debug("Iniciando proceso OCR")
+        # OCR con logging detallado
+        logger.debug("Ejecutando OCR...")
         resultado_ocr = ocr.ocr(enhanced, cls=True)
         
         if not resultado_ocr or not resultado_ocr[0]:
-            logger.error("No se detectó texto en la imagen")
-            return jsonify({
-                "error": "No text detected in image",
-                "details": "El OCR no pudo detectar texto en la imagen"
-            }), 400
+            return jsonify({"error": "No text detected in image"}), 400
 
-        # Extraer texto
-        texto_ocr = "\n".join([line[1][0] for line in resultado_ocr[0] if line])
-        logger.debug(f"Texto extraído por OCR:\n{texto_ocr}")
+        # Mostrar cada línea detectada
+        logger.debug("=== TEXTO DETECTADO POR OCR ===")
+        texto_ocr = ""
+        for i, line in enumerate(resultado_ocr[0]):
+            if line:
+                texto_detectado = line[1][0]
+                confidence = line[1][1]
+                logger.debug(f"Línea {i+1}: '{texto_detectado}' (Confianza: {confidence})")
+                texto_ocr += texto_detectado + "\n"
 
         # Procesar información
         factura_info = extract_factura_info(texto_ocr)
-        logger.debug(f"Información extraída: {factura_info}")
         
         if not factura_info:
-            logger.error("No se pudo extraer la información requerida de la factura")
             return jsonify({
                 "error": "No se pudo extraer la información requerida",
-                "texto_detectado": texto_ocr,
-                "details": "No se encontraron todos los campos requeridos"
+                "debug_info": {
+                    "texto_detectado": texto_ocr
+                }
             }), 400
 
-        # Preparar respuesta
         formulario606_data = {
             'fecha': factura_info.get('Fecha', ''),
             'ncf': factura_info.get('NCF', ''),
@@ -447,12 +454,9 @@ def api_ocr():
             'itbis': factura_info.get('Itbis', 0.0)
         }
 
-        logger.debug(f"Datos extraídos exitosamente: {formulario606_data}")
-        
         return jsonify({
             "success": True,
             "ocr_data": formulario606_data,
-            "classification": "Archivo válido: Esto es una factura",
             "debug_info": {
                 "texto_detectado": texto_ocr,
                 "campos_encontrados": list(factura_info.keys())
@@ -464,9 +468,9 @@ def api_ocr():
         logger.error(traceback.format_exc())
         return jsonify({
             "error": "OCR processing failed",
-            "details": str(e),
-            "trace": traceback.format_exc()
+            "details": str(e)
         }), 500
+
 
 
 # Ensure the temp directory exists

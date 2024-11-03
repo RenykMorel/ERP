@@ -168,7 +168,7 @@
                             </div>
                         </div>
                         <div class="col-span-6 sm:col-span-3">
-                            <label for="total" class="block text-sm font-medium text-gray-700">TOTAL</label>
+                            <label for="total" class="block text-sm font-medium text-gray-700">MONTO</label>
                             <div class="mt-1 relative rounded-md shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <span class="text-gray-500 sm:text-sm">
@@ -451,11 +451,14 @@ document.getElementById('ocr-upload').addEventListener('change', function(event)
 });
 
 function fillFormWithOCRData(ocrData) {
+    console.log('Datos OCR recibidos:', ocrData);
+    
+    const fecha = ocrData.fecha || '';
+    document.getElementById('fecha').value = fecha ? fecha.split('/').reverse().join('-') : '';
     document.getElementById('rnc-cedula').value = ocrData.rnc_cedula || '';
-    document.getElementById('itbis').value = ocrData.itbis || '';
     document.getElementById('ncf').value = ocrData.ncf || '';
-    document.getElementById('total').value = ocrData.total || '';
-    document.getElementById('tipo-bienes-servicios').value = ocrData.tipo_bienes_servicios || '';
+    document.getElementById('total').value = ocrData.monto || ocrData.total || '';
+    document.getElementById('itbis').value = ocrData.itbis || '';
 
     openModal();
 }
