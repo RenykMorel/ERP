@@ -105,23 +105,43 @@
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <form id="registro-form">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Crear/Editar Registro</h3>
-                    <div class="mt-4 space-y-4">
-                        <input type="hidden" id="registro-id" name="id">
-                        <div>
-                            <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
-                            <input type="text" name="fecha" id="fecha" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border-2 border-green-500">
+            <form id="registro-form" class="bg-white px-4 pt-5 pb-4 sm:p-6">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Crear/Editar Registro
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">
+                                Complete los detalles del registro para el Formulario 606.
+                            </p>
                         </div>
-                        <div>
+                    </div>
+                </div>
+                <div class="mt-5 sm:mt-4 space-y-6">
+                    <input type="hidden" id="registro-id" name="id">
+                    <div class="grid grid-cols-6 gap-6">
+                        <div class="col-span-6 sm:col-span-3">
                             <label for="rnc-cedula" class="block text-sm font-medium text-gray-700">RNC/Cédula</label>
-                            <input type="text" name="rnc_cedula" id="rnc-cedula" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            <input type="text" name="rnc_cedula" id="rnc-cedula" required class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-green-300 rounded-md bg-green-50">
                         </div>
-                        <div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
+                            <input type="date" name="fecha" id="fecha" required class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-green-300 rounded-md bg-green-50">
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <label for="ncf" class="block text-sm font-medium text-gray-700">NCF</label>
+                            <input type="text" name="ncf" id="ncf" required class="mt-1 focus:ring-green-500 focus:border-green-500 block w-full shadow-sm sm:text-sm border-green-300 rounded-md bg-green-50">
+                        </div>
+                        <div class="col-span-6">
                             <label for="tipo-bienes-servicios" class="block text-sm font-medium text-gray-700">Tipo de Bienes/Servicios</label>
-                            <select name="tipo_bienes_servicios" id="tipo-bienes-servicios" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <select name="tipo_bienes_servicios" id="tipo-bienes-servicios" required class="mt-1 block w-full py-2 px-3 border border-green-300 bg-green-50 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm">
                                 <option value="">Seleccione un tipo</option>
                                 <option value="01">01 - Gastos de personal</option>
                                 <option value="02">02 - Gastos por trabajo, suministros y servicios</option>
@@ -136,21 +156,35 @@
                                 <option value="11">11 - Gastos de Seguro</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="ncf" class="block text-sm font-medium text-gray-700">NCF</label>
-                            <input type="text" name="ncf" id="ncf" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        <div class="col-span-6 sm:col-span-3">
+                            <label for="itbis" class="block text-sm font-medium text-gray-700">ITBIS</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">
+                                        $
+                                    </span>
+                                </div>
+                                <input type="number" name="itbis" id="itbis" step="0.01" required class="focus:ring-green-500 focus:border-green-500 block w-full pl-7 pr-12 sm:text-sm border-green-300 rounded-md bg-green-50" placeholder="0.00">
+                            </div>
                         </div>
-                        <div>
-                            <label for="monto" class="block text-sm font-medium text-gray-700">Monto</label>
-                            <input type="number" name="monto" id="monto" step="0.01" required class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                        <div class="col-span-6 sm:col-span-3">
+                            <label for="total" class="block text-sm font-medium text-gray-700">TOTAL</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">
+                                        $
+                                    </span>
+                                </div>
+                                <input type="number" name="total" id="total" step="0.01" required class="focus:ring-green-500 focus:border-green-500 block w-full pl-7 pr-12 sm:text-sm border-green-300 rounded-md bg-green-50" placeholder="0.00">
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
                         Guardar
                     </button>
-                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeModal()">
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm" onclick="closeModal()">
                         Cancelar
                     </button>
                 </div>
@@ -196,8 +230,6 @@ function initializeFormulario606() {
 
     prevPageBtn.addEventListener('click', () => cambiarPagina(-1));
     nextPageBtn.addEventListener('click', () => cambiarPagina(1));
-
-    
 
     document.getElementById('registro-form').addEventListener('submit', guardarRegistro);
     exportarExcelBtn.addEventListener('click', exportarExcel);
@@ -292,11 +324,9 @@ function editarRegistro(id) {
             if (data.success) {
                 const registro = data.registro;
                 document.getElementById('registro-id').value = registro.id;
-                document.getElementById('fecha').value = registro.fecha;
                 document.getElementById('rnc-cedula').value = registro.rnc_cedula;
-                document.getElementById('tipo-bienes-servicios').value = registro.tipo_bienes_servicios;
                 document.getElementById('ncf').value = registro.ncf;
-                document.getElementById('monto').value = registro.monto;
+                document.getElementById('total').value = registro.total;
                 document.getElementById('modal-title').textContent = 'Editar Registro';
                 openModal();
             } else {
@@ -421,11 +451,11 @@ document.getElementById('ocr-upload').addEventListener('change', function(event)
 });
 
 function fillFormWithOCRData(ocrData) {
-    document.getElementById('fecha').value = ocrData.fecha || '';
     document.getElementById('rnc-cedula').value = ocrData.rnc_cedula || '';
-    document.getElementById('tipo-bienes-servicios').value = ocrData.tipo_bienes_servicios || '';
+    document.getElementById('itbis').value = ocrData.itbis || '';
     document.getElementById('ncf').value = ocrData.ncf || '';
-    document.getElementById('monto').value = ocrData.monto || '';
+    document.getElementById('total').value = ocrData.total || '';
+    document.getElementById('tipo-bienes-servicios').value = ocrData.tipo_bienes_servicios || '';
 
     openModal();
 }
