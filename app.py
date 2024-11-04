@@ -54,7 +54,10 @@ import csv
 from reportlab.lib import colors
 from common.models import ItemFactura, ItemPreFactura, MovimientoInventario
 from asistentes.banco_assistant import AsistenteBancario
+from asistentes.inventario_assistant import AsistenteInventario
 from decimal import Decimal
+
+
 
 # Importar el nuevo módulo de marketing
 from marketing.routes import marketing
@@ -206,16 +209,36 @@ def verificar_items():
 class AsistenteVirtual:
     def __init__(self, api_key, get_context_func):
         self.client = OpenAI(api_key=api_key)
-        self.get_context_func = get_context_func
-        self.asistente_bancario = None  # Se inicializará después
+        self.asistente_bancario = None
+        self.asistente_inventario = None
         self.context = """Eres un asistente virtual multifuncional para CalculAI con acceso completo 
-        al módulo bancario. Puedes proporcionar información detallada sobre bancos, cuentas, 
-        transacciones y balances. También puedes ayudar con análisis financiero y 
-        recomendaciones basadas en los datos bancarios."""
+        a los módulos bancario e inventario. Puedes proporcionar información detallada sobre:
+        - Módulo Bancario: bancos, cuentas, transacciones, balances y análisis financiero
+        - Módulo Inventario: productos, stock, movimientos de inventario, almacenes, categorías y reportes"""
+        
+        # Inicializar los asistentes con el contexto de aplicación actual
+        with current_app.app_context():
+            self.inicializar_asistentes()
 
-    def inicializar_asistente_bancario(self):
-        """Inicializa el componente bancario del asistente"""
-        self.asistente_bancario = AsistenteBancario()
+    def inicializar_asistentes(self):
+        """Inicializa los componentes del asistente"""
+        try:
+            self.asistente_bancario = AsistenteBancario()
+            logging.info("AsistenteBancario inicializado correctamente")
+            bancos = self.asistente_bancario.obtener_info_bancos()
+            logging.info(f"Bancos obtenidos: {len(bancos)}")
+        except Exception as e:
+            logging.error(f"Error al inicializar AsistenteBancario: {str(e)}")
+            self.asistente_bancario = None
+
+        try:
+            self.asistente_inventario = AsistenteInventario()
+            logging.info("AsistenteInventario inicializado correctamente")
+            items = self.asistente_inventario.obtener_items()
+            logging.info(f"Items obtenidos: {len(items)}")
+        except Exception as e:
+            logging.error(f"Error al inicializar AsistenteInventario: {str(e)}")
+            self.asistente_inventario = None
 
     def object_as_dict(self, obj):
         def serialize(value):
@@ -228,60 +251,131 @@ class AsistenteVirtual:
 
     def get_db_info(self, usuario_id):
         info = {}
-        
         usuario = Usuario.query.get(usuario_id)
         if usuario:
             info['usuario'] = self.object_as_dict(usuario)
             info['empresa'] = self.object_as_dict(usuario.empresa) if usuario.empresa else None
-
         return info
 
-    def generar_reporte(self, usuario_id, pregunta):
-        # Aquí deberías implementar la lógica para generar el reporte basado en la pregunta
-        # Por ahora, usaremos datos de ejemplo
-        if 'ventas' in pregunta.lower():
-            datos = [
-                ["Producto", "Cantidad", "Precio Unitario", "Total"],
-                ["Producto A", 100, 10.00, 1000.00],
-                ["Producto B", 50, 20.00, 1000.00],
-                ["Producto C", 75, 15.00, 1125.00],
-                ["Producto D", 200, 5.00, 1000.00],
-                ["Producto E", 30, 50.00, 1500.00],
-            ]
-            tipo_reporte = "Reporte de Ventas"
-        elif 'inventario' in pregunta.lower():
-            datos = [
-                ["Producto", "Stock Actual", "Stock Mínimo", "Reorden"],
-                ["Producto A", 500, 100, "No"],
-                ["Producto B", 50, 100, "Sí"],
-                ["Producto C", 750, 500, "No"],
-            ]
-            tipo_reporte = "Reporte de Inventario"
+    def detect_module(self, pregunta: str) -> str:
+        """Detecta a qué módulo corresponde la pregunta"""
+        pregunta = pregunta.lower()
+        
+        inventario_keywords = [
+            'item', 'items', 'inventario', 'stock', 'producto', 'productos',
+            'almacen', 'almacenes', 'categoria', 'categorias', 'movimiento',
+            'entrada', 'salida', 'ajuste'
+        ]
+        
+        banco_keywords = [
+            'banco', 'bancos', 'cuenta', 'cuentas', 'transaccion', 'transacciones',
+            'balance', 'deposito', 'transferencia', 'credito', 'debito'
+        ]
+        
+        inventario_matches = sum(1 for keyword in inventario_keywords if keyword in pregunta)
+        banco_matches = sum(1 for keyword in banco_keywords if keyword in pregunta)
+        
+        if inventario_matches > banco_matches:
+            return 'inventario'
+        elif banco_matches > inventario_matches:
+            return 'banco'
         else:
-            datos = [
-                ["Campo", "Valor"],
-                ["Dato 1", "Valor 1"],
-                ["Dato 2", "Valor 2"],
-                ["Dato 3", "Valor 3"],
-            ]
-            tipo_reporte = "Reporte General"
+            return 'general'
 
-        return datos, tipo_reporte
+    def get_module_info(self, modulo: str) -> Dict[str, Any]:
+        """Obtiene la información relevante según el módulo detectado"""
+        try:
+            if modulo == 'inventario' and self.asistente_inventario:
+                items = self.asistente_inventario.obtener_items()
+                items_info = []
+                
+                # Crear una lista formateada de items para el contexto
+                for item in items:
+                    item_info = {
+                        "nombre": item.get("nombre", ""),
+                        "codigo": item.get("codigo", ""),
+                        "categoria": item.get("categoria", "Sin categoría"),
+                        "stock": item.get("stock", 0),
+                        "stock_minimo": item.get("stock_minimo", 0),
+                        "precio": item.get("precio", 0),
+                        "costo": item.get("costo", 0)
+                    }
+                    items_info.append(item_info)
+
+                # Obtener el resto de la información
+                resumen = self.asistente_inventario.obtener_resumen_inventario()
+                almacenes = self.asistente_inventario.obtener_almacenes()
+                categorias = self.asistente_inventario.obtener_categorias()
+                bajo_stock = self.asistente_inventario.obtener_items_bajo_stock()
+
+                return {
+                    "items_total": len(items),
+                    "items": items_info,  # Lista detallada de items
+                    "resumen": resumen,
+                    "almacenes": almacenes,
+                    "categorias": categorias,
+                    "bajo_stock": bajo_stock
+                }
+
+            elif modulo == 'banco' and self.asistente_bancario:
+                bancos = self.asistente_bancario.obtener_info_bancos()
+                return {
+                    "bancos": bancos,
+                    "bancos_total": len(bancos)
+                }
+            return {}
+        except Exception as e:
+            logging.error(f"Error al obtener información del módulo {modulo}: {str(e)}", exc_info=True)
+            return {
+                "error": f"Error al acceder a la información del módulo {modulo}",
+                "details": str(e)
+            }
 
     def responder(self, pregunta: str, usuario_id: int) -> Dict[str, Any]:
         try:
-            # Detectar si la pregunta pide una lista o información tabulada
-            palabras_clave_lista = ['lista', 'listado', 'muestra', 'enumera', 'dame', 'mostrar']
-            es_solicitud_lista = any(palabra in pregunta.lower() for palabra in palabras_clave_lista)
-
-            # Obtener información bancaria relevante
-            info_bancaria = {
-                "bancos": self.asistente_bancario.obtener_info_bancos() if self.asistente_bancario else []
-            }
+            logging.info(f"Procesando pregunta: {pregunta}")
             
-            # Actualizar el contexto con la información bancaria
-            context_updated = f"{self.context}\n\nInformación bancaria actual: {json.dumps(info_bancaria, ensure_ascii=False)}"
+            modulo = self.detect_module(pregunta)
+            logging.info(f"Módulo detectado: {modulo}")
+            
+            # Verificar estado de los asistentes
+            if modulo == 'banco' and not self.asistente_bancario:
+                return {
+                    "tipo": "texto",
+                    "respuesta": "El módulo bancario no está disponible en este momento."
+                }
+            elif modulo == 'inventario' and not self.asistente_inventario:
+                return {
+                    "tipo": "texto",
+                    "respuesta": "El módulo de inventario no está disponible en este momento."
+                }
+            
+            # Obtener información del módulo
+            info_modulo = self.get_module_info(modulo)
+            
+            # Crear contexto específico según el módulo
+            if modulo == 'inventario':
+                context_especifico = f"""Estás analizando el módulo de inventario.
+                Información actual del inventario:
+                - Total de items: {info_modulo.get('items_total', 0)}
+                - Items con bajo stock: {len(info_modulo.get('bajo_stock', []))}
+                - Total de almacenes: {len(info_modulo.get('almacenes', []))}
+                - Total de categorías: {len(info_modulo.get('categorias', []))}
+                
+                Lista detallada de items en inventario:
+                {json.dumps(info_modulo.get('items', []), indent=2, ensure_ascii=False)}
+                
+                Cuando se solicite información sobre items específicos, usa la lista anterior."""
+            elif modulo == 'banco':
+                context_especifico = f"""Estás analizando el módulo bancario.
+                Información actual bancaria:
+                - Total de bancos: {info_modulo.get('bancos_total', 0)}
+                - Detalles de bancos: {json.dumps(info_modulo.get('bancos', []), ensure_ascii=False)}"""
+            else:
+                context_especifico = "Estás analizando una consulta general."
 
+            context_updated = f"{self.context}\n\n{context_especifico}"
+            
             response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -292,99 +386,106 @@ class AsistenteVirtual:
             
             respuesta_texto = response.choices[0].message.content
 
-            # Si es una solicitud de lista o contiene información estructurada
+            # Determinar si se requiere formato de lista
+            palabras_clave_lista = ['lista', 'listado', 'muestra', 'enumera', 'dame', 'mostrar']
+            es_solicitud_lista = any(palabra in pregunta.lower() for palabra in palabras_clave_lista)
+
             if es_solicitud_lista or "reporte" in pregunta.lower():
-                datos = self.convertir_respuesta_a_tabla(respuesta_texto, info_bancaria)
-                if datos:  # Solo si se pudo convertir a tabla
+                datos = self.convertir_respuesta_a_tabla(respuesta_texto, info_modulo, modulo)
+                if datos:
                     return {
                         "tipo": "lista",
-                        "titulo": self.generar_titulo_lista(pregunta),
+                        "titulo": self.generar_titulo_lista(pregunta, modulo),
                         "contenido": respuesta_texto,
                         "datos": datos,
                         "permite_descarga": True,
                         "formatos_descarga": ["excel", "pdf", "word"]
                     }
             
-            # Si no es una lista o no se pudo estructurar, devolver como texto
             return {
                 "tipo": "texto",
                 "respuesta": respuesta_texto
             }
 
         except Exception as e:
-            logger.error(f"Error en el asistente: {str(e)}")
+            logging.error(f"Error al responder: {str(e)}", exc_info=True)
             return {
                 "tipo": "texto",
                 "respuesta": "Ha ocurrido un error al procesar tu consulta. Por favor, intenta de nuevo."
             }
 
-    def convertir_respuesta_a_tabla(self, respuesta: str, info_bancaria: Dict[str, Any]) -> List[List[str]]:
+    # ... (resto de los métodos sin cambios: convertir_respuesta_a_tabla, generar_titulo_lista, etc.)
+
+    def convertir_respuesta_a_tabla(self, respuesta: str, info_modulo: Dict[str, Any], modulo: str) -> List[List[str]]:
         """Convierte una respuesta en texto a formato de tabla"""
         lineas = respuesta.split('\n')
         tabla = []
         
-        # Si hay líneas que parecen ser una lista
         if any(linea.strip().startswith(('-', '*', '•', '1.')) for linea in lineas):
-            # Determinar las columnas basadas en el contenido
-            if "banco" in respuesta.lower():
-                encabezados = ["Banco", "Información", "Detalles"]
-            elif "cuenta" in respuesta.lower():
-                encabezados = ["Cuenta", "Balance", "Última Actualización"]
-            elif "transacción" in respuesta.lower():
-                encabezados = ["Fecha", "Tipo", "Monto", "Descripción"]
+            if modulo == 'inventario':
+                if "stock" in respuesta.lower():
+                    encabezados = ["Item", "Código", "Stock Actual", "Stock Mínimo", "Stock Máximo"]
+                elif "movimiento" in respuesta.lower():
+                    encabezados = ["Fecha", "Tipo", "Item", "Cantidad", "Usuario"]
+                else:
+                    encabezados = ["Item", "Código", "Categoría", "Stock", "Precio"]
+            elif modulo == 'banco':
+                if "banco" in respuesta.lower():
+                    encabezados = ["Banco", "Información", "Detalles"]
+                elif "cuenta" in respuesta.lower():
+                    encabezados = ["Cuenta", "Balance", "Última Actualización"]
+                elif "transacción" in respuesta.lower():
+                    encabezados = ["Fecha", "Tipo", "Monto", "Descripción"]
+                else:
+                    encabezados = ["Item", "Descripción", "Valor"]
             else:
                 encabezados = ["Item", "Descripción", "Valor"]
             
             tabla.append(encabezados)
             
-            # Procesar cada línea
             for linea in lineas:
                 linea = linea.strip()
                 if linea and not linea.startswith(('#', '=', '-', '*', '•')):
-                    # Limpiar la línea de marcadores de lista
                     for marcador in ['-', '*', '•', '1.', '2.', '3.']:
                         if linea.startswith(marcador):
                             linea = linea[len(marcador):].strip()
                     
-                    # Dividir en columnas
                     partes = linea.split(' - ') if ' - ' in linea else [linea]
-                    # Asegurar que tengamos el número correcto de columnas
                     while len(partes) < len(encabezados):
                         partes.append("")
                     
                     tabla.append(partes[:len(encabezados)])
             
-            return tabla if len(tabla) > 1 else None  # Retornar None si solo tenemos encabezados
+            return tabla if len(tabla) > 1 else None
         
         return None
 
-    def generar_titulo_lista(self, pregunta: str) -> str:
-        """Genera un título apropiado para la lista basado en la pregunta"""
+    def generar_titulo_lista(self, pregunta: str, modulo: str) -> str:
+        """Genera un título apropiado para la lista basado en la pregunta y el módulo"""
         palabras_clave = {
-            "banco": "Información Bancaria",
-            "cuenta": "Listado de Cuentas",
-            "transaccion": "Registro de Transacciones",
-            "balance": "Balance de Cuentas",
-            "movimiento": "Movimientos Bancarios",
+            'inventario': {
+                "item": "Listado de Items",
+                "producto": "Listado de Productos",
+                "stock": "Estado del Stock",
+                "almacen": "Información de Almacenes",
+                "categoria": "Listado de Categorías",
+                "movimiento": "Registro de Movimientos"
+            },
+            'banco': {
+                "banco": "Información Bancaria",
+                "cuenta": "Listado de Cuentas",
+                "transaccion": "Registro de Transacciones",
+                "balance": "Balance de Cuentas",
+                "movimiento": "Movimientos Bancarios",
+            }
         }
 
-        for palabra, titulo in palabras_clave.items():
+        modulo_keywords = palabras_clave.get(modulo, {})
+        for palabra, titulo in modulo_keywords.items():
             if palabra in pregunta.lower():
                 return titulo
 
         return "Información Solicitada"
-
-    def generar_reporte_bancario(self, info_bancaria: Dict[str, Any]) -> list[list[Any]]:
-        """Genera un reporte estructurado con la información bancaria"""
-        reporte = [["Banco", "Número de Cuentas", "Balance Total"]]
-        
-        for banco in info_bancaria["bancos"]:
-            num_cuentas = len([c for c in info_bancaria.get("cuentas", []) if c["banco_id"] == banco["id"]])
-            balance_total = sum(c["balance"] for c in info_bancaria.get("cuentas", []) 
-                              if c["banco_id"] == banco["id"])
-            reporte.append([banco["nombre"], num_cuentas, f"${balance_total:,.2f}"])
-            
-        return reporte
 
     def generar_archivos(self, usuario_id, formato):
         info = self.get_db_info(usuario_id)
@@ -577,9 +678,22 @@ def create_app():
 
     app.config['ASISTENTE_ACTIVO'] = True
     
-    # Asignar el asistente como atributo de la aplicación
-    app.asistente = AsistenteVirtual(OPENAI_API_KEY, get_assistant_context)
-    app.asistente.inicializar_asistente_bancario()
+    with app.app_context():
+        try:
+            # Ahora podemos pasar None como get_context_func ya que no lo usamos
+            app.asistente = AsistenteVirtual(OPENAI_API_KEY, None)
+            logger.info("Asistente virtual inicializado correctamente")
+            
+            # Verificar estado de inicialización
+            estado = {
+                "bancario": app.asistente.asistente_bancario is not None,
+                "inventario": app.asistente.asistente_inventario is not None
+            }
+            logger.info(f"Estado de inicialización de asistentes: {estado}")
+            
+        except Exception as e:
+            logger.error(f"Error al inicializar el asistente virtual: {str(e)}")
+            app.asistente = None
 
     # Configurar el logging
     setup_logging(app)
@@ -606,6 +720,28 @@ def create_app():
             "message": f"Asistente {'activado' if usuario.asistente_activo else 'desactivado'} para {usuario.nombre_usuario}",
             "asistente_activo": usuario.asistente_activo
         })
+        
+    @app.route('/api/asistente/diagnostico')
+    @login_required
+    def diagnostico_asistente():
+        if not app.asistente:
+            return jsonify({
+                "status": "error",
+                "message": "Asistente no inicializado"
+            })
+        
+        estado = {
+            "asistente_bancario": {
+                "inicializado": app.asistente.asistente_bancario is not None,
+                "bancos_count": len(app.asistente.asistente_bancario.obtener_info_bancos()) if app.asistente.asistente_bancario else 0
+            },
+            "asistente_inventario": {
+                "inicializado": app.asistente.asistente_inventario is not None,
+                "items_count": len(app.asistente.asistente_inventario.obtener_items()) if app.asistente.asistente_inventario else 0
+            }
+        }
+        
+        return jsonify(estado)   
 
     @asistente_notificacion.connect
     def log_notificacion(sender, mensaje):
@@ -617,7 +753,22 @@ def create_app():
 
     @event.listens_for(Banco, 'after_update')
     def notificar_actualizacion_banco(mapper, connection, target):
-        asistente_notificacion.send('Banco', mensaje=f"Banco actualizado: {target.nombre}")    
+        asistente_notificacion.send('Banco', mensaje=f"Banco actualizado: {target.nombre}") 
+        
+    # Agregar estos manejadores de eventos después de los existentes de banco
+    @event.listens_for(InventarioItem, 'after_insert')
+    def notificar_nuevo_item(mapper, connection, target):
+        asistente_notificacion.send('Inventario', mensaje=f"Nuevo item creado: {target.nombre}")
+
+    @event.listens_for(InventarioItem, 'after_update')
+    def notificar_actualizacion_item(mapper, connection, target):
+        asistente_notificacion.send('Inventario', mensaje=f"Item actualizado: {target.nombre}")
+
+    @event.listens_for(MovimientoInventario, 'after_insert')
+    def notificar_movimiento_inventario(mapper, connection, target):
+        tipo_mov = "entrada" if target.tipo == "entrada" else "salida"
+        asistente_notificacion.send('Inventario', 
+            mensaje=f"Nuevo movimiento de {tipo_mov} registrado para item ID: {target.item_id}")       
     
     @app.before_request
     def log_request_info():
