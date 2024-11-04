@@ -720,6 +720,15 @@ def create_app():
             "message": f"Asistente {'activado' if usuario.asistente_activo else 'desactivado'} para {usuario.nombre_usuario}",
             "asistente_activo": usuario.asistente_activo
         })
+     
+    @app.route('/api/asistente/verificar-inventario')
+    @login_required
+    def verificar_inventario():
+        if not app.asistente:
+            return jsonify({"error": "Asistente no inicializado"})
+        
+        resultado = app.asistente.verificar_datos_inventario()
+        return jsonify(resultado) 
         
     @app.route('/api/asistente/diagnostico')
     @login_required
