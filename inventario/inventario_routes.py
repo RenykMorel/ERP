@@ -45,32 +45,61 @@ def create_item():
         data = request.get_json()
         logger.info(f"Datos recibidos para crear item: {data}")
         
-        # Convertir campos numéricos vacíos a None o 0 según corresponda
-        stock = int(data.get('stock')) if data.get('stock') and data.get('stock').strip() else 0
-        stock_minimo = int(data.get('stock_minimo')) if data.get('stock_minimo') and data.get('stock_minimo').strip() else 0
-        stock_maximo = int(data.get('stock_maximo')) if data.get('stock_maximo') and data.get('stock_maximo').strip() else None
+        # Validación del tipo
+        tipo = data.get('tipo')
+        if not tipo or tipo not in ['producto', 'servicio', 'otro']:
+            return jsonify({"error": "El tipo debe ser 'producto', 'servicio' u 'otro'"}), 400
+
+        # Validar y convertir campos numéricos con valores por defecto
+        try:
+            stock = int(data.get('stock', 0) if data.get('stock') is not None else 0)
+            stock_minimo = int(data.get('stock_minimo', 0) if data.get('stock_minimo') is not None else 0)
+            stock_maximo = int(data.get('stock_maximo', 0) if data.get('stock_maximo') is not None else 0)
+            costo = float(data.get('costo', 0) if data.get('costo') is not None else 0)
+            itbis = float(data.get('itbis', 0) if data.get('itbis') is not None else 0)
+            margen = float(data.get('margen', 0) if data.get('margen') is not None else 0)
+            precio = float(data.get('precio', 0) if data.get('precio') is not None else 0)
+        except (ValueError, TypeError) as e:
+            return jsonify({
+                "error": "Error en la conversión de datos numéricos",
+                "detalle": str(e)
+            }), 400
         
         # Validar campos requeridos
-        if not all([data.get('nombre'), data.get('tipo'), data.get('costo'), 
-                   data.get('itbis'), data.get('margen'), data.get('precio')]):
-            return jsonify({"error": "Faltan campos requeridos"}), 400
+        required_fields = {
+            'nombre': data.get('nombre'),
+            'tipo': tipo,
+            'costo': costo,
+            'itbis': itbis,
+            'margen': margen,
+            'precio': precio
+        }
+        
+        missing_fields = [field for field, value in required_fields.items() if not value and value != 0]
+        if missing_fields:
+            return jsonify({
+                "error": "Faltan campos requeridos",
+                "campos": missing_fields
+            }), 400
 
+        # Crear el item con los campos validados
         new_item = InventarioItem(
-            codigo=data.get('codigo') if data.get('codigo') else None,
+            codigo=data.get('codigo'),
             nombre=data['nombre'],
-            tipo=data['tipo'],
-            costo=float(data['costo']),
-            itbis=float(data['itbis']),
-            margen=float(data['margen']),
-            precio=float(data['precio']),
-            descripcion=data.get('descripcion') or None,
-            categoria=data.get('categoria') or None,
-            proveedor=data.get('proveedor') or None,
-            marca=data.get('marca') or None,
-            unidad_medida=data.get('unidad_medida') or None,
+            tipo=tipo,
+            descripcion=data.get('descripcion'),
+            categoria=data.get('categoria'),
+            proveedor=data.get('proveedor'),
+            marca=data.get('marca'),
+            unidad_medida=data.get('unidad_medida'),
             stock=stock,
             stock_minimo=stock_minimo,
-            stock_maximo=stock_maximo
+            stock_maximo=stock_maximo,
+            costo=costo,
+            itbis=itbis,
+            margen=margen,
+            precio=precio,
+            tipo_item_id=data.get('tipo_item_id')
         )
 
         db.session.add(new_item)
@@ -79,41 +108,99 @@ def create_item():
         logger.info(f"Item creado exitosamente: {new_item.id}")
         return jsonify(new_item.to_dict()), 201
         
-    except ValueError as e:
+    except IntegrityError as e:
         db.session.rollback()
-        logger.error(f"Error de validación: {str(e)}")
-        return jsonify({"error": "Error en los datos proporcionados. Verifique los campos numéricos."}), 400
+        logger.error(f"Error de integridad: {str(e)}")
+        return jsonify({
+            "error": "Error de integridad en la base de datos",
+            "detalle": "Ya existe un item con ese código" if "unique" in str(e).lower() else str(e)
+        }), 400
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al crear item: {str(e)}")
+        return jsonify({
+            "error": "Error interno del servidor",
+            "detalle": str(e)
+        }), 500
+@inventario_bp.route('/api/items/<int:item_id>', methods=['GET'])
+@login_required
+def get_item(item_id):
+    try:
+        item = InventarioItem.query.get_or_404(item_id)
+        item_data = {
+            'id': item.id,
+            'codigo': item.codigo,
+            'nombre': item.nombre,
+            'tipo': item.tipo,
+            'categoria': item.categoria,
+            'descripcion': item.descripcion,
+            'proveedor': item.proveedor,
+            'marca': item.marca,
+            'unidad_medida': item.unidad_medida,
+            'stock': item.stock,
+            'stock_minimo': item.stock_minimo,
+            'stock_maximo': item.stock_maximo,
+            'costo': float(item.costo) if item.costo else 0,
+            'itbis': float(item.itbis) if item.itbis else 0,
+            'margen': float(item.margen) if item.margen else 0,
+            'precio': float(item.precio) if item.precio else 0,
+            'tipo_item_id': item.tipo_item_id
+        }
+        logger.info(f"Item recuperado: {item_data}")
+        return jsonify(item_data)
+    except Exception as e:
+        logger.error(f"Error al obtener item {item_id}: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@inventario_bp.route('/api/items/<int:item_id>', methods=['PUT'])
+@login_required
+def update_item(item_id):
+    try:
+        item = InventarioItem.query.get_or_404(item_id)
+        data = request.get_json()
+        
+        # Validar y convertir campos numéricos
+        try:
+            if 'stock' in data:
+                data['stock'] = int(data['stock'] if data['stock'] is not None else 0)
+            if 'stock_minimo' in data:
+                data['stock_minimo'] = int(data['stock_minimo'] if data['stock_minimo'] is not None else 0)
+            if 'stock_maximo' in data:
+                data['stock_maximo'] = int(data['stock_maximo'] if data['stock_maximo'] is not None else 0)
+            if 'costo' in data:
+                data['costo'] = float(data['costo'] if data['costo'] is not None else 0)
+            if 'itbis' in data:
+                data['itbis'] = float(data['itbis'] if data['itbis'] is not None else 0)
+            if 'margen' in data:
+                data['margen'] = float(data['margen'] if data['margen'] is not None else 0)
+            if 'precio' in data:
+                data['precio'] = float(data['precio'] if data['precio'] is not None else 0)
+        except (ValueError, TypeError) as e:
+            return jsonify({
+                "error": "Error en la conversión de datos numéricos",
+                "detalle": str(e)
+            }), 400
+
+        # Actualizar campos del item
+        for field in ['nombre', 'tipo', 'categoria', 'descripcion', 'proveedor', 
+                     'marca', 'unidad_medida', 'stock', 'stock_minimo', 'stock_maximo',
+                     'costo', 'itbis', 'margen', 'precio', 'tipo_item_id']:
+            if field in data:
+                setattr(item, field, data[field])
+
+        db.session.commit()
+        logger.info(f"Item actualizado: {item.id}")
+        return jsonify(item.to_dict())
         
     except IntegrityError as e:
         db.session.rollback()
         logger.error(f"Error de integridad: {str(e)}")
         return jsonify({"error": "Ya existe un item con ese código"}), 400
-        
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error al crear item: {str(e)}")
-        return jsonify({"error": "Error interno del servidor"}), 500
-
-@inventario_bp.route('/api/items/<int:item_id>', methods=['PUT'])
-@login_required
-def update_item(item_id):
-    item = InventarioItem.query.get_or_404(item_id)
-    data = request.json
-    try:
-        item.update_from_dict(data)
-        db.session.commit()
-        return jsonify(item.to_dict())
-    except IntegrityError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error de integridad al actualizar item: {str(e)}")
-        return jsonify({"error": "Ya existe un item con ese código"}), 400
-    except ValueError as e:
-        current_app.logger.error(f"Error de validación al actualizar item: {str(e)}")
-        return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error inesperado al actualizar item: {str(e)}")
-        return jsonify({"error": "Error interno del servidor"}), 500
+        logger.error(f"Error al actualizar item: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @inventario_bp.route('/api/items/<int:item_id>', methods=['DELETE'])
 @login_required
@@ -213,6 +300,7 @@ def get_inventario():
         return jsonify({"error": "Error interno del servidor"}), 500
 
 # Ruta para Reporte de Inventario
+# Ruta para Reporte de Inventario
 @inventario_bp.route('/reporte')
 @login_required
 def reporte():
@@ -230,47 +318,84 @@ def get_reporte():
     
     try:
         fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
-        fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
+        fecha_fin = datetime.strptime(fecha_fin + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
         
-        query = MovimientoInventario.query.filter(
-            MovimientoInventario.fecha.between(fecha_inicio, fecha_fin)
-        )
-        
+        # Obtener los items según la categoría
+        items_query = InventarioItem.query
         if categoria:
-            query = query.join(InventarioItem).filter(InventarioItem.categoria == categoria)
+            items_query = items_query.filter(InventarioItem.categoria == categoria)
+        items = items_query.all()
+
+        # Preparar el resumen y detalle
+        resumen = {
+            "total_items": len(items),
+            "valor_total": 0.0,
+            "items_stock_bajo": 0
+        }
+
+        detalle = []
         
-        movimientos = query.all()
-        
-        reporte = {}
-        for movimiento in movimientos:
-            if movimiento.item_id not in reporte:
-                reporte[movimiento.item_id] = {
-                    "item": movimiento.item.to_dict(),
-                    "entradas": 0,
-                    "salidas": 0
-                }
-            if movimiento.tipo == 'entrada':
-                reporte[movimiento.item_id]["entradas"] += movimiento.cantidad
-            else:
-                reporte[movimiento.item_id]["salidas"] += movimiento.cantidad
-        
-        return jsonify(list(reporte.values()))
-    except ValueError:
+        for item in items:
+            # Obtener movimientos en el período
+            movimientos = MovimientoInventario.query.filter(
+                MovimientoInventario.item_id == item.id,
+                MovimientoInventario.fecha.between(fecha_inicio, fecha_fin)
+            ).all()
+
+            # Calcular movimientos
+            entradas = sum(m.cantidad for m in movimientos if m.tipo == 'entrada')
+            salidas = sum(m.cantidad for m in movimientos if m.tipo == 'salida')
+            
+            # Calcular stock inicial
+            movimientos_anteriores = MovimientoInventario.query.filter(
+                MovimientoInventario.item_id == item.id,
+                MovimientoInventario.fecha < fecha_inicio
+            ).all()
+            
+            total_entradas_previas = sum(m.cantidad for m in movimientos_anteriores if m.tipo == 'entrada')
+            total_salidas_previas = sum(m.cantidad for m in movimientos_anteriores if m.tipo == 'salida')
+            stock_inicial = item.stock - (total_entradas_previas - total_salidas_previas)
+            
+            # Calcular valores
+            valor_unitario = float(item.costo)
+            stock_actual = stock_inicial + entradas - salidas
+            valor_total = stock_actual * valor_unitario
+
+            # Agregar al detalle
+            detalle.append({
+                "codigo": item.codigo or str(item.id),
+                "nombre": item.nombre,
+                "categoria": item.categoria or "Sin categoría",
+                "stock_inicial": stock_inicial,
+                "entradas": entradas,
+                "salidas": salidas,
+                "stock_actual": stock_actual,
+                "valor_unitario": valor_unitario,
+                "valor_total": valor_total
+            })
+
+            # Actualizar resumen
+            resumen["valor_total"] += valor_total
+            if 1 <= stock_actual <= 5:  # Changed to consider stock between 1 and 5 as low
+                resumen["items_stock_bajo"] += 1
+
+        return jsonify({
+            "resumen": resumen,
+            "detalle": detalle
+        })
+
+    except ValueError as e:
+        logger.error(f"Error de validación en reporte: {str(e)}")
         return jsonify({"error": "Formato de fecha inválido. Use YYYY-MM-DD"}), 400
     except Exception as e:
-        current_app.logger.error(f"Error al generar reporte: {str(e)}")
+        logger.error(f"Error al generar reporte: {str(e)}", exc_info=True)
         return jsonify({"error": "Error interno del servidor"}), 500
 
-@inventario_bp.route('/api/categorias', methods=['GET'])
-@login_required
-def get_categorias():
-    try:
-        categorias = db.session.query(distinct(InventarioItem.categoria)).all()
-        categorias = [categoria[0] for categoria in categorias if categoria[0]]  # Filtra los valores None o vacíos
-        return jsonify(categorias)
-    except Exception as e:
-        current_app.logger.error(f"Error al obtener categorías: {str(e)}")
-        return jsonify({"error": "Error interno del servidor"}), 500
+
+
+
+
+
 
 @inventario_bp.route('/api/exportar-excel', methods=['GET'])
 @login_required
@@ -284,44 +409,62 @@ def exportar_excel():
     
     try:
         fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d')
-        fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d')
+        fecha_fin = datetime.strptime(fecha_fin + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
         
-        query = MovimientoInventario.query.filter(
-            MovimientoInventario.fecha.between(fecha_inicio, fecha_fin)
-        )
-        
+        # Obtener los items
+        items_query = InventarioItem.query
         if categoria:
-            query = query.join(InventarioItem).filter(InventarioItem.categoria == categoria)
-        
-        movimientos = query.all()
+            items_query = items_query.filter(InventarioItem.categoria == categoria)
+        items = items_query.all()
         
         output = io.StringIO()
         writer = csv.writer(output)
         
-        writer.writerow(['Código', 'Nombre', 'Categoría', 'Entradas', 'Salidas', 'Stock Final'])
+        # Escribir encabezados
+        writer.writerow([
+            'Código',
+            'Nombre',
+            'Categoría',
+            'Stock Inicial',
+            'Entradas',
+            'Salidas',
+            'Stock Actual',
+            'Valor Unitario',
+            'Valor Total'
+        ])
         
-        reporte = {}
-        for movimiento in movimientos:
-            if movimiento.item_id not in reporte:
-                reporte[movimiento.item_id] = {
-                    "item": movimiento.item,
-                    "entradas": 0,
-                    "salidas": 0
-                }
-            if movimiento.tipo == 'entrada':
-                reporte[movimiento.item_id]["entradas"] += movimiento.cantidad
-            else:
-                reporte[movimiento.item_id]["salidas"] += movimiento.cantidad
-        
-        for item_id, data in reporte.items():
-            item = data['item']
+        for item in items:
+            # Obtener movimientos
+            movimientos = MovimientoInventario.query.filter(
+                MovimientoInventario.item_id == item.id,
+                MovimientoInventario.fecha.between(fecha_inicio, fecha_fin)
+            ).all()
+
+            # Calcular movimientos
+            entradas = sum(m.cantidad for m in movimientos if m.tipo == 'entrada')
+            salidas = sum(m.cantidad for m in movimientos if m.tipo == 'salida')
+            
+            # Calcular stock inicial
+            movimientos_anteriores = MovimientoInventario.query.filter(
+                MovimientoInventario.item_id == item.id,
+                MovimientoInventario.fecha < fecha_inicio
+            ).all()
+            
+            total_entradas_previas = sum(m.cantidad for m in movimientos_anteriores if m.tipo == 'entrada')
+            total_salidas_previas = sum(m.cantidad for m in movimientos_anteriores if m.tipo == 'salida')
+            stock_inicial = item.stock - (total_entradas_previas - total_salidas_previas)
+            stock_actual = stock_inicial + entradas - salidas
+
             writer.writerow([
-                item.codigo,
+                item.codigo or str(item.id),
                 item.nombre,
-                item.categoria,
-                data['entradas'],
-                data['salidas'],
-                item.stock
+                item.categoria or "Sin categoría",
+                stock_inicial,
+                entradas,
+                salidas,
+                stock_actual,
+                float(item.costo),
+                float(item.costo) * stock_actual
             ])
         
         output.seek(0)
@@ -329,13 +472,42 @@ def exportar_excel():
             io.BytesIO(output.getvalue().encode('utf-8')),
             mimetype='text/csv',
             as_attachment=True,
-            attachment_filename='reporte_inventario.csv'
+            attachment_filename=f'reporte_inventario_{fecha_inicio.strftime("%Y%m%d")}_{fecha_fin.strftime("%Y%m%d")}.csv'
         )
-    except ValueError:
+        
+    except ValueError as e:
+        logger.error(f"Error de validación en exportación: {str(e)}")
         return jsonify({"error": "Formato de fecha inválido. Use YYYY-MM-DD"}), 400
     except Exception as e:
-        current_app.logger.error(f"Error al exportar reporte: {str(e)}")
+        logger.error(f"Error al exportar reporte: {str(e)}", exc_info=True)
         return jsonify({"error": "Error interno del servidor"}), 500
+
+@inventario_bp.route('/api/categorias', methods=['GET'])
+@login_required
+def get_categorias():
+    try:
+        # Obtener categorías únicas de los items
+        categorias = db.session.query(distinct(InventarioItem.categoria))\
+            .filter(InventarioItem.categoria.isnot(None))\
+            .order_by(InventarioItem.categoria)\
+            .all()
+        
+        # Formatear las categorías para el frontend
+        categorias_formateadas = [
+            {
+                "nombre": categoria[0]
+            }
+            for categoria in categorias
+            if categoria[0]  # Filtrar valores None o vacíos
+        ]
+        
+        logger.info(f"Categorías recuperadas: {len(categorias_formateadas)}")
+        return jsonify(categorias_formateadas)
+    except Exception as e:
+        logger.error(f"Error al obtener categorías: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+
     
 # inventario/inventario_routes.py
 
@@ -787,24 +959,37 @@ def crear_categoria_item():
 @login_required
 def get_inventario_actual():
     try:
-        # Simplificar la consulta inicialmente para verificar si funciona
         items = InventarioItem.query.all()
-        
-        # Agregar logging para debug
         logger.info(f"Encontrados {len(items)} items en inventario")
         
         inventario = []
+        items_stock_bajo = 0
+        items_sin_stock = 0
+        items_stock_normal = 0
+        items_stock_alto = 0
+        
         for item in items:
-            # Calcular stock actual usando la tabla de movimientos
-            stock_actual = item.stock  # Usar el stock base del item
+            stock_actual = item.stock
             
-            # Obtener movimientos
+            # Obtener movimientos del item si es necesario
             movimientos = MovimientoInventario.query.filter_by(item_id=item.id).all()
             for mov in movimientos:
                 if mov.tipo == 'entrada':
                     stock_actual += mov.cantidad
                 elif mov.tipo == 'salida':
                     stock_actual -= mov.cantidad
+            
+            # Determinar el estado del stock
+            stock_bajo = 1 <= stock_actual <= 5
+            
+            if stock_actual <= 0:
+                items_sin_stock += 1
+            elif stock_bajo:
+                items_stock_bajo += 1
+            elif item.stock_maximo and stock_actual >= item.stock_maximo:
+                items_stock_alto += 1
+            else:
+                items_stock_normal += 1
             
             inventario.append({
                 'id': item.id,
@@ -814,17 +999,29 @@ def get_inventario_actual():
                 'stock_actual': stock_actual,
                 'stock_minimo': item.stock_minimo,
                 'stock_maximo': item.stock_maximo,
-                'costo': float(item.costo),
-                'precio': float(item.precio),
-                'valor_total': float(item.costo * stock_actual)
+                'costo': float(item.costo) if item.costo else 0,
+                'precio': float(item.precio) if item.precio else 0,
+                'valor_total': float(item.costo * stock_actual) if item.costo else 0,
+                'stock_bajo': stock_bajo
             })
-            
-        logger.info(f"Procesados {len(inventario)} items con éxito")
-        return jsonify(inventario)
+
+        response_data = {
+            'items': inventario,
+            'estadisticas': {
+                'total_items': len(inventario),
+                'items_stock_bajo': items_stock_bajo,
+                'items_sin_stock': items_sin_stock,
+                'items_stock_normal': items_stock_normal,
+                'items_stock_alto': items_stock_alto
+            }
+        }
+        
+        logger.info(f"Estadísticas: {response_data['estadisticas']}")
+        return jsonify(response_data)
         
     except Exception as e:
         logger.error(f"Error al obtener inventario actual: {str(e)}")
-        return jsonify({"error": f"Error al obtener inventario: {str(e)}"}), 500   
+        return jsonify({"error": f"Error al obtener inventario: {str(e)}"}), 500
 
 # Manejo de errores
 @inventario_bp.errorhandler(404)

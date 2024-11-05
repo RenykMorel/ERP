@@ -5,9 +5,51 @@
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .modal {
+        transition: opacity 0.25s ease;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
+<!-- Modal para Stock Bajo -->
+<div id="modal-stock-bajo" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+    <div class="modal-container bg-white w-11/12 md:max-w-3xl mx-auto rounded shadow-lg z-50 overflow-y-auto">
+        <div class="modal-content py-4 text-left px-6">
+            <div class="flex justify-between items-center pb-3">
+                <p class="text-xl font-bold text-red-600">Items con Stock Bajo</p>
+                <button id="cerrar-modal" class="modal-close cursor-pointer z-50">
+                    <i class="fas fa-times text-gray-500 hover:text-gray-700"></i>
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full leading-normal">
+                    <thead>
+                        <tr>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Código
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Nombre
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Stock Actual
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                Stock Mínimo
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-bajo-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6 text-gray-800">Reporte de Inventario</h1>
 
@@ -25,7 +67,6 @@
                 <label for="categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
                 <select id="categoria" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     <option value="">Todas las categorías</option>
-                    <!-- Las categorías se cargarán dinámicamente -->
                 </select>
             </div>
         </div>
@@ -51,9 +92,10 @@
                 <h5 class="text-lg font-medium text-green-800 mb-2">Valor Total del Inventario</h5>
                 <p id="valor-total" class="text-3xl font-bold text-green-600">$0.00</p>
             </div>
-            <div class="bg-yellow-100 p-4 rounded-lg">
+            <div id="stock-bajo-card" class="bg-yellow-100 p-4 rounded-lg cursor-pointer hover:bg-yellow-200 transition-colors duration-200">
                 <h5 class="text-lg font-medium text-yellow-800 mb-2">Items con Stock Bajo</h5>
                 <p id="items-stock-bajo" class="text-3xl font-bold text-yellow-600">0</p>
+                <p class="text-sm text-yellow-700 mt-1 italic">Click para ver detalles</p>
             </div>
         </div>
 
@@ -108,29 +150,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const categoriaSelect = document.getElementById('categoria');
     const generarReporteBtn = document.getElementById('generar-reporte-btn');
     const exportarExcelBtn = document.getElementById('exportar-excel-btn');
+    const modal = document.getElementById('modal-stock-bajo');
+    const stockBajoCard = document.getElementById('stock-bajo-card');
+    const cerrarModal = document.getElementById('cerrar-modal');
 
+    // Establecer fechas por defecto
+    const hoy = new Date();
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    fechaFin.value = hoy.toISOString().split('T')[0];
+    fechaInicio.value = inicioMes.toISOString().split('T')[0];
+
+    // Cargar categorías al inicio
     cargarCategorias();
+    
+    // Generar reporte inicial
+    setTimeout(() => {
+        generarReporte();
+    }, 
+
+ 500);
+
+    // Event listeners
     generarReporteBtn.addEventListener('click', generarReporte);
     exportarExcelBtn.addEventListener('click', exportarExcel);
+    stockBajoCard.addEventListener('click', mostrarModalStockBajo);
+    cerrarModal.addEventListener('click', cerrarModalStockBajo);
+    modal.querySelector('.modal-overlay').addEventListener('click', cerrarModalStockBajo);
 
     function cargarCategorias() {
-        fetch('/inventario/api/categorias')
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(categoria => {
+        fetch('/inventario/api/categorias-inventario')
+            .then(response => {
+                if (!response.ok) throw new Error('Error al cargar categorías');
+                return response.json();
+            })
+            .then(categorias => {
+                categoriaSelect.innerHTML = '<option value="">Todas las categorías</option>';
+                categorias.forEach(categoria => {
                     const option = document.createElement('option');
-                    option.value = categoria.id;
+                    option.value = categoria.nombre;  // Usar el nombre como valor
                     option.textContent = categoria.nombre;
                     categoriaSelect.appendChild(option);
                 });
             })
             .catch(error => {
                 console.error('Error:', error);
-                mostrarNotificacion('Ocurrió un error al cargar las categorías', 'error');
+                mostrarNotificacion('Error al cargar categorías: ' + error.message, 'error');
             });
     }
 
     function generarReporte() {
+        if (!validarFechas()) {
+            mostrarNotificacion('Por favor, seleccione un rango de fechas válido', 'error');
+            return;
+        }
+
         const params = new URLSearchParams({
             fecha_inicio: fechaInicio.value,
             fecha_fin: fechaFin.value,
@@ -138,63 +211,158 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         fetch(`/inventario/api/reporte?${params}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Error al generar el reporte');
+                return response.json();
+            })
             .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
                 actualizarResumen(data.resumen);
                 actualizarTablaReporte(data.detalle);
                 mostrarNotificacion('Reporte generado con éxito', 'success');
             })
             .catch(error => {
                 console.error('Error:', error);
-                mostrarNotificacion('Ocurrió un error al generar el reporte', 'error');
+                mostrarNotificacion(error.message, 'error');
             });
     }
 
+    function validarFechas() {
+        if (!fechaInicio.value || !fechaFin.value) return false;
+        const inicio = new Date(fechaInicio.value);
+        const fin = new Date(fechaFin.value);
+        return inicio <= fin;
+    }
+
     function actualizarResumen(resumen) {
-        document.getElementById('total-items').textContent = resumen.total_items;
-        document.getElementById('valor-total').textContent = `$${resumen.valor_total.toFixed(2)}`;
-        document.getElementById('items-stock-bajo').textContent = resumen.items_stock_bajo;
+        document.getElementById('total-items').textContent = resumen.total_items.toLocaleString();
+        document.getElementById('valor-total').textContent = 
+            new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' })
+            .format(resumen.valor_total);
+        document.getElementById('items-stock-bajo').textContent = resumen.items_stock_bajo.toLocaleString();
     }
 
     function actualizarTablaReporte(detalle) {
         const tbody = document.getElementById('reporte-tbody');
         tbody.innerHTML = '';
-        detalle.forEach(item => {
+    
+        if (!detalle || detalle.length === 0) {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.codigo}</p>
+                <td colspan="9" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                    <p class="text-gray-500">No hay datos disponibles para el período seleccionado</p>
                 </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+            `;
+            tbody.appendChild(tr);
+            return;
+        }
+    
+        detalle.forEach(item => {
+            const tr = document.createElement('tr');
+            const stockClass = item.stock_bajo ? 'text-red-600 font-bold' : 'text-gray-900';
+            
+            tr.innerHTML = `
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm" data-codigo="${item.codigo || '-'}">
+                    <p class="text-gray-900 whitespace-no-wrap">${item.codigo || '-'}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm" data-nombre="${item.nombre}">
                     <p class="text-gray-900 whitespace-no-wrap">${item.nombre}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.categoria}</p>
+                    <p class="text-gray-900 whitespace-no-wrap">${item.categoria || 'Sin categoría'}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.stock_inicial}</p>
+                    <p class="text-gray-900 whitespace-no-wrap">${item.stock_inicial.toLocaleString()}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.entradas}</p>
+                    <p class="text-green-600 whitespace-no-wrap">${item.entradas.toLocaleString()}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.salidas}</p>
+                    <p class="text-red-600 whitespace-no-wrap">${item.salidas.toLocaleString()}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm" data-stock-actual="${item.stock_actual}" data-stock-minimo="${item.stock_minimo}">
+                    <p class="${stockClass} whitespace-no-wrap">${item.stock_actual.toLocaleString()}</p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.stock_actual}</p>
+                    <p class="text-gray-900 whitespace-no-wrap">
+                        ${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(item.valor_unitario)}
+                    </p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">$${item.valor_unitario.toFixed(2)}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">$${item.valor_total.toFixed(2)}</p>
+                    <p class="text-gray-900 whitespace-no-wrap">
+                        ${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(item.valor_total)}
+                    </p>
                 </td>
             `;
             tbody.appendChild(tr);
         });
     }
+    
+    function mostrarModalStockBajo() {
+        const stockBajoTbody = document.getElementById('stock-bajo-tbody');
+        stockBajoTbody.innerHTML = '';
+        
+        const itemsConStockBajo = Array.from(document.querySelectorAll('#reporte-tbody tr')).filter(tr => {
+            const stockActualCell = tr.querySelector('td[data-stock-actual]');
+            return stockActualCell && parseInt(stockActualCell.dataset.stockActual) >= 1 && parseInt(stockActualCell.dataset.stockActual) <= 5;
+        });
+    
+        if (itemsConStockBajo.length === 0) {
+            stockBajoTbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                        <p class="text-gray-500">No hay items con stock bajo</p>
+                    </td>
+                </tr>
+            `;
+        } else {
+            itemsConStockBajo.forEach(tr => {
+                const newTr = document.createElement('tr');
+                const stockTd = tr.querySelector('td[data-stock-actual]');
+                
+                if (!stockTd) {
+                    console.log('No se encontró la celda de stock para una fila');
+                    return;
+                }
+    
+                const codigo = tr.querySelector('td[data-codigo]').dataset.codigo;
+                const nombre = tr.querySelector('td[data-nombre]').dataset.nombre;
+                const stockActual = stockTd.dataset.stockActual;
+                const stockMinimo = stockTd.dataset.stockMinimo;
+    
+                newTr.innerHTML = `
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <p class="text-gray-900 whitespace-no-wrap">${codigo}</p>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <p class="text-gray-900 whitespace-no-wrap">${nombre}</p>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <p class="text-red-600 font-bold whitespace-no-wrap">${stockActual}</p>
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                        <p class="text-gray-900 whitespace-no-wrap">${stockMinimo}</p>
+                    </td>
+                `;
+                stockBajoTbody.appendChild(newTr);
+            });
+        }
+    
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function cerrarModalStockBajo() {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+    }
 
     function exportarExcel() {
+        if (!validarFechas()) {
+            mostrarNotificacion('Por favor, seleccione un rango de fechas válido', 'error');
+            return;
+        }
+
         const params = new URLSearchParams({
             fecha_inicio: fechaInicio.value,
             fecha_fin: fechaFin.value,
@@ -206,12 +374,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function mostrarNotificacion(mensaje, tipo) {
+        const notificacionExistente = document.querySelector('.notificacion');
+        if (notificacionExistente) {
+            notificacionExistente.remove();
+        }
+
         const notificacion = document.createElement('div');
-        notificacion.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md text-white ${tipo === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-        notificacion.textContent = mensaje;
+        notificacion.className = `notificacion fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white ${
+            tipo === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } shadow-lg z-50 transition-opacity duration-300`;
+        
+        notificacion.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+                <span>${mensaje}</span>
+            </div>
+        `;
+        
         document.body.appendChild(notificacion);
+        
         setTimeout(() => {
-            notificacion.remove();
+            notificacion.style.opacity = '0';
+            setTimeout(() => notificacion.remove(), 300);
         }, 3000);
     }
 });

@@ -84,21 +84,21 @@
 
     <!-- Estadísticas Rápidas -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-        <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-400">
+        <div id="no-stock-card" class="bg-white p-4 rounded-lg shadow-md border-l-4 border-red-400 cursor-pointer">
+            <h3 class="text-lg font-semibold text-gray-800">Items sin Stock</h3>
+            <p class="text-2xl font-bold text-red-600" id="no-stock-count">0</p>
+        </div>
+        <div id="low-stock-card" class="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-400 cursor-pointer">
             <h3 class="text-lg font-semibold text-gray-800">Items con Stock Bajo</h3>
             <p class="text-2xl font-bold text-yellow-600" id="low-stock-count">0</p>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-400">
+        <div id="normal-stock-card" class="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-400 cursor-pointer">
             <h3 class="text-lg font-semibold text-gray-800">Items con Stock Normal</h3>
             <p class="text-2xl font-bold text-green-600" id="normal-stock-count">0</p>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-400">
+        <div id="high-stock-card" class="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-400 cursor-pointer">
             <h3 class="text-lg font-semibold text-gray-800">Items con Stock Alto</h3>
             <p class="text-2xl font-bold text-blue-600" id="high-stock-count">0</p>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-red-400">
-            <h3 class="text-lg font-semibold text-gray-800">Items sin Stock</h3>
-            <p class="text-2xl font-bold text-red-600" id="no-stock-count">0</p>
         </div>
     </div>
 </div>
@@ -207,37 +207,135 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoading();
         fetch('/inventario/api/inventario-actual')
             .then(async response => {
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    const text = await response.text();
-                    console.error('Respuesta no JSON recibida:', text);
-                    
-                    throw new Error('Respuesta del servidor no es JSON');
-                }
                 if (!response.ok) {
-                    return response.json().then(err => Promise.reject(err));
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al cargar el inventario');
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('Inventario cargado:', data);
-                if (!Array.isArray(data)) {
-                    console.warn('Los datos recibidos no son un array:', data);
-                    data = [];
+                console.log('Datos recibidos:', data);
+                if (!data.items || !Array.isArray(data.items)) {
+                    throw new Error('Formato de datos inválido');
                 }
-                window.inventoryData = data;
-                inventoryData = data;
-                updateCategoryFilter(data);
-                filterInventory();
+                
+                // Guardar los items en la variable global
+                window.inventoryData = data.items;
+                
+                // Actualizar los filtros y la tabla
+                updateCategoryFilter(data.items);
+                updateInventoryTable(data.items);
+                
+                // Actualizar las estadísticas
+                if (data.estadisticas) {
+                    document.getElementById('low-stock-count').textContent = data.estadisticas.items_stock_bajo;
+                    document.getElementById('normal-stock-count').textContent = data.estadisticas.items_stock_normal;
+                    document.getElementById('high-stock-count').textContent = data.estadisticas.items_stock_alto;
+                    document.getElementById('no-stock-count').textContent = data.estadisticas.items_sin_stock;
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showError(`Error al cargar el inventario: ${error.message || 'Error desconocido'}`);
+                showError(error.message || 'Error al cargar el inventario');
             });
     }
 
+    // Add event listeners for stock level cards
+    document.getElementById('no-stock-card').addEventListener('click', () => filterByStockLevel('none'));
+    document.getElementById('low-stock-card').addEventListener('click', () => filterByStockLevel('low'));
+    document.getElementById('normal-stock-card').addEventListener('click', () => filterByStockLevel('normal'));
+    document.getElementById('high-stock-card').addEventListener('click', () => filterByStockLevel('high'));
+
+    function filterByStockLevel(level) {
+        console.log(`Filtering by stock level: ${level}`);
+        if (!Array.isArray(window.inventoryData)) {
+            console.error('inventoryData no es un array:', window.inventoryData);
+            return;
+        }
+
+        const filteredItems = window.inventoryData.filter(item => {
+            const status = getStockStatusForFilter(item);
+            return status === level;
+        });
+
+        console.log(`Found ${filteredItems.length} items with stock level: ${level}`);
+        updateInventoryTable(filteredItems);
+
+        // Update the stock status filter dropdown to reflect the current selection
+        document.getElementById('stock-status-filter').value = level;
+    }
+
+    function getStockStatusForFilter(item) {
+        if (item.stock_actual <= 0) return 'none';
+        if (item.stock_actual <= 5) return 'low'; // Stock bajo: 1-5 unidades
+        if (item.stock_maximo && item.stock_actual >= item.stock_maximo) return 'high';
+        return 'normal';
+    }
+
+    // Modify the existing filterInventory function to use the new getStockStatusForFilter
+    function filterInventory() {
+        const searchTerm = searchItemInput.value.toLowerCase();
+        const categoryValue = categoryFilter.value;
+        const stockStatus = stockStatusFilter.value;
+
+        if (!Array.isArray(window.inventoryData)) {
+            console.error('inventoryData no es un array:', window.inventoryData);
+            return;
+        }
+
+        console.log('Filtro de stock seleccionado:', stockStatus);
+
+        const filteredItems = window.inventoryData.filter(item => {
+            const matchesSearch = (
+                (item.codigo?.toLowerCase().includes(searchTerm) || '') ||
+                item.nombre.toLowerCase().includes(searchTerm) ||
+                (item.categoria?.toLowerCase().includes(searchTerm) || '')
+            );
+
+            const matchesCategory = !categoryValue || item.categoria === categoryValue;
+            
+            let matchesStatus = true;
+            if (stockStatus) {
+                const currentStatus = getStockStatusForFilter(item);
+                console.log(`Item ${item.nombre} - Stock: ${item.stock_actual}, Status: ${currentStatus}`);
+                matchesStatus = currentStatus === stockStatus;
+            }
+
+            return matchesSearch && matchesCategory && matchesStatus;
+        });
+
+        console.log('Items filtrados:', filteredItems.length);
+        updateInventoryTable(filteredItems);
+    }
+    
+    function updateStatistics(stats) {
+        if (!stats) return;
+        
+        document.getElementById('low-stock-count').textContent = stats.items_stock_bajo || 0;
+        document.getElementById('normal-stock-count').textContent = stats.items_stock_normal || 0;
+        document.getElementById('high-stock-count').textContent = stats.items_stock_alto || 0;
+        document.getElementById('no-stock-count').textContent = stats.items_sin_stock || 0;
+    }
+    
+    function getStockStatus(item) {
+        if (item.stock_actual <= 0) return 'none';
+        if (item.stock_bajo) return 'low';
+        if (item.stock_maximo && item.stock_actual >= item.stock_maximo) return 'high';
+        return 'normal';
+    }
+
     function updateCategoryFilter(items) {
-        const categories = [...new Set(items.map(item => item.categoria).filter(Boolean))];
+        if (!Array.isArray(items)) {
+            console.error('Items no es un array para updateCategoryFilter:', items);
+            return;
+        }
+    
+        const categories = [...new Set(items
+            .map(item => item.categoria)
+            .filter(Boolean)
+            .sort()
+        )];
+        
         categoryFilter.innerHTML = '<option value="">Todas las categorías</option>';
         categories.forEach(category => {
             const option = document.createElement('option');
@@ -251,29 +349,61 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchTerm = searchItemInput.value.toLowerCase();
         const categoryValue = categoryFilter.value;
         const stockStatus = stockStatusFilter.value;
-
-        const filteredItems = inventoryData.filter(item => {
+    
+        if (!Array.isArray(window.inventoryData)) {
+            console.error('inventoryData no es un array:', window.inventoryData);
+            return;
+        }
+    
+        console.log('Filtro de stock seleccionado:', stockStatus);
+    
+        const filteredItems = window.inventoryData.filter(item => {
+            // Filtro de búsqueda por texto
             const matchesSearch = (
                 (item.codigo?.toLowerCase().includes(searchTerm) || '') ||
                 item.nombre.toLowerCase().includes(searchTerm) ||
                 (item.categoria?.toLowerCase().includes(searchTerm) || '')
             );
-
+    
+            // Filtro por categoría
             const matchesCategory = !categoryValue || item.categoria === categoryValue;
             
-            const matchesStatus = !stockStatus || getStockStatus(item) === stockStatus;
-
+            // Filtro por estado de stock
+            let matchesStatus = true;
+            if (stockStatus) {
+                const currentStatus = getStockStatusForFilter(item);
+                console.log(`Item ${item.nombre} - Stock: ${item.stock_actual}, Status: ${currentStatus}`);
+                matchesStatus = currentStatus === stockStatus;
+            }
+    
             return matchesSearch && matchesCategory && matchesStatus;
         });
-
+    
+        console.log('Items filtrados:', filteredItems.length);
         updateInventoryTable(filteredItems);
-        updateStatistics(filteredItems);
     }
 
     function updateInventoryTable(items) {
+        if (!Array.isArray(items)) {
+            console.error('Items no es un array para updateInventoryTable:', items);
+            return;
+        }
+    
         inventoryTbody.innerHTML = '';
         const totalValue = items.reduce((sum, item) => sum + (item.stock_actual * item.costo), 0);
-
+    
+        if (items.length === 0) {
+            inventoryTbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                        No se encontraron items que coincidan con los criterios de búsqueda
+                    </td>
+                </tr>
+            `;
+            document.getElementById('total-value').textContent = formatCurrency(0);
+            return;
+        }
+    
         items.forEach(item => {
             const stockStatus = getStockStatus(item);
             const tr = document.createElement('tr');
@@ -325,45 +455,35 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             inventoryTbody.appendChild(tr);
         });
-
+    
         document.getElementById('total-value').textContent = formatCurrency(totalValue);
         
         // Agregar event listeners para los botones
         document.querySelectorAll('.ver-detalle').forEach(btn => {
             btn.addEventListener('click', (e) => showItemDetail(parseInt(e.currentTarget.dataset.id)));
         });
-
+    
         document.querySelectorAll('.ajustar-stock').forEach(btn => {
             btn.addEventListener('click', showAdjustStockModal);
         });
-
+    
         document.querySelectorAll('.ver-movimientos').forEach(btn => {
             btn.addEventListener('click', (e) => showMovements(parseInt(e.currentTarget.dataset.id)));
         });
     }
 
-    function updateStatistics(items) {
-        const stats = {
-            low: 0,
-            normal: 0,
-            high: 0,
-            none: 0
-        };
-
-        items.forEach(item => {
-            const status = getStockStatus(item);
-            stats[status]++;
-        });
-
-        document.getElementById('low-stock-count').textContent = stats.low;
-        document.getElementById('normal-stock-count').textContent = stats.normal;
-        document.getElementById('high-stock-count').textContent = stats.high;
-        document.getElementById('no-stock-count').textContent = stats.none;
-    }
+    function getStockStatusForFilter(item) {
+        // Para el filtrado, usamos una lógica específica
+        if (item.stock_actual <= 0) return 'none';
+        if (item.stock_actual <= 5) return 'low'; // Stock bajo: 1-5 unidades
+        if (item.stock_maximo && item.stock_actual >= item.stock_maximo) return 'high';
+        return 'normal';
+    }    
 
     function getStockStatus(item) {
         if (item.stock_actual <= 0) return 'none';
-        if (item.stock_actual <= item.stock_minimo) return 'low';
+        // Usar la propiedad stock_bajo si viene del servidor, o calcularla
+        if (item.stock_bajo || (item.stock_actual > 0 && item.stock_actual <= 5)) return 'low';
         if (item.stock_maximo && item.stock_actual >= item.stock_maximo) return 'high';
         return 'normal';
     }

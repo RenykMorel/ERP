@@ -174,12 +174,26 @@
                             <label for="item-nombre" class="block text-sm font-medium text-gray-700 mb-1 required-field">Nombre del Item</label>
                             <input type="text" id="item-nombre" name="nombre" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                         </div>
-                        <div>
-                            <label for="item-tipo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Tipo de Item</label>
-                            <select id="item-tipo" name="tipo" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
-                                <option value="">Seleccione un tipo...</option>
-                            </select>
+
+                        <!-- Tipo y Categoría en una grid de 2 columnas -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="item-tipo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Tipo de Item</label>
+                                <select id="item-tipo" name="tipo" required class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                    <option value="">Seleccione un tipo...</option>
+                                    <option value="producto">Producto</option>
+                                    <option value="servicio">Servicio</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="item-categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                                <select id="item-categoria" name="categoria" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                    <option value="">Seleccione una categoría...</option>
+                                </select>
+                            </div>
                         </div>
+            
                         <div>
                             <label for="item-costo" class="block text-sm font-medium text-gray-700 mb-1 required-field">Costo</label>
                             <input type="number" id="item-costo" name="costo" required step="0.01" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
@@ -218,13 +232,6 @@
                                     <textarea id="item-descripcion" name="descripcion" rows="3" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50"></textarea>
                                 </div>
                                 <div>
-                                    <label for="item-categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-                                    <select id="item-categoria" name="categoria" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
-                                        <option value="">Seleccione una categoría</option>
-                                        <!-- Las categorías se cargarán dinámicamente aquí -->
-                                    </select>
-                                </div>
-                                <div>
                                     <label for="item-proveedor" class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
                                     <input type="text" id="item-proveedor" name="proveedor" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
@@ -238,15 +245,15 @@
                                 </div>
                                 <div>
                                     <label for="item-stock" class="block text-sm font-medium text-gray-700 mb-1">Stock Actual</label>
-                                    <input type="number" id="item-stock" name="stock" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                    <input type="number" id="item-stock" name="stock" value="0" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
                                 <div>
                                     <label  for="item-stock-minimo" class="block text-sm font-medium text-gray-700 mb-1">Stock  Mínimo</label>
-                                    <input type="number" id="item-stock-minimo" name="stock_minimo" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                    <input type="number" id="item-stock-minimo" name="stock_minimo" value="0" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
                                 <div>
                                     <label for="item-stock-maximo" class="block text-sm font-medium text-gray-700 mb-1">Stock Máximo</label>
-                                    <input type="number" id="item-stock-maximo" name="stock_maximo" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                    <input type="number" id="item-stock-maximo" name="stock_maximo" value="0" class="mt-1 block w-full rounded-md border-2 border-green-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
                                 </div>
                             </div>
                         </div>
@@ -739,6 +746,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 }
 
+    // Para cargar los tipos
+    fetch('/inventario/api/tipos-item')
+    .then(response => response.json())
+    .then(tipos => {
+        const select = document.getElementById('item-tipo');
+        select.innerHTML = '<option value="">Seleccione un tipo...</option>';
+        tipos.forEach(tipo => {
+            select.innerHTML += `<option value="${tipo.id}">${tipo.nombre}</option>`;
+        });
+    });
+
+    // Para cargar las categorías
+    fetch('/inventario/api/categorias')
+    .then(response => response.json())
+    .then(categorias => {
+        const select = document.getElementById('item-categoria');
+        select.innerHTML = '<option value="">Seleccione una categoría...</option>';
+        categorias.forEach(categoria => {
+            select.innerHTML += `<option value="${categoria.id}">${categoria.nombre}</option>`;
+        });
+    });
+
    function mostrarModalItem(id = null) {
        itemForm.reset();
        if (id) {
@@ -899,30 +928,96 @@ function formatNumber(number) {
     return new Intl.NumberFormat('es-DO').format(number);
 }
 
-   function cargarDatosItem(id) {
-       fetch(`/api/items/${id}`)
-           .then(response => response.json())
-           .then(item => {
-               document.getElementById('modal-title').textContent = 'Editar Item';
-               eliminarItemBtn.classList.remove('hidden');
-               for (const [key, value] of Object.entries(item)) {
-                   const field = document.getElementById(`item-${key}`);
-                   if (field) {
-                       field.value = value;
-                   }
-               }
-               toggleCamposInventario();
-           })
-           .catch(error => console.error('Error:', error));
-   }
+function cargarDatosItem(id) {
+    console.log('Cargando datos del item:', id);
+    fetch(`/inventario/api/items/${id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(item => {
+            console.log('Datos del item recibidos:', item);
+            document.getElementById('modal-title').textContent = 'Editar Item';
+            document.getElementById('eliminar-item-btn').classList.remove('hidden');
+            document.getElementById('item-id').value = item.id;
 
-   function guardarItem() {
+            // Cargar las categorías y tipos primero
+            Promise.all([
+                cargarCategoriasSelect(),
+                cargarTiposItemSelect()
+            ]).then(() => {
+                // Esperar un momento para asegurar que los selects se hayan actualizado
+                setTimeout(() => {
+                    // Llenar todos los campos del formulario
+                    const fields = [
+                        'codigo', 'nombre', 'tipo', 'categoria', 'descripcion',
+                        'proveedor', 'marca', 'unidad_medida', 'stock',
+                        'stock_minimo', 'stock_maximo', 'costo', 'itbis',
+                        'margen', 'precio', 'tipo_item_id'
+                    ];
+
+                    fields.forEach(field => {
+                        const element = document.getElementById(`item-${field}`);
+                        if (element) {
+                            // Para campos numéricos, asegurar que se muestren con el formato correcto
+                            if (['costo', 'itbis', 'margen', 'precio'].includes(field)) {
+                                element.value = parseFloat(item[field] || 0).toFixed(2);
+                            } else if (['stock', 'stock_minimo', 'stock_maximo'].includes(field)) {
+                                element.value = parseInt(item[field] || 0);
+                            } else {
+                                element.value = item[field] || '';
+                            }
+
+                            // Disparar evento de cambio para campos que lo necesiten
+                            if (['costo', 'itbis', 'margen'].includes(field)) {
+                                element.dispatchEvent(new Event('input'));
+                            }
+                        }
+                    });
+
+                    // Actualizar campos dependientes
+                    toggleCamposInventario();
+                    calcularPrecioFinal();
+                }, 100);
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar datos del item:', error);
+            alert('Error al cargar los datos del item');
+        });
+}
+
+// Función para guardar el item
+
+
+function guardarItem() {
     const formData = new FormData(itemForm);
-    const itemData = Object.fromEntries(formData.entries());
-    const method = itemData.id ? 'PUT' : 'POST';
-    const url = itemData.id ? `/inventario/api/items/${itemData.id}` : '/inventario/api/items';
+    const itemData = {
+        nombre: formData.get('nombre'),
+        tipo: formData.get('tipo'),
+        categoria: formData.get('categoria') || null,
+        descripcion: formData.get('descripcion') || null,
+        proveedor: formData.get('proveedor') || null,
+        marca: formData.get('marca') || null,
+        unidad_medida: formData.get('unidad_medida') || null,
+        
+        // Convertir campos numéricos
+        costo: parseFloat(formData.get('costo')) || 0,
+        itbis: parseFloat(formData.get('itbis')) || 0,
+        margen: parseFloat(formData.get('margen')) || 0,
+        precio: parseFloat(formData.get('precio')) || 0,
+        stock: parseInt(formData.get('stock')) || 0,
+        stock_minimo: parseInt(formData.get('stock_minimo')) || 0,
+        stock_maximo: parseInt(formData.get('stock_maximo')) || 0
+    };
 
-    // Añadir logging para debug
+    // Si hay un ID, es una actualización
+    const itemId = formData.get('id');
+    const method = itemId ? 'PUT' : 'POST';
+    const url = itemId ? `/inventario/api/items/${itemId}` : '/inventario/api/items';
+
     console.log('Enviando datos:', itemData);
 
     fetch(url, {
@@ -931,7 +1026,7 @@ function formatNumber(number) {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(itemData),
-        credentials: 'same-origin'  // Importante para las cookies de sesión
+        credentials: 'same-origin'
     })
     .then(response => {
         if (!response.ok) {
@@ -940,13 +1035,15 @@ function formatNumber(number) {
         return response.json();
     })
     .then(data => {
-        console.log('Respuesta:', data);
+        console.log('Respuesta exitosa:', data);
         itemModal.classList.add('hidden');
         cargarItems();
+        alert(itemId ? 'Item actualizado exitosamente' : 'Item creado exitosamente');
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al guardar el item: ' + (error.error || 'Error desconocido'));
+        alert('Error al ' + (itemId ? 'actualizar' : 'crear') + ' el item: ' + 
+              (error.error || error.message || 'Error desconocido'));
     });
 }
 
@@ -1959,7 +2056,7 @@ function eliminarTipoItem(id) {
 }
 
 function cargarTiposItemSelect() {
-    return fetch('/inventario/api/tipos-item', {  // Asegúrate que esta ruta sea diferente
+    return fetch('/inventario/api/tipos-item', {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -1975,15 +2072,11 @@ function cargarTiposItemSelect() {
     .then(tipos => {
         const selectTipo = document.getElementById('item-tipo');
         selectTipo.innerHTML = '<option value="">Seleccione un tipo...</option>';
-        
-        tipos.forEach(tipo => {
-            if (tipo.estatus === 'activo') {
-                const option = document.createElement('option');
-                option.value = tipo.tipo;  // O tipo.nombre, dependiendo de tu estructura de datos
-                option.textContent = tipo.nombre;
-                selectTipo.appendChild(option);
-            }
-        });
+        selectTipo.innerHTML += `
+            <option value="producto">Producto</option>
+            <option value="servicio">Servicio</option>
+            <option value="otro">Otro</option>
+        `;
     })
     .catch(error => {
         console.error('Error al cargar tipos:', error);
