@@ -4,142 +4,545 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --primary-color: #3446eb;
+        --secondary-color: #00ff88;
+        --background-color: #0a0e17;
+        --card-background: rgba(16, 20, 34, 0.95);
+        --text-color: #e0e6ff;
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        --glow: 0 0 15px rgba(52, 70, 235, 0.3);
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, var(--background-color) 0%, #141824 100%);
+        color: var(--text-color);
+        margin: 0;
+        padding: 0;
+    }
+
     #dashboard {
         display: grid;
-        grid-template-columns: 200px 1fr;
-        gap: 20px;
-        padding: 20px;
-        background-color: #f0f2f5;
-        height: calc(100vh - 40px); /* Altura total menos el padding */
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
     .main-content {
-        grid-column: 2;
         display: grid;
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 24px;
     }
 
     .summary-cards {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
+        gap: 24px;
     }
 
-    .charts-container {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-
-    .widgets-container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-    }
-
-    .summary-card, .chart-wrapper, .widget {
-        background-color: white;
+    .summary-card {
+        background: var(--card-background);
         border-radius: 8px;
-        padding: 15px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 12px;
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .summary-card:hover::before {
+        opacity: 1;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--glow);
     }
 
     .summary-card h4 {
-        margin: 0 0 10px 0;
-        font-size: 14px;
-        color: #333;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 6px;
     }
 
     .summary-card p {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-color);
         margin: 0;
-        font-size: 24px;
-        font-weight: bold;
-        color: #007EA7;
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
-    .chart-container {
-        height: 300px;
+    .card-trend {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-top: 4px;
     }
 
-    .widget-title {
-        font-size: 18px;
-        margin-bottom: 15px;
+    .card-trend.up {
+        color: var(--secondary-color);
     }
 
-    .task-list, .notification-list {
-        list-style-type: none;
-        padding: 0;
+    .card-trend.down {
+        color: #ff4538;
+    }
+
+    .card-trend::before {
+        content: '';
+        display: inline-block;
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        margin-right: 5px;
+    }
+
+    .card-trend.up::before {
+        border-bottom: 5px solid var(--secondary-color);
+    }
+
+    .card-trend.down::before {
+        border-top: 5px solid #ff4538;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+
+    .chart-wrapper {
+        background: var(--card-background);
+        border-radius: 16px;
+        padding: 12px;
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        height: 220px;
+    }
+
+    .chart-title {
+        font-size: 1rem;
+        margin-bottom: 8px;
+        color: var(--text-color);
+    }
+
+    .widgets-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+
+    .notification-panel, .task-panel {
+        background: var(--card-background);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .notification-header, .task-header {
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notification-header h3, .task-header h3 {
         margin: 0;
+        font-size: 16px;
+        color: var(--text-color);
+    }
+
+    .notification-count {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .notification-content, .task-list {
         max-height: 300px;
         overflow-y: auto;
+        padding: 0;
     }
 
-    .task-item, .notification-item {
-        padding: 10px 0;
-        border-bottom: 1px solid #e0e0e0;
+    .notification-item, .task-item {
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: flex-start;
+        transition: background-color 0.3s ease;
     }
 
-    .task-item:last-child, .notification-item:last-child {
-        border-bottom: none;
+    .notification-icon, .task-icon {
+        margin-right: 15px;
+        font-size: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(145deg, #2a2a2a, #232323);
+        box-shadow: 5px 5px 10px #1e1e1e, -5px -5px 10px #2e2e2e;
+        transition: all 0.3s ease;
+    }
+
+    .notification-icon.critical,
+    .task-icon.critical {
+        color: #ff4757;
+        text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+    }
+
+    .notification-icon.warning,
+    .task-icon.warning {
+        color: #ffa502;
+        text-shadow: 0 0 10px rgba(255, 165, 2, 0.5);
+    }
+
+    .notification-icon.info,
+    .task-icon.info {
+        color: #2ed573;
+        text-shadow: 0 0 10px rgba(46, 213, 115, 0.5);
+    }
+
+    .notification-icon:hover,
+    .task-icon:hover {
+        transform: translateY(-2px);
+        box-shadow: 6px 6px 12px #1c1c1c, -6px -6px 12px #303030;
+    }
+
+    .notification-details, .task-details {
+        flex: 1;
+    }
+
+    .notification-message, .task-title {
+        font-size: 14px;
+        color: var(--text-color);
+        margin-bottom: 5px;
+    }
+
+    .notification-time, .task-due {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .notification-actions {
+        padding: 15px 20px;
+        background-color: rgba(255, 255, 255, 0.05);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .btn-priority, .btn-clear {
+        padding: 5px 10px;
+        font-size: 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-priority:hover, .btn-clear:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .task-progress {
+        font-size: 14px;
+        color: var(--secondary-color);
+    }
+
+    .notification-item.critical,
+    .task-item.critical {
+        border-left: 4px solid rgba(220, 53, 69, 0.5);
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .notification-item.warning,
+    .task-item.warning {
+        border-left: 4px solid rgba(255, 193, 7, 0.5);
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .notification-item.info,
+    .task-item.info {
+        border-left: 4px solid rgba(23, 162, 184, 0.5);
+        background-color: rgba(23, 162, 184, 0.1);
+    }
+
+    .notification-item:hover,
+    .task-item:hover {
+        background-color: rgba(52, 70, 235, 0.2);
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(52, 70, 235, 0.5);
+        border-radius: 3px;
+    }
+
+    .calculator-style {
+        font-family: 'Courier New', monospace;
+    }
+
+    .calculator-screen {
+        background-color: #1a1a1a;
+        border: 2px solid #333;
+        border-radius: 10px;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+    }
+
+    .calculator-screen .notification-header,
+    .calculator-screen .task-header {
+        background-color: #222;
+        border-bottom: 1px solid #444;
+        padding: 10px;
+    }
+
+    .calculator-screen h3 {
+        color: #00ff00;
+        font-size: 1.2rem;
+        margin: 0;
+        text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    }
+
+    .calculator-screen .notification-content,
+    .calculator-screen .task-list {
+        padding: 10px;
+        height: 300px;
+        overflow-y: auto;
+        background: repeating-linear-gradient(
+            0deg,
+            rgba(0, 255, 0, 0.03) 0px,
+            rgba(0, 255, 0, 0.03) 1px,
+            transparent 1px,
+            transparent 2px
+        );
+    }
+
+    .calculator-screen .notification-item,
+    .calculator-screen .task-item {
+        background-color: #222;
+        border: 1px solid #444;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        padding: 10px;
+        color: #00ff00;
+        font-size: 0.9rem;
+        text-shadow: 0 0 3px rgba(0, 255, 0, 0.5);
+    }
+
+    .calculator-screen .notification-message,
+    .calculator-screen .task-title {
+        margin-bottom: 5px;
+    }
+
+    .calculator-screen .notification-time,
+    .calculator-screen .task-due {
+        font-size: 0.8rem;
+        color: #00aa00;
+    }
+
+    .calculator-screen .progress-ring-circle {
+        stroke: #00ff00;
+    }
+
+    .calculator-screen .progress-text {
+        color: #00ff00;
+        font-size: 1rem;
+        font-weight: bold;
+    }
+
+    .calculator-screen:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            rgba(255, 255, 255, 0.1) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.1) 1px,
+            transparent 1px
+        );
+        background-size: 2px 2px;
+        pointer-events: none;
+    }
+
+    .calculator-screen .btn-icon {
+        background-color: #333;
+        color: #00ff00;
+        border: none;
+        border-radius: 5px;
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+
+    .calculator-screen .btn-icon:hover {
+        background-color: #444;
+    }
+
+    .calculator-screen .notification-icon,
+    .calculator-screen .task-icon {
+        background: linear-gradient(145deg, #222, #1a1a1a);
+        box-shadow: 3px 3px 6px #161616, -3px -3px 6px #262626;
+    }
+
+    .calculator-screen .notification-icon.critical,
+    .calculator-screen .task-icon.critical {
+        color: #ff6b6b;
+        text-shadow: 0 0 8px rgba(255, 107, 107, 0.7);
+    }
+
+    .calculator-screen .notification-icon.warning,
+    .calculator-screen .task-icon.warning {
+        color: #feca57;
+        text-shadow: 0 0 8px rgba(254, 202, 87, 0.7);
+    }
+
+    .calculator-screen .notification-icon.info,
+    .calculator-screen .task-icon.info {
+        color: #54a0ff;
+        text-shadow: 0 0 8px rgba(84, 160, 255, 0.7);
+    }
+
+    /* Ajusta el scrollbar para que coincida con el estilo */
+    .calculator-screen ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .calculator-screen ::-webkit-scrollbar-track {
+        background: #1a1a1a;
+    }
+
+    .calculator-screen ::-webkit-scrollbar-thumb {
+        background: #00ff00;
+        border-radius: 4px;
+    }
+
+    .calculator-screen ::-webkit-scrollbar-thumb:hover {
+        background: #00aa00;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<div id="dashboard">
     <div class="main-content">
+        <!-- Summary Cards -->
         <div class="summary-cards">
             <div class="summary-card">
                 <h4>Ingresos Totales</h4>
                 <p>$24,000</p>
+                <div class="card-trend up">+12.5%</div>
             </div>
             <div class="summary-card">
                 <h4>Gastos Totales</h4>
                 <p>$12,000</p>
+                <div class="card-trend down">-5.2%</div>
             </div>
             <div class="summary-card">
                 <h4>Beneficio Neto</h4>
                 <p>$12,000</p>
+                <div class="card-trend up">+18.3%</div>
             </div>
             <div class="summary-card">
                 <h4>Nuevos Clientes</h4>
                 <p>120</p>
+                <div class="card-trend up">+8.7%</div>
             </div>
         </div>
 
-        <div class="charts-container">
+        <!-- Charts Grid -->
+        <div class="charts-grid">
             <div class="chart-wrapper">
-                <h3>Ventas Mensuales</h3>
-                <div class="chart-container">
-                    <canvas id="line-chart"></canvas>
-                </div>
+                <h3 class="chart-title">Tendencia de Ventas</h3>
+                <canvas id="area-chart"></canvas>
             </div>
             <div class="chart-wrapper">
-                <h3>Ingresos vs Gastos</h3>
-                <div class="chart-container">
-                    <canvas id="bar-chart"></canvas>
-                </div>
+                <h3 class="chart-title">Análisis Financiero</h3>
+                <canvas id="gradient-bar-chart"></canvas>
             </div>
             <div class="chart-wrapper">
-                <h3>Distribución Financiera</h3>
-                <div class="chart-container">
-                    <canvas id="pie-chart"></canvas>
-                </div>
+                <h3 class="chart-title">Distribución de Recursos</h3>
+                <canvas id="resource-distribution-chart"></canvas>
             </div>
         </div>
 
-        <div class="widgets-container">
-            <div id="virtual-assistant">
-                <h3>Asistente Virtual</h3>
-                <!-- Contenido del asistente virtual -->
+        <!-- Widgets Grid -->
+        <div class="widgets-grid">
+            <!-- Notification Panel -->
+            <div class="notification-panel">
+                <div class="notification-header">
+                    <h3>Notificaciones</h3>
+                    <span class="notification-count">4 notificaciones</span>
+                </div>
+                <div class="notification-content" id="notification-list">
+                    <!-- Notifications will be inserted here -->
+                </div>
+                <div class="notification-actions">
+                    <button class="btn-priority">Alta</button>
+                    <button class="btn-priority">Media</button>
+                    <button class="btn-priority">Baja</button>
+                    <button class="btn-priority">Todas</button>
+                    <button class="btn-clear">Limpiar Notificaciones</button>
+                </div>
             </div>
-            <div class="widget">
-                <h3 class="widget-title">Tareas Pendientes</h3>
-                <ul id="task-list" class="task-list"></ul>
-            </div>
-            <div class="widget">
-                <h3 class="widget-title">Notificaciones</h3>
-                <ul id="notification-list" class="notification-list"></ul>
+
+            <!-- Task Panel -->
+            <div class="task-panel">
+                <div class="task-header">
+                    <h3>Tareas Pendientes</h3>
+                    <div class="task-progress">
+                        <span class="progress-text">75% completado</span>
+                    </div>
+                </div>
+                <div class="task-list" id="task-list">
+                    <!-- Tasks will be inserted here -->
+                </div>
             </div>
         </div>
     </div>
@@ -148,46 +551,130 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();
     loadTasks();
     loadNotifications();
+    initializeAnimations();
 });
 
 function initializeCharts() {
-    fetch('/api/datos_graficos')
-        .then(response => response.json())
-        .then(data => {
-            createLineChart(data.ventas);
-            createBarChart(data.ingresos_vs_gastos);
-            createPieChart(data.distribucion);
-        })
-        .catch(error => console.error('Error loading chart data:', error));
+    Chart.defaults.color = '#e0e6ff';
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+    Chart.defaults.font.size = 11;
+    
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+            duration: 1000,
+            easing: 'easeInOutQuart'
+        },
+        interaction: {
+            intersect: false,
+            mode: 'nearest'
+        },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 11,
+                    usePointStyle: true,
+                    font: {
+                        family: 'Inter',
+                        size: 11
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(16, 20, 34, 0.95)',
+                titleFont: { size: 13 },
+                bodyFont: { size: 12 },
+                padding: 9,
+                cornerRadius: 4,
+                boxPadding: 3
+            }
+        }
+    };
+
+    createAreaChart({
+        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+        data: [12000, 19000, 15000, 22000, 18000, 25000]
+    });
+
+    createGradientBarChart({
+        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+        ingresos: [15000, 22000, 18000, 25000, 20000, 28000],
+        gastos: [10000, 15000, 12000, 18000, 15000, 20000]
+    });
+
+    createResourceDistributionChart({
+        labels: ['Operaciones', 'Marketing', 'I+D', 'Administración', 'Ventas'],
+        values: [30, 20, 25, 15, 10]
+    });
 }
 
-function createLineChart(data) {
-    const ctx = document.getElementById('line-chart').getContext('2d');
+function createAreaChart(data) {
+    const ctx = document.getElementById('area-chart').getContext('2d');
+    
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(52, 70, 235, 0.3)');
+    gradient.addColorStop(1, 'rgba(52, 70, 235, 0)');
+
     new Chart(ctx, {
         type: 'line',
         data: {
             labels: data.labels,
             datasets: [{
                 label: 'Ventas',
-                data: data.values,
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
+                data: data.data,
+                borderColor: '#3446eb',
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#3446eb',
+                pointRadius: 4,
+                pointHoverRadius: 7
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        maxTicksLimit: 5
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxTicksLimit: 6
+                    }
+                }
+            }
         }
     });
 }
 
-function createBarChart(data) {
-    const ctx = document.getElementById('bar-chart').getContext('2d');
+function createGradientBarChart(data) {
+    const ctx = document.getElementById('gradient-bar-chart').getContext('2d');
+    
+    const gradientIngresos = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientIngresos.addColorStop(0, 'rgba(0, 255, 136, 0.8)');
+    gradientIngresos.addColorStop(1, 'rgba(0, 255, 136, 0.2)');
+    
+    const gradientGastos = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientGastos.addColorStop(0, 'rgba(255, 69, 58, 0.8)');
+    gradientGastos.addColorStop(1, 'rgba(255, 69, 58, 0.2)');
+
     new Chart(ctx, {
         type: 'bar',
         data: {
@@ -196,72 +683,185 @@ function createBarChart(data) {
                 {
                     label: 'Ingresos',
                     data: data.ingresos,
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                    backgroundColor: gradientIngresos,
+                    borderRadius: 8,
+                    borderWidth: 0
                 },
                 {
                     label: 'Gastos',
                     data: data.gastos,
-                    backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                    backgroundColor: gradientGastos,
+                    borderRadius: 8,
+                    borderWidth: 0
                 }
             ]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        maxTicksLimit: 5
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        maxTicksLimit: 6
+                    }
+                }
+            }
         }
     });
 }
 
-function createPieChart(data) {
-    const ctx = document.getElementById('pie-chart').getContext('2d');
+function createResourceDistributionChart(data) {
+    const ctx = document.getElementById('resource-distribution-chart').getContext('2d');
     new Chart(ctx, {
-        type: 'doughnut',
+        type: 'bar',
         data: {
             labels: data.labels,
             datasets: [{
                 data: data.values,
                 backgroundColor: [
-                    'rgba(255, 99, 132, 0.8)',
-                    'rgba(54, 162, 235, 0.8)',
-                    'rgba(255, 206, 86, 0.8)'
-                ]
+                    'rgba(52, 70, 235, 0.7)',
+                    'rgba(0, 255, 136, 0.7)',
+                    'rgba(255, 170, 0, 0.7)',
+                    'rgba(255, 69, 58, 0.7)',
+                    'rgba(138, 43, 226, 0.7)'
+                ],
+                borderWidth: 0
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
         }
     });
 }
 
 function loadTasks() {
-    fetch('/api/tareas')
-        .then(response => response.json())
-        .then(tasks => {
-            const taskList = document.getElementById('task-list');
-            taskList.innerHTML = tasks.map(task => `
-                <li class="task-item">
-                    <div>${task.descripcion}</div>
-                    <small>Vence: ${task.vence}</small>
-                </li>
-            `).join('');
-        })
-        .catch(error => console.error('Error loading tasks:', error));
+    const tasks = [
+        { id: 1, title: "Revisar informe financiero", due: "Hoy", type: "critical" },
+        { id: 2, title: "Preparar presentación", due: "Mañana", type: "warning" },
+        { id: 3, title: "Llamada con cliente", due: "En 2 días", type: "info" },
+        { id: 4, title: "Actualizar sitio web", due: "Esta semana", type: "info" },
+        { id: 5, title: "Enviar propuesta", due: "Próxima semana", type: "warning" }
+    ];
+    const taskList = document.getElementById('task-list');
+    taskList.innerHTML = tasks.map(task => `
+        <div class="task-item ${task.type}">
+            <span class="task-icon ${task.type}">
+                <i class="fas fa-${task.type === 'critical' ? 'fire-alt' : task.type === 'warning' ? 'clock' : 'check-circle'}"></i>
+            </span>
+            <div class="task-details">
+                <div class="task-title">${task.title}</div>
+                <div class="task-due">Vence: ${task.due}</div>
+            </div>
+        </div>
+    `).join('');
 }
 
 function loadNotifications() {
-    fetch('/api/notificaciones')
-        .then(response => response.json())
-        .then(notifications => {
-            const notificationList = document.getElementById('notification-list');
-            notificationList.innerHTML = notifications.map(notification => `
-                <li class="notification-item">
-                    <div>${notification.mensaje}</div>
-                    <small>${notification.tipo}</small>
-                </li>
-            `).join('');
-        })
-        .catch(error => console.error('Error loading notifications:', error));
+    const notifications = [
+        { id: 1, message: "¡Actualización crítica disponible!", type: "critical", time: "Ahora" },
+        { id: 2, message: "3 tareas pendientes para hoy", type: "warning", time: "Hace 10 min" },
+        { id: 3, message: "Nuevo artículo en el blog", type: "info", time: "Hace 1 hora" },
+        { id: 4, message: "Reunión programada para mañana", type: "info", time: "Hace 2 horas" }
+    ];
+    const notificationList = document.getElementById('notification-list');
+    notificationList.innerHTML = notifications.map(notification => `
+        <div class="notification-item ${notification.type}">
+            <span class="notification-icon ${notification.type}">
+                <i class="fas fa-${notification.type === 'critical' ? 'exclamation-circle' : notification.type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+            </span>
+            <div class="notification-details">
+                <div class="notification-message">${notification.message}</div>
+                <div class="notification-time">${notification.time}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function initializeAnimations() {
+    gsap.from('.summary-card', {
+        duration: 0.8,
+        y: 50,
+        opacity: 0,
+        stagger: 0.2,
+        ease: 'power3.out'
+    });
+
+    const chartObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('chart-animate');
+                chartObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.chart-wrapper').forEach(chart => {
+        chartObserver.observe(chart);
+    });
+
+    document.querySelectorAll('.notification-item, .task-item').forEach(item => {
+        item.addEventListener('mouseover', () => {
+            gsap.to(item, {
+                duration: 0.3,
+                backgroundColor: 'rgba(52, 70, 235, 0.1)',
+                x: 5,
+                ease: 'power2.out'
+            });
+        });
+
+        item.addEventListener('mouseout', () => {
+            gsap.to(item, {
+                duration: 0.3,
+                backgroundColor: 'transparent',
+                x: 0,
+                ease: 'power2.out'
+            });
+        });
+    });
+
+    animateProgressRing(75);
+}
+
+function animateProgressRing(percent) {
+    const circle = document.querySelector('.progress-ring-circle');
+    const radius = circle.r.baseVal.value;
+    const circumference = radius * 2 * Math.PI;
+    const offset = circumference - (percent / 100) * circumference;
+
+    gsap.set(circle, { strokeDasharray: circumference });
+    gsap.to(circle, {
+        duration: 1.5,
+        strokeDashoffset: offset,
+        ease: 'power3.out'
+    });
 }
 </script>
 {% endblock %}
