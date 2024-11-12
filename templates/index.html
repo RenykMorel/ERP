@@ -131,24 +131,43 @@
 
     .charts-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 24px;
+        width: 100%;
+        margin: 20px 0;
     }
 
     .chart-wrapper {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 60%; /* Mantiene una proporción de aspecto 16:10 */
         background: var(--card-background);
         border-radius: 16px;
-        padding: 12px;
         box-shadow: var(--shadow);
         border: 1px solid rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
-        height: 220px;
+        overflow: hidden;
+    }
+
+    .chart-wrapper canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+        padding: 20px;
+        box-sizing: border-box;
     }
 
     .chart-title {
-        font-size: 1rem;
-        margin-bottom: 8px;
+        position: absolute;
+        top: 10px;
+        left: 20px;
+        z-index: 1;
+        font-size: clamp(0.875rem, 1.5vw, 1rem);
         color: var(--text-color);
+        margin: 0;
     }
 
     .widgets-grid {
@@ -466,6 +485,23 @@
     .calculator-screen ::-webkit-scrollbar-thumb:hover {
         background: #00aa00;
     }
+
+    @media (max-width: 1200px) {
+        .charts-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .chart-wrapper {
+            padding-bottom: 75%; /* Mayor altura en móviles */
+        }
+    }
+
 </style>
 {% endblock %}
 
@@ -563,7 +599,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeCharts() {
     Chart.defaults.color = '#e0e6ff';
     Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
-    Chart.defaults.font.size = 11;
+    Chart.defaults.font.size = window.innerWidth < 768 ? 10 : 11;
     
     const commonOptions = {
         responsive: true,
@@ -578,43 +614,122 @@ function initializeCharts() {
         },
         plugins: {
             legend: {
-                position: 'bottom',
+                position: window.innerWidth < 768 ? 'top' : 'bottom',
                 labels: {
-                    padding: 11,
+                    padding: window.innerWidth < 768 ? 8 : 11,
                     usePointStyle: true,
+                    boxWidth: window.innerWidth < 768 ? 6 : 8,
                     font: {
                         family: 'Inter',
-                        size: 11
+                        size: window.innerWidth < 768 ? 10 : 11
                     }
                 }
             },
             tooltip: {
+                enabled: true,
                 backgroundColor: 'rgba(16, 20, 34, 0.95)',
-                titleFont: { size: 13 },
-                bodyFont: { size: 12 },
-                padding: 9,
+                titleFont: { size: window.innerWidth < 768 ? 11 : 13 },
+                bodyFont: { size: window.innerWidth < 768 ? 10 : 12 },
+                padding: window.innerWidth < 768 ? 6 : 9,
                 cornerRadius: 4,
                 boxPadding: 3
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                    maxTicksLimit: window.innerWidth < 768 ? 4 : 5,
+                    font: {
+                        size: window.innerWidth < 768 ? 10 : 11
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    maxTicksLimit: window.innerWidth < 768 ? 4 : 6,
+                    font: {
+                        size: window.innerWidth < 768 ? 10 : 11
+                    }
+                }
             }
         }
     };
 
-    createAreaChart({
+    // Store chart instances
+    const charts = [];
+
+    // Create charts with common options
+    charts.push(createAreaChart({
         labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
         data: [12000, 19000, 15000, 22000, 18000, 25000]
-    });
+    }, commonOptions));
 
-    createGradientBarChart({
+    charts.push(createGradientBarChart({
         labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
         ingresos: [15000, 22000, 18000, 25000, 20000, 28000],
         gastos: [10000, 15000, 12000, 18000, 15000, 20000]
-    });
+    }, commonOptions));
 
-    createResourceDistributionChart({
+    charts.push(createResourceDistributionChart({
         labels: ['Operaciones', 'Marketing', 'I+D', 'Administración', 'Ventas'],
         values: [30, 20, 25, 15, 10]
+    }, commonOptions));
+
+    // Handle window resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            charts.forEach(chart => {
+                chart.resize();
+            });
+        }, 250);
     });
 }
+
+function createAreaChart(data, options) {
+    const ctx = document.getElementById('area-chart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Ventas',
+                data: data.data,
+                borderColor: '#3446eb',
+                backgroundColor: createGradient(ctx),
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#3446eb',
+                pointRadius: window.innerWidth < 768 ? 3 : 4,
+                pointHoverRadius: window.innerWidth < 768 ? 5 : 7
+            }]
+        },
+        options: options
+    });
+    return chart;
+}
+
+// Helper function to create gradients
+function createGradient(ctx) {
+    const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+    gradient.addColorStop(0, 'rgba(52, 70, 235, 0.3)');
+    gradient.addColorStop(1, 'rgba(52, 70, 235, 0)');
+    return gradient;
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+});
 
 function createAreaChart(data) {
     const ctx = document.getElementById('area-chart').getContext('2d');

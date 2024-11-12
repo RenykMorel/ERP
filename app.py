@@ -610,11 +610,9 @@ def create_app():
     from facturas.facturas_models import Facturacion, PreFactura, NotaCredito, NotaDebito, Cliente
         
     
+    
     from facturas import facturacion_bp
     app.register_blueprint(facturacion_bp, url_prefix='/facturacion')
-    
-    
-    
     
     from marketing.routes import marketing
     app.register_blueprint(marketing, url_prefix='/marketing')
@@ -1447,6 +1445,8 @@ def create_app():
         response.headers['X-Frame-Options'] = 'SAMEORIGIN'
         response.headers['X-XSS-Protection'] = '1; mode=block'
         return response
+ 
+
 
     return app
 

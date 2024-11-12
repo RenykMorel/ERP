@@ -1,50 +1,60 @@
-2024-11-04 01:00:49,259 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:533]
-2024-11-04 01:00:58,351 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:533]
-2024-11-04 01:19:55,969 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:551]
-2024-11-04 01:25:51,717 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:537]
-2024-11-04 11:35:06,895 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:567]
-2024-11-04 11:35:49,493 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:567]
-2024-11-04 12:39:27,078 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 12:39:36,802 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 17:06:03,734 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 17:24:44,735 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 17:25:05,626 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 17:46:38,394 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 17:46:52,241 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 19:42:04,591 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 19:46:15,564 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 19:53:18,347 ERROR: Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-04 20:08:11,007 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 20:10:44,876 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 20:48:39,999 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 20:54:49,408 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 22:21:37,792 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 22:22:14,737 ERROR: Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-04 22:30:42,357 ERROR: Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-04 22:33:57,590 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 22:46:14,043 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 22:55:04,696 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-04 23:42:57,269 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-04 23:44:43,187 ERROR: Unhandled exception: Could not build url for endpoint 'main.index'. Did you mean 'marketing.index' instead? [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-04 23:51:01,116 ERROR: Unhandled exception: Could not build url for endpoint 'main.index'. Did you mean 'marketing.index' instead? [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-04 23:51:07,699 ERROR: Unhandled exception: Could not build url for endpoint 'main.index'. Did you mean 'marketing.index' instead? [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-04 23:52:29,626 ERROR: Unhandled exception: Could not build url for endpoint 'main.index'. Did you mean 'marketing.index' instead? [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-05 00:02:05,941 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 00:02:14,251 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 11:51:27,311 ERROR: Unhandled exception: maximum recursion depth exceeded in comparison [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-05 11:54:03,438 ERROR: Unhandled exception: maximum recursion depth exceeded in comparison [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-05 11:54:05,864 ERROR: Unhandled exception: maximum recursion depth exceeded in comparison [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\inventario\inventario_routes.py:1039]
-2024-11-05 11:54:08,566 ERROR: Unhandled exception: maximum recursion depth exceeded in comparison [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-05 13:49:43,423 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 13:49:54,149 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 14:24:03,274 ERROR: Unhandled exception: block 'title' defined twice [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-05 14:38:26,636 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 14:38:35,786 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 14:42:02,665 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 14:42:11,577 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 16:29:56,799 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 16:30:05,552 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 19:08:11,431 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 19:08:19,374 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 22:33:46,401 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-05 22:33:59,641 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-11 23:54:23,657 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-11 23:54:33,267 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-11 23:58:05,697 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-11 23:58:13,308 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 00:13:53,096 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 00:21:08,608 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 00:22:37,613 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 00:37:55,764 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 00:39:15,317 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 00:39:23,827 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 00:55:53,858 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 00:56:02,136 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 01:09:00,979 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 01:11:17,562 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 01:26:15,980 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-12 01:27:13,664 ERROR: Error obteniendo clientes: (psycopg2.errors.UndefinedColumn) no existe la columna clientes.ruc
+LINE 1: ... clientes_id, clientes.nombre AS clientes_nombre, clientes.r...
+                                                             ^
+
+[SQL: SELECT clientes.id AS clientes_id, clientes.nombre AS clientes_nombre, clientes.ruc AS clientes_ruc, clientes.telefono AS clientes_telefono, clientes.email AS clientes_email, clientes.fecha_creacion AS clientes_fecha_creacion 
+FROM clientes ORDER BY clientes.nombre]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:258]
+2024-11-12 01:27:20,109 ERROR: Error al crear cliente: (psycopg2.errors.UndefinedColumn) no existe la columna «ruc» en la relación «clientes»
+LINE 1: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_cr...
+                                      ^
+
+[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
+[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 27, 20, 101113)}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
+2024-11-12 01:27:20,109 ERROR: Error al crear cliente: (psycopg2.errors.UndefinedColumn) no existe la columna «ruc» en la relación «clientes»
+LINE 1: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_cr...
+                                      ^
+
+[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
+[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 27, 20, 101113)}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
+2024-11-12 01:31:33,199 ERROR: Error al crear cliente: (psycopg2.errors.NotNullViolation) el valor nulo en la columna «numero_documento» de la relación «clientes» viola la restricción de no nulo
+DETAIL:  La fila que falla contiene (2, Renyk Morel, null, null, null, 8296849017, el_renyk_rmg@hotmail.com, 2024-11-12 05:31:33.194818-04, 2024-11-12 01:31:33.193048-04, 40221558596).
+
+[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
+[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 31, 33, 194818)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
+2024-11-12 01:31:33,199 ERROR: Error al crear cliente: (psycopg2.errors.NotNullViolation) el valor nulo en la columna «numero_documento» de la relación «clientes» viola la restricción de no nulo
+DETAIL:  La fila que falla contiene (1, Renyk Morel, null, null, null, 8296849017, el_renyk_rmg@hotmail.com, 2024-11-12 05:31:33.194818-04, 2024-11-12 01:31:33.193213-04, 40221558596).
+
+[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
+[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 31, 33, 194818)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
+2024-11-12 01:34:10,060 ERROR: Error al crear cliente: (psycopg2.errors.NotNullViolation) el valor nulo en la columna «numero_documento» de la relación «clientes» viola la restricción de no nulo
+DETAIL:  La fila que falla contiene (3, Renyk Morel, null, null, null, 8296849017, el_renyk_rmg@hotmail.com, 2024-11-12 05:34:10.051282-04, 2024-11-12 01:34:10.057105-04, 40221558596).
+
+[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
+[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 34, 10, 51282)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
+2024-11-12 01:34:10,060 ERROR: Error al crear cliente: (psycopg2.errors.NotNullViolation) el valor nulo en la columna «numero_documento» de la relación «clientes» viola la restricción de no nulo
+DETAIL:  La fila que falla contiene (4, Renyk Morel, null, null, null, 8296849017, el_renyk_rmg@hotmail.com, 2024-11-12 05:34:10.058305-04, 2024-11-12 01:34:10.057266-04, 40221558596).
+
+[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
+[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 34, 10, 58305)}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]

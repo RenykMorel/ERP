@@ -144,24 +144,22 @@ class NotaDebito(db.Model):
 
 class Cliente(db.Model):
     __tablename__ = 'clientes'
+    
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     ruc = db.Column(db.String(20), unique=True, nullable=False)
-    direccion = db.Column(db.String(200))
     telefono = db.Column(db.String(20))
     email = db.Column(db.String(100))
-    fecha_creacion = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    fecha_actualizacion = db.Column(db.DateTime(timezone=True), onupdate=func.now())
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Cliente {self.nombre}>'
 
     def to_dict(self):
         return {
             'id': self.id,
             'nombre': self.nombre,
             'ruc': self.ruc,
-            'direccion': self.direccion,
             'telefono': self.telefono,
             'email': self.email
         }
-
-    def __repr__(self):
-        return f'<Cliente {self.nombre}>'

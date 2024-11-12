@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}CalculAI{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     {% if current_user.is_authenticated %}
@@ -10,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     {% endif %}
     {% block extra_css %}{% endblock %}
     <style>
@@ -28,27 +30,26 @@
             transition: background-color 0.3s;
         }
 
-
         /* Ajuste del contenedor principal */
         #app {
             display: flex;
             width: 100%;
             min-height: 100vh;
-            padding-right: 0; /* Elimina cualquier padding derecho */
-            margin-right: 0; /* Elimina cualquier margen derecho */
+            padding-right: 0;
+            margin-right: 0;
         }
 
         /* Ajuste del contenido principal */
         #content {
             flex: 1;
-            overflow-x: hidden; /* Evita scroll horizontal */
-            margin-right: 0; /* Elimina el margen negativo que causaba el problema */
-            padding-right: 20px; /* Añade un poco de padding para el contenido */
+            overflow-x: hidden;
+            margin-right: 0;
+            padding-right: 20px;
         }
 
         /* Ajuste del sidebar */
         #sidebar {
-            min-width: 250px; /* O el ancho que prefieras */
+            min-width: 250px;
             height: 100vh;
             position: sticky;
             top: 0;
@@ -76,9 +77,16 @@
 
         /* Asegura que el chat no afecte el layout */
         #chat-window {
+            display: none;
             position: fixed;
             bottom: 20px;
             right: 40px;
+            width: 540px; /* Aumentado de 450px (450 * 1.2 = 540) */
+            height: 810px; /* Aumentado de 675px (675 * 1.2 = 810) */
+            background-color: white;
+            border-radius: 24px;
+            box-shadow: 0 6px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
             z-index: 10000;
         }
 
@@ -137,6 +145,7 @@
             height: 150px;
             transition: all 0.3s ease;
             cursor: pointer;
+            display: block; /* Asegúrate de que esté visible por defecto */
         }
         
         #assistant-icon {
@@ -144,55 +153,44 @@
             height: 100%;
         }
         
-        #chat-window {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 40px;
-            width: 300px;
-            height: 450px;
-            background-color: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            overflow: hidden;
-            z-index: 10000;
-        }
-        
         #chat-header {
             background-color: #1a1a1a;
             color: white;
-            padding: 20px 24px;
+            padding: 36px 43px; /* Aumentado proporcionalmente */
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 18px;
+            font-size: 25px; /* Aumentado ligeramente para mejor legibilidad */
         }
         
         .header-content {
             display: flex;
             align-items: center;
-            gap: 12px;
-            width: 32px;
-            height: 32px;
+            gap: 18px; /* Update: Increased gap for better spacing */
+        }
+        
+        .header-content .avatar {
+            width: 48px; /* Update: Increased size for better visibility */
+            height: 48px; /* Update: Increased size for better visibility */
         }
         
         #chat-messages {
-            height: calc(100% - 180px);
+            height: calc(100% - 324px); /* Ajustado para el nuevo tamaño de la ventana */
             overflow-y: auto;
-            padding: 16px;
+            padding: 24px; /* Update: Increased padding for better spacing */
             background-color: #ffffff;
         }
         
         .quick-responses {
-            padding: 8px 16px;
+            padding: 12px 24px; /* Update: Increased padding for better spacing */
             border-top: 1px solid #eee;
             background-color: #ffffff;
         }
         
         .quick-response-button {
             width: 100%;
-            padding: 12px;
-            margin: 4px 0;
+            padding: 18px; /* Update: Increased padding for better spacing */
+            margin: 6px 0; /* Update: Increased margin for better spacing */
             text-align: left;
             background: none;
             border: none;
@@ -201,9 +199,9 @@
             justify-content: space-between;
             align-items: center;
             color: #1a1a1a;
-            font-size: 14px;
+            font-size: 16px; /* Update: Increased font size for better readability */
             transition: background-color 0.2s;
-            border-radius: 8px;
+            border-radius: 12px;
         }
         
         .quick-response-button:hover {
@@ -212,7 +210,7 @@
         
         .quick-response-button .chevron {
             color: #666;
-            font-size: 18px;
+            font-size: 21px; /* Update: Increased font size for better visibility */
         }
         
         #chat-input {
@@ -221,18 +219,18 @@
             left: 0;
             right: 0;
             display: flex;
-            padding: 16px;
+            padding: 24px; /* Update: Increased padding for better spacing */
             background-color: #fff;
             border-top: 1px solid #eee;
-            gap: 8px;
+            gap: 12px; /* Update: Increased gap for better spacing */
         }
         
         #assistant-input {
             flex-grow: 1;
-            padding: 8px 12px;
+            padding: 12px 18px; /* Update: Increased padding for better spacing */
             border: 1px solid #ddd;
-            border-radius: 20px;
-            font-size: 14px;
+            border-radius: 30px;
+            font-size: 16px; /* Update: Increased font size for better readability */
             outline: none;
         }
         
@@ -240,8 +238,8 @@
             background-color: #1a1a1a;
             color: white;
             border: none;
-            width: 44px;N
-            height: 44px;
+            width: 66px; /* Update: Increased size for better visibility */
+            height: 66px; /* Update: Increased size for better visibility */
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -249,35 +247,118 @@
             cursor: pointer;
         }
         
+        #assistant-send svg {
+            width: 24px;
+            height: 24px;
+        }
+        
         .voice {
             background: none !important;
             border: 1px solid #ddd !important;
             color: #666 !important;
+            width: 66px; /* Update: Increased size for better visibility */
+            height: 66px; /* Update: Increased size for better visibility */
+        }
+        
+        .voice svg {
+            width: 24px;
+            height: 24px;
         }
         
         .user-message {
-            background-color: #ffffff;
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 12px;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 30px 30px 30px 75px; /* Update: Increased padding for better spacing */
+            border-radius: 24px;
+            margin-bottom: 24px; /* Update: Increased margin for better spacing */
             max-width: 85%;
             margin-left: auto;
-            color: #000000 !important;
-            font-size: 14px;
-            border: 1px solid #eee;
+            color: #2c3e50;
+            font-size: 16px; /* Update: Increased font size for better readability */
+            font-family: 'Poppins', sans-serif;
+            font-weight: 400;
+            line-height: 1.8;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-right: 4px solid #1976d2;
+            position: relative;
+            transition: transform 0.2s ease, background-color 0.3s ease;
         }
         
+        .user-message:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #bbdefb, #90caf9);
+        }
+        
+        .user-message::before {
+            content: "\f007";
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 36px; /* Update: Increased font size for better visibility */
+            color: #1976d2;
+            position: absolute;
+            top: 50%;
+            left: 22px; /* Update: Adjusted left position */
+            transform: translateY(-50%);
+        }
+        
+        .user-message p {
+            margin: 0;
+        }
+        
+        .user-message strong {
+            color: #1565c0;
+        }
+        
+        .user-message em {
+            color: #0d47a1;
+        }
+           
+        
+        /* Contenedor principal para el mensaje y el icono del bot */
         .assistant-message {
-            background-color: #f8f9fa;
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 12px;
+            background: linear-gradient(135deg, #e0f7fa, #fce4ec);
+            padding: 30px 30px 30px 75px; /* Update: Increased padding for better spacing */
+            border-radius: 24px;
+            margin-bottom: 24px; /* Update: Increased margin for better spacing */
             max-width: 85%;
-            color: #FFA500 !important;
-            font-size: 14px;
-        
+            color: #2c3e50;
+            font-size: 16px; /* Update: Increased font size for better readability */
+            font-family: 'Poppins', sans-serif;
+            font-weight: 400;
+            line-height: 1.8;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid #1e88e5;
+            position: relative;
+            transition: transform 0.2s ease, background-color 0.3s ease;
         }
-
+        
+        .assistant-message:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #e1f5fe, #fce4ec);
+        }
+        
+        .assistant-message::before {
+            content: "\f544";
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 36px; /* Update: Increased font size for better visibility */
+            color: #1e88e5;
+            position: absolute;
+            top: 50%;
+            left: 22px; /* Update: Adjusted left position */
+            transform: translateY(-50%);
+        }
+        
+        .assistant-message p {
+            margin: 0;
+        }
+        
+        .assistant-message strong {
+            color: #d32f2f;
+        }
+        
+        .assistant-message em {
+            color: #388e3c;
+        }
         
         .archivo-descargable {
             color: #007bff;
@@ -310,6 +391,7 @@
             max-height: 80vh;
             overflow: auto;
             font-family: 'Arial', sans-serif;
+            color: #000000;
         }
 
         .ventana-reporte h2 {
@@ -334,6 +416,7 @@
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #e0e0e0;
+            color: #000000;
         }
 
         .ventana-reporte th {
@@ -343,6 +426,7 @@
             text-transform: uppercase;
             font-size: 14px;
             letter-spacing: 0.5px;
+            padding: 12px 15px;
         }
 
         .ventana-reporte tr:nth-child(even) {
@@ -410,7 +494,28 @@
         .robot-head {
             animation: nod 5s infinite;
         }
+
+        /* Estilos para el botón de limpiar chat */
+        #clear-chat {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+        }
+
+        #clear-chat:hover {
+            color: #f44336;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            console.log('CSRF Token:', token);
+        });
+    </script>
 </head>
 <body>
     {% if current_user.is_authenticated %}
@@ -539,40 +644,34 @@
             <div id="chat-header">
                 <div class="header-content">
                     <div class="avatar">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="white">
                             <circle cx="12" cy="12" r="10" fill="white"/>
                         </svg>
                     </div>
                     <span>Assistant</span>
                 </div>
                 <button id="minimize-chat" aria-label="Minimizar chat">&times;</button>
+                <button id="clear-chat" aria-label="Limpiar chat" title="Limpiar historial del chat">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                </button>
             </div>
             <div id="chat-messages">
                 <!-- Los mensajes se agregarán aquí dinámicamente -->
             </div>
             <div class="quick-responses">
-                <button class="quick-response-button">
-                    What services do you offer?
-                    <span class="chevron">›</span>
-                </button>
-                <button class="quick-response-button">
-                    How can I contact support?
-                    <span class="chevron">›</span>
-                </button>
-                <button class="quick-response-button">
-                    Tell me about your pricing
-                    <span class="chevron">›</span>
-                </button>
+                
             </div>
             <div id="chat-input">
                 <input type="text" id="assistant-input" placeholder="Type your message..." aria-label="Type your message">
                 <button id="assistant-send" aria-label="Send message">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                     </svg>
                 </button>
                 <button class="voice" aria-label="Voice input">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                         <line x1="12" y1="19" x2="12" y2="23"/>
@@ -604,10 +703,32 @@
         let messageCount = conversationHistory.length;
         let initialMessageSent = false;
 
+        // Asegúrate de que esta función se llame al cargar la página
+        verificarEstadoAsistente();
+
+        function verificarEstadoAsistente() {
+            fetch('/api/estado_asistente')
+                .then(response => response.json())
+                .then(data => {
+                    asistenteActivo = data.activo;
+                    if (asistenteActivo) {
+                        virtualAssistant.style.display = 'block';
+                    } else {
+                        virtualAssistant.style.display = 'none';
+                    }
+                    console.log('Estado del asistente:', asistenteActivo);
+                })
+                .catch(error => {
+                    console.error('Error al obtener el estado del asistente:', error);
+                    // En caso de error, mostramos el asistente por defecto
+                    virtualAssistant.style.display = 'block';
+                });
+        }
+
         function mostrarMensajeAsistente(mensaje, esUsuario = false) {
             const mensajeElement = document.createElement('p');
             mensajeElement.className = esUsuario ? 'user-message' : 'assistant-message';
-            mensajeElement.textContent = esUsuario ? `Tú: ${mensaje}` : `Asistente: ${mensaje}`;
+            mensajeElement.textContent = mensaje;
             chatMessages.appendChild(mensajeElement);
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -652,6 +773,17 @@
                 mostrarMensajeAsistente(entry.message, entry.sender === 'Usuario');
             });
         }
+
+        const clearChatButton = document.getElementById('clear-chat');
+        clearChatButton.addEventListener('click', function() {
+            if (confirm('¿Estás seguro de que quieres borrar todo el historial del chat?')) {
+                chatMessages.innerHTML = '';
+                conversationHistory = [];
+                localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+                messageCount = 0;
+                mostrarMensajeAsistente("El historial del chat ha sido borrado. ¿En qué puedo ayudarte?");
+            }
+        });
 
         virtualAssistant.addEventListener('click', function() {
             document.body.classList.add('chat-open');
@@ -698,129 +830,86 @@
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        mostrarMensajeAsistente("Lo siento, ha ocurrido un error. Por favor, intenta de nuevo más tarde.");
+                        mostrarMensajeAsistente("Lo siento, ha ocurrido un error al procesar tu solicitud.");
                     });
                 } else {
-                    mostrarMensajeAsistente("El asistente no está activo. Por favor, contacte al equipo de CalculAI para su activación.");
+                    mostrarMensajeAsistente("Lo siento, el asistente virtual está desactivado en este momento.");
                 }
                 chatInput.value = '';
             }
         }
 
-
-        function mostrarVentanaReporte(datos, tipoReporte) {
-            const ventanaReporte = document.createElement('div');
-            ventanaReporte.className = 'ventana-reporte';
-            
-            const titulo = document.createElement('h2');
-            titulo.textContent = obtenerTituloReporte(tipoReporte);
-            ventanaReporte.appendChild(titulo);
-
-            const tabla = document.createElement('table');
-            datos.forEach((fila, index) => {
-                const tr = document.createElement('tr');
-                fila.forEach(celda => {
-                    const td = document.createElement(index === 0 ? 'th' : 'td');
-                    td.textContent = celda;
-                    tr.appendChild(td);
-                });
-                tabla.appendChild(tr);
-            });
-            ventanaReporte.appendChild(tabla);
-
-            const botonesContainer = document.createElement('div');
-            botonesContainer.style.textAlign = 'right';
-
-            const botonDescargarCSV = crearBoton('Descargar CSV', 'btn-descargar-csv', () => descargarReporte(datos, 'csv'));
-            const botonDescargarPDF = crearBoton('Descargar PDF', 'btn-descargar-pdf', () => descargarReporte(datos, 'pdf'));
-            const botonDescargarWord = crearBoton('Descargar Word', 'btn-descargar-word', () => descargarReporte(datos, 'word'));
-            const botonCerrar = crearBoton('Cerrar', 'btn-cerrar', () => document.body.removeChild(ventanaReporte));
-
-            botonesContainer.appendChild(botonDescargarCSV);
-            botonesContainer.appendChild(botonDescargarPDF);
-            botonesContainer.appendChild(botonDescargarWord);
-            botonesContainer.appendChild(botonCerrar);
-
-            ventanaReporte.appendChild(botonesContainer);
-
-            document.body.appendChild(ventanaReporte);
-        }
-
-        function crearBoton(texto, clase, onClick) {
-            const boton = document.createElement('button');
-            boton.textContent = texto;
-            boton.className = clase;
-            boton.onclick = onClick;
-            return boton;
-        }
-
-        function obtenerTituloReporte(tipoReporte) {
-            switch (tipoReporte.toLowerCase()) {
-                case 'ventas':
-                    return 'Reporte de Ventas Realizadas';
-                case 'facturas pendientes':
-                    return 'Reporte de Facturas Pendientes de Pago';
-                case 'clientes que pagaron':
-                    return 'Reporte de Clientes con Pagos Realizados';
-                case 'facturas pagadas':
-                    return 'Reporte de Facturas Pagadas';
-                default:
-                    return `Reporte de ${tipoReporte}`;
-            }
-        }
-
-        function descargarReporte(datos, tipoArchivo) {
-            fetch(`/api/descargar_reporte/${tipoArchivo}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ datos: datos })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `reporte.${tipoArchivo}`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-            })
-            .catch(error => {
-                console.error('Error al descargar el reporte:', error);
-                alert('Hubo un error al descargar el reporte. Por favor, inténtalo de nuevo.');
-            });
-        }
-
         chatSendButton.addEventListener('click', enviarMensaje);
-
         chatInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 enviarMensaje();
             }
         });
 
-        // Verificar el estado del asistente al cargar la página
-        fetch('/api/asistente_status')
-        .then(response => response.json())
-        .then(data => {
-            console.log('Estado del asistente:', data);
-            asistenteActivo = data.activo;
-        })
-        .catch(error => {
-            console.error('Error al verificar el estado del asistente:', error);
-        });
+        function mostrarVentanaReporte(datos, tipoReporte) {
+            const ventanaReporte = document.createElement('div');
+            ventanaReporte.className = 'ventana-reporte';
+            ventanaReporte.innerHTML = `
+                <h2>Reporte de ${tipoReporte}</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            ${Object.keys(datos[0]).map(key => `<th>${key}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${datos.map(row => `
+                            <tr>
+                                ${Object.values(row).map(value => `<td>${value}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <button class="btn-descargar-csv">Descargar CSV</button>
+                <button class="btn-descargar-pdf">Descargar PDF</button>
+                <button class="btn-descargar-word">Descargar Word</button>
+                <button class="btn-cerrar">Cerrar</button>
+            `;
+            document.body.appendChild(ventanaReporte);
 
-        // Asegurarse de que el asistente virtual sea visible inicialmente
-        virtualAssistant.style.display = 'block';
-        chatWindow.style.display = 'none';
+            ventanaReporte.querySelector('.btn-descargar-csv').addEventListener('click', () => descargarReporte(datos, 'csv', tipoReporte));
+            ventanaReporte.querySelector('.btn-descargar-pdf').addEventListener('click', () => descargarReporte(datos, 'pdf', tipoReporte));
+            ventanaReporte.querySelector('.btn-descargar-word').addEventListener('click', () => descargarReporte(datos, 'word', tipoReporte));
+            ventanaReporte.querySelector('.btn-cerrar').addEventListener('click', () => document.body.removeChild(ventanaReporte));
+        }
+
+        function descargarReporte(datos, formato, tipoReporte) {
+            fetch('/api/descargar_reporte', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ datos: datos, formato: formato, tipo_reporte: tipoReporte })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('Error en la descarga del reporte');
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `reporte_${tipoReporte}.${formato}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al descargar el reporte');
+            });
+        }
+
+        
+        cargarHistorialConversacion();
     });
     </script>
     {% endif %}

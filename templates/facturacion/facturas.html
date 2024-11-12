@@ -1,94 +1,1899 @@
-{% extends "base_facturacion.html" %}
+{% extends "base.html" %}
 
 {% block title %}Gestión de Facturas - CalculAI{% endblock %}
 
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+/* Estilos del formulario por pasos */
+.step-content {
+    display: none;
+}
+
+.step-content.active {
+    display: block;
+}
+
+/* Nuevos estilos para el indicador de pasos creativo */
+.step-indicator-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.step-indicator {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #e5e7eb;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+    position: relative;
+    z-index: 10;
+    transition: all 0.5s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    background-color: #3b82f6;
+    border-radius: 50%;
+    transition: all 0.5s ease;
+    z-index: -1;
+}
+
+.step-indicator.active {
+    color: white;
+}
+
+.step-indicator.active::before {
+    width: 100%;
+    height: 100%;
+}
+
+.step-indicator.completed {
+    background-color: #10b981;
+    color: white;
+}
+
+.step-line {
+    flex: 1;
+    height: 4px;
+    background-color: #e5e7eb;
+    position: relative;
+    overflow: hidden;
+}
+
+.step-line::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0;
+    background-color: #10b981;
+    transition: width 0.5s ease;
+}
+
+.step-line.half-completed::before {
+    width: 50%;
+}
+
+.step-line.completed::before {
+    width: 100%;
+}
+
+.step-label {
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-align: center;
+    width: 120px;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+.step-indicator.active {
+    animation: pulse 2s infinite;
+}
+
+/* Estilos para campos de búsqueda mejorados */
+.search-field {
+    position: relative;
+}
+
+.search-field input {
+    padding-left: 2.5rem;
+}
+
+.search-field .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+/* Estilos para los campos de producto */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.product-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    transition: all 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para el resumen de factura */
+.invoice-summary {
+    background-color: #f9fafb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+    font-weight: bold;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.fade-out {
+    animation: fadeOut 0.3s ease-in-out;
+}
+
+#confirmation-modal {
+    transition: opacity 0.3s ease-in-out;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Gestión de Facturas</h1>
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Facturas</h1>
 
-    <div class="row mb-3">
-        <div class="col">
-            <button id="crear-nuevo-btn" class="btn btn-primary">Crear Nueva Factura</button>
+    <!-- Formulario de búsqueda con layout modificado -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="space-y-4">
+            <!-- Campos de filtro -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="search-field">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" placeholder="Número de factura o cliente" class="w-full border rounded-lg px-4 py-3 text-base">
+                </div>
+                <div>
+                    <input type="date" class="w-full border rounded-lg px-4 py-3 text-base">
+                </div>
+                <div>
+                    <select class="w-full border rounded-lg px-4 py-3 text-base">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="pagada">Pagada</option>
+                        <option value="anulada">Anulada</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Botones en una fila separada -->
+            <div class="flex flex-wrap justify-between items-center gap-4 mt-4">
+                <div class="flex gap-4">
+                    <button class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors duration-200 text-base font-medium flex items-center">
+                        <i class="fas fa-search mr-2"></i>Buscar
+                    </button>
+                    <button class="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors duration-200 text-base font-medium flex items-center" id="clients-btn">
+                        <i class="fas fa-users mr-2"></i>Clientes
+                    </button>
+                </div>
+                <button class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors duration-200 text-base font-medium flex items-center" id="new-invoice-btn">
+                    <i class="fas fa-plus mr-2"></i>Nueva Factura
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <input type="text" id="numero-factura" class="form-control" placeholder="Número de factura">
-        </div>
-        <div class="col-md-3">
-            <input type="text" id="cliente-factura" class="form-control" placeholder="Cliente">
-        </div>
-        <div class="col-md-3">
-            <input type="date" id="fecha-factura" class="form-control">
-        </div>
-        <div class="col-md-2">
-            <select id="estatus-factura" class="form-control">
-                <option value="">Todos los estados</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="pagada">Pagada</option>
-                <option value="anulada">Anulada</option>
-            </select>
-        </div>
-        <div class="col-md-1">
-            <button id="buscar-btn" class="btn btn-secondary">Buscar</button>
+    <!-- Modal de Clientes -->
+    <div id="clients-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="fixed inset-0 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Gestión de Clientes</h2>
+                    <button class="text-gray-500 hover:text-gray-700" id="close-clients-modal">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Barra de búsqueda y botón nuevo cliente -->
+                <!-- En el modal de clientes, actualiza el botón de nuevo cliente -->
+                <div class="flex gap-4 mb-6">
+                    <div class="flex-1 relative">
+                        <input type="text" placeholder="Buscar cliente..." class="w-full px-4 py-2 border rounded-lg">
+                        <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                    </div>
+                    <!-- Actualiza el botón con un id -->
+                    <button id="new-client-btn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
+                        <i class="fas fa-plus mr-2"></i>Nuevo Cliente
+                    </button>
+                </div>
+
+                <!-- Tabla de clientes -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">RNC/Cédula</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- Los clientes se cargarán dinámicamente aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Número</th>
-                <th>Cliente</th>
-                <th>Fecha</th>
-                <th>Total</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="facturas-tbody">
-            <!-- Las facturas se cargarán aquí dinámicamente -->
-        </tbody>
-    </table>
-</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Referencias a elementos del DOM para el modal de clientes
+            const clientsBtn = document.getElementById('clients-btn');
+            const clientsModal = document.getElementById('clients-modal');
+            const closeClientsModal = document.getElementById('close-clients-modal');
+            const clientFormModal = document.getElementById('client-form-modal');
+            const clientForm = document.getElementById('client-form');
+            const closeClientForm = document.getElementById('close-client-form');
+            const cancelClientForm = document.getElementById('cancel-client-form');
+            const newClientBtn = document.getElementById('new-client-btn'); // Actualizado el selector
+        
 
-<!-- Modal para crear/editar factura -->
-<div id="facturaModal" class="modal">
-    <div class="modal-content">
-        <span class="close modal-close">&times;</span>
-        <h2 id="modal-title">Crear/Editar Factura</h2>
-        <form id="factura-form">
-            <input type="hidden" id="factura-id" name="id">
-            <div class="form-group">
-                <label for="numero">Número de Factura:</label>
-                <input type="text" id="numero" name="numero" required class="form-control">
+        // Funciones de utilidad para los modales
+        function showModal(modal) {
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function hideModal(modal) {
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // Event Listeners para modales de clientes
+        if (clientsBtn) {
+            clientsBtn.addEventListener('click', () => {
+                showModal(clientsModal);
+                loadClients();
+            });
+        }
+
+        if (closeClientsModal) {
+            closeClientsModal.addEventListener('click', () => hideModal(clientsModal));
+        }
+
+        if (closeClientForm) {
+            closeClientForm.addEventListener('click', () => hideModal(clientFormModal));
+        }
+
+        if (cancelClientForm) {
+            cancelClientForm.addEventListener('click', () => hideModal(clientFormModal));
+        }
+
+        // Event listener para el botón de nuevo cliente
+        if (newClientBtn) {
+            newClientBtn.addEventListener('click', () => {
+                // Limpiar el formulario
+                if (clientForm) clientForm.reset();
+                // Mostrar el modal
+                showModal(clientFormModal);
+                // Ocultar el modal de listado si está abierto
+                hideModal(clientsModal);
+            });
+        }
+
+        // Manejar el envío del formulario
+        if (clientForm) {
+            clientForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(clientForm);
+                const clientData = Object.fromEntries(formData.entries());
+                
+                try {
+                    const response = await fetch('/facturacion/api/clientes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        },
+                        body: JSON.stringify(clientData)
+                    });
+
+                    if (!response.ok) {
+                        const data = await response.json();
+                        throw new Error(data.error || 'Error al crear el cliente');
+                    }
+
+                    const data = await response.json();
+
+                    // Éxito
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: 'Cliente creado correctamente'
+                    });
+
+                    // Cerrar el modal y limpiar el formulario
+                    hideModal(clientFormModal);
+                    clientForm.reset();
+                    await loadClients();
+                    showModal(clientsModal);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message || 'Error al crear el cliente'
+                    });
+                }
+            });
+        }
+    });
+    </script>
+
+    <!-- Modal de nueva factura -->
+    <div id="invoice-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+        <div class="fixed inset-0 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full max-h-screen overflow-y-auto">
+                <!-- Nuevo indicador de pasos creativo -->
+                <div class="step-indicator-container mb-8">
+                    <div class="step-indicator active" data-step="1">
+                        1
+                        <span class="step-label">Información Básica</span>
+                    </div>
+                    <div class="step-line" data-line="1"></div>
+                    <div class="step-indicator" data-step="2">
+                        2
+                        <span class="step-label">Productos y Servicios</span>
+                    </div>
+                    <div class="step-line" data-line="2"></div>
+                    <div class="step-indicator" data-step="3">
+                        3
+                        <span class="step-label">Resumen y Pago</span>
+                    </div>
+                </div>
+                <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-700" id="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+
+                <!-- Contenido del paso 1: Información básica -->
+                <div class="step-content active" id="step1">
+                    <h3 class="text-lg font-semibold mb-4">Información básica</h3>
+                    <div class="space-y-6">
+                        <!-- Tipo de factura -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Tipo de factura</label>
+                            <div class="grid grid-cols-2 gap-4 max-w-lg mx-auto">
+                                <!-- Opción Contado -->
+                                <div class="invoice-type-option relative group cursor-pointer transform hover:-translate-y-0.5 transition-all duration-300" data-type="contado">
+                                    <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                                    <div class="relative bg-white border-2 border-gray-100 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-300">
+                                        <input type="radio" name="tipo" value="contado" class="hidden" checked>
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex-shrink-0">
+                                                <div class="icon-wrapper w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center transition-transform duration-300">
+                                                    <i class="fas fa-money-bill text-lg text-blue-500"></i>
+                                                </div>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="font-semibold text-sm text-gray-800">Contado</div>
+                                                <p class="text-xs text-gray-500">Pago inmediato</p>
+                                            </div>
+                                            <div class="selected-indicator opacity-0 transition-opacity duration-300">
+                                                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                            </div>
+                                        </div>
+                                        <div class="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400 transform scale-x-0 transition-transform duration-300 selected-line"></div>
+                                    </div>
+                                </div>
+                        
+                                <!-- Opción Crédito -->
+                                <div class="invoice-type-option relative group cursor-pointer transform hover:-translate-y-0.5 transition-all duration-300" data-type="credito">
+                                    <div class="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                                    <div class="relative bg-white border-2 border-gray-100 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-300">
+                                        <input type="radio" name="tipo" value="credito" class="hidden">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex-shrink-0">
+                                                <div class="icon-wrapper w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center transition-transform duration-300">
+                                                    <i class="fas fa-credit-card text-lg text-purple-500"></i>
+                                                </div>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="font-semibold text-sm text-gray-800">Crédito</div>
+                                                <p class="text-xs text-gray-500">Pago a plazos</p>
+                                            </div>
+                                            <div class="selected-indicator opacity-0 transition-opacity duration-300">
+                                                <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+                                            </div>
+                                        </div>
+                                        <div class="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 transform scale-x-0 transition-transform duration-300 selected-line"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <style>
+                        @keyframes glow {
+                            0% {
+                                box-shadow: 0 0 5px rgba(59, 130, 246, 0.5),
+                                            0 0 10px rgba(59, 130, 246, 0.3);
+                            }
+                            50% {
+                                box-shadow: 0 0 10px rgba(59, 130, 246, 0.8),
+                                            0 0 20px rgba(59, 130, 246, 0.5);
+                            }
+                            100% {
+                                box-shadow: 0 0 5px rgba(59, 130, 246, 0.5),
+                                            0 0 10px rgba(59, 130, 246, 0.3);
+                            }
+                        }
+                        
+                        .invoice-type-option.selected .bg-white {
+                            border-color: transparent;
+                        }
+                        
+                        .invoice-type-option.selected[data-type="contado"] .bg-white {
+                            animation: glow 2s infinite;
+                            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5),
+                                        0 0 20px rgba(59, 130, 246, 0.3);
+                        }
+                        
+                        .invoice-type-option.selected[data-type="credito"] .bg-white {
+                            animation: glow 2s infinite;
+                            box-shadow: 0 0 10px rgba(168, 85, 247, 0.5),
+                                        0 0 20px rgba(168, 85, 247, 0.3);
+                        }
+                        
+                        .invoice-type-option.selected .selected-line {
+                            transform: scaleX(1);
+                        }
+                        
+                        .invoice-type-option.selected .selected-indicator {
+                            opacity: 1;
+                        }
+                        
+                        .invoice-type-option.selected .icon-wrapper {
+                            transform: scale(1.1);
+                        }
+                        
+                        .blur {
+                            filter: blur(12px);
+                        }
+                        </style>
+                        
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const options = document.querySelectorAll('.invoice-type-option');
+                            
+                            function selectOption(selectedOption) {
+                                options.forEach(option => {
+                                    option.classList.remove('selected');
+                                });
+                                
+                                selectedOption.classList.add('selected');
+                                
+                                const radio = selectedOption.querySelector('input[type="radio"]');
+                                if (radio) {
+                                    radio.checked = true;
+                                }
+                            }
+                        
+                            options.forEach(option => {
+                                option.addEventListener('click', () => {
+                                    selectOption(option);
+                                });
+                            });
+                        
+                            // Seleccionar la opción por defecto
+                            const defaultOption = document.querySelector('[data-type="contado"]');
+                            if (defaultOption) {
+                                selectOption(defaultOption);
+                            }
+                        });
+                        </script>
+
+                        <!-- Cliente (Nuevo componente creativo) -->
+                        <div class="client-selector bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+                            <label class="block text-xl font-bold text-gray-800 mb-4">Cliente</label>
+                            <div class="relative">
+                                <input type="text" id="clientSearch" placeholder="Buscar o crear cliente..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                <button id="toggleClientForm" class="absolute right-2 top-2 bg-blue-500 text-white p-1 rounded-full hover:bg-blue-600">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div id="searchResults" class="mt-2 bg-white rounded-lg shadow-md max-h-40 overflow-y-auto hidden"></div>
+                            <div id="clientForm" class="mt-4 bg-gray-50 p-4 rounded-lg hidden">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
+                                        <select id="docType" class="mt-1 block w-full rounded-md border-green-500 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                            <option value="cedula">Cédula</option>
+                                            <option value="rnc">RNC</option>
+                                            <option value="pasaporte">Pasaporte</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Número de Documento</label>
+                                        <input type="text" id="docNumber" class="mt-1 block w-full rounded-md border-green-500 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                                    <input type="text" id="clientName" class="mt-1 block w-full rounded-md border-green-500 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                </div>
+                                <button id="saveClient" class="mt-4 w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                    Guardar Cliente
+                                </button>
+                            </div>
+                            <div id="selectedClient" class="mt-4 bg-blue-50 p-4 rounded-lg hidden">
+                                <h4 class="font-semibold text-blue-800">Cliente Seleccionado</h4>
+                                <p id="selectedClientName" class="text-blue-600"></p>
+                                <p id="selectedClientDoc" class="text-sm text-blue-500"></p>
+                            </div>
+                        </div>
+
+                        <!-- Tipo de Pago -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Pago</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div class="border rounded-lg p-4 cursor-pointer hover:border-blue-500">
+                                    <input type="radio" name="tipo_pago" value="efectivo" class="hidden" checked>
+                                    <div class="flex items-center">
+                                        <i class="fas fa-money-bill text-2xl text-green-500 mr-3"></i>
+                                        <div class="font-medium">Efectivo</div>
+                                    </div>
+                                </div>
+                                <div class="border rounded-lg p-4 cursor-pointer hover:border-blue-500">
+                                    <input type="radio" name="tipo_pago" value="tarjeta" class="hidden">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-credit-card text-2xl text-blue-500 mr-3"></i>
+                                        <div class="font-medium">Tarjeta</div>
+                                    </div>
+                                </div>
+                                <div class="border rounded-lg p-4 cursor-pointer hover:border-blue-500">
+                                    <input type="radio" name="tipo_pago" value="transferencia" class="hidden">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-university text-2xl text-purple-500 mr-3"></i>
+                                        <div class="font-medium">Transferencia</div>
+                                    </div>
+                                </div>
+                                <div class="border rounded-lg p-4 cursor-pointer hover:border-blue-500">
+                                    <input type="radio" name="tipo_pago" value="cheque" class="hidden">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-money-check text-2xl text-gray-500 mr-3"></i>
+                                        <div class="font-medium">Cheque</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tienda -->
+                        <div class="store-selector bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+                            <label class="block text-xl font-bold text-gray-800 mb-4">Tienda</label>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="storeOptions">
+                                <div class="store-option bg-blue-50 p-4 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors" data-store="principal">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-store text-2xl text-blue-500 mb-2"></i>
+                                        <span class="font-medium text-blue-700 text-sm">Tienda Principal</span>
+                                    </div>
+                                </div>
+                                <div class="store-option bg-green-50 p-4 rounded-lg cursor-pointer hover:bg-green-100 transition-colors" data-store="sucursal1">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-building text-2xl text-green-500 mb-2"></i>
+                                        <span class="font-medium text-green-700 text-sm">Sucursal 1</span>
+                                    </div>
+                                </div>
+                                <div class="store-option bg-purple-50 p-4 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors" data-store="sucursal2">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-shop text-2xl text-purple-500 mb-2"></i>
+                                        <span class="font-medium text-purple-700 text-sm">Sucursal 2</span>
+                                    </div>
+                                </div>
+                                <div class="store-option bg-yellow-50 p-4 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors" data-store="online">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-globe text-2xl text-yellow-500 mb-2"></i>
+                                        <span class="font-medium text-yellow-700 text-sm">Tienda Online</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="selectedStore" class="mt-4 bg-gray-100 p-4 rounded-lg hidden">
+                                <h4 class="font-semibold text-gray-800">Tienda Seleccionada</h4>
+                                <p id="selectedStoreName" class="text-gray-600"></p>
+                            </div>
+                        </div>
+
+                        <!-- Descuento -->
+                        <div class="discount-selector bg-white p-3 rounded-lg border border-gray-200">
+                            <label class="block text-lg font-semibold text-gray-700 mb-2">Descuento</label>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <div class="flex-1">
+                                    <div class="relative">
+                                        <input type="range" id="discountSlider" min="0" max="100" value="0" step="1" class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                        <div id="discountThumb" class="absolute w-4 h-4 bg-gray-500 rounded-full shadow -top-1.5 flex items-center justify-center text-white text-xs font-bold">0%</div>
+                                    </div>
+                                </div>
+                                <div class="flex-none w-20">
+                                    <div class="relative">
+                                        <input type="number" id="discountInput" min="0" max="100" value="0" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400">
+                                        <span class="absolute right-2 top-1 text-gray-500 text-sm">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex gap-2">
+                                <button id="percentDiscount" class="flex-1 bg-gray-100 text-gray-700 px-2 py-1 text-sm rounded hover:bg-gray-200 transition-colors">Porcentaje</button>
+                                <button id="amountDiscount" class="flex-1 bg-white text-gray-700 px-2 py-1 text-sm rounded border border-gray-300 hover:bg-gray-100 transition-colors">Monto</button>
+                            </div>
+                            <div id="discountAmount" class="hidden mt-2">
+                                <div class="relative">
+                                    <input type="number" id="discountAmountInput" min="0" value="0" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400">
+                                    <span class="absolute left-2 top-1 text-gray-500 text-sm">$</span>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <div class="flex justify-center">
+                                    <div class="relative inline-block">
+                                      <button id="applyDiscount" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-bold py-1 px-3 rounded-l-full rounded-r-full hover:from-blue-600 hover:to-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-md transform hover:-translate-y-0.5">
+                                        <span class="flex items-center">
+                                          <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                                          </svg>
+                                          Aplicar Descuento
+                                        </span>
+                                      </button>
+                                      <div class="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full"></div>
+                                    </div>
+                                  </div>                            </div>
+                            <div id="appliedDiscount" class="mt-2 bg-gray-100 p-2 rounded text-sm hidden">
+                                <span class="font-medium text-gray-700">Descuento Aplicado:</span>
+                                <span id="appliedDiscountValue" class="text-gray-600"></span>
+                            </div>
+                        </div>
+
+                        <!-- Notas -->
+                        <div class="notes-section bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg shadow-md">
+                            <div class="flex items-center justify-between mb-3">
+                                <label for="notesInput" class="text-lg font-semibold text-gray-700 flex items-center cursor-pointer">
+                                    <i class="fas fa-sticky-note text-yellow-500 mr-2"></i>
+                                    Notas
+                                </label>
+                                <button id="notesToggle" class="text-gray-500 hover:text-gray-700 focus:outline-none" aria-label="Toggle notes">
+                                    <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                                </button>
+                            </div>
+                            <div id="notesContent">
+                                <div class="bg-white rounded-lg p-3 shadow-inner">
+                                    <textarea id="notesInput" rows="4" class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Agregar notas o comentarios..."></textarea>
+                                </div>
+                                <div class="flex justify-between items-center mt-3">
+                                    <div class="text-sm text-gray-500">
+                                        <span id="charCount">0</span> / 500 caracteres
+                                    </div>
+                                    <button id="saveNotes" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">
+                                        Guardar Notas
+                                    </button>
+                                </div>
+                                <div id="savedNotes" class="mt-4 hidden">
+                                    <h4 class="font-semibold text-gray-700 mb-2">Notas Guardadas:</h4>
+                                    <div id="savedNotesContent" class="bg-white rounded-lg p-3 shadow-inner text-gray-700"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Contenido del paso 2: Productos y Servicios -->
+                 <div class="step-content hidden" id="step2">
+                    <h3 class="text-lg font-semibold mb-4">Productos y servicios</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-2">
+                            <div class="search-field flex-1 relative">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                <input type="text" id="product-search" placeholder="Buscar producto..." class="w-full border rounded-lg pl-10 pr-4 py-2">
+                            </div>
+                            <button id="add-product" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                                <i class="fas fa-plus mr-2"></i>Agregar
+                            </button>
+                            <div class="relative">
+                                <input type="file" id="template-upload" class="hidden" accept=".csv,.txt">
+                                <label for="template-upload" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 cursor-pointer">
+                                    <i class="fas fa-upload mr-2"></i>Cargar Plantilla
+                                </label>
+                            </div>
+                        </div>
+                
+                        <div class="border rounded-lg overflow-hidden">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Series</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ITBIS</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lote</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha Exp.</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cantidad</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comentario</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="product-list" class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 text-sm text-gray-500" colspan="10">
+                                            No hay productos agregados.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contenido del paso 3: Resumen y Pago -->
+                <div class="step-content hidden" id="step3">
+                    <h3 class="text-lg font-semibold mb-4">Resumen y pago</h3>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="invoice-summary">
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span i d="summary-subtotal">$0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>ITBIS</span>
+                                <span id="summary-itbis">$0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Descuento</span>
+                                <span id="summary-discount">$0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Total</span>
+                                <span id="summary-total">$0.00</span>
+                            </div>
+                        </div>
+                        <div class="payment-options">
+                            <h4 class="font-semibold mb-2">Opciones de pago</h4>
+                            <div class="space-y-2">
+                                <div>
+                                    <input type="radio" id="payment-full" name="payment-option" value="full" checked>
+                                    <label for="payment-full">Pago completo</label>
+                                </div>
+                                <div>
+                                    <input type="radio" id="payment-partial" name="payment-option" value="partial">
+                                    <label for="payment-partial">Pago parcial</label>
+                                </div>
+                                <div id="partial-payment-amount" class="hidden">
+                                    <label for="partial-amount">Monto a pagar:</label>
+                                    <input type="number" id="partial-amount" class="border rounded px-2 py-1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="font-semibold mb-2">Documentos relacionados</h4>
+                        <div class="space-y-2">
+                            <div>
+                                <input type="checkbox" id="apply-credit-note">
+                                <label for="apply-credit-note">Aplicar nota de crédito</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="apply-advance-payment">
+                                <label for="apply-advance-payment">Aplicar pago por adelantado</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-between">
+                    <button id="prev-step" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 hidden">Anterior</button>
+                    <button id="cancel-invoice" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">Cancelar</button>
+                    <button id="next-step" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Siguiente</button>
+                    <button id="submit-invoice" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 hidden">Crear Factura</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="cliente">Cliente:</label>
-                <input type="text" id="cliente" name="cliente" required class="form-control">
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" aria-modal="true" role="dialog">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+                    <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-5">¿Está seguro?</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500">
+                        Si cancela la creación de la factura, perderá todos los datos ingresados. Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="cancel-yes" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                        Sí, cancelar
+                    </button>
+                    <button id="cancel-no" class="mt-3 px-4 py-2 bg-white text-gray-800 text-base font-medium rounded-md w-full shadow-sm border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        No, continuar
+                    </button>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="fecha">Fecha:</label>
-                <input type="date" id="fecha" name="fecha" required class="form-control">
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Cliente -->
+    <div id="client-form-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="fixed inset-0 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Nuevo Cliente</h2>
+                    <button class="text-gray-500 hover:text-gray-700" id="close-client-form">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="client-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                        <input type="text" id="client-name" name="nombre" required
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">RNC/Cédula</label>
+                        <input type="text" id="client-ruc" name="ruc" required
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                        <input type="tel" id="client-phone" name="telefono"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="client-email" name="email"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-200">
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" class="px-4 py-2 border rounded-md hover:bg-gray-100" id="cancel-client-form">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="form-group">
-                <label for="total">Total:</label>
-                <input type="number" id="total" name="total" step="0.01" required class="form-control">
-            </div>
-            <div class="form-group">
-                <label for="estatus">Estado:</label>
-                <select id="estatus" name="estatus" required class="form-control">
-                    <option value="pendiente">Pendiente</option>
-                    <option value="pagada">Pagada</option>
-                    <option value="anulada">Anulada</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Guardar</button>
-        </form>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Referencias a elementos del DOM
+        const clientsBtn = document.getElementById('clients-btn');
+        const clientsModal = document.getElementById('clients-modal');
+        const closeClientsModal = document.getElementById('close-clients-modal');
+        const clientFormModal = document.getElementById('client-form-modal');
+        const clientForm = document.getElementById('client-form');
+        const closeClientForm = document.getElementById('close-client-form');
+        const cancelClientForm = document.getElementById('cancel-client-form');
+        const newClientBtn = document.querySelector('[data-action="new-client"]');
+        const clientSearchInput = document.querySelector('#client-search');
+
+        // Funciones de utilidad
+        function showModal(modal) {
+            modal.classList.remove('hidden');
+        }
+
+        function hideModal(modal) {
+            modal.classList.add('hidden');
+        }
+
+        // Event Listeners para modales
+        clientsBtn.addEventListener('click', () => {
+            showModal(clientsModal);
+            loadClients();
+        });
+
+        closeClientsModal.addEventListener('click', () => hideModal(clientsModal));
+        closeClientForm.addEventListener('click', () => hideModal(clientFormModal));
+        cancelClientForm.addEventListener('click', () => hideModal(clientFormModal));
+
+        // Función para cargar clientes
+        async function loadClients() {
+            try {
+                const response = await fetch('/facturacion/api/clientes');
+                if (!response.ok) throw new Error('Error al cargar clientes');
+                
+                const clients = await response.json();
+                const tbody = document.querySelector('#clients-modal tbody');
+                
+                if (!tbody) return;
+                
+                tbody.innerHTML = clients.map(client => `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.nombre}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.ruc}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.telefono || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.email || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-2">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cargar los clientes'
+                });
+            }
+        }
+
+        // Manejar el formulario de cliente
+        if (clientForm) {
+            clientForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(clientForm);
+                const clientData = {
+                    nombre: formData.get('nombre'),
+                    ruc: formData.get('ruc'),
+                    telefono: formData.get('telefono'),
+                    email: formData.get('email')
+                };
+                
+                try {
+                    const response = await fetch('/facturacion/api/clientes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        },
+                        body: JSON.stringify(clientData)
+                    });
+        
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Error al crear el cliente');
+                    }
+        
+                    // Éxito
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: data.message || 'Cliente creado correctamente'
+                    });
+        
+                    // Cerrar el modal y limpiar el formulario
+                    hideModal(clientFormModal);
+                    clientForm.reset();
+                    await loadClients();
+                    showModal(clientsModal);
+        
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message || 'Error al crear el cliente'
+                    });
+                }
+            });
+        }
+
+        // Búsqueda de clientes en el campo de factura
+        let clientSearchTimeout;
+        const clientSearchResults = document.createElement('div');
+        clientSearchResults.className = 'absolute z-10 w-full bg-white shadow-lg rounded-lg mt-1 max-h-60 overflow-y-auto hidden';
+        clientSearchInput.parentElement.appendChild(clientSearchResults);
+
+        clientSearchInput.addEventListener('input', async (e) => {
+            clearTimeout(clientSearchTimeout);
+            const searchTerm = e.target.value.trim();
+
+            if (!searchTerm) {
+                clientSearchResults.classList.add('hidden');
+                return;
+            }
+
+            clientSearchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(searchTerm)}`);
+                    const clients = await response.json();
+
+                    if (clients.length > 0) {
+                        clientSearchResults.innerHTML = clients.map(client => `
+                            <div class="p-2 hover:bg-gray-100 cursor-pointer" onclick="selectClient(${JSON.stringify(client).replace(/"/g, '&quot;')})">
+                                <div class="font-medium">${client.nombre}</div>
+                                <div class="text-sm text-gray-500">${client.ruc}</div>
+                            </div>
+                        `).join('');
+                        clientSearchResults.classList.remove('hidden');
+                    } else {
+                        clientSearchResults.classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }, 300);
+        });
+
+        // Función para seleccionar cliente
+        window.selectClient = function(client) {
+            document.getElementById('client-search').value = client.nombre;
+            document.getElementById('selected-client').dataset.clientId = client.id;
+            clientSearchResults.classList.add('hidden');
+        };
+
+        // Cerrar resultados al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!clientSearchInput.contains(e.target)) {
+                clientSearchResults.classList.add('hidden');
+            }
+        });
+    });
+    </script>
+
+    <!-- Tabla de facturas -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <!-- Ejemplo de fila de factura -->
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">INV-001</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cliente Ejemplo</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-05-15</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$1,000.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Pagada</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-2">Ver</a>
+                        <a href="#" class="text-red-600 hover:text-red-900">Anular</a>
+                    </td>
+                </tr>
+                <!-- Más filas de facturas aquí -->
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/facturacion.js') }}"></script>
+<script>
+// Función para obtener el CSRF token
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
+
+// Objeto api con métodos para interactuar con el backend
+const api = {
+    async searchClients(query) {
+        try {
+            const response = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(query)}`, {
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+            });
+            if (!response.ok) throw new Error('Error buscando clientes');
+            return await response.json();
+        } catch (error) {
+            console.error('Error:', error);
+            throw error;
+        }
+    },
+
+    async searchProducts(query) {
+        try {
+            const response = await fetch(`/api/productos/buscar?q=${encodeURIComponent(query)}`, {
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+            });
+            if (!response.ok) throw new Error('Error buscando productos');
+            return await response.json();
+        } catch (error) {
+            console.error('Error:', error);
+            throw error;
+        }
+    },
+
+    async createInvoice(invoiceData) {
+        try {
+            const response = await fetch('/api/facturas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(invoiceData)
+            });
+            if (!response.ok) throw new Error('Error creando factura');
+            return await response.json();
+        } catch (error) {
+            console.error('Error:', error);
+            throw error;
+        }
+    },
+
+    async loadInvoices(filters = {}) {
+        try {
+            const response = await fetch('/api/facturas', {
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+            });
+            if (!response.ok) throw new Error('Error cargando facturas');
+            return await response.json();
+        } catch (error) {
+            console.error('Error:', error);
+            throw error;
+        }
+    }
+};
+
+// Agregar esto dentro del DOMContentLoaded
+const tiposFactura = document.querySelectorAll('[name="tipo"]');
+const tiposFacturaContainer = document.querySelectorAll('.border.rounded-lg.p-4');
+
+tiposFacturaContainer.forEach(container => {
+    container.addEventListener('click', () => {
+        // Remover la selección visual de todos los contenedores
+        tiposFacturaContainer.forEach(c => {
+            c.classList.remove('bg-blue-50', 'border-blue-500');
+        });
+        
+        // Agregar la selección visual al contenedor clickeado
+        container.classList.add('bg-blue-50', 'border-blue-500');
+        
+        // Encontrar y marcar el radio button correspondiente
+        const radio = container.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = true;
+        }
+    });
+});
+
+// Marcar el tipo "contado" como seleccionado por defecto
+const contadoContainer = tiposFacturaContainer[0];
+if (contadoContainer) {
+    contadoContainer.classList.add('bg-blue-50', 'border-blue-500');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('invoice-modal');
+    const newInvoiceBtn = document.getElementById('new-invoice-btn');
+    const closeModalBtn = document.getElementById('close-modal');
+    const prevStepBtn = document.getElementById('prev-step');
+    const nextStepBtn = document.getElementById('next-step');
+    const submitInvoiceBtn = document.getElementById('submit-invoice');
+    const cancelInvoiceBtn = document.getElementById('cancel-invoice');
+    const steps = document.querySelectorAll('.step-content');
+    const stepIndicators = document.querySelectorAll('.step-indicator');
+    const stepLines = document.querySelectorAll('.step-line');
+    let currentStep = 0;
+
+    // Funciones para manejar los pasos del formulario
+    function showStep(stepIndex) {
+        steps.forEach((step, index) => {
+            if (index === stepIndex) {
+                step.classList.remove('hidden');
+                step.classList.add('active');
+            } else {
+                step.classList.add('hidden');
+                step.classList.remove('active');
+            }
+        });
+
+        stepIndicators.forEach((indicator, index) => {
+            if (index <= stepIndex) {
+                indicator.classList.add('active');
+            } else {
+                indicator.classList.remove('active');
+            }
+        });
+
+        stepLines.forEach((line, index) => {
+            if (index < stepIndex) {
+                line.classList.add('completed');
+            } else {
+                line.classList.remove('completed');
+            }
+        });
+
+        prevStepBtn.classList.toggle('hidden', stepIndex === 0);
+        nextStepBtn.classList.toggle('hidden', stepIndex === steps.length - 1);
+        submitInvoiceBtn.classList.toggle('hidden', stepIndex !== steps.length - 1);
+    }
+
+    function calcularTotal() {
+        let subtotal = 0;
+        let itbis = 0;
+        let descuento = parseFloat(document.getElementById('discountAmountInput').value) || 0;
+    
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            const row = input.closest('tr');
+            const precio = parseFloat(row.querySelector('.precio').textContent);
+            const cantidad = parseInt(input.value);
+            const itbisRate = parseFloat(row.querySelector('.itbis').textContent) / 100;
+    
+            subtotal += precio * cantidad;
+            itbis += precio * cantidad * itbisRate;
+        });
+    
+        const total = subtotal + itbis - descuento;
+    
+        document.getElementById('summary-subtotal').textContent = `RD$ ${subtotal.toFixed(2)}`;
+        document.getElementById('summary-itbis').textContent = `RD$ ${itbis.toFixed(2)}`;
+        document.getElementById('summary-discount').textContent = `RD$ ${descuento.toFixed(2)}`;
+        document.getElementById('summary-total').textContent = `RD$ ${total.toFixed(2)}`;
+    
+        return total;
+    }
+
+    // Nueva versión de la búsqueda de clientes
+    const clientSearch = document.getElementById('clientSearch');
+    const searchResults = document.getElementById('searchResults');
+    clientSearch.addEventListener('input', async function() {
+        const searchTerm = this.value.trim();
+        if (!searchTerm) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        try {
+            const clients = await api.searchClients(searchTerm);
+            searchResults.innerHTML = '';
+            
+            if (clients.length > 0) {
+                clients.forEach(client => {
+                    const div = document.createElement('div');
+                    div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                    div.textContent = `${client.nombre} (${client.ruc})`;
+                    div.addEventListener('click', () => selectClient(client));
+                    searchResults.appendChild(div);
+                });
+                searchResults.classList.remove('hidden');
+            } else {
+                searchResults.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Error buscando clientes:', error);
+        }
+    });
+
+    // Nueva versión del guardado de facturas
+    submitInvoiceBtn.addEventListener('click', async () => {
+        try {
+            // Validar que haya cliente seleccionado
+            const clienteId = document.getElementById('selectedClient').dataset.clientId;
+            if (!clienteId) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Debe seleccionar un cliente',
+                    icon: 'error'
+                });
+                return;
+            }
+    
+            // Validar que haya productos
+            const items = obtenerItemsFactura();
+            if (items.length === 0) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Debe agregar al menos un producto',
+                    icon: 'error'
+                });
+                return;
+            }
+    
+            // Preparar los datos en el formato que espera el backend
+            const invoiceData = {
+                cliente_id: parseInt(clienteId),
+                tipo: document.querySelector('input[name="tipo"]:checked').value,
+                tipo_pago: document.querySelector('input[name="tipo_pago"]:checked').value,
+                tienda: document.querySelector('.store-option.bg-blue-100')?.dataset.store || 'principal',
+                items: items.map(item => ({
+                    item_id: parseInt(item.id),
+                    cantidad: parseInt(item.quantity),
+                    precio_unitario: parseFloat(item.price),
+                    itbis: parseFloat(item.itbis),
+                    comentario: item.comentario
+                })),
+                notas: document.getElementById('notesInput').value,
+                descuento: document.getElementById('appliedDiscountValue').textContent
+            };
+    
+            const response = await fetch('/api/facturas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(invoiceData)
+            });
+    
+            const data = await response.json();
+    
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al crear la factura');
+            }
+    
+            // Si la creación fue exitosa
+            Swal.fire({
+                title: '¡Éxito!',
+                text: data.message || 'Factura creada correctamente',
+                icon: 'success'
+            }).then(() => {
+                modal.classList.add('hidden');
+                resetForm();
+                cargarFacturas();
+            });
+    
+        } catch (error) {
+            console.error('Error creando factura:', error);
+            Swal.fire({
+                title: 'Error',
+                text: error.message || 'Error al crear la factura',
+                icon: 'error'
+            });
+        }
+    });
+
+// Función para obtener los items de la factura
+function obtenerItemsFactura() {
+    const items = [];
+    document.querySelectorAll('#product-list tr').forEach(row => {
+        const quantityInput = row.querySelector('.quantity-input');
+        if (!quantityInput) return;
+        
+        const precio = row.querySelector('.precio');
+        const itbis = row.querySelector('.itbis');
+        const comentario = row.querySelector('input[type="text"]');
+        
+        if (precio && itbis) {
+            items.push({
+                id: row.dataset.itemId,
+                quantity: parseInt(quantityInput.value),
+                price: parseFloat(precio.textContent.replace('$', '').trim()),
+                itbis: parseFloat(itbis.textContent.replace('%', '').trim()),
+                comentario: comentario ? comentario.value : ''
+            });
+        }
+    });
+    return items;
+}
+
+    // Nueva función para cargar facturas
+    async function cargarFacturas(filters = {}) {
+        try {
+            const facturas = await api.loadInvoices(filters);
+            const tbody = document.querySelector('table tbody');
+            tbody.innerHTML = facturas.map(factura => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${factura.numero}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${factura.cliente_nombre}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${factura.fecha}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${factura.total.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${getStatusClass(factura.estatus)}">
+                            ${factura.estatus}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editarFactura(${factura.id})" class="text-indigo-600 hover:text-indigo-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="eliminarFactura(${factura.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Error cargando facturas:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Error al cargar las facturas',
+                icon: 'error'
+            });
+        }
+    }
+
+    // Event listeners para los botones de navegación
+    newInvoiceBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        showStep(0);
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        confirmCancelInvoice();
+    });
+
+    prevStepBtn.addEventListener('click', () => {
+        if (currentStep > 0) {
+            currentStep--;
+            showStep(currentStep);
+        }
+    });
+
+    nextStepBtn.addEventListener('click', () => {
+        if (currentStep < steps.length - 1) {
+            currentStep++;
+            showStep(currentStep);
+        }
+    });
+
+    cancelInvoiceBtn.addEventListener('click', () => {
+        confirmCancelInvoice();
+    });
+
+    // Funcionalidad para el selector de cliente
+    const toggleClientForm = document.getElementById('toggleClientForm');
+    const clientForm = document.getElementById('clientForm');
+    const selectedClient = document.getElementById('selectedClient');
+    const selectedClientName = document.getElementById('selectedClientName');
+    const selectedClientDoc = document.getElementById('selectedClientDoc');
+    const saveClientBtn = document.getElementById('saveClient');
+
+    function selectClient(client) {
+        selectedClientName.textContent = client.nombre;
+        selectedClientDoc.textContent = client.ruc;
+        selectedClient.classList.remove('hidden');
+        searchResults.classList.add('hidden');
+        clientSearch.value = '';
+        selectedClient.dataset.clientId = client.id;
+    }
+
+    toggleClientForm.addEventListener('click', () => {
+        clientForm.classList.toggle('hidden');
+    });
+
+    saveClientBtn.addEventListener('click', async () => {
+        const name = document.getElementById('clientName').value;
+        const docType = document.getElementById('docType').value;
+        const docNumber = document.getElementById('docNumber').value;
+        if (name && docNumber) {
+            try {
+                const response = await fetch('/api/clientes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        nombre: name,
+                        ruc: `${docType}: ${docNumber}`
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.id) {
+                    selectClient(data);
+                    clientForm.classList.add('hidden');
+                } else {
+                    throw new Error(data.error || 'Error al crear cliente');
+                }
+            } catch (error) {
+                console.error('Error guardando cliente:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al crear el cliente',
+                    icon: 'error'
+                });
+            }
+        }
+    });
+
+    // Funcionalidad para el selector de tienda
+    const storeOptions = document.getElementById('storeOptions');
+    const selectedStore = document.getElementById('selectedStore');
+    const selectedStoreName = document.getElementById('selectedStoreName');
+
+    storeOptions.addEventListener('click', (e) => {
+        const storeOption = e.target.closest('.store-option');
+        if (storeOption) {
+            const storeName = storeOption.querySelector('span').textContent;
+            selectedStoreName.textContent = storeName;
+            selectedStore.classList.remove('hidden');
+            document.querySelectorAll('.store-option').forEach(opt => opt.classList.remove('bg-blue-100'));
+            storeOption.classList.add('bg-blue-100');
+        }
+    });
+
+    // Funcionalidad para el selector de descuento
+    const discountSlider = document.getElementById('discountSlider');
+    const discountInput = document.getElementById('discountInput');
+    const discountThumb = document.getElementById('discountThumb');
+    const percentDiscountBtn = document.getElementById('percentDiscount');
+    const amountDiscountBtn = document.getElementById('amountDiscount');
+    const discountAmountDiv = document.getElementById('discountAmount');
+    const discountAmountInput = document.getElementById('discountAmountInput');
+    const applyDiscountBtn = document.getElementById('applyDiscount');
+    const appliedDiscount = document.getElementById('appliedDiscount');
+    const appliedDiscountValue = document.getElementById('appliedDiscountValue');
+
+    let isPercentDiscount = true;
+
+    function updateDiscountDisplay(value) {
+        discountThumb.style.left = `calc(${value}% - 8px)`;
+        discountThumb.textContent = `${value}%`;
+        discountInput.value = value;
+    }
+
+    discountSlider.addEventListener('input', (e) => updateDiscountDisplay(e.target.value));
+
+    discountInput.addEventListener('input', (e) => {
+        let value = parseInt(e.target.value);
+        if (isNaN(value)) value = 0;
+        if (value > 100) value = 100;
+        updateDiscountDisplay(value);
+        discountSlider.value = value;
+    });
+
+    percentDiscountBtn.addEventListener('click', () => {
+        isPercentDiscount = true;
+        percentDiscountBtn.classList.add('bg-gray-100');
+        amountDiscountBtn.classList.remove('bg-gray-100');
+        discountAmountDiv.classList.add('hidden');
+    });
+
+    amountDiscountBtn.addEventListener('click', () => {
+        isPercentDiscount = false;
+        amountDiscountBtn.classList.add('bg-gray-100');
+        percentDiscountBtn.classList.remove('bg-gray-100');
+        discountAmountDiv.classList.remove('hidden');
+    });
+
+    applyDiscountBtn.addEventListener('click', () => {
+        let discountValue;
+        if (isPercentDiscount) {
+            discountValue = `${discountInput.value}%`;
+        } else {
+            discountValue = `$${discountAmountInput.value}`;
+        }
+        appliedDiscountValue.textContent = discountValue;
+        appliedDiscount.classList.remove('hidden');
+        calcularTotal();
+    });
+
+    // Funcionalidad para las notas
+    const notesToggle = document.getElementById('notesToggle');
+    const notesContent = document.getElementById('notesContent');
+    const notesInput = document.getElementById('notesInput');
+    const charCount = document.getElementById('charCount');
+    const saveNotesBtn = document.getElementById('saveNotes');
+    const savedNotes = document.getElementById('savedNotes');
+    const savedNotesContent = document.getElementById('savedNotesContent');
+
+    notesToggle.addEventListener('click', () => {
+        notesContent.classList.toggle('hidden');
+        notesToggle.querySelector('i').classList.toggle('fa-chevron-down');
+        notesToggle.querySelector('i').classList.toggle('fa-chevron-up');
+    });
+
+    notesInput.addEventListener('input', () => {
+        const count = notesInput.value.length;
+        charCount.textContent = count;
+        if (count > 500) {
+            charCount.classList.add('text-red-500');
+        } else {
+            charCount.classList.remove('text-red-500');
+        }
+    });
+
+    saveNotesBtn.addEventListener('click', () => {
+        const notes = notesInput.value.trim();
+        if (notes) {
+            savedNotesContent.textContent = notes;
+            savedNotes.classList.remove('hidden');
+            notesInput.value = '';
+            charCount.textContent = '0';
+        }
+    });
+
+    // Funcionalidad para agregar productos
+    const productSearch = document.getElementById('product-search');
+    const addProductBtn = document.getElementById('add-product');
+    const productList = document.getElementById('product-list');
+
+    function createProductRow(product) {
+        const row = document.createElement('tr');
+        row.dataset.itemId = product.id;
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.nombre}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.codigo || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 precio">$${product.precio_venta.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 itbis">${product.itbis}%</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.lote || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.fecha_vencimiento || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <input type="number" value="1" min="1" max="${product.stock}" class="w-16 border rounded px-2 py-1 quantity-input">
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 product-total">$${product.precio_venta.toFixed(2)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <input type="text" placeholder="Agregar comentario" class="border rounded px-2 py-1">
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="text-red-600 hover:text-red-900 delete-product">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        return row;
+    }
+
+    productSearch.addEventListener('input', async function() {
+        const searchTerm = this.value.trim();
+        if (!searchTerm) return;
+    
+        try {
+            const products = await api.searchProducts(searchTerm);
+            
+            const resultsContainer = document.createElement('div');
+            resultsContainer.className = 'absolute z-10 w-full bg-white shadow-lg rounded-lg mt-1 max-h-60 overflow-y-auto';
+            
+            products.forEach(product => {
+                const div = document.createElement('div');
+                div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                div.innerHTML = `
+                    <div class="font-medium">${product.nombre}</div>
+                    <div class="text-sm text-gray-500">
+                        Stock: ${product.stock} | Precio: $${product.precio_venta.toFixed(2)}
+                    </div>
+                `;
+                div.addEventListener('click', () => {
+                    const row = createProductRow(product);
+                    if (productList.firstElementChild.textContent.includes('No hay productos agregados')) {
+                        productList.innerHTML = '';
+                    }
+                    productList.appendChild(row);
+                    updateTotals();
+                    // Limpiar búsqueda
+                    this.value = '';
+                    resultsContainer.remove();
+                });
+                resultsContainer.appendChild(div);
+            });
+    
+            const searchField = this.parentElement;
+            const existingResults = searchField.querySelector('.product-results');
+            if (existingResults) {
+                existingResults.remove();
+            }
+            searchField.appendChild(resultsContainer);
+        } catch (error) {
+            console.error('Error buscando productos:', error);
+        }
+    });
+
+    productList.addEventListener('click', (e) => {
+        if (e.target.closest('.delete-product')) {
+            e.target.closest('tr').remove();
+            if (productList.children.length === 0) {
+                productList.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-4 text-sm text-gray-500" colspan="10">
+                            No hay productos agregados.
+                        </td>
+                    </tr>
+                `;
+            }
+            updateTotals();
+        }
+    });
+
+    productList.addEventListener('input', (e) => {
+        if (e.target.classList.contains('quantity-input')) {
+            const row = e.target.closest('tr');
+            const precio = parseFloat(row.querySelector('.precio').textContent.replace('$', ''));
+            const cantidad = parseInt(e.target.value);
+            const total = precio * cantidad;
+            row.querySelector('.product-total').textContent = `$${total.toFixed(2)}`;
+            updateTotals();
+        }
+    });
+
+    function getStatusClass(status) {
+        const classes = {
+            'pendiente': 'bg-yellow-100 text-yellow-800',
+            'pagada': 'bg-green-100 text-green-800',
+            'anulada': 'bg-red-100 text-red-800'
+        };
+        return classes[status] || 'bg-gray-100 text-gray-800';
+    }
+
+    function updateTotals() {
+        let subtotal = 0;
+        let itbis = 0;
+
+        document.querySelectorAll('#product-list tr').forEach(row => {
+            if (!row.querySelector('.quantity-input')) return;
+            
+            const precio = parseFloat(row.querySelector('.precio').textContent.replace('$', ''));
+            const cantidad = parseInt(row.querySelector('.quantity-input').value);
+            const itbisPercent = parseFloat(row.querySelector('.itbis').textContent.replace('%', '')) / 100;
+
+            subtotal += precio * cantidad;
+            itbis += precio * cantidad * itbisPercent;
+        });
+
+        const discountText = document.getElementById('appliedDiscountValue').textContent;
+        let discount = 0;
+        
+        if (discountText.includes('%')) {
+            const percentDiscount = parseFloat(discountText.replace('%', '')) / 100;
+            discount = subtotal * percentDiscount;
+        } else {
+            discount = parseFloat(discountText.replace('$', '')) || 0;
+        }
+
+        const total = subtotal + itbis - discount;
+
+        document.getElementById('summary-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        document.getElementById('summary-itbis').textContent = `$${itbis.toFixed(2)}`;
+        document.getElementById('summary-discount').textContent = `$${discount.toFixed(2)}`;
+        document.getElementById('summary-total').textContent = `$${total.toFixed(2)}`;
+    }
+
+    // Funcionalidad para el modal de confirmación
+    const confirmationModal = document.getElementById('confirmation-modal');
+    const cancelYesBtn = document.getElementById('cancel-yes');
+    const cancelNoBtn = document.getElementById('cancel-no');
+
+    function showConfirmationModal() {
+        confirmationModal.classList.remove('hidden');
+        confirmationModal.classList.add('fade-in');
+    }
+
+    function hideConfirmationModal() {
+        confirmationModal.classList.add('fade-out');
+        setTimeout(() => {
+            confirmationModal.classList.add('hidden');
+            confirmationModal.classList.remove('fade-in', 'fade-out');
+        }, 300);
+    }
+
+    function confirmCancelInvoice() {
+        showConfirmationModal();
+    }
+
+    cancelYesBtn.addEventListener('click', () => {
+        hideConfirmationModal();
+        modal.classList.add('hidden');
+        resetForm();
+    });
+
+    cancelNoBtn.addEventListener('click', hideConfirmationModal);
+
+    function resetForm() {
+        currentStep = 0;
+        showStep(currentStep);
+        
+        // Limpiar selección de cliente
+        if (selectedClient) {
+            selectedClient.classList.add('hidden');
+            selectedClientName.textContent = '';
+            selectedClientDoc.textContent = '';
+        }
+        
+        // Limpiar productos
+        productList.innerHTML = `
+            <tr>
+                <td class="px-6 py-4 text-sm text-gray-500" colspan="10">
+                    No hay productos agregados.
+                </td>
+            </tr>
+        `;
+        
+        // Resetear descuentos
+        discountSlider.value = 0;
+        discountInput.value = 0;
+        discountAmountInput.value = 0;
+        updateDiscountDisplay(0);
+        appliedDiscount.classList.add('hidden');
+        appliedDiscountValue.textContent = '';
+        
+        // Limpiar notas
+        notesInput.value = '';
+        charCount.textContent = '0';
+        savedNotes.classList.add('hidden');
+        
+        // Actualizar totales
+        updateTotals();
+    }
+
+    // Cargar facturas iniciales
+    cargarFacturas();
+});
+</script>
 {% endblock %}

@@ -1,98 +1,67 @@
-2024-11-02 20:19:45,834 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:493]
-2024-11-02 20:19:56,760 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:493]
-2024-11-02 20:20:16,671 ERROR: OCR processing failed: (PreconditionNotMet) Tensor holds no memory. Call Tensor::mutable_data firstly.
-  [Hint: holder_ should not be null.] (at ..\paddle\phi\core\dense_tensor_impl.cc:44)
- [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:179]
-2024-11-02 20:23:41,481 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:493]
-2024-11-02 20:30:28,288 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:493]
-2024-11-02 20:32:01,608 INFO: File saved: C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\uploads\6eb19ddb-b54b-4e2f-a9fc-39abdb97a68d.jpeg [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:146]
-2024-11-02 20:32:01,608 INFO: File saved: C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\uploads\c211f996-11f2-4c6e-af3e-d593c8dd958c.jpeg [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:146]
-2024-11-02 20:32:01,674 INFO: Starting OCR processing [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:158]
-2024-11-02 20:32:01,676 INFO: Starting OCR processing [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:158]
-2024-11-02 20:32:03,856 ERROR: PaddleOCR error: (PreconditionNotMet) Tensor holds no memory. Call Tensor::mutable_data firstly.
-  [Hint: holder_ should not be null.] (at ..\paddle\phi\core\dense_tensor_impl.cc:44)
- [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:162]
-2024-11-02 20:32:03,897 ERROR: Traceback (most recent call last):
-  File "C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py", line 159, in api_ocr
-    resultado_ocr = ocr.ocr(image_rgb, cls=True)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\el_re\Downloads\CALCULAI2\ERP\.venv\Lib\site-packages\paddleocr\paddleocr.py", line 760, in ocr
-    dt_boxes, rec_res, _ = self.__call__(img, cls, slice)
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\el_re\Downloads\CALCULAI2\ERP\.venv\Lib\site-packages\paddleocr\tools\infer\predict_system.py", line 134, in __call__
-    img_crop_list, angle_list, elapse = self.text_classifier(img_crop_list)
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\el_re\Downloads\CALCULAI2\ERP\.venv\Lib\site-packages\paddleocr\tools\infer\predict_cls.py", line 115, in __call__
-    prob_out = self.output_tensors[0].copy_to_cpu()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-RuntimeError: (PreconditionNotMet) Tensor holds no memory. Call Tensor::mutable_data firstly.
-  [Hint: holder_ should not be null.] (at ..\paddle\phi\core\dense_tensor_impl.cc:44)
-
- [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:163]
-2024-11-02 20:32:03,942 INFO: Temporary file removed: C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\uploads\c211f996-11f2-4c6e-af3e-d593c8dd958c.jpeg [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:233]
-2024-11-02 20:32:14,301 INFO: OCR processing completed [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:160]
-2024-11-02 20:32:14,301 INFO: Extracted text: TD
-MERCERIA Y VARIEDADES MEJIA
-Ave. Gustavo Mejia Ricart #111
-809-685-1062,809-686-0270
-RNC:13106226... [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:180]
-2024-11-02 20:32:14,313 WARNING: Document not recognized [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:195]
-2024-11-02 20:32:14,316 INFO: Temporary file removed: C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\uploads\6eb19ddb-b54b-4e2f-a9fc-39abdb97a68d.jpeg [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:233]
-2024-11-02 21:08:18,577 INFO: File saved: C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\uploads\98de1846-ea31-4f31-9d5b-ff0135570154.jpeg [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:146]
-2024-11-02 21:08:18,578 INFO: File saved: C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\uploads\d20116fe-5014-46fa-8d9d-23e55264d75b.jpeg [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:146]
-2024-11-02 21:08:18,684 INFO: Starting OCR processing [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:158]
-2024-11-02 21:08:18,692 INFO: Starting OCR processing [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:158]
-2024-11-02 21:08:21,666 ERROR: PaddleOCR error: (PreconditionNotMet) Tensor holds no memory. Call Tensor::mutable_data firstly.
-  [Hint: holder_ should not be null.] (at ..\paddle\phi\core\dense_tensor_impl.cc:44)
- [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:162]
-2024-11-02 21:08:21,694 ERROR: Traceback (most recent call last):
-  File "C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py", line 159, in api_ocr
-    resultado_ocr = ocr.ocr(image_rgb, cls=True)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\el_re\Downloads\CALCULAI2\ERP\.venv\Lib\site-packages\paddleocr\paddleocr.py", line 760, in ocr
-    dt_boxes, rec_res, _ = self.__call__(img, cls, slice)
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\el_re\Downloads\CALCULAI2\ERP\.venv\Lib\site-packages\paddleocr\tools\infer\predict_system.py", line 134, in __call__
-    img_crop_list, angle_list, elapse = self.text_classifier(img_crop_list)
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\el_re\Downloads\CALCULAI2\ERP\.venv\Lib\site-packages\paddleocr\tools\infer\predict_cls.py", line 115, in __call__
-    prob_out = self.output_tensors[0].copy_to_cpu()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-RuntimeError: (PreconditionNotMet) Tensor holds no memory. Call Tensor::mutable_data firstly.
-  [Hint: holder_ should not be null.] (at ..\paddle\phi\core\dense_tensor_impl.cc:44)
-
- [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:163]
-2024-11-02 21:08:21,736 INFO: Temporary file removed: C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\uploads\98de1846-ea31-4f31-9d5b-ff0135570154.jpeg [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:233]
-2024-11-02 21:08:33,523 INFO: OCR processing completed [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:160]
-2024-11-02 21:08:33,530 INFO: Extracted text: TD
-MERCERIA Y VARIEDADES MEJIA
-Ave. Gustavo Mejia Ricart #111
-809-685-1062,809-686-0270
-RNC:13106226... [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:180]
-2024-11-02 21:08:33,532 WARNING: Document not recognized [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:195]
-2024-11-02 21:08:33,535 INFO: Temporary file removed: C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\uploads\d20116fe-5014-46fa-8d9d-23e55264d75b.jpeg [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:233]
-2024-11-02 21:12:14,185 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:493]
-2024-11-02 21:15:04,879 ERROR: Unhandled exception: name 'app' is not defined [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:589]
-2024-11-02 21:15:04,899 ERROR: Unhandled exception: name 'app' is not defined [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:589]
-2024-11-02 21:18:12,927 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:493]
-2024-11-02 21:18:36,853 INFO: Starting OCR API request [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:129]
-2024-11-02 21:18:36,859 INFO: File saved: C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\uploads\6b9941eb-27c5-4be3-a8cf-3ab3b4b63e7b.jpeg [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:147]
-2024-11-02 21:18:36,879 INFO: Starting OCR API request [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:129]
-2024-11-02 21:18:36,888 INFO: File saved: C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\uploads\fe9ab82c-1db1-419c-8228-b53a3568c221.jpeg [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:147]
-2024-11-02 21:18:36,936 INFO: Starting OCR processing [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:160]
-2024-11-02 21:18:36,951 INFO: Starting OCR processing [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:160]
-2024-11-02 21:18:55,797 INFO: OCR processing completed [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:162]
-2024-11-02 21:18:55,936 INFO: OCR processing completed [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:162]
-2024-11-02 21:18:55,944 INFO: Extracted text: TD
-MERCERIA Y VARIEDADES MEJIA
-Ave. Gustavo Mejia Ricart #111
-809-685-1062,809-686-0270
-RNC:13106226... [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:182]
-2024-11-02 21:18:55,944 INFO: Extracted text: TD
-MERCERIA Y VARIEDADES MEJIA
-Ave. Gustavo Mejia Ricart #111
-809-685-1062,809-686-0270
-RNC:13106226... [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:182]
-2024-11-02 21:18:55,960 WARNING: Document not recognized [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:199]
-2024-11-02 21:18:55,960 WARNING: Document not recognized [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\impuestos\routes.py:199]
-2024-11-02 21:25:04,346 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:493]
+2024-11-08 03:47:13,226 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 03:47:21,408 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 11:00:48,224 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 11:08:11,586 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 11:08:16,319 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 11:13:55,766 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 11:13:57,020 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 11:20:57,843 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 11:22:35,902 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 11:33:05,403 ERROR: Unhandled exception: block 'title' defined twice [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 12:10:33,443 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 13:17:32,897 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:28:09,310 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:28:15,864 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:37:23,196 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:37:29,845 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:38:15,639 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:38:54,577 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:39:09,370 ERROR: Unhandled exception: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[ItemFactura(items_factura)]'. Original exception was: Multiple classes found for path "ItemFactura" in the registry of this declarative base. Please use a fully module-qualified path. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 13:44:24,875 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:46:08,573 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:48:49,317 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:53:43,117 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 13:53:50,777 ERROR: Unhandled exception: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[ItemPreFactura(items_pre_factura)]'. Original exception was: Mapper 'Mapper[InventarioItem(items_inventario)]' has no property 'items_pre_factura'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 13:55:21,803 ERROR: Unhandled exception: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[ItemPreFactura(items_pre_factura)]'. Original exception was: Mapper 'Mapper[InventarioItem(items_inventario)]' has no property 'items_pre_factura'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
+2024-11-08 16:38:19,117 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 16:38:31,423 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 17:36:19,524 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 17:36:58,797 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-08 19:20:24,390 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
+2024-11-08 19:30:00,249 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
+2024-11-08 19:30:08,167 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
+2024-11-08 19:30:49,131 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
+2024-11-08 19:32:05,858 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
+2024-11-08 19:32:16,522 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
+2024-11-08 21:46:42,393 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:636]
+2024-11-08 21:49:00,911 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:636]
+2024-11-09 11:33:42,221 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:636]
+2024-11-09 11:37:41,747 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:636]
+2024-11-09 11:46:37,143 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:636]
+2024-11-09 12:08:59,957 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:648]
+2024-11-09 12:11:43,446 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:649]
+2024-11-09 12:14:37,238 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:680]
+2024-11-09 12:24:34,094 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:670]
+2024-11-09 12:28:36,419 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
+2024-11-09 12:43:10,210 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
+2024-11-09 12:44:37,735 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
+2024-11-09 12:51:19,140 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
+2024-11-09 14:38:07,638 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
+2024-11-09 15:47:03,850 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
+2024-11-09 16:38:42,659 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
+2024-11-09 16:41:02,679 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
+2024-11-09 16:49:53,016 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 16:50:00,926 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 16:50:54,038 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 16:53:33,805 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 16:54:36,421 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 17:23:30,472 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 17:26:53,908 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 17:27:36,720 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 17:28:57,706 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 17:30:12,416 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 17:30:49,151 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 17:34:11,675 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 17:36:09,874 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 17:36:57,049 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-09 17:38:17,899 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
