@@ -1,67 +1,62 @@
-2024-11-08 03:47:13,226 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 03:47:21,408 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 11:00:48,224 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 11:08:11,586 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 11:08:16,319 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 11:13:55,766 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 11:13:57,020 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 11:20:57,843 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 11:22:35,902 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 11:33:05,403 ERROR: Unhandled exception: block 'title' defined twice [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 12:10:33,443 ERROR: Unhandled exception: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 13:17:32,897 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:28:09,310 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:28:15,864 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:37:23,196 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:37:29,845 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:38:15,639 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:38:54,577 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:39:09,370 ERROR: Unhandled exception: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[ItemFactura(items_factura)]'. Original exception was: Multiple classes found for path "ItemFactura" in the registry of this declarative base. Please use a fully module-qualified path. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 13:44:24,875 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:46:08,573 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:48:49,317 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:53:43,117 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 13:53:50,777 ERROR: Unhandled exception: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[ItemPreFactura(items_pre_factura)]'. Original exception was: Mapper 'Mapper[InventarioItem(items_inventario)]' has no property 'items_pre_factura'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 13:55:21,803 ERROR: Unhandled exception: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[ItemPreFactura(items_pre_factura)]'. Original exception was: Mapper 'Mapper[InventarioItem(items_inventario)]' has no property 'items_pre_factura'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:703]
-2024-11-08 16:38:19,117 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 16:38:31,423 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 17:36:19,524 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 17:36:58,797 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-08 19:20:24,390 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
-2024-11-08 19:30:00,249 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
-2024-11-08 19:30:08,167 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
-2024-11-08 19:30:49,131 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
-2024-11-08 19:32:05,858 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
-2024-11-08 19:32:16,522 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:618]
-2024-11-08 21:46:42,393 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:636]
-2024-11-08 21:49:00,911 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:636]
-2024-11-09 11:33:42,221 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:636]
-2024-11-09 11:37:41,747 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:636]
-2024-11-09 11:46:37,143 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:636]
-2024-11-09 12:08:59,957 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:648]
-2024-11-09 12:11:43,446 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:649]
-2024-11-09 12:14:37,238 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:680]
-2024-11-09 12:24:34,094 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:670]
-2024-11-09 12:28:36,419 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
-2024-11-09 12:43:10,210 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
-2024-11-09 12:44:37,735 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
-2024-11-09 12:51:19,140 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
-2024-11-09 14:38:07,638 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
-2024-11-09 15:47:03,850 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
-2024-11-09 16:38:42,659 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
-2024-11-09 16:41:02,679 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:672]
-2024-11-09 16:49:53,016 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 16:50:00,926 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 16:50:54,038 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 16:53:33,805 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 16:54:36,421 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 17:23:30,472 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 17:26:53,908 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 17:27:36,720 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 17:28:57,706 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 17:30:12,416 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 17:30:49,151 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 17:34:11,675 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 17:36:09,874 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 17:36:57,049 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
-2024-11-09 17:38:17,899 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:673]
+2024-11-19 17:02:14,801 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-19 17:02:22,792 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-19 17:05:58,936 ERROR: Unhandled exception: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tienda(tiendas)]'. Original exception was: Error creating backref 'tienda' on relationship 'Tienda.facturas': property of that name exists on mapper 'Mapper[Facturacion(facturacion)]' [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-19 17:10:52,323 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-19 17:11:17,666 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-19 17:11:25,984 ERROR: Unhandled exception: (psycopg2.errors.UndefinedColumn) no existe la columna facturacion.moneda
+LINE 1: ..., facturacion.tipo_pago AS facturacion_tipo_pago, facturacio...
+                                                             ^
+
+[SQL: SELECT facturacion.id AS facturacion_id, facturacion.numero AS facturacion_numero, facturacion.cliente_id AS facturacion_cliente_id, facturacion.fecha AS facturacion_fecha, facturacion.total AS facturacion_total, facturacion.estatus AS facturacion_estatus, facturacion.fecha_creacion AS facturacion_fecha_creacion, facturacion.fecha_actualizacion AS facturacion_fecha_actualizacion, facturacion.tipo AS facturacion_tipo, facturacion.tipo_pago AS facturacion_tipo_pago, facturacion.moneda AS facturacion_moneda, facturacion.tienda_id AS facturacion_tienda_id, facturacion.vendedor_id AS facturacion_vendedor_id, facturacion.descuento_monto AS facturacion_descuento_monto, facturacion.descuento_porcentaje AS facturacion_descuento_porcentaje, facturacion.notas AS facturacion_notas 
+FROM facturacion]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-19 17:13:27,182 ERROR: Unhandled exception: (psycopg2.errors.UndefinedColumn) no existe la columna facturacion.vendedor_id
+LINE 1: ..., facturacion.tienda_id AS facturacion_tienda_id, facturacio...
+                                                             ^
+
+[SQL: SELECT facturacion.id AS facturacion_id, facturacion.numero AS facturacion_numero, facturacion.cliente_id AS facturacion_cliente_id, facturacion.fecha AS facturacion_fecha, facturacion.total AS facturacion_total, facturacion.estatus AS facturacion_estatus, facturacion.fecha_creacion AS facturacion_fecha_creacion, facturacion.fecha_actualizacion AS facturacion_fecha_actualizacion, facturacion.tipo AS facturacion_tipo, facturacion.tipo_pago AS facturacion_tipo_pago, facturacion.moneda AS facturacion_moneda, facturacion.tienda_id AS facturacion_tienda_id, facturacion.vendedor_id AS facturacion_vendedor_id, facturacion.descuento_monto AS facturacion_descuento_monto, facturacion.descuento_porcentaje AS facturacion_descuento_porcentaje, facturacion.notas AS facturacion_notas 
+FROM facturacion]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-19 17:14:34,511 ERROR: Unhandled exception: (psycopg2.errors.UndefinedColumn) no existe la columna facturacion.vendedor_id
+LINE 1: ..., facturacion.tienda_id AS facturacion_tienda_id, facturacio...
+                                                             ^
+
+[SQL: SELECT facturacion.id AS facturacion_id, facturacion.numero AS facturacion_numero, facturacion.cliente_id AS facturacion_cliente_id, facturacion.fecha AS facturacion_fecha, facturacion.total AS facturacion_total, facturacion.estatus AS facturacion_estatus, facturacion.fecha_creacion AS facturacion_fecha_creacion, facturacion.fecha_actualizacion AS facturacion_fecha_actualizacion, facturacion.tipo AS facturacion_tipo, facturacion.tipo_pago AS facturacion_tipo_pago, facturacion.moneda AS facturacion_moneda, facturacion.tienda_id AS facturacion_tienda_id, facturacion.vendedor_id AS facturacion_vendedor_id, facturacion.descuento_monto AS facturacion_descuento_monto, facturacion.descuento_porcentaje AS facturacion_descuento_porcentaje, facturacion.notas AS facturacion_notas 
+FROM facturacion]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-19 21:14:58,148 ERROR: Unhandled exception: (psycopg2.errors.UndefinedColumn) no existe la columna facturacion.vendedor_id
+LINE 1: ..., facturacion.tienda_id AS facturacion_tienda_id, facturacio...
+                                                             ^
+
+[SQL: SELECT facturacion.id AS facturacion_id, facturacion.numero AS facturacion_numero, facturacion.cliente_id AS facturacion_cliente_id, facturacion.fecha AS facturacion_fecha, facturacion.total AS facturacion_total, facturacion.estatus AS facturacion_estatus, facturacion.fecha_creacion AS facturacion_fecha_creacion, facturacion.fecha_actualizacion AS facturacion_fecha_actualizacion, facturacion.tipo AS facturacion_tipo, facturacion.tipo_pago AS facturacion_tipo_pago, facturacion.moneda AS facturacion_moneda, facturacion.tienda_id AS facturacion_tienda_id, facturacion.vendedor_id AS facturacion_vendedor_id, facturacion.descuento_monto AS facturacion_descuento_monto, facturacion.descuento_porcentaje AS facturacion_descuento_porcentaje, facturacion.notas AS facturacion_notas 
+FROM facturacion]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-19 21:15:05,831 ERROR: Unhandled exception: (psycopg2.errors.UndefinedColumn) no existe la columna facturacion.vendedor_id
+LINE 1: ..., facturacion.tienda_id AS facturacion_tienda_id, facturacio...
+                                                             ^
+
+[SQL: SELECT facturacion.id AS facturacion_id, facturacion.numero AS facturacion_numero, facturacion.cliente_id AS facturacion_cliente_id, facturacion.fecha AS facturacion_fecha, facturacion.total AS facturacion_total, facturacion.estatus AS facturacion_estatus, facturacion.fecha_creacion AS facturacion_fecha_creacion, facturacion.fecha_actualizacion AS facturacion_fecha_actualizacion, facturacion.tipo AS facturacion_tipo, facturacion.tipo_pago AS facturacion_tipo_pago, facturacion.moneda AS facturacion_moneda, facturacion.tienda_id AS facturacion_tienda_id, facturacion.vendedor_id AS facturacion_vendedor_id, facturacion.descuento_monto AS facturacion_descuento_monto, facturacion.descuento_porcentaje AS facturacion_descuento_porcentaje, facturacion.notas AS facturacion_notas 
+FROM facturacion]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-19 21:29:49,463 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-19 21:32:23,493 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-20 01:41:14,977 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-20 01:41:27,232 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-20 19:18:43,465 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-20 19:18:58,046 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-20 20:56:31,029 ERROR: Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-20 21:05:04,681 ERROR: Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-20 22:10:48,699 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-20 22:11:02,261 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-20 22:11:17,832 ERROR: Unhandled exception: name 'render_template' is not defined [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-20 22:13:15,271 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-20 22:13:48,296 ERROR: Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-20 22:13:48,303 ERROR: Unhandled exception: 405 Method Not Allowed: The method is not allowed for the requested URL. [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:701]
+2024-11-20 22:20:46,890 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-20 22:20:58,063 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-20 22:21:20,320 ERROR: Error obteniendo tiendas: name 'Store' is not defined [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:432]
+2024-11-20 22:21:32,960 ERROR: Error creando tienda: name 'Store' is not defined [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:472]
+2024-11-20 22:21:32,960 ERROR: Error creando tienda: name 'Store' is not defined [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:472]
+2024-11-20 22:22:56,627 ERROR: Error creando tienda: name 'Store' is not defined [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:472]
+2024-11-20 22:22:56,628 ERROR: Error creando tienda: name 'Store' is not defined [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:472]
+2024-11-20 22:41:25,424 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]

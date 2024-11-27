@@ -70,6 +70,143 @@ function generarFlujoCaja() {
         return;
     }
 
+    // Mostrar indicador de carga
+    const flujoCajaContent = document.getElementById('flujo-caja-content');
+    flujoCajaContent.innerHTML = `
+        <div class="flex justify-center items-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+    `;
+
+    // Construir la URL con los parámetros
+    const params = new URLSearchParams({
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin
+    });
+
+    fetch(`/contabilidad/api/flujo_caja/generar?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarFlujoCaja(data.data);
+                Swal.fire('Éxito', 'Flujo de Caja generado correctamente.', 'success');
+            } else {
+                console.error('Error:', data.error);
+                Swal.fire('Error', data.error || 'Error al generar el flujo de caja', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Error al generar el flujo de caja', 'error');
+        });
+}
+
+function actualizarFlujoCaja(data) {
+    const flujoCajaContent = document.getElementById('flujo-caja-content');
+    
+    let html = `
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-xl font-bold mb-2 text-center">Flujo de Caja</h2>
+            <p class="text-sm text-gray-600 mb-6 text-center">Período: ${data.periodo.inicio} al ${data.periodo.fin}</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-green-600">Ingresos</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 compact-table">
+                            <tbody>
+                                ${data.ingresos.map(item => `
+                                    <tr>
+                                        <td class="px-4 py-2">${item.concepto}</td>
+                                        <td class="px-4 py-2 text-right text-green-600">
+                                            ${item.monto.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr class="bg-green-50 font-semibold">
+                                    <td class="px-4 py-2">Total Ingresos</td>
+                                    <td class="px-4 py-2 text-right text-green-600">
+                                        ${data.total_ingresos.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-red-600">Egresos</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 compact-table">
+                            <tbody>
+                                ${data.egresos.map(item => `
+                                    <tr>
+                                        <td class="px-4 py-2">${item.concepto}</td>
+                                        <td class="px-4 py-2 text-right text-red-600">
+                                            ${item.monto.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                <tr class="bg-red-50 font-semibold">
+                                    <td class="px-4 py-2">Total Egresos</td>
+                                    <td class="px-4 py-2 text-right text-red-600">
+                                        ${data.total_egresos.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 p-6 bg-gray-50 rounded-lg">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-600">Saldo Inicial</p>
+                        <p class="text-xl font-bold">
+                            ${data.saldo_inicial.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600">Saldo Final</p>
+                        <p class="text-xl font-bold ${data.saldo_final >= 0 ? 'text-green-600' : 'text-red-600'}">
+                            ${data.saldo_final.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    flujoCajaContent.innerHTML = html;
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFlujoCaja();
+    
+    // Establecer fecha actual y primer día del mes por defecto
+    const fechaInicio = document.getElementById('fecha-inicio');
+    const fechaFin = document.getElementById('fecha-fin');
+    
+    if (fechaInicio && fechaFin) {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        fechaInicio.value = firstDay.toISOString().split('T')[0];
+        fechaFin.value = today.toISOString().split('T')[0];
+    }
+});
+
+function generarFlujoCaja() {
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    if (!fechaInicio || !fechaFin) {
+        Swal.fire('Error', 'Por favor, seleccione ambas fechas.', 'error');
+        return;
+    }
+
     // Aquí deberías hacer una llamada a tu API para obtener los datos del flujo de caja
     // Por ahora, usaremos datos simulados
     const flujoCajaData = {

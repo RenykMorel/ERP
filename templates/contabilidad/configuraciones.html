@@ -61,6 +61,90 @@ function guardarConfiguraciones(event) {
     }, 1000);
 }
 
+function initializeConfiguracionesContables() {
+    const configForm = document.getElementById('config-form');
+    if (configForm) {
+        configForm.addEventListener('submit', guardarConfiguraciones);
+        cargarConfiguraciones();
+    }
+}
+
+async function cargarConfiguraciones() {
+    try {
+        const response = await fetch('/contabilidad/api/configuraciones');
+        const data = await response.json();
+        
+        if (data.success) {
+            data.configuraciones.forEach(config => {
+                const input = document.getElementById(config.clave);
+                if (input) {
+                    input.value = config.valor;
+                    // Agregar tooltip con la descripción si existe
+                    if (config.descripcion) {
+                        input.title = config.descripcion;
+                    }
+                }
+            });
+        } else {
+            console.error('Error cargando configuraciones:', data.error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al cargar las configuraciones'
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al cargar las configuraciones'
+        });
+    }
+}
+
+async function guardarConfiguraciones(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const configuraciones = Object.fromEntries(formData);
+
+    try {
+        const response = await fetch('/contabilidad/api/configuraciones', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(configuraciones)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Configuraciones guardadas correctamente',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        } else {
+            throw new Error(data.error || 'Error al guardar las configuraciones');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Error al guardar las configuraciones'
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initializeConfiguracionesContables);
+
 // Función para cargar las configuraciones desde el servidor (si es necesario)
 function cargarConfiguraciones() {
     // Aquí deberías hacer una llamada a tu API para obtener las configuraciones actuales

@@ -1,60 +1,21 @@
-2024-11-11 23:54:23,657 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-11 23:54:33,267 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-11 23:58:05,697 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-11 23:58:13,308 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 00:13:53,096 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 00:21:08,608 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 00:22:37,613 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 00:37:55,764 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 00:39:15,317 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 00:39:23,827 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 00:55:53,858 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 00:56:02,136 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 01:09:00,979 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 01:11:17,562 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 01:26:15,980 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
-2024-11-12 01:27:13,664 ERROR: Error obteniendo clientes: (psycopg2.errors.UndefinedColumn) no existe la columna clientes.ruc
-LINE 1: ... clientes_id, clientes.nombre AS clientes_nombre, clientes.r...
-                                                             ^
-
-[SQL: SELECT clientes.id AS clientes_id, clientes.nombre AS clientes_nombre, clientes.ruc AS clientes_ruc, clientes.telefono AS clientes_telefono, clientes.email AS clientes_email, clientes.fecha_creacion AS clientes_fecha_creacion 
-FROM clientes ORDER BY clientes.nombre]
-(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:258]
-2024-11-12 01:27:20,109 ERROR: Error al crear cliente: (psycopg2.errors.UndefinedColumn) no existe la columna «ruc» en la relación «clientes»
-LINE 1: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_cr...
-                                      ^
-
-[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
-[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 27, 20, 101113)}]
-(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
-2024-11-12 01:27:20,109 ERROR: Error al crear cliente: (psycopg2.errors.UndefinedColumn) no existe la columna «ruc» en la relación «clientes»
-LINE 1: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_cr...
-                                      ^
-
-[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
-[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 27, 20, 101113)}]
-(Background on this error at: https://sqlalche.me/e/20/f405) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
-2024-11-12 01:31:33,199 ERROR: Error al crear cliente: (psycopg2.errors.NotNullViolation) el valor nulo en la columna «numero_documento» de la relación «clientes» viola la restricción de no nulo
-DETAIL:  La fila que falla contiene (2, Renyk Morel, null, null, null, 8296849017, el_renyk_rmg@hotmail.com, 2024-11-12 05:31:33.194818-04, 2024-11-12 01:31:33.193048-04, 40221558596).
-
-[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
-[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 31, 33, 194818)}]
-(Background on this error at: https://sqlalche.me/e/20/gkpj) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
-2024-11-12 01:31:33,199 ERROR: Error al crear cliente: (psycopg2.errors.NotNullViolation) el valor nulo en la columna «numero_documento» de la relación «clientes» viola la restricción de no nulo
-DETAIL:  La fila que falla contiene (1, Renyk Morel, null, null, null, 8296849017, el_renyk_rmg@hotmail.com, 2024-11-12 05:31:33.194818-04, 2024-11-12 01:31:33.193213-04, 40221558596).
-
-[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
-[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 31, 33, 194818)}]
-(Background on this error at: https://sqlalche.me/e/20/gkpj) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
-2024-11-12 01:34:10,060 ERROR: Error al crear cliente: (psycopg2.errors.NotNullViolation) el valor nulo en la columna «numero_documento» de la relación «clientes» viola la restricción de no nulo
-DETAIL:  La fila que falla contiene (3, Renyk Morel, null, null, null, 8296849017, el_renyk_rmg@hotmail.com, 2024-11-12 05:34:10.051282-04, 2024-11-12 01:34:10.057105-04, 40221558596).
-
-[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
-[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 34, 10, 51282)}]
-(Background on this error at: https://sqlalche.me/e/20/gkpj) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
-2024-11-12 01:34:10,060 ERROR: Error al crear cliente: (psycopg2.errors.NotNullViolation) el valor nulo en la columna «numero_documento» de la relación «clientes» viola la restricción de no nulo
-DETAIL:  La fila que falla contiene (4, Renyk Morel, null, null, null, 8296849017, el_renyk_rmg@hotmail.com, 2024-11-12 05:34:10.058305-04, 2024-11-12 01:34:10.057266-04, 40221558596).
-
-[SQL: INSERT INTO clientes (nombre, ruc, telefono, email, fecha_creacion) VALUES (%(nombre)s, %(ruc)s, %(telefono)s, %(email)s, %(fecha_creacion)s) RETURNING clientes.id]
-[parameters: {'nombre': 'Renyk Morel', 'ruc': '40221558596', 'telefono': '8296849017', 'email': 'el_renyk_rmg@hotmail.com', 'fecha_creacion': datetime.datetime(2024, 11, 12, 5, 34, 10, 58305)}]
-(Background on this error at: https://sqlalche.me/e/20/gkpj) [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\facturas\facturacion_routes.py:294]
+2024-11-26 17:15:46,236 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 17:15:59,672 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 19:55:28,622 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:00:32,135 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:07:32,455 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:07:42,018 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:17:58,291 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:21:50,599 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:23:58,340 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:25:33,941 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:26:20,756 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:32:30,882 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:36:24,043 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:42:26,150 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:46:29,197 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:47:08,838 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:52:18,436 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:55:55,525 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 20:57:17,191 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 21:12:44,285 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]
+2024-11-26 21:13:37,818 INFO: CalculAI startup [in C:\Users\el_re\OneDrive - Sendiu\Desktop\CalculAI\ERP\app.py:594]

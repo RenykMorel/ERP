@@ -131,6 +131,74 @@ function actualizarMayorGeneral(data) {
     mayorGeneralContent.innerHTML = html;
 }
 
+function cargarCuentas() {
+    fetch('/contabilidad/api/mayor_general/cuentas')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const cuentaSelect = document.getElementById('cuenta-select');
+                cuentaSelect.innerHTML = '<option value="">Todas las cuentas</option>';
+                
+                data.cuentas.forEach(cuenta => {
+                    const option = document.createElement('option');
+                    option.value = cuenta.id;
+                    option.textContent = `${cuenta.codigo} - ${cuenta.nombre}`;
+                    cuentaSelect.appendChild(option);
+                });
+            } else {
+                console.error('Error cargando cuentas:', data.error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cargar las cuentas'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al cargar las cuentas'
+            });
+        });
+}
+
+function buscarMayorGeneral() {
+    const cuentaId = document.getElementById('cuenta-select').value;
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    // Construir la URL con los parámetros
+    const params = new URLSearchParams();
+    if (cuentaId) params.append('cuenta_id', cuentaId);
+    if (fechaInicio) params.append('fecha_inicio', fechaInicio);
+    if (fechaFin) params.append('fecha_fin', fechaFin);
+
+    fetch(`/contabilidad/api/mayor_general/movimientos?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarMayorGeneral(data.data);
+            } else {
+                console.error('Error:', data.error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'Error al obtener el mayor general'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al obtener el mayor general'
+            });
+        });
+}
+
 function generarTablaCuenta(cuenta) {
     return `
         <div class="px-4 py-5 sm:px-6 border-b border-gray-200">

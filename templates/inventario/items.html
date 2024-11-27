@@ -37,6 +37,9 @@
           <button id="crear-categoria-item-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
             <i class="fas fa-folder-plus mr-2"></i>Crear Categoría de Item
         </button>
+        <button id="carga-masiva-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+            <i class="fas fa-upload mr-2"></i>Carga Masiva Item
+        </button>
       </div>
       <div class="flex space-x-2">
           <button id="ajuste-inventario-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
@@ -83,6 +86,75 @@
           </tbody>
       </table>
   </div>
+</div>
+
+<!-- Agregar este modal al final del archivo, junto a los otros modales -->
+<div id="cargaMasivaModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border-4 border-green-500">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-2xl leading-6 font-bold text-gray-900 mb-4 border-b-2 border-green-500 pb-2">
+                    Carga Masiva de Items
+                </h3>
+                
+                <!-- Botón para descargar plantilla -->
+                <div class="mb-6">
+                    <button id="descargar-plantilla-items" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center">
+                        <i class="fas fa-download mr-2"></i>
+                        Descargar Plantilla Excel
+                    </button>
+                    <p class="text-sm text-gray-600 mt-2">
+                        Descargue la plantilla, llénela con sus items y súbala usando el formulario a continuación.
+                    </p>
+                </div>
+
+                <!-- Área de carga de archivo -->
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cargar archivo Excel</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-green-500 transition-colors">
+                        <div class="space-y-1 text-center">
+                            <i class="fas fa-file-excel text-gray-400 text-3xl mb-3"></i>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="file-upload-items" class="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none">
+                                    <span>Cargar archivo</span>
+                                    <input id="file-upload-items" name="file" type="file" class="sr-only" accept=".xlsx,.xls">
+                                </label>
+                                <p class="pl-1">o arrastre y suelte</p>
+                            </div>
+                            <p class="text-xs text-gray-500">Excel (.xlsx, .xls)</p>
+                        </div>
+                    </div>
+                    <div id="file-name" class="mt-2 text-sm text-gray-600 hidden">
+                        Archivo seleccionado: <span id="selected-file-name"></span>
+                    </div>
+                </div>
+
+                <!-- Preview de datos -->
+                <div id="preview-container" class="mt-4 hidden">
+                    <h4 class="font-semibold text-gray-700 mb-2">Vista previa:</h4>
+                    <div class="max-h-60 overflow-y-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr id="preview-headers"></tr>
+                            </thead>
+                            <tbody id="preview-data" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t-2 border-green-500">
+                <button type="button" id="procesar-carga-masiva" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Procesar Carga
+                </button>
+                <button type="button" id="cerrar-carga-masiva" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal para crear categoría de item -->
@@ -686,6 +758,13 @@ document.addEventListener('DOMContentLoaded', function() {
    const cerrarCategoriaItemModalBtn = document.getElementById('cerrar-categoria-item-modal-btn');
    const crearCategoriaItemForm = document.getElementById('crear-categoria-item-form');
 
+    const cargaMasivaBtn = document.getElementById('carga-masiva-btn');
+    const cargaMasivaModal = document.getElementById('cargaMasivaModal');
+    const cerrarCargaMasivaBtn = document.getElementById('cerrar-carga-masiva');
+    const fileUploadItems = document.getElementById('file-upload-items');
+    const procesarCargaMasivaBtn = document.getElementById('procesar-carga-masiva');
+    const descargarPlantillaItemsBtn = document.getElementById('descargar-plantilla-items');
+
    crearItemBtn.addEventListener('click', () => mostrarModalItem());
    guardarItemBtn.addEventListener('click', guardarItem);
    cerrarModalBtn.addEventListener('click', () => itemModal.classList.add('hidden'));
@@ -696,6 +775,12 @@ document.addEventListener('DOMContentLoaded', function() {
    costoInput.addEventListener('input', calcularPrecioFinal);
    itbisInput.addEventListener('input', calcularPrecioFinal);
    margenInput.addEventListener('input', calcularPrecioFinal);
+
+    cargaMasivaBtn.addEventListener('click', () => cargaMasivaModal.classList.remove('hidden'));
+    cerrarCargaMasivaBtn.addEventListener('click', () => cargaMasivaModal.classList.add('hidden'));
+    fileUploadItems.addEventListener('change', handleFileSelect);
+    procesarCargaMasivaBtn.addEventListener('click', procesarCargaMasiva);
+    descargarPlantillaItemsBtn.addEventListener('click', descargarPlantillaItems);
 
    ajusteInventarioBtn.addEventListener('click', mostrarModalAjuste);
    guardarAjusteBtn.addEventListener('click', guardarAjuste);
@@ -2084,6 +2169,186 @@ function cargarTiposItemSelect() {
         selectTipo.innerHTML = '<option value="">Error al cargar tipos</option>';
     });
 }
+
+function initializeClientSearch() {
+    const clientSearch = document.getElementById('clientSearch');
+    const searchResults = document.getElementById('searchResults');
+    const selectedClient = document.getElementById('selectedClient');
+    const selectedClientName = document.getElementById('selectedClientName');
+    const selectedClientDoc = document.getElementById('selectedClientDoc');
+
+    let searchTimeout;
+
+    // Función para buscar clientes con la ruta correcta
+    async function searchClients(query) {
+        try {
+            console.log('Buscando clientes con query:', query); // Debug
+            const response = await fetch(`/facturacion/api/clientes/buscar?q=${encodeURIComponent(query)}`);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error('Error en la búsqueda');
+            }
+            
+            const data = await response.json();
+            console.log('Datos recibidos:', data); // Debug
+            return data;
+        } catch (error) {
+            console.error('Error en la búsqueda:', error);
+            return [];
+        }
+    }
+
+    // Función para seleccionar un cliente
+    function selectClient(client) {
+        selectedClientName.textContent = client.nombre;
+        selectedClientDoc.textContent = client.ruc || 'Sin RNC/Cédula';
+        selectedClient.classList.remove('hidden');
+        selectedClient.dataset.clientId = client.id;
+        searchResults.classList.add('hidden');
+        clientSearch.value = client.nombre;
+    }
+
+    // Manejador de eventos para la búsqueda
+    function handleSearch(e) {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+        
+        if (!query) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+
+        // Mostrar indicador de carga
+        searchResults.innerHTML = '<div class="p-2 text-gray-500">Buscando...</div>';
+        searchResults.classList.remove('hidden');
+
+        searchTimeout = setTimeout(async () => {
+            console.log('Iniciando búsqueda para:', query); // Debug
+            const clients = await searchClients(query);
+            searchResults.innerHTML = '';
+            
+            if (clients && clients.length > 0) {
+                console.log('Clientes encontrados:', clients.length); // Debug
+                clients.forEach(client => {
+                    const div = document.createElement('div');
+                    div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                    div.innerHTML = `
+                        <div class="font-medium">${client.nombre}</div>
+                        <div class="text-sm text-gray-500">${client.ruc || 'Sin RNC/Cédula'}</div>
+                    `;
+                    div.addEventListener('click', () => {
+                        selectClient(client);
+                    });
+                    searchResults.appendChild(div);
+                });
+            } else {
+                const div = document.createElement('div');
+                div.className = 'p-2 text-gray-500';
+                div.textContent = 'No se encontraron clientes';
+                searchResults.appendChild(div);
+            }
+            searchResults.classList.remove('hidden');
+        }, 300);
+    }
+
+    // Event Listeners
+    if (clientSearch) {
+        console.log('Inicializando búsqueda de clientes...'); // Debug
+        
+        // Remover event listeners anteriores si existen
+        const newClientSearch = clientSearch.cloneNode(true);
+        clientSearch.parentNode.replaceChild(newClientSearch, clientSearch);
+        
+        // Agregar nuevo event listener
+        newClientSearch.addEventListener('input', handleSearch);
+
+        // Cerrar resultados al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!newClientSearch.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.add('hidden');
+            }
+        });
+    } else {
+        console.error('No se encontró el elemento clientSearch');
+    }
+
+    // Crear nuevo cliente
+    const toggleClientForm = document.getElementById('toggleClientForm');
+    const clientForm = document.getElementById('clientForm');
+    
+    if (toggleClientForm) {
+        toggleClientForm.addEventListener('click', () => {
+            if (clientForm) {
+                clientForm.classList.toggle('hidden');
+            }
+        });
+    }
+
+    // Guardar nuevo cliente
+    const saveClientBtn = document.getElementById('saveClient');
+    if (saveClientBtn) {
+        saveClientBtn.addEventListener('click', async () => {
+            const clientName = document.getElementById('clientName').value;
+            const docType = document.getElementById('docType').value;
+            const docNumber = document.getElementById('docNumber').value;
+            
+            if (!clientName || !docNumber) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'El nombre y el documento son requeridos',
+                    icon: 'error'
+                });
+                return;
+            }
+
+            try {
+                const response = await fetch('/facturacion/api/clientes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nombre: clientName,
+                        ruc: `${docType}: ${docNumber}`
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    selectClient(data);
+                    clientForm.classList.add('hidden');
+                    
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Cliente creado correctamente',
+                        icon: 'success'
+                    });
+                    
+                    document.getElementById('clientName').value = '';
+                    document.getElementById('docNumber').value = '';
+                } else {
+                    throw new Error(data.error || 'Error al crear el cliente');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'Error al crear el cliente',
+                    icon: 'error'
+                });
+            }
+        });
+    }
+}
+
+// Remover cualquier inicialización previa
+document.removeEventListener('DOMContentLoaded', initializeClientSearch);
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', initializeClientSearch);
 
 // Modificar el event listener del botón de ajuste
 document.getElementById('guardar-ajuste-btn').addEventListener('click', guardarAjuste);

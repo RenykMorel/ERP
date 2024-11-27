@@ -611,7 +611,7 @@ def create_app():
         
     
     
-    from facturas import facturacion_bp
+    from facturas import facturacion_bp, init_facturacion
     app.register_blueprint(facturacion_bp, url_prefix='/facturacion')
     
     from marketing.routes import marketing

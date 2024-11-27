@@ -1,3 +1,5 @@
+#inventario_routes.py en la carpeta de inventario
+
 from flask import render_template, request, jsonify, current_app, send_file
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
@@ -9,6 +11,11 @@ from extensions import db
 import logging
 import io  
 import csv
+import pandas as pd
+from io import BytesIO
+from werkzeug.utils import secure_filename
+from facturas.facturas_models import ItemPendiente
+
 
 
 logger = logging.getLogger(__name__)
@@ -231,18 +238,66 @@ def create_entrada_almacen():
             if item.tipo != 'producto':
                 return jsonify({"error": f"El item {item.codigo} no es un producto"}), 400
             
+            cantidad_entrada = item_data['cantidad']
+            
+            # Crear el movimiento de entrada
             movimiento = MovimientoInventario(
                 item_id=item.id,
                 tipo='entrada',
-                cantidad=item_data['cantidad'],
+                cantidad=cantidad_entrada,
                 fecha=datetime.utcnow(),
                 usuario_id=current_user.id
             )
             db.session.add(movimiento)
-            item.stock += item_data['cantidad']
+            
+            # Actualizar stock
+            item.stock += cantidad_entrada
+            
+            # Verificar items pendientes para este producto
+            items_pendientes = ItemPendiente.query.filter_by(
+                item_id=item.id,
+                estado='pendiente'
+            ).order_by(ItemPendiente.fecha_creacion).all()
+            
+            stock_disponible = item.stock
+            
+            # Procesar items pendientes
+            for pendiente in items_pendientes:
+                if stock_disponible >= pendiente.cantidad_pendiente:
+                    # Registrar salida por item pendiente
+                    movimiento_salida = MovimientoInventario(
+                        item_id=item.id,
+                        tipo='salida',
+                        cantidad=pendiente.cantidad_pendiente,
+                        fecha=datetime.utcnow(),
+                        usuario_id=current_user.id,
+                        comentario=f"Completando pendiente de Factura #{pendiente.factura.numero if pendiente.factura else 'N/A'}"
+                    )
+                    db.session.add(movimiento_salida)
+                    
+                    # Actualizar stock y estado del pendiente
+                    stock_disponible -= pendiente.cantidad_pendiente
+                    item.stock = stock_disponible
+                    pendiente.estado = 'completado'
+                    
+                    print(f"Item pendiente completado - Producto: {item.nombre}, "
+                          f"Cantidad: {pendiente.cantidad_pendiente}, "
+                          f"Factura: {pendiente.factura.numero if pendiente.factura else 'N/A'}")
         
         db.session.commit()
-        return jsonify({"message": "Entrada de almacén registrada correctamente"}), 201
+        return jsonify({
+            "message": "Entrada de almacén registrada correctamente",
+            "items_actualizados": [
+                {
+                    "id": item.id,
+                    "nombre": item.nombre,
+                    "stock_actual": item.stock,
+                    "pendientes_completados": len([p for p in items_pendientes if p.estado == 'completado'])
+                }
+                for item in InventarioItem.query.filter(InventarioItem.id.in_([d['item_id'] for d in data['items']]))
+            ]
+        }), 201
+        
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error al registrar entrada de almacén: {str(e)}")
@@ -1022,6 +1077,142 @@ def get_inventario_actual():
     except Exception as e:
         logger.error(f"Error al obtener inventario actual: {str(e)}")
         return jsonify({"error": f"Error al obtener inventario: {str(e)}"}), 500
+    
+    
+@inventario_bp.route('/api/items/plantilla')
+@login_required
+def descargar_plantilla_items():
+    """Descarga una plantilla Excel para la carga masiva de items"""
+    try:
+        # Crear DataFrame con las columnas necesarias
+        df = pd.DataFrame(columns=[
+            'codigo', 'nombre', 'tipo', 'categoria', 'descripcion',
+            'proveedor', 'marca', 'unidad_medida', 'stock', 'stock_minimo',
+            'stock_maximo', 'costo', 'itbis', 'margen', 'precio'
+        ])
+        
+        # Crear archivo Excel en memoria
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, sheet_name='Items', index=False)
+            workbook = writer.book
+            worksheet = writer.sheets['Items']
+            
+            # Formato para encabezados
+            header_format = workbook.add_format({
+                'bold': True,
+                'bg_color': '#4CAF50',
+                'color': 'white',
+                'border': 1
+            })
+            
+            # Aplicar formato a encabezados
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                worksheet.set_column(col_num, col_num, 15)
+                
+            # Agregar validaciones
+            worksheet.data_validation('C2:C1048576', {
+                'validate': 'list',
+                'source': ['producto', 'servicio', 'otro']
+            })
+        
+        output.seek(0)
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            attachment_filename='plantilla_items.xlsx'
+        )
+    except Exception as e:
+        logger.error(f"Error al generar plantilla: {str(e)}")
+        return jsonify({"error": "Error al generar la plantilla"}), 500
+
+@inventario_bp.route('/api/items/carga-masiva', methods=['POST'])
+@login_required
+def carga_masiva_items():
+    """Procesa un archivo Excel para la carga masiva de items"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No se envió ningún archivo"}), 400
+            
+        file = request.files['file']
+        if not file.filename:
+            return jsonify({"error": "No se seleccionó ningún archivo"}), 400
+            
+        # Leer el archivo Excel
+        df = pd.read_excel(file)
+        
+        # Validar columnas requeridas
+        required_columns = ['nombre', 'tipo', 'costo', 'precio']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            return jsonify({
+                "error": f"Faltan las siguientes columnas requeridas: {', '.join(missing_columns)}"
+            }), 400
+        
+        # Procesar cada fila
+        items_creados = []
+        errores = []
+        
+        for index, row in df.iterrows():
+            try:
+                # Validar tipo
+                if row['tipo'] not in ['producto', 'servicio', 'otro']:
+                    errores.append(f"Fila {index + 2}: Tipo inválido '{row['tipo']}'")
+                    continue
+                
+                # Validar campos numéricos
+                try:
+                    costo = float(row['costo'])
+                    precio = float(row['precio'])
+                    stock = int(row.get('stock', 0))
+                    stock_minimo = int(row.get('stock_minimo', 0))
+                    stock_maximo = int(row.get('stock_maximo', 0))
+                    itbis = float(row.get('itbis', 0))
+                    margen = float(row.get('margen', 0))
+                except (ValueError, TypeError):
+                    errores.append(f"Fila {index + 2}: Error en campos numéricos")
+                    continue
+                
+                # Crear el item
+                nuevo_item = InventarioItem(
+                    codigo=row.get('codigo'),
+                    nombre=row['nombre'],
+                    tipo=row['tipo'],
+                    categoria=row.get('categoria'),
+                    descripcion=row.get('descripcion'),
+                    proveedor=row.get('proveedor'),
+                    marca=row.get('marca'),
+                    unidad_medida=row.get('unidad_medida'),
+                    stock=stock,
+                    stock_minimo=stock_minimo,
+                    stock_maximo=stock_maximo,
+                    costo=costo,
+                    itbis=itbis,
+                    margen=margen,
+                    precio=precio
+                )
+                
+                db.session.add(nuevo_item)
+                items_creados.append(nuevo_item.nombre)
+                
+            except Exception as e:
+                errores.append(f"Fila {index + 2}: {str(e)}")
+        
+        if items_creados:
+            db.session.commit()
+        
+        return jsonify({
+            "message": f"Se crearon {len(items_creados)} items correctamente",
+            "items_creados": items_creados,
+            "errores": errores
+        }), 201 if items_creados else 400
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error en carga masiva: {str(e)}")
+        return jsonify({"error": f"Error al procesar el archivo: {str(e)}"}), 500  
 
 # Manejo de errores
 @inventario_bp.errorhandler(404)

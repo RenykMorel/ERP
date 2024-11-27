@@ -239,6 +239,12 @@
                     <button class="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors duration-200 text-base font-medium flex items-center" id="clients-btn">
                         <i class="fas fa-users mr-2"></i>Clientes
                     </button>
+                    <button class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors duration-200 text-base font-medium flex items-center border-2 border-black" id="stores-btn">
+                        <i class="fas fa-store mr-2"></i>Tiendas
+                    </button>
+                    <button class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 transition-colors duration-200 text-base font-medium flex items-center" id="sellers-btn">
+                        <i class="fas fa-user-tie mr-2"></i>Vendedores
+                    </button>
                 </div>
                 <button class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors duration-200 text-base font-medium flex items-center" id="new-invoice-btn">
                     <i class="fas fa-plus mr-2"></i>Nueva Factura
@@ -246,6 +252,408 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Vendedores -->
+    <div id="sellers-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="fixed inset-0 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Gestión de Vendedores</h2>
+                    <button class="text-gray-500 hover:text-gray-700" id="close-sellers-modal">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Barra de búsqueda y botón nuevo vendedor -->
+                <div class="flex gap-4 mb-6">
+                    <div class="flex-1 relative">
+                        <input type="text" placeholder="Buscar vendedor..." class="w-full px-4 py-2 border rounded-lg">
+                        <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button id="new-seller-btn" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors duration-200">
+                        <i class="fas fa-plus mr-2"></i>Nuevo Vendedor
+                    </button>
+                </div>
+
+                <!-- Tabla de vendedores -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sellers-list" class="bg-white divide-y divide-gray-200">
+                            <!-- Los vendedores se cargarán dinámicamente aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Vendedor -->
+    <div id="seller-form-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="fixed inset-0 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800" id="seller-form-title">Nuevo Vendedor</h2>
+                    <button class="text-gray-500 hover:text-gray-700" id="close-seller-form">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="seller-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                        <input type="text" id="seller-name" name="nombre" required
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-yellow-500 focus:ring focus:ring-yellow-200">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Código</label>
+                        <input type="text" id="seller-code" name="codigo" required
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-yellow-500 focus:ring focus:ring-yellow-200">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                        <input type="tel" id="seller-phone" name="telefono"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-yellow-500 focus:ring focus:ring-yellow-200">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="seller-email" name="email"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-yellow-500 focus:ring focus:ring-yellow-200">
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" id="seller-active" name="activo" checked
+                            class="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
+                        <label for="seller-active" class="ml-2 block text-sm text-gray-900">
+                            Vendedor activo
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" class="px-4 py-2 border rounded-md hover:bg-gray-100" id="cancel-seller-form">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Tiendas -->
+<div id="stores-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="fixed inset-0 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Gestión de Tiendas</h2>
+                <button class="text-gray-500 hover:text-gray-700" id="close-stores-modal">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Barra de búsqueda y botón nueva tienda -->
+            <div class="flex gap-4 mb-6">
+                <div class="flex-1 relative">
+                    <input type="text" 
+                           placeholder="Buscar tienda..." 
+                           class="w-full px-4 py-2 border rounded-lg"
+                    >
+                    <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                </div>
+                <button id="new-store-btn" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold shadow-md flex items-center space-x-2 border-2 border-blue-700">
+                    <i class="fas fa-plus"></i>
+                    <span>Nueva Tienda</span>
+                </button>
+            </div>
+
+            <!-- Tabla de tiendas -->
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Número</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Aquí se cargarán las facturas dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Crear Tienda -->
+<!-- Modal para Crear/Editar Tienda -->
+<div id="store-form-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="fixed inset-0 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800" id="store-form-title">Nueva Tienda</h2>
+                <button class="text-gray-500 hover:text-gray-700 transition-colors duration-200" id="close-store-form">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="store-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Código y Nombre en la misma fila en pantallas medianas -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Código de Tienda*</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-store-alt text-gray-400"></i>
+                            </div>
+                            <input type="text" 
+                                   id="store-code" 
+                                   name="codigo" 
+                                   required
+                                   class="pl-10 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-cyan-500 focus:ring focus:ring-cyan-200 focus:ring-opacity-50 transition-colors duration-200"
+                                   placeholder="Ej: T001">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nombre de Tienda*</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-store text-gray-400"></i>
+                            </div>
+                            <input type="text" 
+                                   id="store-name" 
+                                   name="nombre" 
+                                   required
+                                   class="pl-10 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-cyan-500 focus:ring focus:ring-cyan-200 focus:ring-opacity-50 transition-colors duration-200"
+                                   placeholder="Ej: Tienda Principal">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Dirección</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-map-marker-alt text-gray-400"></i>
+                        </div>
+                        <input type="text" 
+                               id="store-address" 
+                               name="direccion"
+                               class="pl-10 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-cyan-500 focus:ring focus:ring-cyan-200 focus:ring-opacity-50 transition-colors duration-200"
+                               placeholder="Ej: Calle Principal #123">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-phone text-gray-400"></i>
+                            </div>
+                            <input type="tel" 
+                                   id="store-phone" 
+                                   name="telefono"
+                                   class="pl-10 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-cyan-500 focus:ring focus:ring-cyan-200 focus:ring-opacity-50 transition-colors duration-200"
+                                   placeholder="Ej: (809) 555-5555">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-gray-400"></i>
+                            </div>
+                            <input type="email" 
+                                   id="store-email" 
+                                   name="email"
+                                   class="pl-10 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-cyan-500 focus:ring focus:ring-cyan-200 focus:ring-opacity-50 transition-colors duration-200"
+                                   placeholder="Ej: tienda@ejemplo.com">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Moneda*</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-money-bill text-gray-400"></i>
+                            </div>
+                            <select id="store-currency" 
+                                    name="moneda" 
+                                    required
+                                    class="pl-10 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-cyan-500 focus:ring focus:ring-cyan-200 focus:ring-opacity-50 transition-colors duration-200">
+                                <option value="">Seleccionar moneda</option>
+                                <option value="DOP">DOP - Peso Dominicano</option>
+                                <option value="USD">USD - Dólar Americano</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3 mt-6">
+                        <div class="flex items-center">
+                            <input type="checkbox" 
+                                   id="store-active" 
+                                   name="activa" 
+                                   checked
+                                   class="h-5 w-5 text-cyan-600 focus:ring-cyan-500 border-gray-300 rounded transition-colors duration-200">
+                            <label for="store-active" class="ml-2 block text-sm font-medium text-gray-700">
+                                Tienda activa
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-gray-200">
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" 
+                                id="cancel-store-form"
+                                class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700 text-sm font-medium hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
+                            Cancelar
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-md flex items-center justify-center space-x-2 border-2 border-green-700">
+                            <i class="fas fa-save mr-2"></i>
+                            <span>Guardar Tienda</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal de Tiendas -->
+<div id="stores-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="fixed inset-0 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Gestión de Tiendas</h2>
+                <button class="text-gray-500 hover:text-gray-700" id="close-stores-modal">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Barra de búsqueda y botón nueva tienda -->
+            <div class="flex gap-4 mb-6">
+                <div class="flex-1 relative">
+                    <input type="text" placeholder="Buscar tienda..." class="w-full px-4 py-2 border rounded-lg">
+                    <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                </div>
+                <button id="new-store-btn" class="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition-colors duration-200">
+                    <i class="fas fa-plus mr-2"></i>Nueva Tienda
+                </button>
+            </div>
+
+            <!-- Tabla de tiendas -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dirección</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Moneda</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Las tiendas se cargarán dinámicamente aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Crear/Editar Tienda -->
+<div id="store-form-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="fixed inset-0 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Nueva Tienda</h2>
+                <button class="text-gray-500 hover:text-gray-700" id="close-store-form">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="store-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Código</label>
+                    <input type="text" id="store-code" name="codigo" required
+                        class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-teal-500 focus:ring focus:ring-teal-200">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                    <input type="text" id="store-name" name="nombre" required
+                        class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-teal-500 focus:ring focus:ring-teal-200">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Dirección</label>
+                    <input type="text" id="store-address" name="direccion"
+                        class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-teal-500 focus:ring focus:ring-teal-200">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <input type="tel" id="store-phone" name="telefono"
+                        class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-teal-500 focus:ring focus:ring-teal-200">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Moneda</label>
+                    <select id="store-currency" name="moneda" required
+                        class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-teal-500 focus:ring focus:ring-teal-200">
+                        <option value="DOP">DOP - Peso Dominicano</option>
+                        <option value="USD">USD - Dólar Americano</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="store-active" name="activa" checked
+                        class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded">
+                    <label for="store-active" class="ml-2 block text-sm text-gray-900">
+                        Tienda activa
+                    </label>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" class="px-4 py-2 border rounded-md hover:bg-gray-100" id="cancel-store-form">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
     <!-- Modal de Clientes -->
     <div id="clients-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
@@ -562,18 +970,26 @@
                         <div class="client-selector bg-white p-4 rounded-lg shadow-lg border border-gray-200">
                             <label class="block text-xl font-bold text-gray-800 mb-4">Cliente</label>
                             <div class="relative">
-                                <input type="text" id="clientSearch" placeholder="Buscar o crear cliente..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                <input type="text" 
+                                       id="clientSearch" 
+                                       placeholder="Buscar o crear cliente..." 
+                                       autocomplete="off"
+                                       class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-300">
                                 <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                                 <button id="toggleClientForm" class="absolute right-2 top-2 bg-blue-500 text-white p-1 rounded-full hover:bg-blue-600">
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
-                            <div id="searchResults" class="mt-2 bg-white rounded-lg shadow-md max-h-40 overflow-y-auto hidden"></div>
+                            
+                            <!-- Resultados de búsqueda -->
+                            <div id="searchResults" class="mt-2 bg-white rounded-lg shadow-md max-h-40 overflow-y-auto absolute w-full z-50 hidden"></div>
+                            
+                            <!-- Formulario de nuevo cliente -->
                             <div id="clientForm" class="mt-4 bg-gray-50 p-4 rounded-lg hidden">
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
-                                        <select id="docType" class="mt-1 block w-full rounded-md border-green-500 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                        <select id="docType" name="docType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                             <option value="cedula">Cédula</option>
                                             <option value="rnc">RNC</option>
                                             <option value="pasaporte">Pasaporte</option>
@@ -581,21 +997,62 @@
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Número de Documento</label>
-                                        <input type="text" id="docNumber" class="mt-1 block w-full rounded-md border-green-500 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                        <input type="text" 
+                                               id="docNumber" 
+                                               name="docNumber"
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     </div>
                                 </div>
                                 <div class="mt-4">
                                     <label class="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                                    <input type="text" id="clientName" class="mt-1 block w-full rounded-md border-green-500 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50">
+                                    <input type="text" 
+                                           id="clientName" 
+                                           name="clientName"
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                 </div>
                                 <button id="saveClient" class="mt-4 w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors">
                                     Guardar Cliente
                                 </button>
                             </div>
-                            <div id="selectedClient" class="mt-4 bg-blue-50 p-4 rounded-lg hidden">
-                                <h4 class="font-semibold text-blue-800">Cliente Seleccionado</h4>
-                                <p id="selectedClientName" class="text-blue-600"></p>
+                            
+                            <!-- Cliente seleccionado -->
+                            <div id="selectedClient" class="mt-4 bg-blue-50 p-4 rounded-lg hidden" data-client-id="">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-semibold text-blue-800">Cliente Seleccionado</h4>
+                                    <button id="clearSelectedClient" class="text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <p id="selectedClientName" class="text-blue-600 mt-2"></p>
                                 <p id="selectedClientDoc" class="text-sm text-blue-500"></p>
+                            </div>
+                        </div>
+
+                        <!-- Selector de Vendedor -->
+                        <div class="seller-selector bg-white p-4 rounded-lg shadow-lg border border-gray-200 mt-4">
+                            <label class="block text-xl font-bold text-gray-800 mb-4">Vendedor</label>
+                            <div class="relative">
+                                <input type="text" 
+                                    id="sellerSearch" 
+                                    placeholder="Buscar vendedor..." 
+                                    autocomplete="off"
+                                    class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-300">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                            
+                            <!-- Resultados de búsqueda -->
+                            <div id="sellerSearchResults" class="mt-2 bg-white rounded-lg shadow-md max-h-40 overflow-y-auto absolute w-full z-50 hidden"></div>
+                            
+                            <!-- Vendedor seleccionado -->
+                            <div id="selectedSeller" class="mt-4 bg-yellow-50 p-4 rounded-lg hidden" data-seller-id="">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-semibold text-yellow-800">Vendedor Seleccionado</h4>
+                                    <button id="clearSelectedSeller" class="text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <p id="selectedSellerName" class="text-yellow-600 mt-2"></p>
+                                <p id="selectedSellerCode" class="text-sm text-yellow-500"></p>
                             </div>
                         </div>
 
@@ -604,28 +1061,28 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Pago</label>
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <div class="border rounded-lg p-4 cursor-pointer hover:border-blue-500">
-                                    <input type="radio" name="tipo_pago" value="efectivo" class="hidden" checked>
+                                    <input type="radio" name="tipo_pago" value="efectivo" checked>
                                     <div class="flex items-center">
                                         <i class="fas fa-money-bill text-2xl text-green-500 mr-3"></i>
                                         <div class="font-medium">Efectivo</div>
                                     </div>
                                 </div>
                                 <div class="border rounded-lg p-4 cursor-pointer hover:border-blue-500">
-                                    <input type="radio" name="tipo_pago" value="tarjeta" class="hidden">
+                                    <input type="radio" name="tipo_pago" value="tarjeta">
                                     <div class="flex items-center">
                                         <i class="fas fa-credit-card text-2xl text-blue-500 mr-3"></i>
                                         <div class="font-medium">Tarjeta</div>
                                     </div>
                                 </div>
                                 <div class="border rounded-lg p-4 cursor-pointer hover:border-blue-500">
-                                    <input type="radio" name="tipo_pago" value="transferencia" class="hidden">
+                                    <input type="radio" name="tipo_pago" value="transferencia">
                                     <div class="flex items-center">
                                         <i class="fas fa-university text-2xl text-purple-500 mr-3"></i>
                                         <div class="font-medium">Transferencia</div>
                                     </div>
                                 </div>
                                 <div class="border rounded-lg p-4 cursor-pointer hover:border-blue-500">
-                                    <input type="radio" name="tipo_pago" value="cheque" class="hidden">
+                                    <input type="radio" name="tipo_pago" value="cheque">
                                     <div class="flex items-center">
                                         <i class="fas fa-money-check text-2xl text-gray-500 mr-3"></i>
                                         <div class="font-medium">Cheque</div>
@@ -638,35 +1095,14 @@
                         <div class="store-selector bg-white p-4 rounded-lg shadow-lg border border-gray-200">
                             <label class="block text-xl font-bold text-gray-800 mb-4">Tienda</label>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="storeOptions">
-                                <div class="store-option bg-blue-50 p-4 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors" data-store="principal">
-                                    <div class="flex flex-col items-center">
-                                        <i class="fas fa-store text-2xl text-blue-500 mb-2"></i>
-                                        <span class="font-medium text-blue-700 text-sm">Tienda Principal</span>
-                                    </div>
-                                </div>
-                                <div class="store-option bg-green-50 p-4 rounded-lg cursor-pointer hover:bg-green-100 transition-colors" data-store="sucursal1">
-                                    <div class="flex flex-col items-center">
-                                        <i class="fas fa-building text-2xl text-green-500 mb-2"></i>
-                                        <span class="font-medium text-green-700 text-sm">Sucursal 1</span>
-                                    </div>
-                                </div>
-                                <div class="store-option bg-purple-50 p-4 rounded-lg cursor-pointer hover:bg-purple-100 transition-colors" data-store="sucursal2">
-                                    <div class="flex flex-col items-center">
-                                        <i class="fas fa-shop text-2xl text-purple-500 mb-2"></i>
-                                        <span class="font-medium text-purple-700 text-sm">Sucursal 2</span>
-                                    </div>
-                                </div>
-                                <div class="store-option bg-yellow-50 p-4 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors" data-store="online">
-                                    <div class="flex flex-col items-center">
-                                        <i class="fas fa-globe text-2xl text-yellow-500 mb-2"></i>
-                                        <span class="font-medium text-yellow-700 text-sm">Tienda Online</span>
-                                    </div>
-                                </div>
+                                <!-- Las tiendas se cargarán dinámicamente aquí -->
                             </div>
                             <div id="selectedStore" class="mt-4 bg-gray-100 p-4 rounded-lg hidden">
                                 <h4 class="font-semibold text-gray-800">Tienda Seleccionada</h4>
                                 <p id="selectedStoreName" class="text-gray-600"></p>
                             </div>
+                            <!-- Agregar un input hidden para la moneda -->
+                            <input type="hidden" name="moneda" value="DOP">
                         </div>
 
                         <!-- Descuento -->
@@ -748,45 +1184,52 @@
                     </div>
                 </div>
 
-                 <!-- Contenido del paso 2: Productos y Servicios -->
-                 <div class="step-content hidden" id="step2">
+                <div class="step-content hidden" id="step2">
                     <h3 class="text-lg font-semibold mb-4">Productos y servicios</h3>
                     <div class="space-y-4">
                         <div class="flex gap-2">
                             <div class="search-field flex-1 relative">
                                 <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                                <input type="text" id="product-search" placeholder="Buscar producto..." class="w-full border rounded-lg pl-10 pr-4 py-2">
+                                <input type="text" 
+                                       id="product-search" 
+                                       placeholder="Buscar producto..." 
+                                       autocomplete="off"
+                                       class="w-full border rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                <div id="search-results" class="absolute z-50 w-full bg-white mt-1 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden"></div>
                             </div>
-                            <button id="add-product" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                                <i class="fas fa-plus mr-2"></i>Agregar
+                            <button id="add-product" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Lista de Productos
                             </button>
                             <div class="relative">
-                                <input type="file" id="template-upload" class="hidden" accept=".csv,.txt">
-                                <label for="template-upload" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 cursor-pointer">
+                                <input type="file" 
+                                       id="template-upload" 
+                                       class="hidden" 
+                                       accept=".csv,.txt">
+                                <label for="template-upload" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 cursor-pointer transition-colors">
                                     <i class="fas fa-upload mr-2"></i>Cargar Plantilla
                                 </label>
                             </div>
                         </div>
                 
-                        <div class="border rounded-lg overflow-hidden">
+                        <div class="border rounded-lg overflow-hidden shadow">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Series</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ITBIS</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lote</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha Exp.</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cantidad</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comentario</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Series</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ITBIS</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lote</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Exp.</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comentario</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="product-list" class="bg-white divide-y divide-gray-200">
                                     <tr>
-                                        <td class="px-6 py-4 text-sm text-gray-500" colspan="10">
+                                        <td class="px-6 py-4 text-sm text-gray-500 text-center" colspan="10">
                                             No hay productos agregados.
                                         </td>
                                     </tr>
@@ -803,19 +1246,19 @@
                         <div class="invoice-summary">
                             <div class="summary-row">
                                 <span>Subtotal</span>
-                                <span i d="summary-subtotal">$0.00</span>
+                                <span id="summary-subtotal">RD$0.00</span>
                             </div>
                             <div class="summary-row">
                                 <span>ITBIS</span>
-                                <span id="summary-itbis">$0.00</span>
+                                <span id="summary-itbis">RD$0.00</span>
                             </div>
                             <div class="summary-row">
                                 <span>Descuento</span>
-                                <span id="summary-discount">$0.00</span>
+                                <span id="summary-discount">RD$0.00</span>
                             </div>
                             <div class="summary-row">
                                 <span>Total</span>
-                                <span id="summary-total">$0.00</span>
+                                <span id="summary-total">RD$0.00</span>
                             </div>
                         </div>
                         <div class="payment-options">
@@ -937,88 +1380,99 @@
         </div>
     </div>
 
+        <!-- Agregar este código después de tu último modal -->
+    <div id="products-search-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="fixed inset-0 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full max-h-screen overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Catálogo de Productos</h2>
+                    <button class="text-gray-500 hover:text-gray-700" id="close-products-search">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Barra de búsqueda -->
+                <div class="flex gap-4 mb-6">
+                    <div class="flex-1 relative">
+                        <input type="text" 
+                            id="modal-product-search" 
+                            placeholder="Buscar producto..." 
+                            class="w-full px-4 py-2 border rounded-lg pl-10">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Tabla de productos -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ITBIS</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-product-list" class="bg-white divide-y divide-gray-200">
+                            <!-- Los productos se cargarán dinámicamente aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Referencias a elementos del DOM
-        const clientsBtn = document.getElementById('clients-btn');
-        const clientsModal = document.getElementById('clients-modal');
-        const closeClientsModal = document.getElementById('close-clients-modal');
-        const clientFormModal = document.getElementById('client-form-modal');
-        const clientForm = document.getElementById('client-form');
-        const closeClientForm = document.getElementById('close-client-form');
-        const cancelClientForm = document.getElementById('cancel-client-form');
-        const newClientBtn = document.querySelector('[data-action="new-client"]');
-        const clientSearchInput = document.querySelector('#client-search');
-
-        // Funciones de utilidad
-        function showModal(modal) {
-            modal.classList.remove('hidden');
-        }
-
-        function hideModal(modal) {
-            modal.classList.add('hidden');
-        }
-
-        // Event Listeners para modales
-        clientsBtn.addEventListener('click', () => {
-            showModal(clientsModal);
-            loadClients();
-        });
-
-        closeClientsModal.addEventListener('click', () => hideModal(clientsModal));
-        closeClientForm.addEventListener('click', () => hideModal(clientFormModal));
-        cancelClientForm.addEventListener('click', () => hideModal(clientFormModal));
-
-        // Función para cargar clientes
-        async function loadClients() {
-            try {
-                const response = await fetch('/facturacion/api/clientes');
-                if (!response.ok) throw new Error('Error al cargar clientes');
+        document.addEventListener('DOMContentLoaded', function() {
+            const clientSearch = document.getElementById('clientSearch');
+            const searchResults = document.getElementById('searchResults');
+            const toggleClientForm = document.getElementById('toggleClientForm');
+            const clientForm = document.getElementById('clientForm');
+            const saveClientBtn = document.getElementById('saveClient');
+            const selectedClient = document.getElementById('selectedClient');
+            const clearSelectedClient = document.getElementById('clearSelectedClient');
+            let searchTimeout;
+        
+            clientSearch.addEventListener('input', async function(e) {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.trim();
                 
-                const clients = await response.json();
-                const tbody = document.querySelector('#clients-modal tbody');
-                
-                if (!tbody) return;
-                
-                tbody.innerHTML = clients.map(client => `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.nombre}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.ruc}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.telefono || '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.email || '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-indigo-600 hover:text-indigo-900 mr-2">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-red-600 hover:text-red-900">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (error) {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error al cargar los clientes'
-                });
-            }
-        }
-
-        // Manejar el formulario de cliente
-        if (clientForm) {
-            clientForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const formData = new FormData(clientForm);
+                if (!query) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+        
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/facturacion/api/clientes/buscar?q=${encodeURIComponent(query)}`);
+                        const clients = await response.json();
+                        
+                        searchResults.innerHTML = clients.length ? clients.map(client => `
+                            <div class="p-2 hover:bg-gray-100 cursor-pointer" onclick="selectClient(${JSON.stringify(client).replace(/"/g, '&quot;')})">
+                                <div class="font-medium">${client.nombre}</div>
+                                <div class="text-sm text-gray-500">${client.ruc || 'Sin documento'}</div>
+                            </div>
+                        `).join('') : '<div class="p-2 text-gray-500">No se encontraron resultados</div>';
+                        
+                        searchResults.classList.remove('hidden');
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                }, 300);
+            });
+        
+            toggleClientForm.addEventListener('click', () => {
+                clientForm.classList.toggle('hidden');
+            });
+        
+            saveClientBtn.addEventListener('click', async () => {
                 const clientData = {
-                    nombre: formData.get('nombre'),
-                    ruc: formData.get('ruc'),
-                    telefono: formData.get('telefono'),
-                    email: formData.get('email')
+                    nombre: document.getElementById('clientName').value,
+                    ruc: `${document.getElementById('docType').value}: ${document.getElementById('docNumber').value}`
                 };
-                
+        
                 try {
                     const response = await fetch('/facturacion/api/clientes', {
                         method: 'POST',
@@ -1030,195 +1484,1207 @@
                     });
         
                     const data = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Error al crear el cliente');
+                    if (response.ok) {
+                        selectClient(data);
+                        clientForm.classList.add('hidden');
+                        document.getElementById('clientName').value = '';
+                        document.getElementById('docNumber').value = '';
+                    } else {
+                        throw new Error(data.error);
                     }
-        
-                    // Éxito
-                    await Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        text: data.message || 'Cliente creado correctamente'
-                    });
-        
-                    // Cerrar el modal y limpiar el formulario
-                    hideModal(clientFormModal);
-                    clientForm.reset();
-                    await loadClients();
-                    showModal(clientsModal);
-        
                 } catch (error) {
                     console.error('Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: error.message || 'Error al crear el cliente'
-                    });
+                    alert('Error al crear el cliente');
+                }
+            });
+        
+            clearSelectedClient.addEventListener('click', () => {
+                selectedClient.classList.add('hidden');
+                selectedClient.dataset.clientId = '';
+                clientSearch.value = '';
+            });
+        
+            document.addEventListener('click', (e) => {
+                if (!clientSearch.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+        });
+
+        // Función para manejar el envío del formulario de tienda
+        // En tu código JavaScript que maneja el formulario de tienda
+        document.getElementById('store-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+        
+            try {
+                const formData = new FormData(this);
+                const storeData = {};
+                
+                formData.forEach((value, key) => {
+                    if (key === 'activa') {
+                        storeData[key] = value === 'on';
+                    } else {
+                        storeData[key] = value;
+                    }
+                });
+        
+                const response = await fetch('/facturacion/api/tiendas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify(storeData)
+                });
+        
+                const data = await response.json();
+        
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al crear la tienda');
+                }
+        
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: data.message
+                });
+        
+                this.reset();
+                document.getElementById('store-form-modal').classList.add('hidden');
+                document.getElementById('stores-modal').classList.remove('hidden');
+                await loadStores();
+        
+            } catch (error) {
+                console.error('Error:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+
+        async function crearFactura(data) {
+            try {
+                const response = await fetch('/api/facturas', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content 
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    if (result.error === 'stock_insuficiente') {
+                        if (result.requiere_autorizacion) {
+                            const { isConfirmed, value: override } = await solicitarAutorizacion(result);
+                            if (isConfirmed && override) {
+                                // Reintentar con código de autorización
+                                const itemIndex = data.items.findIndex(i => i.item_id === result.item_id);
+                                if (itemIndex !== -1) {
+                                    data.items[itemIndex].override_code = override;
+                                    return crearFactura(data);
+                                }
+                            } else if (!isConfirmed) {
+                                // Usuario canceló la autorización
+                                await mostrarAlertaStock(result);
+                                return false;
+                            }
+                        } else {
+                            await mostrarAlertaStock(result);
+                            return false;
+                        }
+                    }
+                    throw new Error(result.mensaje || result.error);
+                }
+                
+                // Éxito
+                await Swal.fire({
+                    title: '¡Éxito!',
+                    text: 'Factura creada correctamente',
+                    icon: 'success'
+                });
+                
+                return result;
+            } catch (error) {
+                console.error('Error en crearFactura:', error);
+                await Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'Error al crear la factura',
+                    icon: 'error'
+                });
+                return false;
+            }
+        }
+
+        async function mostrarAlertaStock(data) {
+            const result = await Swal.fire({
+                title: 'Stock Insuficiente',
+                html: `
+                    <div class="text-left">
+                        <p><strong>Producto:</strong> ${data.nombre}</p>
+                        <p><strong>Stock actual:</strong> ${data.stock_actual}</p>
+                        <p><strong>Cantidad solicitada:</strong> ${data.cantidad_solicitada}</p>
+                        <p class="text-danger">Faltan ${data.cantidad_solicitada - data.stock_actual} unidades</p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Solicitar Autorización',
+                cancelButtonText: 'Seleccionar Otro Item',
+                showDenyButton: true,
+                denyButtonText: 'Actualizar Cantidad'
+            });
+
+            if (result.isDenied) {
+                return actualizarCantidadItem(data);
+            }
+
+            return result.isConfirmed;
+        }
+
+        async function solicitarAutorizacion(data) {
+            return Swal.fire({
+                title: 'Autorización Requerida',
+                html: `
+                    <div class="text-left">
+                        <p>Se requiere autorización para facturar con stock insuficiente:</p>
+                        <p><strong>Producto:</strong> ${data.nombre}</p>
+                        <p><strong>Faltante:</strong> ${data.cantidad_solicitada - data.stock_actual} unidades</p>
+                    </div>
+                `,
+                input: 'password',
+                inputLabel: 'Código de Autorización',
+                inputPlaceholder: 'Ingrese el código',
+                showCancelButton: true,
+                confirmButtonText: 'Autorizar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Debe ingresar un código de autorización';
+                    }
+                    if (value.length < 4) {
+                        return 'El código debe tener al menos 4 caracteres';
+                    }
+                },
+                preConfirm: (code) => {
+                    // Aquí podrías agregar validaciones adicionales si es necesario
+                    return code;
                 }
             });
         }
 
-        // Búsqueda de clientes en el campo de factura
-        let clientSearchTimeout;
-        const clientSearchResults = document.createElement('div');
-        clientSearchResults.className = 'absolute z-10 w-full bg-white shadow-lg rounded-lg mt-1 max-h-60 overflow-y-auto hidden';
-        clientSearchInput.parentElement.appendChild(clientSearchResults);
+        async function actualizarCantidadItem(data) {
+            const { isConfirmed, value: nuevaCantidad } = await Swal.fire({
+                title: 'Actualizar Cantidad',
+                input: 'number',
+                inputLabel: `Cantidad disponible: ${data.stock_actual}`,
+                inputValue: data.stock_actual,
+                inputAttributes: {
+                    min: 1,
+                    max: data.stock_actual,
+                    step: 1
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Actualizar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Debe ingresar una cantidad';
+                    }
+                    if (parseInt(value) > data.stock_actual) {
+                        return 'La cantidad no puede superar el stock disponible';
+                    }
+                    if (parseInt(value) <= 0) {
+                        return 'La cantidad debe ser mayor a 0';
+                    }
+                }
+            });
 
-        clientSearchInput.addEventListener('input', async (e) => {
-            clearTimeout(clientSearchTimeout);
-            const searchTerm = e.target.value.trim();
+            if (isConfirmed) {
+                // Retornar la nueva cantidad para actualizar el item
+                return {
+                    actualizado: true,
+                    cantidad: parseInt(nuevaCantidad)
+                };
+            }
 
-            if (!searchTerm) {
-                clientSearchResults.classList.add('hidden');
+            return { actualizado: false };
+        }
+
+        // Función para cargar las tiendas
+        async function loadStoresForSelection() {
+            try {
+                const response = await fetch('/facturacion/api/tiendas', {
+                    headers: {
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar las tiendas');
+                }
+                
+                const tiendas = await response.json();
+                const storeOptions = document.getElementById('storeOptions');
+                
+                // Limpiar las opciones existentes
+                storeOptions.innerHTML = '';
+                
+                // Colores predefinidos para las tiendas
+                const colors = [
+                    {bg: 'blue', icon: 'store'},
+                    {bg: 'green', icon: 'building'},
+                    {bg: 'purple', icon: 'shop'},
+                    {bg: 'yellow', icon: 'store-alt'},
+                    {bg: 'red', icon: 'shopping-bag'},
+                    {bg: 'indigo', icon: 'shopping-basket'}
+                ];
+                
+                // Generar las opciones de tienda dinámicamente
+                tiendas.forEach((tienda, index) => {
+                    const color = colors[index % colors.length];
+                    const storeDiv = document.createElement('div');
+                    storeDiv.className = `store-option bg-${color.bg}-50 p-4 rounded-lg cursor-pointer hover:bg-${color.bg}-100 transition-colors`;
+                    storeDiv.dataset.storeId = tienda.id;
+                    storeDiv.dataset.storeName = tienda.nombre;
+                    storeDiv.dataset.storeMoneda = tienda.moneda;
+                    
+                    storeDiv.innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-${color.icon} text-2xl text-${color.bg}-500 mb-2"></i>
+                            <span class="font-medium text-${color.bg}-700 text-sm">${tienda.nombre}</span>
+                            <span class="text-xs text-${color.bg}-600">${tienda.codigo}</span>
+                            <span class="text-xs text-${color.bg}-500">${tienda.moneda}</span>
+                        </div>
+                    `;
+                    
+                    storeOptions.appendChild(storeDiv);
+                });
+                
+                // Agregar event listeners a las nuevas opciones
+                document.querySelectorAll('.store-option').forEach(option => {
+                    option.addEventListener('click', function() {
+                        // Remover selección previa
+                        document.querySelectorAll('.store-option').forEach(opt => 
+                            opt.classList.remove('ring-2', 'ring-offset-2', 'ring-blue-500'));
+                        
+                        // Agregar selección actual
+                        this.classList.add('ring-2', 'ring-offset-2', 'ring-blue-500');
+                        
+                        // Mostrar la tienda seleccionada
+                        const selectedStore = document.getElementById('selectedStore');
+                        const selectedStoreName = document.getElementById('selectedStoreName');
+                        selectedStore.classList.remove('hidden');
+                        selectedStoreName.textContent = `${this.dataset.storeName} (${this.dataset.storeMoneda})`;
+                        
+                        // Actualizar la moneda del formulario si es necesario
+                        document.querySelector('input[name="moneda"]').value = this.dataset.storeMoneda;
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron cargar las tiendas'
+                });
+            }
+        }
+
+        // Llamar a la función cuando se abre el modal de factura
+        document.getElementById('new-invoice-btn').addEventListener('click', function() {
+            loadStoresForSelection();
+        });
+        
+        // Actualizar función loadStores
+        async function loadStores() {
+            try {
+                const response = await fetch('/facturacion/api/tiendas', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Error al cargar tiendas');
+                
+                const stores = await response.json();
+                const tbody = document.querySelector('#stores-modal tbody');
+                
+                tbody.innerHTML = stores.length ? stores.map(store => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">${store.codigo}</td>
+                        <td class="px-6 py-4">${store.nombre}</td>
+                        <td class="px-6 py-4">${store.direccion || '-'}</td>
+                        <td class="px-6 py-4">
+                            <div>${store.telefono || '-'}</div>
+                            <div>${store.email || '-'}</div>
+                        </td>
+                        <td class="px-6 py-4">${store.moneda}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded-full ${store.activa ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${store.activa ? 'Activa' : 'Inactiva'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex space-x-2">
+                                <button onclick="editStore(${JSON.stringify(store)})" class="text-indigo-600 hover:text-indigo-900">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteStore(${store.id})" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('') : '<tr><td colspan="7" class="px-6 py-4 text-center">No hay tiendas registradas</td></tr>';
+            } catch (error) {
+                console.error('Error cargando tiendas:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cargar las tiendas'
+                });
+            }
+        }
+
+        // Función para obtener el token CSRF
+        function getCsrfToken() {
+            const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+            if (!tokenMeta) {
+                console.error('No se encontró el token CSRF');
+                return '';
+            }
+            return tokenMeta.getAttribute('content');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const storeForm = document.getElementById('store-form');
+            
+            // Deshabilitar el envío por defecto del formulario
+            storeForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                document.querySelector('button[type="submit"]').disabled = true;
+        
+                try {
+                    const formData = new FormData(this);
+                    const storeData = {};
+                    
+                    formData.forEach((value, key) => {
+                        if (key === 'activa') {
+                            storeData[key] = value === 'on';
+                        } else {
+                            storeData[key] = value;
+                        }
+                    });
+        
+                    const response = await fetch('/facturacion/api/tiendas', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        },
+                        body: JSON.stringify(storeData)
+                    });
+        
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Error al crear la tienda');
+                    }
+        
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: 'Tienda creada correctamente'
+                    });
+        
+                    this.reset();
+                    document.getElementById('store-form-modal').classList.add('hidden');
+                    document.getElementById('stores-modal').classList.remove('hidden');
+                    await loadStores();
+        
+                } catch (error) {
+                    console.error('Error:', error);
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message
+                    });
+                } finally {
+                    document.querySelector('button[type="submit"]').disabled = false;
+                }
+            });
+        
+            // Evitar envíos duplicados en botones
+            document.getElementById('store-form-modal').addEventListener('click', function(e) {
+                if (e.target.matches('button[type="submit"]')) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+        const sellerSearch = document.getElementById('sellerSearch');
+        const sellerSearchResults = document.getElementById('sellerSearchResults');
+        const selectedSeller = document.getElementById('selectedSeller');
+        const selectedSellerName = document.getElementById('selectedSellerName');
+        const selectedSellerCode = document.getElementById('selectedSellerCode');
+        const clearSelectedSeller = document.getElementById('clearSelectedSeller');
+        let searchTimeout;
+
+        sellerSearch.addEventListener('input', async function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (!query) {
+                sellerSearchResults.classList.add('hidden');
                 return;
             }
 
-            clientSearchTimeout = setTimeout(async () => {
+            searchTimeout = setTimeout(async () => {
                 try {
-                    const response = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(searchTerm)}`);
-                    const clients = await response.json();
-
-                    if (clients.length > 0) {
-                        clientSearchResults.innerHTML = clients.map(client => `
-                            <div class="p-2 hover:bg-gray-100 cursor-pointer" onclick="selectClient(${JSON.stringify(client).replace(/"/g, '&quot;')})">
-                                <div class="font-medium">${client.nombre}</div>
-                                <div class="text-sm text-gray-500">${client.ruc}</div>
-                            </div>
-                        `).join('');
-                        clientSearchResults.classList.remove('hidden');
-                    } else {
-                        clientSearchResults.classList.add('hidden');
-                    }
+                    const response = await fetch(`/facturacion/api/vendedores/buscar?q=${encodeURIComponent(query)}`);
+                    const sellers = await response.json();
+                    
+                    sellerSearchResults.innerHTML = sellers.length ? sellers.map(seller => `
+                        <div class="p-2 hover:bg-gray-100 cursor-pointer" onclick="selectSeller(${JSON.stringify(seller).replace(/"/g, '&quot;')})">
+                            <div class="font-medium">${seller.nombre}</div>
+                            <div class="text-sm text-gray-500">${seller.codigo}</div>
+                        </div>
+                    `).join('') : '<div class="p-2 text-gray-500">No se encontraron vendedores</div>';
+                    
+                    sellerSearchResults.classList.remove('hidden');
                 } catch (error) {
                     console.error('Error:', error);
                 }
             }, 300);
         });
 
-        // Función para seleccionar cliente
-        window.selectClient = function(client) {
-            document.getElementById('client-search').value = client.nombre;
-            document.getElementById('selected-client').dataset.clientId = client.id;
-            clientSearchResults.classList.add('hidden');
-        };
+        clearSelectedSeller.addEventListener('click', () => {
+            selectedSeller.classList.add('hidden');
+            selectedSeller.dataset.sellerId = '';
+            sellerSearch.value = '';
+        });
 
-        // Cerrar resultados al hacer clic fuera
         document.addEventListener('click', (e) => {
-            if (!clientSearchInput.contains(e.target)) {
-                clientSearchResults.classList.add('hidden');
+            if (!sellerSearch.contains(e.target) && !sellerSearchResults.contains(e.target)) {
+                sellerSearchResults.classList.add('hidden');
             }
         });
+
+        window.selectSeller = function(seller) {
+            selectedSellerName.textContent = seller.nombre;
+            selectedSellerCode.textContent = seller.codigo;
+            selectedSeller.classList.remove('hidden');
+            selectedSeller.dataset.sellerId = seller.id;
+            sellerSearchResults.classList.add('hidden');
+            sellerSearch.value = '';
+        };
     });
+        
+        // Funcionalidad para el modal de vendedores
+        document.addEventListener('DOMContentLoaded', function() {
+            const sellersBtn = document.getElementById('sellers-btn');
+            const sellersModal = document.getElementById('sellers-modal');
+            const closeSellersModal = document.getElementById('close-sellers-modal');
+            const newSellerBtn = document.getElementById('new-seller-btn');
+            const sellerFormModal = document.getElementById('seller-form-modal');
+            const closeSellerForm = document.getElementById('close-seller-form');
+            const cancelSellerForm = document.getElementById('cancel-seller-form');
+            const sellerForm = document.getElementById('seller-form');
+
+            // Abrir modal de vendedores
+            sellersBtn.addEventListener('click', () => {
+                sellersModal.classList.remove('hidden');
+                loadSellers();
+            });
+
+            // Cerrar modal de vendedores
+            closeSellersModal.addEventListener('click', () => {
+                sellersModal.classList.add('hidden');
+            });
+
+            // Abrir formulario de nuevo vendedor
+            newSellerBtn.addEventListener('click', () => {
+                sellerForm.reset();
+                document.getElementById('seller-form-title').textContent = 'Nuevo Vendedor';
+                delete sellerForm.dataset.sellerId;
+                sellerFormModal.classList.remove('hidden');
+                sellersModal.classList.add('hidden');
+            });
+
+            // Cerrar formulario de vendedor
+            [closeSellerForm, cancelSellerForm].forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sellerFormModal.classList.add('hidden');
+                    sellersModal.classList.remove('hidden');
+                });
+            });
+
+            // Manejar envío del formulario de vendedor
+            sellerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                try {
+                    const formData = new FormData(sellerForm);
+                    const sellerData = Object.fromEntries(formData.entries());
+                    sellerData.activo = formData.get('activo') === 'on';
+
+                    const sellerId = sellerForm.dataset.sellerId;
+                    const method = sellerId ? 'PUT' : 'POST';
+                    const url = sellerId ? 
+                        `/facturacion/api/vendedores/${sellerId}` : 
+                        '/facturacion/api/vendedores';
+
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        },
+                        body: JSON.stringify(sellerData)
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Error al guardar el vendedor');
+                    }
+
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: `Vendedor ${sellerId ? 'actualizado' : 'creado'} correctamente`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                    sellerFormModal.classList.add('hidden');
+                    sellerForm.reset();
+                    delete sellerForm.dataset.sellerId;
+                    await loadSellers();
+                    sellersModal.classList.remove('hidden');
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message
+                    });
+                }
+            });
+
+            // Función para cargar vendedores
+            async function loadSellers() {
+                try {
+                    const response = await fetch('/facturacion/api/vendedores', {
+                        headers: {
+                            'X-CSRFToken': getCsrfToken()
+                        }
+                    });
+                    
+                    if (!response.ok) throw new Error('Error cargando vendedores');
+                    
+                    const sellers = await response.json();
+                    const tbody = document.getElementById('sellers-list');
+                    
+                    tbody.innerHTML = sellers.length ? sellers.map(seller => `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">${seller.nombre}</td>
+                            <td class="px-6 py-4">${seller.codigo}</td>
+                            <td class="px-6 py-4">${seller.telefono || '-'}</td>
+                            <td class="px-6 py-4">${seller.email || '-'}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded-full ${seller.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${seller.activo ? 'Activo' : 'Inactivo'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex space-x-2">
+                                    <button onclick="editSeller(${JSON.stringify(seller)})" class="text-indigo-600 hover:text-indigo-900">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="toggleSellerStatus(${seller.id}, ${seller.activo})" class="text-yellow-600 hover:text-yellow-900">
+                                        <i class="fas fa-power-off"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="6" class="px-6 py-4 text-center">No hay vendedores registrados</td></tr>';
+                } catch (error) {
+                    console.error('Error cargando vendedores:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error al cargar los vendedores'
+                    });
+                }
+            }
+
+            // Funciones globales
+            window.editSeller = function(seller) {
+                const sellerForm = document.getElementById('seller-form');
+                document.getElementById('seller-form-title').textContent = 'Editar Vendedor';
+                document.getElementById('seller-name').value = seller.nombre;
+                document.getElementById('seller-code').value = seller.codigo;
+                document.getElementById('seller-phone').value = seller.telefono || '';
+                document.getElementById('seller-email').value = seller.email || '';
+                document.getElementById('seller-active').checked = seller.activo;
+
+                sellerForm.dataset.sellerId = seller.id;
+                sellersModal.classList.add('hidden');
+                sellerFormModal.classList.remove('hidden');
+            };
+
+            window.toggleSellerStatus = async function(id, currentStatus) {
+                try {
+                    const response = await fetch(`/facturacion/api/vendedores/${id}/toggle-status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        }
+                    });
+
+                    if (!response.ok) throw new Error('Error al cambiar el estado del vendedor');
+
+                    await loadSellers();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: `Vendedor ${currentStatus ? 'desactivado' : 'activado'} correctamente`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message
+                    });
+                }
+            };
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Referencias a elementos DOM
+            const storesBtn = document.getElementById('stores-btn');
+            const storesModal = document.getElementById('stores-modal');
+            const closeStoresModal = document.getElementById('close-stores-modal');
+            const storeFormModal = document.getElementById('store-form-modal');
+            const storeForm = document.getElementById('store-form');
+            const newStoreBtn = document.getElementById('new-store-btn');
+            const closeStoreForm = document.getElementById('close-store-form');
+            const cancelStoreForm = document.getElementById('cancel-store-form');
+        
+            // Event Listeners para el botón principal de tiendas
+            if (storesBtn) {
+                storesBtn.addEventListener('click', () => {
+                    storesModal.classList.remove('hidden');
+                    loadStores();
+                });
+            }
+        
+            // Event Listeners para cerrar modal de tiendas
+            if (closeStoresModal) {
+                closeStoresModal.addEventListener('click', () => {
+                    storesModal.classList.add('hidden');
+                });
+            }
+        
+            // Event Listener para nueva tienda
+            if (newStoreBtn) {
+                newStoreBtn.addEventListener('click', () => {
+                    storeForm.reset();
+                    document.getElementById('store-form-title').textContent = 'Nueva Tienda';
+                    delete storeForm.dataset.storeId;
+                    storeFormModal.classList.remove('hidden');
+                    storesModal.classList.add('hidden');
+                });
+            }
+        
+            // Event Listeners para cerrar formulario
+            [closeStoreForm, cancelStoreForm].forEach(btn => {
+                if (btn) {
+                    btn.addEventListener('click', () => {
+                        storeFormModal.classList.add('hidden');
+                        storesModal.classList.remove('hidden');
+                    });
+                }
+            });
+        
+            
+        
+            // Validación de formulario
+            function validateStoreForm(formData) {
+                const requiredFields = ['codigo', 'nombre', 'moneda'];
+                const errors = [];
+        
+                requiredFields.forEach(field => {
+                    if (!formData[field]) {
+                        errors.push(`El campo ${field} es obligatorio`);
+                    }
+                });
+        
+                if (formData.email && !formData.email.includes('@')) {
+                    errors.push('El email debe ser válido');
+                }
+        
+                return errors;
+            }
+        
+            // Manejar envío del formulario
+            if (storeForm) {
+                storeForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    try {
+                        const formData = new FormData(storeForm);
+                        const storeData = Object.fromEntries(formData.entries());
+                        storeData.activa = formData.get('activa') === 'on';
+        
+                        // Validar formulario
+                        const errors = validateStoreForm(storeData);
+                        if (errors.length > 0) {
+                            throw new Error(errors.join('\n'));
+                        }
+        
+                        const storeId = storeForm.dataset.storeId;
+                        const method = storeId ? 'PUT' : 'POST';
+                        const url = storeId ? 
+                            `/facturacion/api/tiendas/${storeId}` : 
+                            '/facturacion/api/tiendas';
+        
+                        const response = await fetch(url, {
+                            method: method,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCsrfToken()
+                            },
+                            body: JSON.stringify(storeData)
+                        });
+        
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.message || 'Error al guardar la tienda');
+                        }
+        
+                        await Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: `Tienda ${storeId ? 'actualizada' : 'creada'} correctamente`,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+        
+                        storeFormModal.classList.add('hidden');
+                        storeForm.reset();
+                        delete storeForm.dataset.storeId;
+                        await loadStores();
+                        storesModal.classList.remove('hidden');
+        
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: error.message
+                        });
+                    }
+                });
+            }
+        
+            // Inicializar funciones globales
+            window.loadStores = loadStores;
+        });
+        
+        // Funciones globales para manejo de tiendas
+        window.editStore = function(store) {
+            const storeForm = document.getElementById('store-form');
+            document.getElementById('store-form-title').textContent = 'Editar Tienda';
+            
+            // Llenar formulario
+            document.getElementById('store-code').value = store.codigo;
+            document.getElementById('store-name').value = store.nombre;
+            document.getElementById('store-address').value = store.direccion || '';
+            document.getElementById('store-phone').value = store.telefono || '';
+            document.getElementById('store-email').value = store.email || '';
+            document.getElementById('store-currency').value = store.moneda;
+            document.getElementById('store-active').checked = store.activa;
+        
+            // Guardar ID para edición
+            storeForm.dataset.storeId = store.id;
+            
+            // Cambiar modales
+            document.getElementById('stores-modal').classList.add('hidden');
+            document.getElementById('store-form-modal').classList.remove('hidden');
+        };
+        
+        
+        
+        window.toggleStoreStatus = async function(id, currentStatus) {
+            try {
+                const response = await fetch(`/facturacion/api/tiendas/${id}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+        
+                if (!response.ok) {
+                    throw new Error('Error al cambiar el estado de la tienda');
+                }
+        
+                await loadStores();
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: `Tienda ${currentStatus ? 'desactivada' : 'activada'} correctamente`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+        
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+            }
+        };
+        
+        
+        // Funciones globales
+        window.editStore = function(store) {
+            const storeForm = document.getElementById('store-form');
+            const storeFormModal = document.getElementById('store-form-modal');
+            const storesModal = document.getElementById('stores-modal');
+        
+            document.getElementById('store-form-title').textContent = 'Editar Tienda';
+            document.getElementById('store-code').value = store.codigo;
+            document.getElementById('store-name').value = store.nombre;
+            document.getElementById('store-address').value = store.direccion || '';
+            document.getElementById('store-phone').value = store.telefono || '';
+            document.getElementById('store-currency').value = store.moneda;
+            document.getElementById('store-active').checked = store.activa;
+        
+            storeForm.dataset.storeId = store.id;
+            storesModal.classList.add('hidden');
+            storeFormModal.classList.remove('hidden');
+        };
+        
+        window.deleteStore = async function(id) {
+            try {
+                const result = await Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "Esta acción no se puede deshacer",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                });
+        
+                if (result.isConfirmed) {
+                    const response = await fetch(`/facturacion/api/tiendas/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': getCsrfToken()
+                        }
+                    });
+        
+                    if (!response.ok) {
+                        throw new Error('Error al eliminar la tienda');
+                    }
+        
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Eliminada!',
+                        text: 'La tienda ha sido eliminada correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+        
+                    await loadStores();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const facturasBody = document.getElementById('facturas-tbody');
+            
+            facturasBody.addEventListener('click', function(e) {
+                const row = e.target.closest('tr');
+                if (!row) return;
+                
+                const facturaId = row.querySelector('td:first-child').textContent;
+                if (facturaId !== 'N/A') {
+                    mostrarDetalleFactura(facturaId);
+                }
+            });
+        });
+        
+        async function mostrarDetalleFactura(facturaId) {
+            try {
+                const response = await fetch(`/facturacion/api/facturas/${facturaId}`);
+                const factura = await response.json();
+                
+                const detalleHTML = `
+                    <div id="detalle-factura-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                        <div class="relative top-20 mx-auto p-8 border w-4/5 max-w-4xl shadow-lg rounded-md bg-white">
+                            <!-- Encabezado -->
+                            <div class="flex justify-between mb-8">
+                                <div>
+                                    <h1 class="text-2xl font-bold mb-2">Prueba</h1>
+                                    <p>Correo: datamovil2@yopmail.com</p>
+                                    <p>Teléfono: (829) 662-7145</p>
+                                    <p>RNC: 1-11-11111-1</p>
+                                    <p>Fecha: ${factura.fecha}</p>
+                                </div>
+                                <div class="text-right">
+
+                                    <h2 class="text-xl font-bold">FACTURA DE CONSUMO</h2>
+                                    <div class="text-sm">
+                                        <p>NCF: ${factura.numero}</p>
+                                        <p>Válida hasta: 31/12/2026</p>
+                                        <p>Número Factura: ${factura.id}</p>
+                                        <p>Vendedor: Vendedor Principal</p>
+                                        <p>Moneda: Peso Dominicano</p>
+                                        <p>Factura: ${factura.tipo_pago}</p>
+                                        <p>Tienda: ${factura.tienda_nombre}</p>
+                                        <p>Condición: ${factura.tipo_pago}</p>
+                                    </div>
+                                    <button class="close-modal absolute top-4 right-4 text-gray-600 hover:text-gray-800">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+        
+                            <!-- Información del cliente -->
+                            <div class="mb-8">
+                                <p><strong>Documento Cliente:</strong> </p>
+                                <p><strong>Nombre Cliente:</strong> ${factura.cliente_nombre}</p>
+                                <p><strong>Dirección Cliente:</strong></p>
+                                <p><strong>Teléfono Cliente:</strong></p>
+                            </div>
+        
+                            <!-- Tabla de productos -->
+                            <table class="w-full mb-8">
+                                <thead class="bg-gray-200">
+                                    <tr>
+                                        <th class="text-left p-2">Descripción</th>
+                                        <th class="text-right p-2">Cantidad</th>
+                                        <th class="text-right p-2">Precio</th>
+                                        <th class="text-right p-2">Impuestos</th>
+                                        <th class="text-right p-2">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${factura.items.map(item => `
+                                        <tr>
+                                            <td class="p-2">${item.producto_nombre}</td>
+                                            <td class="text-right p-2">${item.cantidad}</td>
+                                            <td class="text-right p-2">RD$${formatMoney(item.precio_unitario)}</td>
+                                            <td class="text-right p-2">${item.itbis}%</td>
+                                            <td class="text-right p-2">RD$${formatMoney(item.subtotal)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+        
+                             <!-- Totales -->
+                            <div class="flex justify-end">
+                                <div class="w-64 bg-gray-100 p-4">
+                                    <div class="flex justify-between mb-2">
+                                        <span>SubTotal:</span>
+                                        <span>RD$${formatMoney(factura.monto)}</span>
+                                    </div>
+                                    <div class="flex justify-between mb-2">
+                                        <span>Descuento:</span>
+                                        <span>RD$${formatMoney(factura.descuento)}</span>
+                                    </div>
+                                    <div class="flex justify-between mb-2">
+                                        <span>Impuestos:</span>
+                                        <span>RD$${formatMoney(factura.total - factura.monto)}</span>
+                                    </div>
+                                    <div class="flex justify-between font-bold">
+                                        <span>Total:</span>
+                                        <span>RD$${formatMoney(factura.total)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fecha de impresión -->
+                            <div class="absolute bottom-4 left-8 text-sm text-gray-600">
+                                Fecha impresión: ${new Date().toLocaleDateString()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', detalleHTML);
+                
+                const modal = document.getElementById('detalle-factura-modal');
+                modal.querySelector('.close-modal').addEventListener('click', () => {
+                    modal.remove();
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cargar el detalle de la factura'
+                });
+            }
+        }
+        
+        // Asegúrate de tener esta función para formatear moneda
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('es-DO', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount || 0);
+        }
+        
+        // Función para manejar el color del estado
+        function getStatusBadgeColor(status) {
+            const colors = {
+                'pendiente': 'bg-yellow-100 text-yellow-800',
+                'pagada': 'bg-green-100 text-green-800',
+                'anulada': 'bg-red-100 text-red-800',
+                'vencida': 'bg-gray-100 text-gray-800'
+            };
+            return colors[status?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+        }
+        
+        
+        
+        // Hacer la función loadStores disponible globalmente
+        window.loadStores = loadStores;
+        
+        // Funciones globales para editar y cambiar estado
+        window.editStore = function(store) {
+            const storeForm = document.getElementById('store-form');
+            document.getElementById('store-code').value = store.codigo;
+            document.getElementById('store-name').value = store.nombre;
+            document.getElementById('store-address').value = store.direccion || '';
+            document.getElementById('store-phone').value = store.telefono || '';
+            document.getElementById('store-currency').value = store.moneda;
+            document.getElementById('store-active').checked = store.activa;
+        
+            document.getElementById('stores-modal').classList.add('hidden');
+            document.getElementById('store-form-modal').classList.remove('hidden');
+        };
+        
+        window.toggleStoreStatus = async function(id, currentStatus) {
+            try {
+                const response = await fetch(`/facturacion/api/tiendas/${id}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+        
+                if (!response.ok) throw new Error('Error al cambiar el estado de la tienda');
+        
+                await loadStores();
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: `Tienda ${currentStatus ? 'desactivada' : 'activada'} correctamente`
+                });
+        
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+            }
+        };
+        
+        window.selectClient = function(client) {
+            const selectedClient = document.getElementById('selectedClient');
+            const selectedClientName = document.getElementById('selectedClientName');
+            const selectedClientDoc = document.getElementById('selectedClientDoc');
+            const clientSearch = document.getElementById('clientSearch');
+            const searchResults = document.getElementById('searchResults');
+        
+            selectedClientName.textContent = client.nombre;
+            selectedClientDoc.textContent = client.ruc;
+            selectedClient.classList.remove('hidden');
+            selectedClient.dataset.clientId = client.id;
+            clientSearch.value = client.nombre;
+            searchResults.classList.add('hidden');
+        }
     </script>
 
+    <!-- Tabla de facturas -->
     <!-- Tabla de facturas -->
     <div class="bg-white shadow rounded-lg overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tienda</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">NCF</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estatus</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descuento</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Impuesto</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo Pago</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                <!-- Ejemplo de fila de factura -->
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">INV-001</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cliente Ejemplo</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-05-15</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$1,000.00</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Pagada</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-2">Ver</a>
-                        <a href="#" class="text-red-600 hover:text-red-900">Anular</a>
-                    </td>
-                </tr>
-                <!-- Más filas de facturas aquí -->
+            <tbody id="facturas-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Las facturas se cargarán aquí -->
             </tbody>
         </table>
     </div>
+
+
+
+</script>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Función para obtener el CSRF token
-function getCsrfToken() {
-    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-}
 
 // Objeto api con métodos para interactuar con el backend
-const api = {
-    async searchClients(query) {
-        try {
-            const response = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(query)}`, {
-                headers: {
-                    'X-CSRFToken': getCsrfToken()
-                }
-            });
-            if (!response.ok) throw new Error('Error buscando clientes');
-            return await response.json();
-        } catch (error) {
-            console.error('Error:', error);
-            throw error;
-        }
-    },
 
-    async searchProducts(query) {
-        try {
-            const response = await fetch(`/api/productos/buscar?q=${encodeURIComponent(query)}`, {
-                headers: {
-                    'X-CSRFToken': getCsrfToken()
-                }
-            });
-            if (!response.ok) throw new Error('Error buscando productos');
-            return await response.json();
-        } catch (error) {
-            console.error('Error:', error);
-            throw error;
-        }
-    },
-
-    async createInvoice(invoiceData) {
-        try {
-            const response = await fetch('/api/facturas', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken()
-                },
-                body: JSON.stringify(invoiceData)
-            });
-            if (!response.ok) throw new Error('Error creando factura');
-            return await response.json();
-        } catch (error) {
-            console.error('Error:', error);
-            throw error;
-        }
-    },
-
-    async loadInvoices(filters = {}) {
-        try {
-            const response = await fetch('/api/facturas', {
-                headers: {
-                    'X-CSRFToken': getCsrfToken()
-                }
-            });
-            if (!response.ok) throw new Error('Error cargando facturas');
-            return await response.json();
-        } catch (error) {
-            console.error('Error:', error);
-            throw error;
-        }
-    }
-};
 
 // Agregar esto dentro del DOMContentLoaded
 const tiposFactura = document.querySelectorAll('[name="tipo"]');
@@ -1247,6 +2713,728 @@ const contadoContainer = tiposFacturaContainer[0];
 if (contadoContainer) {
     contadoContainer.classList.add('bg-blue-50', 'border-blue-500');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const productSearch = document.getElementById('product-search');
+    const searchResults = document.getElementById('search-results');
+    const modalProductList = document.getElementById('modal-product-list');
+    const productsSearchModal = document.getElementById('products-search-modal');
+    const closeProductsSearch = document.getElementById('close-products-search');
+    const addProductBtn = document.getElementById('add-product');
+    let searchTimeout;
+
+    // Búsqueda por escritura
+    if (productSearch) {
+        productSearch.addEventListener('input', async function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (!query) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/facturacion/api/productos/buscar?q=${encodeURIComponent(query)}`);
+                    const products = await response.json();
+                    
+                    if (products.length > 0) {
+                        searchResults.innerHTML = products.map(product => `
+                            <div class="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0" 
+                                 onclick="selectProduct(${JSON.stringify(product).replace(/"/g, '&quot;')})">
+                                <div class="font-medium">${product.nombre}</div>
+                                <div class="text-sm text-gray-500">
+                                    Stock: ${product.stock} | Precio: RD$${product.precio_venta.toFixed(2)}
+                                </div>
+                            </div>
+                        `).join('');
+                        searchResults.classList.remove('hidden');
+                    } else {
+                        searchResults.innerHTML = '<div class="p-3 text-gray-500">No se encontraron productos</div>';
+                        searchResults.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }, 300);
+        });
+    }
+
+    // Mostrar modal al hacer clic en el botón Agregar
+    if (addProductBtn) {
+        addProductBtn.addEventListener('click', () => {
+            productsSearchModal.classList.remove('hidden');
+            loadProducts();
+        });
+    }
+
+    // Cerrar modal de listado
+    if (closeProductsSearch) {
+        closeProductsSearch.addEventListener('click', () => {
+            productsSearchModal.classList.add('hidden');
+        });
+    }
+
+    // Cerrar resultados de búsqueda al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!productSearch.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.classList.add('hidden');
+        }
+    });
+
+    async function loadClients() {
+        try {
+            const response = await fetch('/facturacion/api/clientes', {
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+            });
+    
+            if (!response.ok) {
+                throw new Error('Error cargando clientes');
+            }
+    
+            const clients = await response.json();
+            const tbody = document.querySelector('#clients-modal table tbody');
+            
+            // Limpiar la tabla actual
+            tbody.innerHTML = '';
+            
+            // Agregar los clientes a la tabla
+            clients.forEach(client => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${client.nombre}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.ruc || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.telefono || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${client.email || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick='selectClientFromTable(${JSON.stringify(client).replace(/"/g, '&quot;')})' 
+                                class="text-blue-600 hover:text-blue-900 mr-2">
+                            <i class="fas fa-check"></i> Seleccionar
+                        </button>
+                        <button onclick='editClient(${JSON.stringify(client).replace(/"/g, '&quot;')})' 
+                                class="text-indigo-600 hover:text-indigo-900 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+    
+            // Si no hay clientes, mostrar mensaje
+            if (clients.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                            No hay clientes registrados
+                        </td>
+                    </tr>
+                `;
+            }
+    
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al cargar los clientes'
+            });
+        }
+    }
+
+    function showLoading() {
+        const tbody = document.querySelector('table tbody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                    <i class="fas fa-spinner fa-spin mr-2"></i>
+                    Cargando facturas...
+                </td>
+            </tr>
+        `;
+    }
+    
+    // Función para seleccionar cliente desde la tabla
+    function selectClientFromTable(client) {
+        // Seleccionar el cliente
+        selectClient(client);
+        
+        // Cerrar el modal de clientes
+        document.getElementById('clients-modal').classList.add('hidden');
+        
+        // Si es factura a crédito, validar la selección
+        const invoiceType = document.querySelector('.invoice-type-option.selected')?.dataset.type;
+        if (invoiceType === 'credito') {
+            const errorMsg = document.getElementById('client-validation-msg');
+            if (errorMsg) {
+                errorMsg.remove();
+            }
+            document.querySelector('.client-selector').classList.remove('border-red-500');
+        }
+    }
+    
+    // Función para editar cliente
+    function editClient(client) {
+        // Llenar el formulario con los datos del cliente
+        document.getElementById('client-name').value = client.nombre;
+        document.getElementById('client-ruc').value = client.ruc;
+        document.getElementById('client-phone').value = client.telefono || '';
+        document.getElementById('client-email').value = client.email || '';
+        
+        // Mostrar el formulario y ocultar el listado
+        document.getElementById('clients-modal').classList.add('hidden');
+        document.getElementById('client-form-modal').classList.remove('hidden');
+        
+        // Actualizar el ID del cliente que se está editando
+        document.getElementById('client-form').dataset.clientId = client.id;
+    }
+    
+    // Agregar la funcionalidad de búsqueda en la tabla de clientes
+    document.querySelector('#clients-modal input[placeholder="Buscar cliente..."]')
+        .addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#clients-modal tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    
+    // Modificar el event listener del formulario de cliente para manejar tanto creación como edición
+    document.getElementById('client-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const clientId = this.dataset.clientId;
+        const formData = new FormData(this);
+        const clientData = Object.fromEntries(formData.entries());
+        
+        try {
+            const url = clientId ? 
+                `/facturacion/api/clientes/${clientId}` : 
+                '/facturacion/api/clientes';
+                
+            const method = clientId ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(clientData)
+            });
+    
+            if (!response.ok) {
+                throw new Error('Error al guardar el cliente');
+            }
+    
+            const data = await response.json();
+            
+            // Mostrar mensaje de éxito
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: clientId ? 'Cliente actualizado correctamente' : 'Cliente creado correctamente'
+            });
+    
+            // Cerrar el modal y limpiar el formulario
+            document.getElementById('client-form-modal').classList.add('hidden');
+            this.reset();
+            delete this.dataset.clientId;
+            
+            // Recargar la lista de clientes y mostrar el modal de listado
+            await loadClients();
+            document.getElementById('clients-modal').classList.remove('hidden');
+    
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message
+            });
+        }
+    });
+
+    // Cargar todos los productos en el modal
+    async function loadProducts() {
+        try {
+            const response = await fetch('/facturacion/api/productos/buscar?q=');
+            if (!response.ok) throw new Error('Error cargando productos');
+            
+            const products = await response.json();
+            modalProductList.innerHTML = products.map(product => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.codigo || '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${product.nombre}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.stock}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">RD$${product.precio_venta.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.itbis || 0}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button onclick='selectProduct(${JSON.stringify(product).replace(/"/g, "&quot;")})' 
+                                class="text-blue-600 hover:text-blue-900">
+                            <i class="fas fa-plus-circle"></i> Seleccionar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    // Funciones para manejar productos
+    window.selectProduct = function(product) {
+        addProductToList(product);
+        searchResults.classList.add('hidden');
+        productsSearchModal.classList.add('hidden');
+        productSearch.value = '';
+    };
+
+    // El resto de las funciones permanece igual...
+    window.addProductToList = function(product) {
+        const productList = document.getElementById('product-list');
+        if (productList.querySelector('td[colspan="10"]')) {
+            productList.innerHTML = '';
+        }
+
+        const row = document.createElement('tr');
+        row.dataset.itemId = product.id;
+        row.innerHTML = `
+            <td class="px-6 py-4 text-sm text-gray-900">${product.nombre}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">${product.codigo || '-'}</td>
+            <td class="px-6 py-4 text-sm text-gray-900 precio">RD$${product.precio_venta.toFixed(2)}</td>
+            <td class="px-6 py-4 text-sm text-gray-500 itbis">${product.itbis || 0}%</td>
+            <td class="px-6 py-4 text-sm text-gray-500">${product.lote || '-'}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">${product.fecha_vencimiento || '-'}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+                <input type="number" 
+                       value="1" 
+                       min="1" 
+                       max="${product.stock}" 
+                       class="w-20 border rounded px-2 py-1 quantity-input"
+                       onchange="updateProductTotal(this)">
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900 product-total">RD$${product.precio_venta.toFixed(2)}</td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+                <input type="text" 
+                       placeholder="Agregar comentario" 
+                       class="w-full border rounded px-2 py-1">
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+                <button onclick="removeProductFromList(this)" 
+                        class="text-red-600 hover:text-red-900 transition-colors">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+
+        productList.appendChild(row);
+        updateTotals();
+    };
+
+    // Mantener funciones updateProductTotal, removeProductFromList y updateTotals igual...
+});
+
+window.addProductToList = function(product) {
+    const productList = document.getElementById('product-list');
+    const searchResults = document.getElementById('search-results');
+    const productSearch = document.getElementById('product-search');
+
+    // Limpiar mensaje "No hay productos"
+    if (productList.querySelector('td[colspan="10"]')) {
+        productList.innerHTML = '';
+    }
+
+    const row = document.createElement('tr');
+    row.dataset.itemId = product.id;
+    row.innerHTML = `
+        <td class="px-6 py-4 text-sm text-gray-900">${product.nombre}</td>
+        <td class="px-6 py-4 text-sm text-gray-500">${product.codigo || '-'}</td>
+        <td class="px-6 py-4 text-sm text-gray-900 precio">RD$${product.precio_venta.toFixed(2)}</td>
+        <td class="px-6 py-4 text-sm text-gray-500 itbis">${product.itbis || 0}%</td>
+        <td class="px-6 py-4 text-sm text-gray-500">${product.lote || '-'}</td>
+        <td class="px-6 py-4 text-sm text-gray-500">${product.fecha_vencimiento || '-'}</td>
+        <td class="px-6 py-4 text-sm text-gray-500">
+            <input type="number" 
+                   value="1" 
+                   min="1" 
+                   max="${product.stock}" 
+                   class="w-20 border rounded px-2 py-1 quantity-input"
+                   onchange="updateProductTotal(this)">
+        </td>
+        <td class="px-6 py-4 text-sm text-gray-900 product-total">RD$${product.precio_venta.toFixed(2)}</td>
+        <td class="px-6 py-4 text-sm text-gray-500">
+            <input type="text" 
+                   placeholder="Agregar comentario" 
+                   class="w-full border rounded px-2 py-1">
+        </td>
+        <td class="px-6 py-4 text-sm text-gray-500">
+            <button onclick="removeProductFromList(this)" 
+                    class="text-red-600 hover:text-red-900 transition-colors">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+
+    productList.appendChild(row);
+    updateTotals();
+
+    // Limpiar búsqueda
+    productSearch.value = '';
+    searchResults.classList.add('hidden');
+};
+
+window.updateProductTotal = function(input) {
+    const row = input.closest('tr');
+    const precio = parseFloat(row.querySelector('.precio').textContent.replace('RD$', ''));
+    const cantidad = parseInt(input.value);
+    const total = precio * cantidad;
+    row.querySelector('.product-total').textContent = `RD$${total.toFixed(2)}`;
+    updateTotals();
+};
+
+window.removeProductFromList = function(button) {
+    const row = button.closest('tr');
+    row.remove();
+    
+    const productList = document.getElementById('product-list');
+    if (productList.children.length === 0) {
+        productList.innerHTML = `
+            <tr>
+                <td class="px-6 py-4 text-sm text-gray-500 text-center" colspan="10">
+                    No hay productos agregados.
+                </td>
+            </tr>
+        `;
+    }
+    
+    updateTotals();
+};
+
+// Actualiza la función updateTotals para manejar correctamente los cálculos
+function updateTotals() {
+    let subtotal = 0;
+    let totalItbis = 0;
+
+    // Procesar cada fila de productos
+    document.querySelectorAll('#product-list tr').forEach(row => {
+        const quantityInput = row.querySelector('.quantity-input');
+        if (!quantityInput) return; // Saltar si no es una fila de producto
+
+        // Obtener valores de la fila
+        const precio = parseFloat(row.querySelector('.precio').textContent.replace('RD$', '').trim());
+        const cantidad = parseInt(quantityInput.value);
+        const itbisRate = parseFloat(row.querySelector('.itbis').textContent.replace('%', '').trim()) / 100;
+        
+        // Calcular subtotales
+        const subtotalRow = precio * cantidad;
+        const itbisRow = subtotalRow * itbisRate;
+        
+        // Acumular totales
+        subtotal += subtotalRow;
+        totalItbis += itbisRow;
+    });
+
+    // Obtener el descuento si existe
+    let discount = 0;
+    const appliedDiscountValue = document.getElementById('appliedDiscountValue');
+    if (appliedDiscountValue && appliedDiscountValue.textContent) {
+        const discountText = appliedDiscountValue.textContent;
+        if (discountText.includes('%')) {
+            const percentDiscount = parseFloat(discountText.replace('%', '')) / 100;
+            discount = subtotal * percentDiscount;
+        } else {
+            discount = parseFloat(discountText.replace('RD$', '')) || 0;
+        }
+    }
+
+    // Calcular total final
+    const total = subtotal + totalItbis - discount;
+
+    // Actualizar elementos en el paso 3
+    const elements = {
+        'summary-subtotal': subtotal,
+        'summary-itbis': totalItbis,
+        'summary-discount': discount,
+        'summary-total': total
+    };
+
+    for (const [id, value] of Object.entries(elements)) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = `RD$${value.toFixed(2)}`;
+        }
+    }
+}
+
+// Asegurarse de llamar a updateTotals cada vez que hay un cambio
+document.addEventListener('DOMContentLoaded', function() {
+    // Observar cambios en la lista de productos
+    const productList = document.getElementById('product-list');
+    if (productList) {
+        const observer = new MutationObserver(() => updateTotals());
+        observer.observe(productList, { childList: true, subtree: true });
+    }
+
+    // Manejar cambios en las cantidades
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('quantity-input')) {
+            updateTotals();
+        }
+    });
+});
+
+// Función para dar formato a la fecha
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+}
+
+// Función para cargar facturas
+async function loadInvoices() {
+    const tbody = document.getElementById('facturas-tbody');
+    if (!tbody) {
+        console.error('No se encontró el elemento tbody');
+        return;
+    }
+    
+    try {
+        // Mostrar loader
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="13" class="px-6 py-4 text-center">
+                    <div class="flex items-center justify-center">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                        <span>Cargando facturas...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        const response = await fetch('/facturacion/api/facturas');
+        const data = await response.json();
+        
+        console.log('Datos recibidos:', data);
+
+        if (!Array.isArray(data) || data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="13" class="px-6 py-4 text-center text-gray-500">
+                        No hay facturas registradas
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Generar el HTML para cada factura
+        const facturasHTML = data.map(factura => `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 whitespace-nowrap">${factura.id || 'N/A'}</td>
+                <td class="px-4 py-3 whitespace-nowrap">${formatDate(factura.fecha)}</td>
+                <td class="px-4 py-3 whitespace-nowrap">${factura.tienda_nombre || 'N/A'}</td>
+                <td class="px-4 py-3 whitespace-nowrap">${factura.cliente_nombre || 'N/A'}</td>
+                <td class="px-4 py-3 whitespace-nowrap">${factura.ncf || 'N/A'}</td>
+                <td class="px-4 py-3 whitespace-nowrap">${factura.tipo || 'N/A'}</td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(factura.estatus)}">
+                        ${factura.estatus}
+                    </span>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">RD$${formatMoney(factura.monto)}</td>
+                <td class="px-4 py-3 whitespace-nowrap">RD$${formatMoney(factura.descuento)}</td>
+                <td class="px-4 py-3 whitespace-nowrap">RD$${formatMoney(factura.impuesto)}</td>
+                <td class="px-4 py-3 whitespace-nowrap">RD$${formatMoney(factura.total)}</td>
+                <td class="px-4 py-3 whitespace-nowrap">${factura.tipo_pago || 'N/A'}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                    <div class="flex space-x-2">
+                        <button onclick="verFactura(${factura.id})" 
+                                class="text-blue-600 hover:text-blue-900" 
+                                title="Ver factura">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        
+                        <button onclick="reimprimirFactura(${factura.id})" 
+                                class="text-green-600 hover:text-green-900" 
+                                title="Reimprimir factura">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        
+                        <button onclick="enviarEmail(${factura.id})" 
+                                class="text-purple-600 hover:text-purple-900" 
+                                title="Enviar por email">
+                            <i class="fas fa-envelope"></i>
+                        </button>
+                        
+                        ${factura.estatus !== 'anulada' ? `
+                            <button onclick="handleInvoiceCancellation(${factura.id})" 
+                                    class="text-red-600 hover:text-red-900" 
+                                    title="Cancelar factura">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        // Actualizar el tbody con las facturas
+        tbody.innerHTML = facturasHTML;
+
+    } catch (error) {
+        console.error('Error cargando facturas:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="13" class="px-4 py-3 text-center text-red-500">
+                    Error al cargar las facturas: ${error.message}
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Función auxiliar para formatear moneda
+function formatMoney(amount) {
+    return new Intl.NumberFormat('es-DO', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount || 0);
+}
+
+// Función auxiliar para formatear fecha
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+}
+
+// Función auxiliar para el color del estado
+function getStatusBadgeColor(status) {
+    const colors = {
+        'pendiente': 'bg-yellow-100 text-yellow-800',
+        'pagada': 'bg-green-100 text-green-800',
+        'anulada': 'bg-red-100 text-red-800',
+        'vencida': 'bg-gray-100 text-gray-800'
+    };
+    return colors[status?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Iniciando carga de facturas...');
+    loadInvoices();
+});
+
+// Recargar facturas después de crear una nueva
+if (document.getElementById('submit-invoice')) {
+    document.getElementById('submit-invoice').addEventListener('click', async () => {
+        const modal = document.getElementById('invoice-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            await loadInvoices();
+        }
+    });
+}
+
+// Agregar esto después de que el documento esté cargado
+document.addEventListener('DOMContentLoaded', function() {
+    const invoiceTypeOptions = document.querySelectorAll('.invoice-type-option');
+    const clientSection = document.querySelector('.client-selector');
+    const clientSearch = document.getElementById('clientSearch');
+    const clientLabel = document.querySelector('.client-selector label');
+    
+    // Función para actualizar la UI basada en el tipo de factura
+    function updateUIForInvoiceType(type) {
+        if (type === 'credito') {
+            clientSection.classList.add('border-red-500');
+            clientLabel.innerHTML = 'Cliente <span class="text-red-500">*</span>';
+            clientSearch.setAttribute('required', 'required');
+            clientSearch.classList.add('border-red-500');
+            
+            // Mostrar mensaje de validación
+            const validationMsg = document.createElement('p');
+            validationMsg.className = 'text-red-500 text-sm mt-1';
+            validationMsg.id = 'client-validation-msg';
+            validationMsg.textContent = 'Cliente es obligatorio para facturas a crédito';
+            
+            // Solo agregar si no existe
+            if (!document.getElementById('client-validation-msg')) {
+                clientSection.appendChild(validationMsg);
+            }
+            
+            // Actualizar los tipos de pago disponibles para crédito
+            updatePaymentTypes('credito');
+        } else {
+            clientSection.classList.remove('border-red-500');
+            clientLabel.innerHTML = 'Cliente <span class="text-gray-500">(Opcional)</span>';
+            clientSearch.removeAttribute('required');
+            clientSearch.classList.remove('border-red-500');
+            
+            // Remover mensaje de validación si existe
+            const validationMsg = document.getElementById('client-validation-msg');
+            if (validationMsg) {
+                validationMsg.remove();
+            }
+            
+            // Actualizar los tipos de pago disponibles para contado
+            updatePaymentTypes('contado');
+        }
+    }
+
+    // Event listeners para los tipos de factura
+    invoiceTypeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const type = this.dataset.type;
+            
+            // Actualizar UI de los botones
+            invoiceTypeOptions.forEach(opt => {
+                opt.classList.remove('selected');
+                opt.querySelector('.selected-line').style.transform = 'scaleX(0)';
+                opt.querySelector('.selected-indicator').style.opacity = '0';
+            });
+            
+            this.classList.add('selected');
+            this.querySelector('.selected-line').style.transform = 'scaleX(1)';
+            this.querySelector('.selected-indicator').style.opacity = '1';
+            
+            // Actualizar la UI basada en el tipo
+            updateUIForInvoiceType(type);
+        });
+    });
+
+    // Validación al enviar el formulario
+    document.getElementById('submit-invoice').addEventListener('click', function(e) {
+        const selectedType = document.querySelector('.invoice-type-option.selected').dataset.type;
+        const clientId = document.getElementById('selectedClient')?.dataset.clientId;
+        
+        if (selectedType === 'credito' && !clientId) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Debe seleccionar un cliente para facturas a crédito'
+            });
+            return false;
+        }
+        
+        // Continuar con el envío si todo está bien
+        return true;
+    });
+
+    // Inicializar con el tipo "contado"
+    updateUIForInvoiceType('contado');
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('invoice-modal');
@@ -1293,6 +3481,217 @@ document.addEventListener('DOMContentLoaded', function() {
         nextStepBtn.classList.toggle('hidden', stepIndex === steps.length - 1);
         submitInvoiceBtn.classList.toggle('hidden', stepIndex !== steps.length - 1);
     }
+
+        // Función para inicializar la búsqueda de clientes
+    function initializeClientSearch() {
+        const clientSearch = document.getElementById('clientSearch');
+        const searchResults = document.getElementById('searchResults');
+        const selectedClient = document.getElementById('selectedClient');
+        const selectedClientName = document.getElementById('selectedClientName');
+        const selectedClientDoc = document.getElementById('selectedClientDoc');
+
+        let searchTimeout;
+
+        // Función para buscar clientes con la ruta correcta
+        // Función para buscar clientes
+    async function searchClients(query) {
+        try {
+            const response = await fetch(`/facturacion/api/clientes/buscar?q=${encodeURIComponent(query)}`);
+            if (!response.ok) {
+                console.error('Error response:', await response.text());
+                throw new Error('Error en la búsqueda');
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error en la búsqueda:', error);
+            return [];
+        }
+    }
+
+    // Actualizar el event listener de búsqueda de clientes
+    clientSearchInput.addEventListener('input', async (e) => {
+        clearTimeout(clientSearchTimeout);
+        const searchTerm = e.target.value.trim();
+
+        if (!searchTerm) {
+            clientSearchResults.classList.add('hidden');
+            return;
+        }
+
+        clientSearchTimeout = setTimeout(async () => {
+            try {
+                const clients = await searchClients(searchTerm);
+                
+                if (clients.length > 0) {
+                    clientSearchResults.innerHTML = clients.map(client => `
+                        <div class="p-2 hover:bg-gray-100 cursor-pointer" 
+                            onclick="selectClient(${JSON.stringify(client).replace(/"/g, '&quot;')})">
+                            <div class="font-medium">${client.nombre}</div>
+                            <div class="text-sm text-gray-500">${client.ruc}</div>
+                        </div>
+                    `).join('');
+                    clientSearchResults.classList.remove('hidden');
+                } else {
+                    clientSearchResults.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }, 300);
+    });
+
+    // También actualizar el objeto api
+    const api = {
+        async searchClients(query) {
+            try {
+                const response = await fetch(`/facturacion/api/clientes/buscar?q=${encodeURIComponent(query)}`, {
+                    headers: {
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+                if (!response.ok) throw new Error('Error buscando clientes');
+                return await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                throw error;
+            }
+        },
+        // ... resto del objeto api
+    };
+
+        // Función para seleccionar un cliente
+        function selectClient(client) {
+            selectedClientName.textContent = client.nombre;
+            selectedClientDoc.textContent = client.ruc || 'Sin RNC/Cédula';
+            selectedClient.classList.remove('hidden');
+            selectedClient.dataset.clientId = client.id;
+            searchResults.classList.add('hidden');
+            clientSearch.value = '';
+        }
+
+        // Manejador de eventos para la búsqueda
+        function handleSearch(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (!query) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                const clients = await searchClients(query);
+                searchResults.innerHTML = '';
+                
+                if (clients && clients.length > 0) {
+                    clients.forEach(client => {
+                        const div = document.createElement('div');
+                        div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
+                        div.innerHTML = `
+                            <div class="font-medium">${client.nombre}</div>
+                            <div class="text-sm text-gray-500">${client.ruc || 'Sin RNC/Cédula'}</div>
+                        `;
+                        div.addEventListener('click', () => {
+                            selectClient(client);
+                        });
+                        searchResults.appendChild(div);
+                    });
+                    searchResults.classList.remove('hidden');
+                } else {
+                    const div = document.createElement('div');
+                    div.className = 'p-2 text-gray-500';
+                    div.textContent = 'No se encontraron clientes';
+                    searchResults.appendChild(div);
+                    searchResults.classList.remove('hidden');
+                }
+            }, 300);
+        }
+
+        // Event Listeners
+        if (clientSearch) {
+            clientSearch.addEventListener('input', handleSearch);
+
+            // Cerrar resultados al hacer clic fuera
+            document.addEventListener('click', (e) => {
+                if (!clientSearch.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+        }
+
+        // Crear nuevo cliente
+        const toggleClientForm = document.getElementById('toggleClientForm');
+        const clientForm = document.getElementById('clientForm');
+        
+        if (toggleClientForm) {
+            toggleClientForm.addEventListener('click', () => {
+                if (clientForm) {
+                    clientForm.classList.toggle('hidden');
+                }
+            });
+        }
+
+        // Guardar nuevo cliente
+        const saveClientBtn = document.getElementById('saveClient');
+        if (saveClientBtn) {
+            saveClientBtn.addEventListener('click', async () => {
+                const clientName = document.getElementById('clientName').value;
+                const docType = document.getElementById('docType').value;
+                const docNumber = document.getElementById('docNumber').value;
+                
+                if (!clientName || !docNumber) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'El nombre y el documento son requeridos',
+                        icon: 'error'
+                    });
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/facturacion/api/clientes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            nombre: clientName,
+                            ruc: `${docType}: ${docNumber}`
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        // Seleccionar el cliente recién creado
+                        selectClient(data);
+                        // Ocultar el formulario
+                        clientForm.classList.add('hidden');
+                        // Mostrar mensaje de éxito
+                        Swal.fire({
+                            title: '¡Éxito!',
+                            text: 'Cliente creado correctamente',
+                            icon: 'success'
+                        });
+                        // Limpiar el formulario
+                        document.getElementById('clientName').value = '';
+                        document.getElementById('docNumber').value = '';
+                    } else {
+                        throw new Error(data.error || 'Error al crear el cliente');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: error.message || 'Error al crear el cliente',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
+    }
+
 
     function calcularTotal() {
         let subtotal = 0;
@@ -1350,84 +3749,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Nueva versión del guardado de facturas
-    submitInvoiceBtn.addEventListener('click', async () => {
-        try {
-            // Validar que haya cliente seleccionado
-            const clienteId = document.getElementById('selectedClient').dataset.clientId;
-            if (!clienteId) {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Debe seleccionar un cliente',
-                    icon: 'error'
-                });
-                return;
-            }
-    
-            // Validar que haya productos
-            const items = obtenerItemsFactura();
-            if (items.length === 0) {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Debe agregar al menos un producto',
-                    icon: 'error'
-                });
-                return;
-            }
-    
-            // Preparar los datos en el formato que espera el backend
-            const invoiceData = {
-                cliente_id: parseInt(clienteId),
-                tipo: document.querySelector('input[name="tipo"]:checked').value,
-                tipo_pago: document.querySelector('input[name="tipo_pago"]:checked').value,
-                tienda: document.querySelector('.store-option.bg-blue-100')?.dataset.store || 'principal',
-                items: items.map(item => ({
-                    item_id: parseInt(item.id),
-                    cantidad: parseInt(item.quantity),
-                    precio_unitario: parseFloat(item.price),
-                    itbis: parseFloat(item.itbis),
-                    comentario: item.comentario
-                })),
-                notas: document.getElementById('notesInput').value,
-                descuento: document.getElementById('appliedDiscountValue').textContent
-            };
-    
-            const response = await fetch('/api/facturas', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken()
-                },
-                body: JSON.stringify(invoiceData)
-            });
-    
-            const data = await response.json();
-    
-            if (!response.ok) {
-                throw new Error(data.error || 'Error al crear la factura');
-            }
-    
-            // Si la creación fue exitosa
-            Swal.fire({
-                title: '¡Éxito!',
-                text: data.message || 'Factura creada correctamente',
-                icon: 'success'
-            }).then(() => {
-                modal.classList.add('hidden');
-                resetForm();
-                cargarFacturas();
-            });
-    
-        } catch (error) {
-            console.error('Error creando factura:', error);
-            Swal.fire({
-                title: 'Error',
-                text: error.message || 'Error al crear la factura',
-                icon: 'error'
-            });
-        }
-    });
-
 // Función para obtener los items de la factura
 function obtenerItemsFactura() {
     const items = [];
@@ -1452,70 +3773,246 @@ function obtenerItemsFactura() {
     return items;
 }
 
-    // Nueva función para cargar facturas
-    async function cargarFacturas(filters = {}) {
+    // Función para manejar el envío de la factura
+    async function submitInvoice() {
         try {
-            const facturas = await api.loadInvoices(filters);
-            const tbody = document.querySelector('table tbody');
-            tbody.innerHTML = facturas.map(factura => `
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${factura.numero}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${factura.cliente_nombre}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${factura.fecha}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$${factura.total.toFixed(2)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${getStatusClass(factura.estatus)}">
-                            ${factura.estatus}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="editarFactura(${factura.id})" class="text-indigo-600 hover:text-indigo-900 mr-2">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="eliminarFactura(${factura.id})" class="text-red-600 hover:text-red-900">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        } catch (error) {
-            console.error('Error cargando facturas:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'Error al cargar las facturas',
-                icon: 'error'
+            // Validar todos los campos antes de procesar
+            const validationErrors = validateInvoiceFields();
+            if (validationErrors.length > 0) {
+                throw new Error(validationErrors.join('\n'));
+            }
+    
+            // 1. Obtener el tipo de factura seleccionado
+            const invoiceType = document.querySelector('.invoice-type-option.selected').dataset.type;
+            
+            // 2. Obtener el tipo de pago seleccionado
+            const paymentType = document.querySelector('input[name="tipo_pago"]:checked')?.value;
+            
+            // 3. Obtener la tienda seleccionada
+            const selectedStore = document.querySelector('.store-option.ring-2');
+            if (!selectedStore) {
+                throw new Error('Debe seleccionar una tienda');
+            }
+            const storeId = selectedStore.dataset.storeId;
+            
+            // 4. Obtener los items de la factura
+            const items = [];
+            document.querySelectorAll('#product-list tr').forEach(row => {
+                const quantityInput = row.querySelector('.quantity-input');
+                if (!quantityInput) return;
+                
+                items.push({
+                    item_id: row.dataset.itemId,
+                    cantidad: parseInt(quantityInput.value),
+                    precio_unitario: parseFloat(row.querySelector('.precio').textContent.replace('RD$', '')),
+                    itbis: parseFloat(row.querySelector('.itbis').textContent.replace('%', '')),
+                    comentario: row.querySelector('input[type="text"]')?.value || ''
+                });
             });
+    
+            // 5. Construir el objeto de datos
+            const invoiceData = {
+                tipo: invoiceType,
+                tipo_pago: paymentType,
+                moneda: document.querySelector('input[name="moneda"]').value || 'DOP',
+                vendedor_id: document.getElementById('selectedSeller')?.dataset.sellerId,
+                tienda_id: storeId,
+                items: items,
+                cliente_id: document.getElementById('selectedClient')?.dataset.clientId,
+                ncf: document.getElementById('ncf-input')?.value || '',
+                notas: document.getElementById('notesInput')?.value || '',
+                descuento_monto: parseFloat(document.getElementById('discountAmountInput')?.value || 0),
+                descuento_porcentaje: parseFloat(document.getElementById('discountInput')?.value || 0)
+            };
+    
+            // 7. Enviar la solicitud al servidor
+            const response = await fetch('/facturacion/api/facturas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(invoiceData)
+            });
+    
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Error al crear la factura');
+            }
+    
+            const result = await response.json();
+            
+            // 8. Mostrar mensaje de éxito
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: 'Factura creada correctamente',
+                showConfirmButton: true
+            });
+    
+            // 9. Cerrar el modal y resetear el formulario
+            document.getElementById('invoice-modal').classList.add('hidden');
+            resetForm();
+    
+        } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error en la Factura',
+            html: error.message.replace(/\n/g, '<br>'),
+            confirmButtonText: 'Entendido'
+        });
+    }
+}
+    
+    // Función de validación de campos
+    function validateInvoiceFields() {
+        const errors = [];
+        
+        // 1. Validar tienda
+        const selectedStore = document.querySelector('.store-option.ring-2');
+        if (!selectedStore) {
+            errors.push('• Debe seleccionar una tienda');
+            highlightError('storeOptions');
+        }
+    
+        // 2. Validar tipo de factura y cliente
+        const invoiceType = document.querySelector('.invoice-type-option.selected')?.dataset.type;
+        const clienteId = document.getElementById('selectedClient')?.dataset.clientId;
+        
+        if (!invoiceType) {
+            errors.push('• Debe seleccionar el tipo de factura (Contado o Crédito)');
+            highlightError('invoice-type-options');
+        } else if (invoiceType === 'credito' && !clienteId) {
+            errors.push('• Debe seleccionar un cliente para facturas a crédito');
+            highlightError('clientSearch');
+        }
+    
+        // 3. Validar NCF si el cliente es fiscal
+        const clienteTipo = document.getElementById('selectedClient')?.dataset.tipo;
+        const ncf = document.getElementById('ncf-input')?.value;
+        if (clienteTipo === 'fiscal' && !ncf) {
+            errors.push('• Debe ingresar el NCF para clientes fiscales');
+            highlightError('ncf-input');
+        }
+    
+        // 4. Validar tipo de pago
+        const tipoPago = document.querySelector('input[name="tipo_pago"]:checked');
+        if (!tipoPago) {
+            errors.push('• Debe seleccionar un tipo de pago');
+            highlightError('payment-options');
+        }
+    
+        // 5. Validar productos
+        const productos = document.querySelectorAll('#product-list tr[data-item-id]');
+        if (productos.length === 0) {
+            errors.push('• Debe agregar al menos un producto');
+            highlightError('product-list');
+        }
+    
+        // 6. Validar cantidades de productos
+        productos.forEach((producto, index) => {
+            const cantidad = producto.querySelector('.quantity-input')?.value;
+            const stock = producto.querySelector('.quantity-input')?.getAttribute('max');
+            
+            if (!cantidad || parseInt(cantidad) <= 0) {
+                errors.push(`• Cantidad inválida en el producto ${index + 1}`);
+                highlightError(`quantity-${index}`);
+            } else if (parseInt(cantidad) > parseInt(stock)) {
+                errors.push(`• Cantidad excede el stock disponible en el producto ${index + 1}`);
+                highlightError(`quantity-${index}`);
+            }
+        });
+    
+        return errors;
+    }
+    
+    // Función para resaltar campos con error
+    function highlightError(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.classList.add('border-red-500', 'bg-red-50');
+            setTimeout(() => {
+                element.classList.remove('border-red-500', 'bg-red-50');
+            }, 5000);
         }
     }
-
-    // Event listeners para los botones de navegación
+    
+    // Event listeners
+    document.getElementById('submit-invoice').addEventListener('click', submitInvoice);
+    
     newInvoiceBtn.addEventListener('click', () => {
         modal.classList.remove('hidden');
         showStep(0);
     });
-
+    
     closeModalBtn.addEventListener('click', () => {
         confirmCancelInvoice();
     });
-
+    
     prevStepBtn.addEventListener('click', () => {
         if (currentStep > 0) {
             currentStep--;
             showStep(currentStep);
         }
     });
-
-    nextStepBtn.addEventListener('click', () => {
+    
+    nextStepBtn.addEventListener('click', async () => {
+        const currentStepErrors = validateCurrentStep(currentStep);
+        if (currentStepErrors.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campos Requeridos',
+                html: currentStepErrors.join('<br>'),
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+    
         if (currentStep < steps.length - 1) {
             currentStep++;
             showStep(currentStep);
         }
     });
-
+    
     cancelInvoiceBtn.addEventListener('click', () => {
         confirmCancelInvoice();
     });
+    
+    // Función para validar el paso actual
+    function validateCurrentStep(step) {
+        const errors = [];
+        
+        switch(step) {
+            case 0: // Información básica
+                if (!document.querySelector('.store-option.ring-2')) {
+                    errors.push('• Debe seleccionar una tienda');
+                }
+                if (document.querySelector('.invoice-type-option.selected')?.dataset.type === 'credito' 
+                    && !document.getElementById('selectedClient')?.dataset.clientId) {
+                    errors.push('• Debe seleccionar un cliente para facturas a crédito');
+                }
+                if (!document.querySelector('input[name="tipo_pago"]:checked')) {
+                    errors.push('• Debe seleccionar un tipo de pago');
+                }
+                break;
+                
+            case 1: // Productos
+                if (document.querySelectorAll('#product-list tr[data-item-id]').length === 0) {
+                    errors.push('• Debe agregar al menos un producto');
+                }
+                break;
+                
+            case 2: // Resumen y pago
+                const total = parseFloat(document.getElementById('summary-total')?.textContent.replace('RD$', '')) || 0;
+                if (total <= 0) {
+                    errors.push('• El total de la factura debe ser mayor a 0');
+                }
+                break;
+        }
+        
+        return errors;
+    }
 
     // Funcionalidad para el selector de cliente
     const toggleClientForm = document.getElementById('toggleClientForm');
@@ -1892,8 +4389,6 @@ function obtenerItemsFactura() {
         updateTotals();
     }
 
-    // Cargar facturas iniciales
-    cargarFacturas();
 });
 </script>
 {% endblock %}

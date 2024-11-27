@@ -70,6 +70,118 @@ function generarEstadoResultados() {
         return;
     }
 
+    // Mostrar indicador de carga
+    const estadoResultadosContent = document.getElementById('estado-resultados-content');
+    estadoResultadosContent.innerHTML = `
+        <div class="flex justify-center items-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+    `;
+
+    // Construir la URL con los parámetros
+    const params = new URLSearchParams({
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin
+    });
+
+    fetch(`/contabilidad/api/estado_resultados/generar?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarEstadoResultados(data.data, fechaInicio, fechaFin);
+                Swal.fire('Éxito', 'Estado de Resultados generado correctamente.', 'success');
+            } else {
+                console.error('Error:', data.error);
+                Swal.fire('Error', data.error || 'Error al generar el estado de resultados', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Error al generar el estado de resultados', 'error');
+        });
+}
+
+function actualizarEstadoResultados(data, fechaInicio, fechaFin) {
+    const estadoResultadosContent = document.getElementById('estado-resultados-content');
+    
+    // Agrupar detalles por tipo
+    const ingresos = data.detalles.filter(d => d.tipo === 'ingresos');
+    const gastos = data.detalles.filter(d => d.tipo === 'gastos');
+
+    let html = `
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-xl font-bold mb-2 text-center">Estado de Resultados</h2>
+            <p class="text-sm text-gray-600 mb-6 text-center">Período: ${fechaInicio} al ${fechaFin}</p>
+
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-3 text-blue-600">Ingresos</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 compact-table">
+                        <tbody class="bg-white">
+                            ${ingresos.map(item => `
+                                <tr>
+                                    <td class="px-6 py-2 text-sm text-gray-900">${item.concepto}</td>
+                                    <td class="px-6 py-2 text-sm text-gray-900 text-right">${item.monto.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                </tr>
+                            `).join('')}
+                            <tr class="bg-blue-50 font-semibold">
+                                <td class="px-6 py-2 text-sm text-blue-800">Total Ingresos</td>
+                                <td class="px-6 py-2 text-sm text-blue-800 text-right">${data.ingresos.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-3 text-red-600">Gastos</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 compact-table">
+                        <tbody class="bg-white">
+                            ${gastos.map(item => `
+                                <tr>
+                                    <td class="px-6 py-2 text-sm text-gray-900">${item.concepto}</td>
+                                    <td class="px-6 py-2 text-sm text-gray-900 text-right">${item.monto.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                </tr>
+                            `).join('')}
+                            <tr class="bg-red-50 font-semibold">
+                                <td class="px-6 py-2 text-sm text-red-800">Total Gastos</td>
+                                <td class="px-6 py-2 text-sm text-red-800 text-right">${data.gastos.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-4 border-t-2">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <tbody>
+                            <tr class="bg-gray-100 font-bold">
+                                <td class="px-6 py-3 text-lg text-gray-900">Utilidad Neta</td>
+                                <td class="px-6 py-3 text-lg text-gray-900 text-right ${data.utilidad >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                    ${data.utilidad.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    estadoResultadosContent.innerHTML = html;
+}
+
+function generarEstadoResultados() {
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    if (!fechaInicio || !fechaFin) {
+        Swal.fire('Error', 'Por favor, seleccione ambas fechas.', 'error');
+        return;
+    }
+
     // Aquí deberías hacer una llamada a tu API para obtener los datos del estado de resultados
     // Por ahora, usaremos datos simulados
     const estadoResultadosData = {

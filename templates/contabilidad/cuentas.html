@@ -442,23 +442,35 @@ function toggleModal(modalId) {
 }
 
 function buscarCuentas() {
-  const codigoCuenta = document.getElementById('codigo-cuenta').value;
-  const nombreCuenta = document.getElementById('nombre-cuenta').value;
-  const tipoCuenta = document.getElementById('tipo-cuenta').value;
+    const codigoCuenta = document.getElementById('codigo-cuenta').value;
+    const nombreCuenta = document.getElementById('nombre-cuenta').value;
+    const tipoCuenta = document.getElementById('tipo-cuenta').value;
 
-  fetch(`/contabilidad/api/buscar-cuentas?numero=${codigoCuenta}&nombre=${nombreCuenta}&categoria=${tipoCuenta}`)
-      .then(response => response.json())
-      .then(data => {
-          if (data.success) {
-              actualizarTablaCuentas(data.cuentas);
-          } else {
-              Swal.fire('Error', data.error, 'error');
-          }
-      })
-      .catch(error => {
-          console.error('Error:', error);
-          Swal.fire('Error', 'Error al buscar cuentas', 'error');
-      });
+    console.log('Buscando cuentas con parámetros:', {
+        codigo: codigoCuenta,
+        nombre: nombreCuenta,
+        tipo: tipoCuenta
+    });
+
+    fetch(`/contabilidad/api/buscar-cuentas?numero=${codigoCuenta}&nombre=${nombreCuenta}&categoria=${tipoCuenta}`)
+        .then(response => {
+            console.log('Status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Respuesta:', data);
+            if (data.success) {
+                console.log('Cuentas encontradas:', data.cuentas.length);
+                actualizarTablaCuentas(data.cuentas);
+            } else {
+                console.error('Error en respuesta:', data.error);
+                Swal.fire('Error', data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Error al buscar cuentas', 'error');
+        });
 }
 
 function guardarCuenta(event) {

@@ -81,6 +81,279 @@ function generarBalanceGeneral() {
     actualizarBalanceGeneral(balanceGeneralData, fechaBalance);
 }
 
+function generarBalanceGeneral() {
+    const fechaBalance = document.getElementById('fecha-balance').value;
+
+    if (!fechaBalance) {
+        Swal.fire('Error', 'Por favor, seleccione una fecha para el balance.', 'error');
+        return;
+    }
+
+    // Mostrar indicador de carga
+    const balanceGeneralContent = document.getElementById('balance-general-content');
+    balanceGeneralContent.innerHTML = `
+        <div class="flex justify-center items-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+    `;
+
+    // Construir la URL con los parámetros
+    const params = new URLSearchParams({
+        fecha: fechaBalance
+    });
+
+    fetch(`/contabilidad/api/balance_general/generar?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarBalanceGeneral(data.data);
+                Swal.fire('Éxito', 'Balance General generado correctamente.', 'success');
+            } else {
+                console.error('Error:', data.error);
+                Swal.fire('Error', data.error || 'Error al generar el balance general', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Error al generar el balance general', 'error');
+        });
+}
+
+function actualizarBalanceGeneral(data) {
+    const balanceGeneralContent = document.getElementById('balance-general-content');
+    
+    let html = `
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-xl font-bold mb-2 text-center">Balance General</h2>
+            <p class="text-sm text-gray-600 mb-6 text-center">Al ${data.fecha}</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Activos -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-blue-600">Activos</h3>
+                    
+                    <!-- Activos Circulantes -->
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-2 text-gray-700">Activos Circulantes</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <tbody class="bg-white">
+                                    ${data.activos.circulante.cuentas.map(cuenta => `
+                                        <tr>
+                                            <td class="px-4 py-2 text-sm">${cuenta.nombre}</td>
+                                            <td class="px-4 py-2 text-sm text-right">${cuenta.saldo.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="bg-gray-50 font-medium">
+                                        <td class="px-4 py-2">Total Activos Circulantes</td>
+                                        <td class="px-4 py-2 text-right">${data.activos.circulante.total.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Activos Fijos -->
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-2 text-gray-700">Activos Fijos</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <tbody class="bg-white">
+                                    ${data.activos.fijo.cuentas.map(cuenta => `
+                                        <tr>
+                                            <td class="px-4 py-2 text-sm">${cuenta.nombre}</td>
+                                            <td class="px-4 py-2 text-sm text-right">${cuenta.saldo.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="bg-gray-50 font-medium">
+                                        <td class="px-4 py-2">Total Activos Fijos</td>
+                                        <td class="px-4 py-2 text-right">${data.activos.fijo.total.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Total Activos -->
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="font-bold text-blue-800 flex justify-between">
+                            <span>Total Activos</span>
+                            <span>${data.totales.activos.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pasivos y Capital -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-red-600">Pasivos y Capital</h3>
+                    
+                    <!-- Pasivos Corto Plazo -->
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-2 text-gray-700">Pasivos Corto Plazo</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <tbody class="bg-white">
+                                    ${data.pasivos.corto_plazo.cuentas.map(cuenta => `
+                                        <tr>
+                                            <td class="px-4 py-2 text-sm">${cuenta.nombre}</td>
+                                            <td class="px-4 py-2 text-sm text-right">${cuenta.saldo.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="bg-gray-50 font-medium">
+                                        <td class="px-4 py-2">Total Pasivos Corto Plazo</td>
+                                        <td class="px-4 py-2 text-right">${data.pasivos.corto_plazo.total.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Pasivos Largo Plazo -->
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-2 text-gray-700">Pasivos Largo Plazo</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <tbody class="bg-white">
+                                    ${data.pasivos.largo_plazo.cuentas.map(cuenta => `
+                                        <tr>
+                                            <td class="px-4 py-2 text-sm">${cuenta.nombre}</td>
+                                            <td class="px-4 py-2 text-sm text-right">${cuenta.saldo.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="bg-gray-50 font-medium">
+                                        <td class="px-4 py-2">Total Pasivos Largo Plazo</td>
+                                        <td class="px-4 py-2 text-right">${data.pasivos.largo_plazo.total.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Capital -->
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-2 text-gray-700">Capital</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <tbody class="bg-white">
+                                    ${data.capital.cuentas.map(cuenta => `
+                                        <tr>
+                                            <td class="px-4 py-2 text-sm">${cuenta.nombre}</td>
+                                            <td class="px-4 py-2 text-sm text-right">${cuenta.saldo.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr class="bg-gray-50 font-medium">
+                                        <td class="px-4 py-2">Total Capital</td>
+                                        <td class="px-4 py-2 text-right">${data.capital.total.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                    <tr class="bg-gray-50 font-medium">
+                                        <td class="px-4 py-2">Total Capital</td>
+                                        <td class="px-4 py-2 text-right">${data.capital.total.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Total Pasivos y Capital -->
+                    <div class="bg-gray-100 p-4 rounded-lg mt-6">
+                        <div class="font-bold text-red-800 flex justify-between mb-2">
+                            <span>Total Pasivos</span>
+                            <span>${data.totales.pasivos.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</span>
+                        </div>
+                        <div class="font-bold text-green-800 flex justify-between mb-2">
+                            <span>Total Capital</span>
+                            <span>${data.capital.total.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</span>
+                        </div>
+                        <div class="font-bold text-gray-800 flex justify-between border-t pt-2">
+                            <span>Total Pasivos y Capital</span>
+                            <span>${data.totales.pasivo_capital.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verificación de cuadre -->
+            <div class="mt-8 p-4 ${data.totales.activos === data.totales.pasivo_capital ? 'bg-green-50' : 'bg-red-50'} rounded-lg">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <div class="font-medium text-gray-600">Total Activos</div>
+                        <div class="text-xl font-bold ${data.totales.activos === data.totales.pasivo_capital ? 'text-green-600' : 'text-red-600'}">
+                            ${data.totales.activos.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="font-medium text-gray-600">Total Pasivos y Capital</div>
+                        <div class="text-xl font-bold ${data.totales.activos === data.totales.pasivo_capital ? 'text-green-600' : 'text-red-600'}">
+                            ${data.totales.pasivo_capital.toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}
+                        </div>
+                    </div>
+                </div>
+                ${data.totales.activos === data.totales.pasivo_capital ? 
+                    `<div class="text-center mt-2 text-green-600 font-medium">
+                        <i class="fas fa-check-circle mr-2"></i>El balance está cuadrado correctamente
+                    </div>` : 
+                    `<div class="text-center mt-2 text-red-600 font-medium">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>¡Advertencia! El balance no está cuadrado
+                        <div class="text-sm mt-1">
+                            Diferencia: ${Math.abs(data.totales.activos - data.totales.pasivo_capital).toLocaleString('es-DO', {style: 'currency', currency: 'DOP'})}
+                        </div>
+                    </div>`
+                }
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="mt-6 flex justify-end space-x-4">
+                <button onclick="exportarBalancePDF()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-file-pdf mr-2"></i>Exportar PDF
+                </button>
+                <button onclick="exportarBalanceExcel()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-file-excel mr-2"></i>Exportar Excel
+                </button>
+            </div>
+        </div>
+    `;
+
+    balanceGeneralContent.innerHTML = html;
+}
+
+// Función para exportar el balance a PDF
+function exportarBalancePDF() {
+    Swal.fire({
+        icon: 'info',
+        title: 'Exportando PDF',
+        text: 'Esta función será implementada próximamente.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+    });
+}
+
+// Función para exportar el balance a Excel
+function exportarBalanceExcel() {
+    Swal.fire({
+        icon: 'info',
+        title: 'Exportando Excel',
+        text: 'Esta función será implementada próximamente.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+    });
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    initializeBalanceGeneral();
+    
+    // Establecer fecha actual por defecto
+    const fechaBalance = document.getElementById('fecha-balance');
+    if (fechaBalance) {
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        fechaBalance.value = formattedDate;
+    }
+});
+
 function actualizarBalanceGeneral(data, fechaBalance) {
     const balanceGeneralContent = document.getElementById('balance-general-content');
     let html = `

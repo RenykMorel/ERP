@@ -519,6 +519,87 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+
+
+    function actualizarTasasCambio() {
+        Swal.fire({
+            title: 'Actualizando tasas de cambio',
+            text: 'Por favor espere...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('/api/actualizar-tasas-cambio', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let actualizacionesHTML = data.actualizaciones.map(act => `
+                    <tr>
+                        <td>${act.divisa}</td>
+                        <td>${act.tasa_anterior.toFixed(4)}</td>
+                        <td>${act.tasa_nueva.toFixed(4)}</td>
+                        <td class="${act.variacion >= 0 ? 'text-green-600' : 'text-red-600'}">
+                            ${act.variacion.toFixed(2)}%
+                        </td>
+                    </tr>
+                `).join('');
+
+                Swal.fire({
+                    title: '¡Tasas actualizadas!',
+                    html: `
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-2">Divisa</th>
+                                        <th class="px-4 py-2">Tasa Anterior</th>
+                                        <th class="px-4 py-2">Nueva Tasa</th>
+                                        <th class="px-4 py-2">Variación</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${actualizacionesHTML}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            Actualizado: ${new Date(data.fecha_actualizacion).toLocaleString()}
+                        </div>
+                    `,
+                    icon: 'success'
+                });
+
+                // Recargar la tabla de divisas
+                loadDivisas();
+            } else {
+                throw new Error(data.error);
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'Error',
+                text: error.message || 'Error al actualizar las tasas de cambio',
+                icon: 'error'
+            });
+        });
+    }
+
+    // Añade el botón de actualización al HTML
+    const actualizarBtn = document.createElement('button');
+    actualizarBtn.className = 'bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-4';
+    actualizarBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Actualizar Tasas';
+    actualizarBtn.onclick = actualizarTasasCambio;
+
+    // Agregar el botón al contenedor de acciones
+    document.querySelector('.mb-8 .flex.flex-wrap.items-center.justify-between').appendChild(actualizarBtn);
+
     function initChart() {
         const ctx = document.getElementById('grafico-divisas').getContext('2d');
         divisasChart = new Chart(ctx, {

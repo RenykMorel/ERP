@@ -812,6 +812,65 @@ def crear_transferencia():
         db.session.rollback()
         logger.error(f"Error al crear transferencia: {str(e)}")
         return jsonify({"error": f"Error al crear la transferencia: {str(e)}"}), 500
+    
+    
+# En routes.py, añade este nuevo endpoint:
+
+@banco_bp.route("/api/actualizar-tasas-cambio", methods=["POST"])
+@login_required
+def actualizar_tasas_cambio():
+    try:
+        import requests
+        from datetime import datetime
+
+        # API key para exchangerate-api.com (regístrate para obtener una gratis)
+        API_KEY = 'TU_API_KEY'  # Reemplaza con tu API key
+        BASE_URL = f'https://v6.exchangerate-api.com/v6/{API_KEY}/latest/USD'
+
+        # Obtener todas las divisas activas
+        divisas = Divisa.query.filter_by(estatus='activo').all()
+        
+        # Obtener tasas de cambio actualizadas
+        response = requests.get(BASE_URL)
+        if response.status_code != 200:
+            raise Exception("Error al obtener tasas de cambio")
+            
+        data = response.json()
+        tasas = data['conversion_rates']
+        
+        actualizaciones = []
+        for divisa in divisas:
+            if divisa.abreviatura in tasas:
+                tasa_anterior = divisa.tasa_cambio
+                nueva_tasa = tasas[divisa.abreviatura]
+                
+                # Actualizar la divisa
+                divisa.tasa_cambio = nueva_tasa
+                divisa.fecha_actualizacion = datetime.now()
+                
+                actualizaciones.append({
+                    'divisa': divisa.abreviatura,
+                    'tasa_anterior': tasa_anterior,
+                    'tasa_nueva': nueva_tasa,
+                    'variacion': ((nueva_tasa - tasa_anterior) / tasa_anterior * 100)
+                })
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Tasas de cambio actualizadas correctamente',
+            'actualizaciones': actualizaciones,
+            'fecha_actualizacion': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error actualizando tasas de cambio: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f"Error al actualizar tasas de cambio: {str(e)}"
+        }), 500    
 
 @banco_bp.route("/crear-conciliacion", methods=["POST"])
 @login_required

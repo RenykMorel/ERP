@@ -83,6 +83,93 @@ function generarBalanzaComprobacion() {
     actualizarBalanzaComprobacion(balanzaData);
 }
 
+function generarBalanzaComprobacion() {
+    const fechaInicio = document.getElementById('fecha-inicio').value;
+    const fechaFin = document.getElementById('fecha-fin').value;
+
+    if (!fechaInicio || !fechaFin) {
+        Swal.fire('Error', 'Por favor, seleccione ambas fechas.', 'error');
+        return;
+    }
+
+    // Mostrar indicador de carga
+    const balanzaContent = document.getElementById('balanza-comprobacion-content');
+    balanzaContent.innerHTML = `
+        <div class="flex justify-center items-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+    `;
+
+    // Construir la URL con los parámetros
+    const params = new URLSearchParams({
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin
+    });
+
+    fetch(`/contabilidad/api/balanza_comprobacion/generar?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarBalanzaComprobacion(data.data.cuentas, data.data.totales);
+                Swal.fire('Éxito', 'Balanza de comprobación generada correctamente.', 'success');
+            } else {
+                console.error('Error:', data.error);
+                Swal.fire('Error', data.error || 'Error al generar la balanza de comprobación', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error', 'Error al generar la balanza de comprobación', 'error');
+        });
+}
+
+function actualizarBalanzaComprobacion(cuentas, totales) {
+    const balanzaContent = document.getElementById('balanza-comprobacion-content');
+    let html = `
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 compact-table">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Debe</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Haber</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Deudor</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Acreedor</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+    `;
+
+    cuentas.forEach(cuenta => {
+        html += `
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${cuenta.cuenta}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${cuenta.debe.toLocaleString('es-DO', {minimumFractionDigits: 2})}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${cuenta.haber.toLocaleString('es-DO', {minimumFractionDigits: 2})}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${cuenta.saldo_deudor.toLocaleString('es-DO', {minimumFractionDigits: 2})}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">${cuenta.saldo_acreedor.toLocaleString('es-DO', {minimumFractionDigits: 2})}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+                <tfoot>
+                    <tr class="bg-gray-50 font-bold">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Totales</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${totales.debe.toLocaleString('es-DO', {minimumFractionDigits: 2})}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${totales.haber.toLocaleString('es-DO', {minimumFractionDigits: 2})}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${totales.saldo_deudor.toLocaleString('es-DO', {minimumFractionDigits: 2})}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${totales.saldo_acreedor.toLocaleString('es-DO', {minimumFractionDigits: 2})}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+
+    balanzaContent.innerHTML = html;
+}
+
 function actualizarBalanzaComprobacion(data) {
     const balanzaContent = document.getElementById('balanza-comprobacion-content');
     let html = `
