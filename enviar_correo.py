@@ -3,8 +3,8 @@ from requests.auth import HTTPBasicAuth
 import pandas as pd
 
 # Credenciales de Mailjet
-api_key = 'c5378b1317b394a5fc77d732701d5de3'
-api_secret = '7a9c010dcca900504dba7410c3585a55'
+api_key = '
+api_secret = 
 
 # Datos del correo
 data = {
@@ -44,7 +44,7 @@ else:
     print(response_json)
 
 # Guardar el cuerpo del correo en un archivo de texto
-cuerpo_correo = "Hola,\nEste es un ejemplo de correo enviado desde Mailjet por Renyk Morel."
+cuerpo_correo = data["Messages"][0]["HTMLPart"].replace("<h3>", "").replace("</h3>", "").replace("<p>", "").replace("</p>", "").strip()
 with open("cuerpo_correo.txt", "w", encoding="utf-8") as texto_file:
     texto_file.write(cuerpo_correo)
 
@@ -52,7 +52,7 @@ with open("cuerpo_correo.txt", "w", encoding="utf-8") as texto_file:
 reporte_data = {
     "Estado del envío": [response.status_code],
     "Respuesta de la API": [response_json],
-    "Cuerpo del correo enviado": [cuerpo_correo]
+    "Cuerpo del correo enviado": [data]
 }
 reporte_df = pd.DataFrame(reporte_data)
 

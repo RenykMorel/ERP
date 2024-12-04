@@ -1,10 +1,14 @@
-#facturacion_routes.py en la carpeta de facturacion
-
-from flask import Blueprint, request, jsonify, render_template, current_app
+from flask import Blueprint, request, jsonify, render_template, current_app, make_response, render_template_string
 from flask_login import login_required, current_user
+import pdfkit
+import os
+import json
+from flask import jsonify, request
+import traceback
+import numpy as np
 from .facturas_models import (
     Facturacion, PreFactura, NotaCredito, NotaDebito, 
-    Cliente, TiendaFactura, ItemPreFactura, Vendedor
+    Cliente, TiendaFactura, ItemPreFactura, Vendedor, FacturaTemplate
 )
 from common.models import (
     ItemFactura, ItemPreFactura, MovimientoInventario
@@ -13,11 +17,78 @@ from inventario.inventario_models import InventarioItem
 from extensions import db
 from . import facturacion_bp
 from sqlalchemy.exc import IntegrityError
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import or_
 from sqlalchemy import text, func
-from .facturas_models import ItemPendiente, CodigoAutorizacion
+from .facturas_models import ItemPendiente, CodigoAutorizacion, InvoiceLayoutProcessor
+from .helpers import (
+    # Funciones de plantilla y formateo
+    generate_default_template,
+    generate_items_html,
+    format_currency,
+    
+    # Funciones de análisis de clientes
+    get_productos_frecuentes,
+    get_metodos_pago,
+    calculate_promedio,
+    get_frecuencia_compra,
+    get_productos_preferidos,
+    
+    # Funciones de análisis de ventas
+    get_ventas_por_hora,
+    get_volumen_transacciones,
+    get_ticket_promedio_metodo,
+    get_ticket_promedio,
+    get_horarios_preferidos,
+    get_tasa_rechazo,
+    
+    # Funciones de análisis comparativo
+    get_comparativa_metodos,
+    get_comparativa_diaria,
+    get_comparativa_semanal,
+    get_comparativa_mensual,
+    get_comparativa_anual,
+    get_comparativa_categorias,
+    
+    # Funciones de análisis de productos
+    get_top_productos,
+    get_tendencia_mensual,
+    calculate_margen,
+    get_stock_categoria,
+    get_top_clientes_categoria,
+    get_ventas_por_categoria,
+    
+    # Funciones de predicción y tendencias
+    predict_next_month,
+    get_tendencias,
+    get_patrones_diarios,
+    get_patrones_semanales,
+    get_patrones_mensuales,
+    
+    # Funciones de métricas financieras
+    calculate_growth_rate,
+    calculate_customer_return_rate,
+    calculate_customer_lifetime_value,
+    calculate_churn_rate,
+    calculate_inventory_turnover,
+    calculate_days_inventory,
+    calculate_gross_margin,
+    calculate_operating_margin,
+    calculate_average_cogs,
+    
+    # Funciones de inventario
+    get_stockouts,
+    get_metricas_inventario,
+    
+    # Funciones de vendedores
+    calculate_tasa_conversion,
+    get_productos_vendedor,
+    get_clientes_vendedor,
+    get_historico_vendedor,
+    calculate_comisiones
+)
 
+config = pdfkit.configuration(wkhtmltopdf=r'C:\Users\el_re\OneDrive - Sendiu\Desktop\wkhtmltopdf\bin\wkhtmltopdf.exe')
 
 
 @facturacion_bp.route('/')
@@ -87,6 +158,386 @@ def obtener_factura(factura_id):
     except Exception as e:
         current_app.logger.error(f"Error obteniendo factura {factura_id}: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    
+@facturacion_bp.route('/api/templates/<int:template_id>/activate', methods=['POST'])
+@login_required
+def activate_template(template_id):
+    try:
+        # Obtener la plantilla
+        template = FacturaTemplate.query.get_or_404(template_id)
+        
+        print(f"Activando plantilla {template_id} para tienda {template.tienda_id}")  # Debug log
+        
+        # Desactivar todas las plantillas para esa tienda
+        FacturaTemplate.query.filter_by(
+            tienda_id=template.tienda_id
+        ).update({'activo': False})
+        
+        # Activar la plantilla seleccionada
+        template.activo = True
+        db.session.commit()
+        
+        print(f"Plantilla activada exitosamente")  # Debug log
+        
+        return jsonify({
+            'success': True,
+            'message': 'Plantilla activada correctamente'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error activando plantilla: {str(e)}")  # Debug log
+        return jsonify({'error': str(e)}), 500
+
+@facturacion_bp.route('/api/templates/<int:template_id>/preview')
+@login_required
+def template_preview(template_id):
+    template = FacturaTemplate.query.get_or_404(template_id)
+    return template.css_styles    
+    
+@facturacion_bp.route('/api/templates/generate', methods=['POST'])
+@login_required
+def generate_invoice_template():
+    try:
+        data = request.json
+        print("Received data:", data)  # Debug log
+        
+        tienda_id = data.get('tienda_id')
+        if not tienda_id:
+            return jsonify({"error": "tienda_id es requerido"}), 400
+
+        # Validate tienda exists
+        tienda = TiendaFactura.query.get(tienda_id)
+        if not tienda:
+            return jsonify({"error": "Tienda no encontrada"}), 404
+
+        processor = InvoiceLayoutProcessor()
+        template = processor.generate_layout(tienda_id)
+
+        # Deactivate previous templates
+        FacturaTemplate.query.filter_by(
+            tienda_id=tienda_id,
+            activo=True
+        ).update({'activo': False})
+
+        db.session.add(template)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'template_id': template.id,
+            'template_preview': template.css_styles,
+            'message': 'Nueva plantilla generada exitosamente'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error generating template:", str(e))  # Debug log
+        return jsonify({'error': str(e)}), 500   
+    
+@facturacion_bp.route('/api/facturas/analisis', methods=['POST'])
+@login_required
+def analizar_facturas():
+    try:
+        data = request.get_json()
+        today = datetime.now()
+        fecha_inicio = datetime.strptime(data.get('fecha_inicio') or today.strftime('%Y-%m-%d'), '%Y-%m-%d')
+        fecha_fin = datetime.strptime(data.get('fecha_fin') or today.strftime('%Y-%m-%d'), '%Y-%m-%d')
+
+        facturas = Facturacion.query.filter(
+            Facturacion.fecha.between(fecha_inicio, fecha_fin),
+            Facturacion.estatus != 'anulada'
+        ).all()
+
+        total_facturas = len(facturas)
+        total_ingresos = sum(float(f.total or 0) for f in facturas)
+
+        return jsonify({
+            "metadata": {
+                "total_facturas": total_facturas,
+                "periodo": {
+                    "inicio": fecha_inicio.strftime('%Y-%m-%d'),
+                    "fin": fecha_fin.strftime('%Y-%m-%d')
+                }
+            },
+            "metricas": {
+                "total_ingresos": total_ingresos,
+                "ticket_promedio": total_ingresos / total_facturas if total_facturas > 0 else 0,
+                "tasa_crecimiento": 0
+            },
+            "tendencias": {
+                "ingresos_por_cliente": [],
+                "ingresos_por_producto": [],
+                "ingresos_por_mes": []
+            },
+            "patrones_sospechosos": [],
+            "analisis_costos": {
+                "oportunidades_ahorro": []
+            }
+        })
+
+    except Exception as e:
+        print(f"Error en analizar_facturas: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+    except Exception as e:
+        print(f"Error en analizar_facturas: {str(e)}")  # Log para debugging
+        return jsonify({"error": str(e)}), 500
+
+def get_top_clientes(facturas):
+    clientes = {}
+    for factura in facturas:
+        if factura.cliente:
+            nombre = factura.cliente.nombre
+            clientes[nombre] = clientes.get(nombre, 0) + float(factura.total or 0)
+    return [{"cliente": k, "total": v} for k, v in sorted(clientes.items(), key=lambda x: x[1], reverse=True)][:5]
+
+def get_analisis_temporal(facturas):
+    ventas_por_mes = {}
+    for factura in facturas:
+        mes = factura.fecha.strftime('%Y-%m')
+        ventas_por_mes[mes] = ventas_por_mes.get(mes, 0) + float(factura.total or 0)
+    return [{"mes": k, "total": v} for k, v in sorted(ventas_por_mes.items())]
+
+def calcular_tasa_crecimiento(ingresos_por_mes):
+    if len(ingresos_por_mes) < 2:
+        return 0
+    
+    meses = sorted(ingresos_por_mes.keys())
+    primer_mes = ingresos_por_mes[meses[0]]
+    ultimo_mes = ingresos_por_mes[meses[-1]]
+    
+    if primer_mes == 0:
+        return 0
+        
+    return ((ultimo_mes - primer_mes) / primer_mes) * 100
+
+# Funciones de análisis detalladas
+def calcular_ingresos_por_cliente(facturas):
+    ingresos = {}
+    for factura in facturas:
+        if factura.cliente:
+            key = factura.cliente.nombre
+            ingresos[key] = ingresos.get(key, 0) + factura.total
+    return [{"cliente": k, "total": v} for k, v in sorted(ingresos.items(), key=lambda x: x[1], reverse=True)]
+
+def calcular_ingresos_por_producto(facturas):
+    ingresos = {}
+    for factura in facturas:
+        for item in factura.items:
+            if item.item:
+                key = item.item.nombre
+                ingresos[key] = ingresos.get(key, 0) + (item.cantidad * item.precio_unitario)
+    return [{"producto": k, "total": v} for k, v in sorted(ingresos.items(), key=lambda x: x[1], reverse=True)]
+
+def proyectar_flujo_caja(facturas):
+    # Proyección por mes
+    flujo = {}
+    for factura in facturas:
+        mes = factura.fecha.strftime('%Y-%m')
+        flujo[mes] = flujo.get(mes, 0) + factura.total
+    return [{"mes": k, "proyeccion": v} for k, v in sorted(flujo.items())]
+
+def detectar_precios_anomalos(facturas):
+    anomalias = []
+    for factura in facturas:
+        for item in factura.items:
+            # Calcular estadísticas de precios para este producto
+            precios_historicos = obtener_precios_historicos(item.item_id)
+            if precios_historicos:
+                promedio = sum(precios_historicos) / len(precios_historicos)
+                desviacion = calcular_desviacion_estandar(precios_historicos)
+                if abs(item.precio_unitario - promedio) > (2 * desviacion):
+                    anomalias.append({
+                        "factura_id": factura.id,
+                        "item_id": item.item_id,
+                        "precio": item.precio_unitario,
+                        "promedio_historico": promedio,
+                        "desviacion": desviacion
+                    })
+    return anomalias
+
+def identificar_oportunidades_ahorro(facturas):
+    oportunidades = []
+    # Análisis de descuentos no aprovechados
+    for factura in facturas:
+        if factura.total > 10000 and not factura.descuento_monto:
+            oportunidades.append({
+                "tipo": "descuento_volumen",
+                "factura_id": factura.id,
+                "monto": factura.total,
+                "ahorro_potencial": factura.total * 0.05
+            })
+    return oportunidades
+
+def calcular_desviacion_estandar(valores):
+    if not valores:
+        return 0
+    media = sum(valores) / len(valores)
+    suma_cuadrados = sum((x - media) ** 2 for x in valores)
+    return (suma_cuadrados / len(valores)) ** 0.5
+
+def obtener_precios_historicos(item_id):
+    # Obtener historial de precios de los últimos 6 meses
+    fecha_limite = datetime.now() - timedelta(days=180)
+    items = ItemFactura.query.join(Facturacion).filter(
+        ItemFactura.item_id == item_id,
+        Facturacion.fecha >= fecha_limite
+    ).all()
+    return [item.precio_unitario for item in items]    
+
+    
+@facturacion_bp.route('/api/facturas/<int:factura_id>/print', methods=['GET'])
+@login_required
+def imprimir_factura(factura_id):
+    try:
+        factura = Facturacion.query.get_or_404(factura_id)
+        
+        template_id = request.args.get('template_id')
+        template = None
+        
+        # Imprimir logs detallados
+        print(f"Template ID solicitado: {template_id}")
+        
+        if template_id:
+            template = FacturaTemplate.query.get(template_id)
+            print(f"Plantilla encontrada por ID: {template.id if template else 'No encontrada'}")
+            print(f"Contenido HTML de la plantilla: {template.html_template if template else 'N/A'}")
+        
+        if not template:
+            template = FacturaTemplate.query.filter_by(
+                tienda_id=factura.tienda_id,
+                activo=True
+            ).first()
+            print(f"Plantilla encontrada por tienda: {template.id if template else 'No encontrada'}")
+        
+        if template:
+            print("Usando plantilla personalizada")
+            # Calcular totales para la factura
+            subtotal = sum(item.cantidad * item.precio_unitario for item in factura.items)
+            total_itbis = sum((item.cantidad * item.precio_unitario * item.itbis / 100) for item in factura.items if item.itbis)
+            
+            html_content = render_template_string(
+                template.html_template,
+                factura=factura,
+                subtotal=subtotal,
+                total_itbis=total_itbis,
+                format_currency=format_currency
+            )
+        else:
+            print("Usando plantilla por defecto")
+            html_content = generate_default_template(factura)
+            
+        print("Generando PDF...")
+        
+        pdf = pdfkit.from_string(
+            html_content, 
+            False,
+            options={
+                'page-size': 'Letter',
+                'encoding': 'UTF-8',
+                'enable-local-file-access': None
+            },
+            configuration=config
+        )
+        
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'inline; filename=factura_{factura.numero}.pdf'
+        
+        return response
+        
+    except Exception as e:
+        print(f"Error detallado al imprimir factura: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+def generate_items_html(items):
+    """Genera el HTML para los items de la factura"""
+    items_html = ""
+    for item in items:
+        items_html += f"""
+            <tr>
+                <td>{item.item.nombre if item.item else 'N/A'}</td>
+                <td>{item.cantidad}</td>
+                <td>${format_currency(item.precio_unitario)}</td>
+                <td>${format_currency(item.itbis)}</td>
+                <td>${format_currency(item.cantidad * item.precio_unitario)}</td>
+            </tr>
+        """
+    return items_html
+
+def format_currency(amount):
+    """Formatea cantidades monetarias"""
+    return "{:,.2f}".format(float(amount or 0))
+    
+@facturacion_bp.route('/api/analyze-invoice-template', methods=['POST'])
+@login_required
+def analyze_invoice_template():
+    try:
+        data = request.json
+        if not data or not data.get('image') or not data.get('tienda_id'):
+            return jsonify({"error": "Imagen y tienda_id son requeridos"}), 400
+
+        processor = InvoiceLayoutProcessor()
+        template = processor.analyze_layout(data['image'], data['tienda_id'])
+
+        # Desactivar templates anteriores
+        FacturaTemplate.query.filter_by(
+            tienda_id=data['tienda_id'],
+            activo=True
+        ).update({'activo': False})
+
+        db.session.add(template)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'template_id': template.id,
+            'message': 'Plantilla procesada y guardada correctamente'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al procesar plantilla: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
+@facturacion_bp.route('/api/templates/fix/<int:template_id>', methods=['POST'])
+@login_required
+def fix_template(template_id):
+    try:
+        template = FacturaTemplate.query.get_or_404(template_id)
+        
+        # Generar nuevo HTML para la plantilla
+        processor = InvoiceLayoutProcessor()
+        colors = {
+            'primary': '#4a90e2',
+            'secondary': '#5c6ac4',
+            'text': '#333333',
+            'border': '#dddddd'
+        }
+        template.html_template = processor._modern_layout(colors)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Plantilla actualizada correctamente'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500    
+    
+@facturacion_bp.route('/api/templates', methods=['GET'])
+@login_required
+def get_templates():
+    templates = FacturaTemplate.query.all()
+    return jsonify([{
+        'id': t.id,
+        'nombre': t.nombre,
+        'fecha_creacion': t.fecha_creacion.isoformat()
+    } for t in templates])    
     
 @facturacion_bp.route('/api/vendedores', methods=['GET'])
 @login_required
@@ -166,6 +617,291 @@ def eliminar_vendedor(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+@facturacion_bp.route('/api/reporte-ventas', methods=['GET'])
+@login_required
+def get_reporte_ventas():
+    try:
+        fecha_inicio = request.args.get('fecha_inicio')
+        fecha_fin = request.args.get('fecha_fin')
+        tipo_venta = request.args.get('tipo_venta')
+        cliente_id = request.args.get('cliente')
+        vendedor_id = request.args.get('vendedor')
+        categoria_producto = request.args.get('categoria_producto')
+        
+        # Convertir fechas
+        fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d') if fecha_inicio else None
+        fecha_fin = datetime.strptime(fecha_fin + ' 23:59:59', '%Y-%m-%d %H:%M:%S') if fecha_fin else None
+        
+        # Query base
+        query = Facturacion.query.filter(Facturacion.estatus != 'anulada')
+        
+        # Aplicar filtros
+        if fecha_inicio:
+            query = query.filter(Facturacion.fecha >= fecha_inicio)
+        if fecha_fin:
+            query = query.filter(Facturacion.fecha <= fecha_fin)
+        if tipo_venta:
+            query = query.filter(Facturacion.tipo == tipo_venta)
+        if cliente_id:
+            query = query.filter(Facturacion.cliente_id == cliente_id)
+        if vendedor_id:
+            query = query.filter(Facturacion.vendedor_id == vendedor_id)
+            
+        # Obtener facturas
+        facturas = query.order_by(Facturacion.fecha.desc()).all()
+        
+        if not facturas:
+            return jsonify({
+                "resumen": {
+                    "total_ventas": 0,
+                    "numero_ventas": 0,
+                    "promedio_venta": 0,
+                    "mayor_venta": 0
+                },
+                "metricas_generales": {
+                    "tasa_crecimiento": 0,
+                    "retorno_cliente": 0,
+                    "tasa_abandono": 0
+                },
+                "metricas_inventario": {
+                    "rotacion": 0,
+                    "productos_agotados": 0,
+                    "dias_inventario": 0
+                },
+                "ventas_por_categoria": [],
+                "metricas_financieras": {
+                    "margen_bruto": 0,
+                    "margen_operativo": 0,
+                    "costo_venta_promedio": 0
+                },
+                "ventas_por_dia": [],
+                "top_clientes": [],
+                "patrones_venta": {
+                    "diarios": [],
+                    "semanales": [],
+                    "mensuales": []
+                },
+                "prediccion_ventas": {
+                    "prediccion": 0,
+                    "confianza": 0
+                },
+                "rendimiento_vendedores": [],
+                "detalle_ventas": []
+            })
+
+        # Calcular resumen
+        total_ventas = sum(float(f.total or 0) for f in facturas)
+        numero_ventas = len(facturas)
+        promedio_venta = total_ventas / numero_ventas if numero_ventas > 0 else 0
+        mayor_venta = max((float(f.total or 0) for f in facturas), default=0)
+
+        # Top clientes
+        clientes_ventas = {}
+        for factura in facturas:
+            if factura.cliente:
+                nombre = factura.cliente.nombre
+                clientes_ventas[nombre] = clientes_ventas.get(nombre, 0) + float(factura.total or 0)
+
+        top_clientes = [
+            {"cliente": k, "total": float(v)} 
+            for k, v in sorted(clientes_ventas.items(), key=lambda x: x[1], reverse=True)[:5]
+        ]
+
+        # Ventas por día
+        ventas_por_dia = [{
+            "fecha": factura.fecha.strftime('%Y-%m-%d'),
+            "total": float(factura.total or 0)
+        } for factura in facturas]
+
+        # Obtener datos de patrones
+        patrones_diarios = get_patrones_diarios() or []
+        patrones_semanales = get_patrones_semanales() or []
+        patrones_mensuales = get_patrones_mensuales() or []
+
+        # Predicción de ventas
+        prediccion = predict_next_month() or {"prediccion": 0, "confianza": 0}
+
+        # Rendimiento de vendedores
+        rendimiento = []
+        if vendedor_id:
+            ventas_hora = get_ventas_por_hora(vendedor_id) or {}
+            rendimiento = [{"vendedor": k, "total": float(v)} for k, v in ventas_hora.items()]
+
+        return jsonify({
+            "resumen": {
+                "total_ventas": float(total_ventas),
+                "numero_ventas": numero_ventas,
+                "promedio_venta": float(promedio_venta),
+                "mayor_venta": float(mayor_venta)
+            },
+            "patrones_venta": {
+                "diarios": patrones_diarios,
+                "semanales": patrones_semanales,
+                "mensuales": patrones_mensuales
+            },
+            "metricas_generales": {
+                "tasa_crecimiento": calculate_growth_rate() or 0,
+                "retorno_cliente": calculate_customer_return_rate() or 0,
+                "tasa_abandono": calculate_churn_rate() or 0
+            },
+            "metricas_inventario": get_metricas_inventario() or {
+                "rotacion": 0,
+                "productos_agotados": 0,
+                "dias_inventario": 0
+            },
+            "ventas_por_categoria": get_ventas_por_categoria(facturas) or [],
+            "metricas_financieras": {
+                "margen_bruto": calculate_gross_margin() or 0,
+                "margen_operativo": calculate_operating_margin() or 0,
+                "costo_venta_promedio": calculate_average_cogs() or 0
+            },
+            "ventas_por_dia": ventas_por_dia,
+            "top_clientes": top_clientes,
+            "patrones_venta": {
+                "diarios": patrones_diarios,
+                "semanales": patrones_semanales,
+                "mensuales": patrones_mensuales
+            },
+            "prediccion_ventas": prediccion,
+            "rendimiento_vendedores": rendimiento,
+            "detalle_ventas": [{
+                'fecha': factura.fecha.strftime('%Y-%m-%d'),
+                'numero_factura': factura.numero,
+                'cliente': factura.cliente.nombre if factura.cliente else 'N/A',
+                'vendedor': factura.vendedor.nombre if factura.vendedor else 'N/A',
+                'tipo_venta': factura.tipo,
+                'total': float(factura.total or 0)
+            } for factura in facturas]
+        })
+        
+    except Exception as e:
+        print(f"Error detallado en reporte_ventas: {str(e)}")
+        current_app.logger.error(f"Error generando reporte: {str(e)}")
+        return jsonify({"error": "Error al generar el reporte", "details": str(e)}), 500  
+    
+@facturacion_bp.route('/api/reporte-ventas/cliente/<int:cliente_id>', methods=['GET'])
+@login_required
+def get_detalle_cliente(cliente_id):
+    try:
+        # Obtener todas las facturas del cliente
+        facturas = Facturacion.query.filter_by(cliente_id=cliente_id).all()
+        
+        return jsonify({
+            "historial_compras": [{
+                "fecha": factura.fecha,
+                "total": factura.total,
+                "productos_frecuentes": get_productos_frecuentes(factura),
+                "metodos_pago": get_metodos_pago(factura),
+                "descuentos_aplicados": factura.descuento_monto,
+                "vendedor": factura.vendedor.nombre
+            } for factura in facturas],
+            "estadisticas": {
+                "promedio_compra": calculate_promedio(facturas),
+                "frecuencia_compra": get_frecuencia_compra(facturas),
+                "productos_preferidos": get_productos_preferidos(facturas),
+                "total_historico": sum(f.total for f in facturas)
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@facturacion_bp.route('/api/reporte-ventas/categoria/<string:categoria>', methods=['GET'])
+@login_required
+def get_detalle_categoria(categoria):
+    try:
+        # Análisis detallado de la categoría
+        return jsonify({
+            "productos_mas_vendidos": get_top_productos(categoria),
+            "tendencia_mensual": get_tendencia_mensual(categoria),
+            "margen_ganancia": calculate_margen(categoria),
+            "clientes_principales": get_top_clientes_categoria(categoria),
+            "comparativa_otras_categorias": get_comparativa_categorias(),
+            "stock_actual": get_stock_categoria(categoria)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@facturacion_bp.route('/api/reporte-ventas/vendedor/<int:vendedor_id>', methods=['GET'])
+@login_required
+def get_detalle_vendedor(vendedor_id):
+    try:
+        return jsonify({
+            "metricas_rendimiento": {
+                "ventas_por_hora": get_ventas_por_hora(vendedor_id),
+                "tasa_conversion": calculate_tasa_conversion(vendedor_id),
+                "tickets_promedio": get_ticket_promedio(vendedor_id),
+                "productos_mas_vendidos": get_productos_vendedor(vendedor_id),
+                "clientes_frecuentes": get_clientes_vendedor(vendedor_id)
+            },
+            "historico_ventas": get_historico_vendedor(vendedor_id),
+            "comisiones": calculate_comisiones(vendedor_id)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@facturacion_bp.route('/api/reporte-ventas/metodo-pago/<string:metodo>', methods=['GET'])
+@login_required
+def get_detalle_metodo_pago(metodo):
+    try:
+        return jsonify({
+            "volumen_transacciones": get_volumen_transacciones(metodo),
+            "ticket_promedio": get_ticket_promedio_metodo(metodo),
+            "horarios_preferidos": get_horarios_preferidos(metodo),
+            "tasa_rechazo": get_tasa_rechazo(metodo),
+            "comparativa_otros_metodos": get_comparativa_metodos()
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@facturacion_bp.route('/api/reporte-ventas/kpis', methods=['GET'])
+@login_required
+def get_kpis():
+    try:
+        return jsonify({
+            "metricas_generales": {
+                "tasa_crecimiento": calculate_growth_rate(),
+                "retorno_cliente": calculate_customer_return_rate(),
+                "lifetime_value": calculate_customer_lifetime_value(),
+                "tasa_abandono": calculate_churn_rate()
+            },
+            "metricas_inventario": {
+                "rotacion": calculate_inventory_turnover(),
+                "productos_agotados": get_stockouts(),
+                "dias_inventario": calculate_days_inventory()
+            },
+            "metricas_financieras": {
+                "margen_bruto": calculate_gross_margin(),
+                "margen_operativo": calculate_operating_margin(),
+                "costo_venta_promedio": calculate_average_cogs()
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@facturacion_bp.route('/api/reporte-ventas/analisis-temporal', methods=['GET'])
+@login_required
+def get_analisis_temporal():
+    try:
+        return jsonify({
+            "comparativa_periodos": {
+                "diaria": get_comparativa_diaria(),
+                "semanal": get_comparativa_semanal(),
+                "mensual": get_comparativa_mensual(),
+                "anual": get_comparativa_anual()
+            },
+            "estacionalidad": {
+                "patrones_diarios": get_patrones_diarios(),
+                "patrones_semanales": get_patrones_semanales(),
+                "patrones_mensuales": get_patrones_mensuales()
+            },
+            "predicciones": {
+                "proximo_mes": predict_next_month(),
+                "tendencias": get_tendencias()
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500                        
 
 @facturacion_bp.route('/api/vendedores/buscar', methods=['GET'])
 @login_required
@@ -321,11 +1057,12 @@ def get_vendedor_principal():
 def crear_factura():
     try:
         data = request.get_json()
+        print("Datos recibidos:", data)
         
         if not data or not isinstance(data, dict):
             return jsonify({"error": "Datos inválidos"}), 400
         
-        # Validar campos obligatorios (sin vendedor_id)
+        # Validar campos obligatorios
         required_fields = ['tipo', 'tipo_pago', 'moneda', 'tienda_id', 'items']
         if not all(key in data for key in required_fields):
             return jsonify({
@@ -339,38 +1076,28 @@ def crear_factura():
             descuento_monto = float(data.get('descuento_monto', 0) or 0)
             descuento_porcentaje = float(data.get('descuento_porcentaje', 0) or 0)
             
-            # Manejo del vendedor
-            vendedor = None
-            if data.get('vendedor_id'):
-                try:
-                    vendedor_id = int(data['vendedor_id'])
-                    vendedor = Vendedor.query.filter_by(id=vendedor_id, activo=True).first()
-                    if vendedor:
-                        print(f"Usando vendedor seleccionado: {vendedor.nombre}")
-                except (ValueError, TypeError):
-                    vendedor = None
-            
-            if not vendedor:
-                vendedor = obtener_vendedor_principal()
-                if not vendedor:
-                    return jsonify({"error": "Error al obtener el vendedor por defecto"}), 500
-                print(f"Usando vendedor principal por defecto: {vendedor.nombre}")
-            
-            # Validar tipo de factura y cliente
+            # Validaciones básicas
             if data['tipo'] not in ['contado', 'credito']:
                 return jsonify({"error": "Tipo de factura inválido"}), 400
             
             if data['tipo'] == 'credito' and not cliente_id:
                 return jsonify({"error": "El cliente es obligatorio para facturas a crédito"}), 400
             
-            # Validar tipo de pago
             if data['tipo_pago'] not in ['efectivo', 'tarjeta', 'transferencia', 'cheque']:
                 return jsonify({"error": "Tipo de pago inválido"}), 400
             
-            # Validar moneda
             if data['moneda'] not in ['DOP', 'USD']:
                 return jsonify({"error": "Moneda inválida"}), 400
             
+            # Obtener vendedor
+            vendedor = None
+            if data.get('vendedor_id'):
+                vendedor = Vendedor.query.filter_by(id=int(data['vendedor_id']), activo=True).first()
+            if not vendedor:
+                vendedor = obtener_vendedor_principal()
+                if not vendedor:
+                    return jsonify({"error": "Error al obtener el vendedor"}), 500
+
             # Validar tienda
             tienda = TiendaFactura.query.get(tienda_id)
             if not tienda:
@@ -379,175 +1106,97 @@ def crear_factura():
                 return jsonify({"error": "La tienda seleccionada no está activa"}), 400
             if tienda.moneda != data['moneda']:
                 return jsonify({"error": f"La moneda debe ser {tienda.moneda}"}), 400
+
+            # Generar número de factura
+            ultimo_numero = Facturacion.query.order_by(Facturacion.numero.desc()).first()
+            siguiente_numero = str(int(ultimo_numero.numero.replace('F', '')) + 1) if ultimo_numero else '1'
+            nuevo_numero = f"F{siguiente_numero.zfill(8)}"
+
+            # Crear la factura
+            nueva_factura = Facturacion(
+                numero=nuevo_numero,
+                cliente_id=cliente_id,
+                fecha=datetime.now().date(),
+                tipo=data['tipo'],
+                tipo_pago=data['tipo_pago'],
+                moneda=data['moneda'],
+                tienda_id=tienda_id,
+                vendedor_id=vendedor.id,
+                descuento_monto=descuento_monto,
+                descuento_porcentaje=descuento_porcentaje,
+                notas=data.get('notas', ''),
+                estatus='pendiente',
+                total=0
+            )
+
+            # Procesar items
+            total = 0
+            items_data = data.get('items', [])
             
-            # Validar descuentos
-            if descuento_monto < 0:
-                return jsonify({"error": "El descuento no puede ser negativo"}), 400
-            if descuento_porcentaje < 0 or descuento_porcentaje > 100:
-                return jsonify({"error": "Descuento porcentual inválido"}), 400
-            
-        except (ValueError, TypeError) as e:
-            return jsonify({"error": f"Error en validación de datos: {str(e)}"}), 400
+            if not items_data:
+                return jsonify({"error": "La factura debe contener al menos un item"}), 400
 
-        # Generar número de factura
-        ultimo_numero = Facturacion.query.order_by(Facturacion.numero.desc()).first()
-        siguiente_numero = '1'
-        if ultimo_numero and ultimo_numero.numero:
-            try:
-                siguiente_numero = str(int(ultimo_numero.numero.replace('F', '')) + 1)
-            except ValueError:
-                siguiente_numero = '1'
-        nuevo_numero = f"F{siguiente_numero.zfill(8)}"
+            for item_data in items_data:
+                try:
+                    item_id = int(item_data.get('item_id'))
+                    cantidad = int(item_data.get('cantidad'))
+                    precio = float(item_data.get('precio_unitario'))
+                    itbis = float(item_data.get('itbis', 0) or 0)
+                    override_code = item_data.get('override_code')
 
-        # Crear la factura
-        nueva_factura = Facturacion(
-            numero=nuevo_numero,
-            cliente_id=cliente_id,
-            fecha=datetime.now().date(),
-            tipo=data['tipo'],
-            tipo_pago=data['tipo_pago'],
-            moneda=data['moneda'],
-            tienda_id=tienda_id,
-            vendedor_id=vendedor.id,
-            descuento_monto=descuento_monto,
-            descuento_porcentaje=descuento_porcentaje,
-            notas=data.get('notas', ''),
-            estatus='pendiente',
-            total=0
-        )
+                    # Obtener producto
+                    producto = db.session.query(InventarioItem).with_for_update().filter_by(id=item_id).first()
+                    if not producto:
+                        return jsonify({"error": f"Producto no encontrado: {item_id}"}), 404
 
-        # Procesar items
-        total = 0
-        movimientos_inventario = []
-        items_data = data.get('items', [])
-        
-        if not items_data:
-            return jsonify({"error": "La factura debe contener al menos un item"}), 400
+                    # Crear ítem de factura
+                    item_factura = ItemFactura(
+                        item_id=producto.id,
+                        cantidad=cantidad,
+                        precio_unitario=precio,
+                        itbis=itbis,
+                        comentario=item_data.get('comentario', ''),
+                        override_code=override_code
+                    )
 
-        for item_data in items_data:
-            try:
-                # Validar datos del item
-                if not isinstance(item_data, dict):
-                    return jsonify({"error": "Formato de item inválido"}), 400
-                
-                item_id = int(item_data.get('item_id'))
-                cantidad = int(item_data.get('cantidad'))
-                precio = float(item_data.get('precio_unitario'))
-                itbis = float(item_data.get('itbis', 0) or 0)
-                
-                if cantidad <= 0:
-                    return jsonify({"error": "La cantidad debe ser mayor que cero"}), 400
-                if precio < 0:
-                    return jsonify({"error": "El precio no puede ser negativo"}), 400
-                if itbis < 0 or itbis > 100:
-                    return jsonify({"error": "ITBIS inválido"}), 400
+                    try:
+                        # Procesar inventario usando la lógica del modelo
+                        item_factura.procesar_inventario()
+                    except ValueError as e:
+                        if isinstance(e.args[0], dict) and e.args[0].get('error') == 'stock_insuficiente':
+                            return jsonify(e.args[0]), 400
+                        raise
 
-                # Obtener y validar producto
-                producto = db.session.query(InventarioItem).with_for_update().filter_by(id=item_id).first()
-                if not producto:
-                    return jsonify({"error": f"Producto no encontrado: {item_id}"}), 404
+                    # Calcular totales
+                    subtotal = cantidad * precio
+                    itbis_monto = subtotal * (itbis / 100)
+                    total += subtotal + itbis_monto
 
-                print(f"Procesando producto: {producto.nombre} (ID: {producto.id})")
-                print(f"Stock actual: {producto.stock}")
+                    nueva_factura.items.append(item_factura)
+                    print(f"Item agregado a la factura: {producto.nombre}")
 
-                # Validar y actualizar inventario
-                if producto.tipo == 'producto':
-                    stock_actual = producto.stock if producto.stock is not None else 0
-                    
-                    if stock_actual < cantidad:
-                        # Verificar código de override
-                        override_code = item_data.get('override_code')
-                        codigo_activo = CodigoAutorizacion.query.filter_by(
-                            tipo='stock_override',
-                            activo=True
-                        ).first()
-                        
-                        if override_code and codigo_activo and codigo_activo.codigo == override_code:
-                            print(f"Código de override válido recibido para {producto.nombre}")
-                            
-                            # Crear item pendiente
-                            item_pendiente = ItemPendiente(
-                                item_id=producto.id,
-                                cantidad_pendiente=cantidad,
-                                estado='pendiente',
-                                override_code=override_code
-                            )
-                            db.session.add(item_pendiente)
-                            
-                            # No actualizar stock aquí, se hará cuando llegue el inventario
-                            print(f"Item pendiente creado para {producto.nombre}")
-                        else:
-                            return jsonify({
-                                "error": "stock_insuficiente",
-                                "item_id": producto.id,
-                                "nombre": producto.nombre,
-                                "stock_actual": stock_actual,
-                                "cantidad_solicitada": cantidad,
-                                "requiere_autorizacion": True,
-                                "mensaje": f"Stock insuficiente para {producto.nombre}. Disponible: {stock_actual}"
-                            }), 400
+                except Exception as e:
+                    print(f"Error procesando item: {str(e)}")
+                    db.session.rollback()
+                    return jsonify({"error": str(e)}), 500
 
-                # Crear ítem de factura
-                item_factura = ItemFactura(
-                    item_id=producto.id,
-                    cantidad=cantidad,
-                    precio_unitario=precio,
-                    itbis=itbis,
-                    comentario=item_data.get('comentario', ''),
-                    override_code=item_data.get('override_code')
-                )
+            nueva_factura.total = round(float(total), 2)
 
-                # Calcular totales
-                subtotal = cantidad * precio
-                itbis_monto = subtotal * (itbis / 100)
-                total += subtotal + itbis_monto
-
-                nueva_factura.items.append(item_factura)
-                print(f"Item agregado a la factura: {producto.nombre}")
-
-            except Exception as e:
-                print(f"Error procesando item: {str(e)}")
-                db.session.rollback()
-                return jsonify({
-                    "error": f"Error procesando item: {str(e)}",
-                    "tipo": "error_procesamiento"
-                }), 500
-
-        # Aplicar descuentos
-        if descuento_porcentaje > 0:
-            total = total * (1 - descuento_porcentaje / 100)
-        if descuento_monto > 0:
-            total = max(0, total - descuento_monto)
-        
-        nueva_factura.total = round(float(total), 2)
-
-        try:
-            # Guardar todo
             db.session.add(nueva_factura)
-            for movimiento in movimientos_inventario:
-                db.session.add(movimiento)
-            
             db.session.commit()
-            print(f"Factura creada exitosamente: {nueva_factura.numero}")
             
             return jsonify({
                 "success": True,
                 "message": "Factura creada exitosamente",
                 "factura_id": nueva_factura.id,
                 "numero": nueva_factura.numero,
-                "total": nueva_factura.total,
-                "tienda": tienda.nombre,
-                "vendedor": vendedor.nombre,
-                "tipo": nueva_factura.tipo,
-                "tipo_pago": nueva_factura.tipo_pago,
-                "cliente": nueva_factura.cliente.nombre if nueva_factura.cliente else None,
-                "fecha": nueva_factura.fecha.strftime('%Y-%m-%d')
+                "total": nueva_factura.total
             }), 201
             
         except Exception as e:
             db.session.rollback()
-            print(f"Error en commit final: {str(e)}")
-            return jsonify({"error": f"Error guardando la factura: {str(e)}"}), 500
+            print(f"Error en procesamiento: {str(e)}")
+            return jsonify({"error": str(e)}), 500
             
     except Exception as e:
         print(f"Error general: {str(e)}")
@@ -704,28 +1353,36 @@ def editar_factura(id):
         
         # Procesar nuevos items
         for item_data in data.get('items', []):
-            item_factura = ItemFactura(
-                item_id=item_data['item_id'],
-                cantidad=item_data['cantidad'],
-                precio_unitario=item_data['precio_unitario'],
-                itbis=item_data.get('itbis', 0),
-                comentario=item_data.get('comentario', '')
-            )
-            factura.items.append(item_factura)
-        
-        db.session.commit()
-        return jsonify({
-            'success': True,
-            'message': 'Factura actualizada correctamente'
-        })
-        
+            try:
+                item_id = int(item_data.get('item_id'))
+                cantidad = int(item_data.get('cantidad'))
+                precio = float(item_data.get('precio_unitario'))
+                override_code = item_data.get('override_code')
+                
+                producto = InventarioItem.query.get(item_id)
+                
+                # Dejar que el modelo maneje la validación de stock
+                item_factura = ItemFactura(
+                    item_id=item_id,
+                    cantidad=cantidad,
+                    precio_unitario=precio,
+                    itbis=float(item_data.get('itbis', 0)),
+                    comentario=item_data.get('comentario', ''),
+                    override_code=override_code
+                )
+                factura.items.append(item_factura)  # Cambiado de nueva_factura a factura
+
+            except ValueError as e:
+                if isinstance(e.args[0], dict) and e.args[0].get('error') == 'stock_insuficiente':
+                    return jsonify(e.args[0]), 400
+                raise
+
+        db.session.commit()  # Cambiado para solo hacer commit
+        return jsonify({"success": True}), 200  # Cambiado a 200 para edición exitosa
+
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f'Error al actualizar factura: {str(e)}')
-        return jsonify({
-            'success': False,
-            'message': 'Error interno del servidor al actualizar la factura'
-        }), 500
+        return jsonify({"error": str(e)}), 500
         
 @facturacion_bp.route('/api/tiendas', methods=['GET', 'POST'])
 @login_required
@@ -1029,5 +1686,3 @@ def buscar_productos():
     except Exception as e:
         current_app.logger.error(f"Error buscando productos: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
-

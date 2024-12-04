@@ -7,6 +7,12 @@ from datetime import datetime
 from common.models import ItemFactura, ItemPreFactura, MovimientoInventario
 from flask import current_app
 from flask_login import current_user
+import os
+import base64
+import requests
+import time
+import random 
+
 
 class Facturacion(db.Model):
   __tablename__ = 'facturacion'
@@ -76,115 +82,7 @@ class Facturacion(db.Model):
       super(Facturacion, self).__init__(**kwargs)
       self._items_procesados = False
 
-@validates('items')
-def validate_items(self, key, item):
-    """Validar items y actualizar inventario"""
-    try:
-        if not item:
-            raise ValueError("Item no puede ser nulo")
-            
-        if not hasattr(item, 'item') or not item.item:
-            print(f"DEBUG - Item inválido: {item}")
-            raise ValueError(f"Item (ID: {getattr(item, 'item_id', 'N/A')}) no tiene producto asociado")
-            
-        if not hasattr(item.item, 'tipo'):
-            print(f"DEBUG - Tipo no definido para item: {getattr(item.item, 'nombre', 'desconocido')}")
-            raise ValueError(f"El producto {getattr(item.item, 'nombre', 'desconocido')} no tiene un tipo definido")
 
-        print(f"DEBUG - Validando item: {item.item.nombre} (Tipo: {item.item.tipo})")
-        
-        # Procesar producto
-        if item.item.tipo == 'producto':
-            # Verificar stock
-            stock_actual = item.item.stock if item.item.stock is not None else 0
-            if stock_actual < item.cantidad:
-                # Verificar código de autorización
-                override_code = getattr(item, 'override_code', None)
-                codigo_activo = CodigoAutorizacion.query.filter_by(
-                    tipo='stock_override',
-                    activo=True
-                ).first()
-                
-                if override_code and codigo_activo and codigo_activo.codigo == override_code:
-                    # Crear item pendiente
-                    item_pendiente = ItemPendiente(
-                        item_id=item.item.id,
-                        cantidad_pendiente=item.cantidad,
-                        factura_id=self.id,
-                        estado='pendiente',
-                        override_code=override_code
-                    )
-                    db.session.add(item_pendiente)
-                    print(f"Item {item.item.nombre} facturado con stock pendiente")
-                    return item
-                
-                raise ValueError(
-                    "stock_insuficiente",
-                    item.item.id,
-                    item.item.nombre,
-                    stock_actual,
-                    item.cantidad,
-                    True,
-                    f"Stock insuficiente para {item.item.nombre}. Disponible: {stock_actual}"
-                )
-            
-            try:
-                # Crear movimiento de inventario
-                movimiento = MovimientoInventario(
-                    item_id=item.item.id,
-                    tipo='salida',
-                    cantidad=item.cantidad,
-                    fecha=datetime.utcnow(),
-                    usuario_id=self.vendedor_id,
-                    comentario=f"Factura {self.numero}"
-                )
-                db.session.add(movimiento)
-                
-                # Actualizar stock
-                db.session.execute(
-                    text('UPDATE items_inventario SET stock = stock - :cantidad WHERE id = :item_id'),
-                    {'cantidad': item.cantidad, 'item_id': item.item.id}
-                )
-                
-                # Registrar logs
-                print(f"DEBUG - Actualizando stock de {item.item.nombre}")
-                print(f"Stock anterior: {stock_actual}")
-                print(f"Cantidad vendida: {item.cantidad}")
-                
-                # Refrescar el objeto producto
-                db.session.refresh(item.item)
-                print(f"DEBUG - Stock actual en BD: {item.item.stock}")
-                
-            except Exception as e:
-                print(f"ERROR procesando stock: {str(e)}")
-                db.session.rollback()
-                raise ValueError(f"Error actualizando stock de {item.item.nombre}: {str(e)}")
-                
-        return item
-        
-    except Exception as e:
-        error_msg = f"Error validando item: {str(e)}"
-        print(f"ERROR - {error_msg}")
-        raise ValueError(error_msg)
-
-def procesar_items(self):
-    """Procesar todos los items de la factura"""
-    if not self._items_procesados:
-        print(f"DEBUG - Procesando items para factura {self.numero}")
-        
-        for item in self.items:
-            try:
-                print(f"DEBUG - Procesando item {getattr(item, 'id', 'Nuevo')}")
-                self.validate_items('items', item)
-                
-            except Exception as e:
-                error_msg = f"Error procesando item: {str(e)}"
-                print(f"ERROR - {error_msg}")
-                db.session.rollback()
-                raise ValueError(error_msg)
-        
-        self._items_procesados = True
-        print(f"DEBUG - Items procesados exitosamente para factura {self.numero}")
 
 @classmethod
 def before_commit(cls, session):
@@ -192,11 +90,11 @@ def before_commit(cls, session):
     for obj in session.new:
         if isinstance(obj, cls):
             try:
-                print(f"Procesando factura antes de commit: {obj.numero}")
-                # Procesar cada item
                 for item in obj.items:
                     item.procesar_inventario()
-            except Exception as e:
+            except ValueError as e:
+                if isinstance(e.args[0], dict) and e.args[0].get("error") == "stock_insuficiente":
+                    raise
                 print(f"ERROR en before_commit: {str(e)}")
                 raise
 
@@ -331,6 +229,20 @@ class TiendaFactura(db.Model):
             'fecha_actualizacion': self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None
         } 
 
+# En facturas_models.py
+class FacturaTemplate(db.Model):
+    __tablename__ = 'factura_templates'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    html_template = db.Column(db.Text, nullable=False)
+    css_styles = db.Column(db.Text)
+    activo = db.Column(db.Boolean, default=True)
+    fecha_creacion = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    tienda_id = db.Column(db.Integer, db.ForeignKey('tiendafactura.id'))
+    
+    tienda = db.relationship('TiendaFactura', backref='templates')
+
 class PreFactura(db.Model):
     __tablename__ = 'pre_facturas'
     id = db.Column(db.Integer, primary_key=True)
@@ -387,6 +299,7 @@ class NotaCredito(db.Model):
             'factura_id': self.factura_id,
             'monto': self.monto,
             'fecha': self.fecha.isoformat(),
+            
             'motivo': self.motivo
         }
 
@@ -484,7 +397,191 @@ class Vendedor(db.Model):
             'activo': self.activo,
             'fecha_creacion': self.fecha_creacion.isoformat() if self.fecha_creacion else None,
             'fecha_actualizacion': self.fecha_actualizacion.isoformat() if self.fecha_actualizacion else None
-        }       
+        }     
+        
+class InvoiceLayoutProcessor:
+    def __init__(self):
+        self.api_url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3.5-large"
+        self.headers = {
+            "Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_TOKEN')}",
+            "Content-Type": "application/json"
+        }
+
+    def generate_layout(self, tienda_id):
+        try:
+            # Primero desactivar todas las plantillas existentes para esta tienda
+            FacturaTemplate.query.filter_by(
+                tienda_id=tienda_id
+            ).update({'activo': False})
+            
+            # Generar nueva plantilla
+            prompts = [
+                "Create a modern professional invoice layout with sleek design",
+                "Generate a minimalist business invoice template with elegant typography",
+                "Design a corporate invoice layout with modern color scheme"
+            ]
+            
+            response = requests.post(
+                self.api_url,
+                headers=self.headers,
+                json={"inputs": random.choice(prompts)}
+            )
+
+            if response.status_code == 200:
+                image_bytes = response.content
+                processed_image = base64.b64encode(image_bytes).decode('utf-8')
+                
+                template = FacturaTemplate(
+                    nombre=f"AI_Template_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    html_template=self._generate_random_template(),
+                    css_styles=f"data:image/jpeg;base64,{processed_image}",
+                    tienda_id=tienda_id,
+                    activo=True  # Nueva plantilla activa por defecto
+                )
+                return template
+
+            raise ValueError(f"Error generando diseño: {response.text}")
+
+        except Exception as e:
+            raise ValueError(f"Error generando plantilla: {str(e)}")
+
+    def _generate_random_template(self):
+        # Generate random color scheme
+        colors = {
+            'primary': f'#{random.randint(0, 0xFFFFFF):06x}',
+            'secondary': f'#{random.randint(0, 0xFFFFFF):06x}',
+            'text': '#333333',
+            'border': '#dddddd'
+        }
+        
+        # Generate random layout variations
+        layouts = [
+            self._modern_layout,
+            self._minimal_layout,
+            self._corporate_layout,
+            self._elegant_layout,
+            self._bold_layout
+        ]
+        
+        return random.choice(layouts)(colors)
+
+    # Los layouts existentes...
+    def _modern_layout(self, colors):
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { 
+                    font-family: 'Helvetica Neue', sans-serif; 
+                    margin: 0;
+                    padding: 40px;
+                    color: """ + colors['text'] + """;
+                    background: linear-gradient(135deg, """ + colors['primary'] + """10, """ + colors['secondary'] + """10);
+                }
+                .invoice-container {
+                    background: white;
+                    border-radius: 15px;
+                    padding: 40px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                }
+                /* ... resto de estilos ... */
+            </style>
+        </head>
+        <body>
+            <div class="invoice-container">
+                <div class="header">
+                    <div class="company-info">
+                        <h2>{{ factura.tienda.nombre if factura.tienda else 'N/A' }}</h2>
+                        <p>{{ factura.tienda.direccion if factura.tienda else 'N/A' }}</p>
+                    </div>
+                    <div class="invoice-details">
+                        <h2>FACTURA</h2>
+                        <p>Número: {{ factura.numero }}</p>
+                        <p>Fecha: {{ factura.fecha.strftime('%d/%m/%Y') }}</p>
+                    </div>
+                </div>
+
+                <div class="client-info">
+                    <h3>Cliente</h3>
+                    <p>{{ factura.cliente.nombre if factura.cliente else 'N/A' }}</p>
+                    <p>RNC/Cédula: {{ factura.cliente.ruc if factura.cliente else 'N/A' }}</p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>ITBIS</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in factura.items %}
+                        {% set itbis_monto = (item.precio_unitario * item.cantidad * item.itbis / 100) if item.itbis else 0 %}
+                        <tr>
+                            <td>{{ item.item.nombre if item.item else 'N/A' }}</td>
+                            <td>{{ item.cantidad }}</td>
+                            <td>{{ format_currency(item.precio_unitario) }}</td>
+                            <td>{{ format_currency(itbis_monto) }}</td>
+                            <td>{{ format_currency(item.cantidad * item.precio_unitario + itbis_monto) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="totals">
+                    {% set total_subtotal = 0 %}
+                    {% set total_itbis = 0 %}
+                    {% for item in factura.items %}
+                        {% set subtotal = item.cantidad * item.precio_unitario %}
+                        {% set itbis_monto = (subtotal * item.itbis / 100) if item.itbis else 0 %}
+                        {% set total_subtotal = total_subtotal + subtotal %}
+                        {% set total_itbis = total_itbis + itbis_monto %}
+                    {% endfor %}
+                    
+                    <div>Subtotal: {{ format_currency(total_subtotal) }}</div>
+                    <div>ITBIS: {{ format_currency(total_itbis) }}</div>
+                    <div>Descuento: {{ format_currency(factura.descuento_monto if factura.descuento_monto else 0) }}</div>
+                    <div><strong>Total: {{ format_currency(factura.total) }}</strong></div>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+    def _minimal_layout(self, colors):
+        # Implementar diseño minimalista similar al modern_layout
+        return self._modern_layout(colors)  # Por ahora usamos el mismo
+
+    def _corporate_layout(self, colors):
+        # Implementar diseño corporativo similar al modern_layout
+        return self._modern_layout(colors)  # Por ahora usamos el mismo
+
+    def _elegant_layout(self, colors):
+        # Implementar diseño elegante similar al modern_layout
+        return self._modern_layout(colors)  # Por ahora usamos el mismo
+
+    def _bold_layout(self, colors):
+        # Implementar diseño bold similar al modern_layout
+        return self._modern_layout(colors)  # Por ahora usamos el mismo
+
+# Agregar método a la clase FacturaTemplate
+def process_layout(self, image_data):
+    """Procesa una imagen y actualiza el template usando LayoutLLaVA"""
+    processor = InvoiceLayoutProcessor()
+    try:
+        new_template = processor.analyze_layout(image_data, self.tienda_id)
+        self.html_template = new_template.html_template
+        self.css_styles = new_template.css_styles
+        db.session.commit()
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Error procesando layout: {str(e)}")
+        db.session.rollback()
+        raise          
         
 class ItemPendiente(db.Model):
     __tablename__ = 'items_pendientes'

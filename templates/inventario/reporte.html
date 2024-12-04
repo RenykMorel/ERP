@@ -114,7 +114,7 @@
                             Categoría
                         </th>
                         <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Stock Inicial
+                            Última Facturación
                         </th>
                         <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             Entradas
@@ -245,93 +245,94 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function actualizarTablaReporte(detalle) {
-        const tbody = document.getElementById('reporte-tbody');
-        tbody.innerHTML = '';
-    
-        if (!detalle || detalle.length === 0) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
+    const tbody = document.getElementById('reporte-tbody');
+    tbody.innerHTML = '';
+
+    if (!detalle || detalle.length === 0) {
+        tbody.innerHTML = `
+            <tr>
                 <td colspan="9" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
                     <p class="text-gray-500">No hay datos disponibles para el período seleccionado</p>
                 </td>
-            `;
-            tbody.appendChild(tr);
-            return;
-        }
-    
-        detalle.forEach(item => {
-            const tr = document.createElement('tr');
-            const stockClass = item.stock_bajo ? 'text-red-600 font-bold' : 'text-gray-900';
-            
-            tr.innerHTML = `
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm" data-codigo="${item.codigo || '-'}">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.codigo || '-'}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm" data-nombre="${item.nombre}">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.nombre}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.categoria || 'Sin categoría'}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">${item.stock_inicial.toLocaleString()}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-green-600 whitespace-no-wrap">${item.entradas.toLocaleString()}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-red-600 whitespace-no-wrap">${item.salidas.toLocaleString()}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm" data-stock-actual="${item.stock_actual}" data-stock-minimo="${item.stock_minimo}">
-                    <p class="${stockClass} whitespace-no-wrap">${item.stock_actual.toLocaleString()}</p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">
-                        ${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(item.valor_unitario)}
-                    </p>
-                </td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">
-                        ${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(item.valor_total)}
-                    </p>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+            </tr>
+        `;
+        return;
     }
+
+    detalle.forEach(item => {
+        const tr = document.createElement('tr');
+        const stockClass = item.stock_actual >= 1 && item.stock_actual <= 5 ? 'text-red-600 font-bold' : 'text-gray-900';
+        
+        tr.innerHTML = `
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm" data-codigo="${item.codigo}">
+                <p class="text-gray-900 whitespace-no-wrap">${item.codigo}</p>
+            </td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm" data-nombre="${item.nombre}">
+                <p class="text-gray-900 whitespace-no-wrap">${item.nombre}</p>
+            </td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                <p class="text-gray-900 whitespace-no-wrap">${item.categoria}</p>
+            </td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                <p class="text-gray-900 whitespace-no-wrap">${item.ultima_facturacion.toLocaleString()}</p>
+            </td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                <p class="text-green-600 whitespace-no-wrap">${item.entradas.toLocaleString()}</p>
+            </td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                <p class="text-red-600 whitespace-no-wrap">${item.salidas.toLocaleString()}</p>
+            </td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm" 
+                data-stock-actual="${item.stock_actual}" 
+                data-stock-minimo="${item.stock_minimo}">
+                <p class="${stockClass} whitespace-no-wrap">${item.stock_actual.toLocaleString()}</p>
+            </td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                <p class="text-gray-900 whitespace-no-wrap">
+                    ${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(item.valor_unitario)}
+                </p>
+            </td>
+            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                <p class="text-gray-900 whitespace-no-wrap">
+                    ${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(item.valor_total)}
+                </p>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
     
     function mostrarModalStockBajo() {
-        const stockBajoTbody = document.getElementById('stock-bajo-tbody');
-        stockBajoTbody.innerHTML = '';
+    const stockBajoTbody = document.getElementById('stock-bajo-tbody');
+    stockBajoTbody.innerHTML = '';
+    
+    // Obtener todos los items del reporte
+    const itemsConStockBajo = Array.from(document.querySelectorAll('#reporte-tbody tr')).filter(tr => {
+        const stockActualCell = tr.querySelector('td[data-stock-actual]');
+        if (!stockActualCell) return false;
         
-        const itemsConStockBajo = Array.from(document.querySelectorAll('#reporte-tbody tr')).filter(tr => {
-            const stockActualCell = tr.querySelector('td[data-stock-actual]');
-            return stockActualCell && parseInt(stockActualCell.dataset.stockActual) >= 1 && parseInt(stockActualCell.dataset.stockActual) <= 5;
-        });
-    
-        if (itemsConStockBajo.length === 0) {
-            stockBajoTbody.innerHTML = `
-                <tr>
-                    <td colspan="4" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
-                        <p class="text-gray-500">No hay items con stock bajo</p>
-                    </td>
-                </tr>
-            `;
-        } else {
-            itemsConStockBajo.forEach(tr => {
-                const newTr = document.createElement('tr');
-                const stockTd = tr.querySelector('td[data-stock-actual]');
-                
-                if (!stockTd) {
-                    console.log('No se encontró la celda de stock para una fila');
-                    return;
-                }
-    
-                const codigo = tr.querySelector('td[data-codigo]').dataset.codigo;
-                const nombre = tr.querySelector('td[data-nombre]').dataset.nombre;
-                const stockActual = stockTd.dataset.stockActual;
-                const stockMinimo = stockTd.dataset.stockMinimo;
-    
+        const stockActual = parseInt(stockActualCell.dataset.stockActual);
+        // Validar que el stock esté entre 1 y 5
+        return stockActual > 0 && stockActual <= 5;
+    });
+
+    if (itemsConStockBajo.length === 0) {
+        stockBajoTbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                    <p class="text-gray-500">No hay items con stock bajo</p>
+                </td>
+            </tr>
+        `;
+    } else {
+        itemsConStockBajo.forEach(tr => {
+            const newTr = document.createElement('tr');
+            const codigo = tr.querySelector('td[data-codigo]')?.dataset.codigo;
+            const nombre = tr.querySelector('td[data-nombre]')?.dataset.nombre;
+            const stockActual = tr.querySelector('td[data-stock-actual]')?.dataset.stockActual;
+            const stockMinimo = tr.querySelector('td[data-stock-minimo]')?.dataset.stockMinimo;
+            
+            if (codigo && nombre && stockActual) {
                 newTr.innerHTML = `
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                         <p class="text-gray-900 whitespace-no-wrap">${codigo}</p>
@@ -343,15 +344,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="text-red-600 font-bold whitespace-no-wrap">${stockActual}</p>
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        <p class="text-gray-900 whitespace-no-wrap">${stockMinimo}</p>
+                        <p class="text-gray-900 whitespace-no-wrap">${stockMinimo || '0'}</p>
                     </td>
                 `;
                 stockBajoTbody.appendChild(newTr);
-            });
-        }
-    
-        modal.classList.remove('opacity-0', 'pointer-events-none');
+            }
+        });
     }
+
+    // Mostrar el modal
+    const modal = document.getElementById('modal-stock-bajo');
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+}
 
     function cerrarModalStockBajo() {
         modal.classList.add('opacity-0', 'pointer-events-none');

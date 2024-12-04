@@ -1,5 +1,6 @@
 #inventario_routes.py en la carpeta de inventario
 
+# Al inicio del archivo, junto con las otras importaciones
 from flask import render_template, request, jsonify, current_app, send_file
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
@@ -14,7 +15,12 @@ import csv
 import pandas as pd
 from io import BytesIO
 from werkzeug.utils import secure_filename
-from facturas.facturas_models import ItemPendiente
+# Agregar estas importaciones
+from facturas.facturas_models import (
+    ItemFactura, 
+    Facturacion, 
+    ItemPendiente
+)
 
 
 
@@ -381,7 +387,6 @@ def get_reporte():
             items_query = items_query.filter(InventarioItem.categoria == categoria)
         items = items_query.all()
 
-        # Preparar el resumen y detalle
         resumen = {
             "total_items": len(items),
             "valor_total": 0.0,
@@ -391,48 +396,50 @@ def get_reporte():
         detalle = []
         
         for item in items:
-            # Obtener movimientos en el período
-            movimientos = MovimientoInventario.query.filter(
+            # Obtener la última facturación del item
+            ultima_factura = db.session.query(ItemFactura)\
+                .join(Facturacion)\
+                .filter(
+                    ItemFactura.item_id == item.id,
+                    Facturacion.estatus != 'anulada'
+                )\
+                .order_by(Facturacion.fecha.desc())\
+                .first()
+
+            ultima_cantidad_facturada = ultima_factura.cantidad if ultima_factura else 0
+
+            # Obtener movimientos del período seleccionado
+            movimientos_periodo = MovimientoInventario.query.filter(
                 MovimientoInventario.item_id == item.id,
                 MovimientoInventario.fecha.between(fecha_inicio, fecha_fin)
             ).all()
 
-            # Calcular movimientos
-            entradas = sum(m.cantidad for m in movimientos if m.tipo == 'entrada')
-            salidas = sum(m.cantidad for m in movimientos if m.tipo == 'salida')
+            # Calcular entradas y salidas del período
+            entradas_periodo = sum(m.cantidad for m in movimientos_periodo if m.tipo == 'entrada')
+            salidas_periodo = sum(m.cantidad for m in movimientos_periodo if m.tipo == 'salida')
             
-            # Calcular stock inicial
-            movimientos_anteriores = MovimientoInventario.query.filter(
-                MovimientoInventario.item_id == item.id,
-                MovimientoInventario.fecha < fecha_inicio
-            ).all()
-            
-            total_entradas_previas = sum(m.cantidad for m in movimientos_anteriores if m.tipo == 'entrada')
-            total_salidas_previas = sum(m.cantidad for m in movimientos_anteriores if m.tipo == 'salida')
-            stock_inicial = item.stock - (total_entradas_previas - total_salidas_previas)
-            
-            # Calcular valores
-            valor_unitario = float(item.costo)
-            stock_actual = stock_inicial + entradas - salidas
-            valor_total = stock_actual * valor_unitario
+            # El stock actual es el stock real en este momento
+            stock_actual = item.stock
 
-            # Agregar al detalle
+            # Calcular valor total
+            valor_total = stock_actual * float(item.costo)
+            resumen["valor_total"] += valor_total
+
+            # Verificar si es stock bajo
+            if 1 <= stock_actual <= 5:
+                resumen["items_stock_bajo"] += 1
+
             detalle.append({
                 "codigo": item.codigo or str(item.id),
                 "nombre": item.nombre,
                 "categoria": item.categoria or "Sin categoría",
-                "stock_inicial": stock_inicial,
-                "entradas": entradas,
-                "salidas": salidas,
+                "ultima_facturacion": ultima_cantidad_facturada,  # Cambiamos stock_inicial por ultima_facturacion
+                "entradas": entradas_periodo,
+                "salidas": salidas_periodo,
                 "stock_actual": stock_actual,
-                "valor_unitario": valor_unitario,
+                "valor_unitario": float(item.costo),
                 "valor_total": valor_total
             })
-
-            # Actualizar resumen
-            resumen["valor_total"] += valor_total
-            if 1 <= stock_actual <= 5:  # Changed to consider stock between 1 and 5 as low
-                resumen["items_stock_bajo"] += 1
 
         return jsonify({
             "resumen": resumen,

@@ -4,61 +4,120 @@
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f0f4f8;
+    }
+    
     .modal {
         transition: opacity 0.25s ease;
     }
+    
     body.modal-active {
         overflow-x: hidden;
         overflow-y: visible !important;
+    }
+    
+    .step {
+        display: none;
+    }
+    
+    .step.active {
+        display: block;
+    }
+    
+    .glassmorphism {
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .animate-slide-in {
+        animation: slideIn 0.5s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .hover-scale {
+        transition: transform 0.3s ease;
+    }
+    
+    .hover-scale:hover {
+        transform: scale(1.05);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div id="clientes-module" class="container mx-auto px-4 py-6">
-    <h1 class="text-2xl font-semibold mb-6 text-gray-800">Gestión de Clientes - CxC</h1>
+<div id="clientes-module" class="container mx-auto px-4 py-6 animate-fade-in">
+    <h1 class="text-4xl font-bold mb-6 text-gray-800 text-center">Gestión de Clientes - CxC</h1>
     
-    <div id="busqueda-form" class="bg-white shadow-sm rounded-lg px-6 py-4 mb-6">
+    <div id="busqueda-form" class="glassmorphism p-6 mb-6 animate-slide-in">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="id-cliente" placeholder="ID Cliente">
+            <div class="relative">
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" type="text" id="id-cliente" placeholder="ID Cliente">
+                <i class="fas fa-id-card absolute right-3 top-2 text-gray-400"></i>
             </div>
-            <div>
-                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="nombre-cliente" placeholder="Nombre">
+            <div class="relative">
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" type="text" id="nombre-cliente" placeholder="Nombre">
+                <i class="fas fa-user absolute right-3 top-2 text-gray-400"></i>
             </div>
-            <div>
-                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" type="text" id="rfc-cliente" placeholder="RFC">
+            <div class="relative">
+                <input class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" type="text" id="rfc-cliente" placeholder="RFC">
+                <i class="fas fa-file-alt absolute right-3 top-2 text-gray-400"></i>
             </div>
-            <div>
-                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" id="estatus-cliente">
+            <div class="relative">
+                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" id="estatus-cliente">
                     <option value="">Todos</option>
                     <option value="activo">Activo</option>
                     <option value="inactivo">Inactivo</option>
                 </select>
+                <i class="fas fa-toggle-on absolute right-3 top-2 text-gray-400"></i>
             </div>
         </div>
         <div class="flex justify-between mt-4">
-            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <button id="buscar-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300 hover-scale">
                 <i class="fas fa-search mr-2"></i>Buscar
             </button>
-            <button id="crear-cliente-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            <button id="crear-cliente-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300 hover-scale">
                 <i class="fas fa-plus mr-2"></i>Crear Nuevo Cliente
+            </button>
+            <button id="generar-reporte-btn" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition duration-300 hover-scale">
+                <i class="fas fa-chart-bar mr-2"></i>Análisis de Clientes
             </button>
         </div>
     </div>
     
-    <div id="clientes-table-container" class="overflow-x-auto bg-white shadow-sm rounded-lg">
+    <div id="clientes-table-container" class="overflow-x-auto glassmorphism rounded-lg animate-slide-in" style="animation-delay: 0.2s;">
         <table id="clientes-table" class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">ID</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Nombre</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">RFC</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Email</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Teléfono</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Estatus</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Acciones</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RFC</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
             </thead>
             <tbody id="clientes-tbody" class="bg-white divide-y divide-gray-200">
@@ -68,66 +127,643 @@
     </div>
 </div>
 
-<!-- Modal para crear/editar cliente -->
-<div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center">
-    <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-    
-    <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
-        <div class="modal-content py-4 text-left px-6">
-            <div class="flex justify-between items-center pb-3">
-                <p class="text-2xl font-bold" id="modal-title">Crear Nuevo Cliente</p>
-                <div class="modal-close cursor-pointer z-50">
-                    <i class="fas fa-times"></i>
+<!-- Modal de Análisis de Clientes -->
+<div id="analisis-modal" class="fixed inset-0 overflow-y-auto opacity-0 pointer-events-none backdrop-blur-sm">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
+        <div class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-50" aria-hidden="true"></div>
+        <div class="modal-container inline-block w-full max-w-6xl overflow-hidden align-middle transition-all transform bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl scale-95 opacity-0">
+            <!-- Header con diseño moderno -->
+            <div class="relative px-6 pt-8 pb-4">
+                <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 opacity-90"></div>
+                <h3 class="relative text-3xl font-bold text-white mb-2">Dashboard de Análisis</h3>
+                <p class="relative text-white/80">Resumen y métricas clave de clientes</p>
+            </div>
+
+            <div class="px-6 py-4">
+                <!-- KPIs con diseño de tarjetas modernas -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- KPI Total Clientes -->
+                    <div class="transform transition-all duration-300 hover:scale-105">
+                        <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 border border-blue-200/50">
+                            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 bg-blue-500 rounded-full opacity-20"></div>
+                            <div class="relative">
+                                <h4 class="text-blue-800 text-lg font-semibold mb-2">Total Clientes</h4>
+                                <p id="total-clientes-kpi" class="text-4xl font-bold text-blue-600">0</p>
+                                <div class="mt-2 text-blue-600/60 text-sm">
+                                    <i class="fas fa-users mr-1"></i> Clientes activos
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KPI Ventas Totales -->
+                    <div class="transform transition-all duration-300 hover:scale-105">
+                        <div class="relative overflow-hidden bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-6 border border-green-200/50">
+                            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 bg-green-500 rounded-full opacity-20"></div>
+                            <div class="relative">
+                                <h4 class="text-green-800 text-lg font-semibold mb-2">Ventas Totales</h4>
+                                <p id="ventas-totales-kpi" class="text-4xl font-bold text-green-600">$0</p>
+                                <div class="mt-2 text-green-600/60 text-sm">
+                                    <i class="fas fa-chart-line mr-1"></i> Acumulado
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KPI Promedio Ventas -->
+                    <div class="transform transition-all duration-300 hover:scale-105">
+                        <div class="relative overflow-hidden bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-6 border border-purple-200/50">
+                            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 bg-purple-500 rounded-full opacity-20"></div>
+                            <div class="relative">
+                                <h4 class="text-purple-800 text-lg font-semibold mb-2">Promedio Venta</h4>
+                                <p id="promedio-venta-kpi" class="text-4xl font-bold text-purple-600">$0</p>
+                                <div class="mt-2 text-purple-600/60 text-sm">
+                                    <i class="fas fa-calculator mr-1"></i> Por cliente
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficos con diseño moderno -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-200/50">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-chart-pie mr-2 text-indigo-500"></i>
+                            Estado de Cuentas
+                        </h4>
+                        <canvas id="grafico-estado-cuentas" class="max-h-80"></canvas>
+                    </div>
+                    <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-200/50">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-chart-line mr-2 text-indigo-500"></i>
+                            Tendencia de Ventas
+                        </h4>
+                        <canvas id="grafico-ventas" class="max-h-80"></canvas>
+                    </div>
+                </div>
+
+                <!-- Tabla Top Clientes con diseño moderno -->
+                <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-200/50">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-trophy mr-2 text-indigo-500"></i>
+                        Top Clientes
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table id="tabla-top-clientes" class="min-w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200">
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cliente</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ventas Totales</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <!-- Los datos se insertarán aquí dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <form id="cliente-form" class="mt-4">
-                <input type="hidden" id="cliente-id" name="id">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">
-                        Nombre
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nombre" name="nombre" type="text" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="rfc">
-                        RFC
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="rfc" name="rfc" type="text" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-                        Email
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="email" name="email" type="email" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono">
-                        Teléfono
-                    </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="telefono" name="telefono" type="tel" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="estatus">
-                        Estatus
-                    </label>
-                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="estatus" name="estatus">
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
-                    </select>
-                </div>
-                <div class="flex items-center justify-between">
-                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
-                        Guardar
-                    </button>
-                    <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline modal-close" type="button">
-                        Cancelar
-                    </button>
-                </div>
-            </form>
+            <!-- Footer con botón moderno -->
+            <div class="px-6 py-4 bg-gray-50/50 backdrop-blur-sm">
+                <button type="button" onclick="cerrarModalAnalisis()" 
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-lg transition-transform duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i class="fas fa-times mr-2"></i>
+                    Cerrar Dashboard
+                </button>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Animaciones para el modal */
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-container {
+    animation: slideIn 0.5s ease-out;
+}
+
+/* Efecto de hover para las tarjetas */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+// Actualizar la función de cerrar modal con animación
+function cerrarModalAnalisis() {
+    const modal = document.getElementById('analisis-modal');
+    const modalContainer = modal.querySelector('.modal-container');
+    
+    // Añadir clases de transición
+    modalContainer.classList.add('scale-95', 'opacity-0');
+    modalContainer.style.transform = 'translateY(20px)';
+    
+    // Esperar a que termine la animación antes de ocultar completamente
+    setTimeout(() => {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        document.body.classList.remove('modal-active');
+        
+        // Resetear las transformaciones
+        modalContainer.style.transform = '';
+    }, 300);
+}
+
+// Agregar evento para cerrar con Escape
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const analisisModal = document.getElementById('analisis-modal');
+        if (!analisisModal.classList.contains('opacity-0')) {
+            cerrarModalAnalisis();
+        }
+    }
+});
+
+// Agregar evento para cerrar al hacer clic fuera del modal
+document.getElementById('analisis-modal').addEventListener('click', function(event) {
+    if (event.target === this) {
+        cerrarModalAnalisis();
+    }
+});
+
+// Actualizar las opciones de los gráficos para un diseño más moderno
+function generarGraficoEstadoCuentas(estadoCuentas) {
+    const ctx = document.getElementById('grafico-estado-cuentas').getContext('2d');
+    
+    if (window.graficoEstadoCuentas instanceof Chart) {
+        window.graficoEstadoCuentas.destroy();
+    }
+
+    window.graficoEstadoCuentas = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Al día', 'Vencidas'],
+            datasets: [{
+                data: [estadoCuentas.al_dia, estadoCuentas.vencidas],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(239, 68, 68, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(16, 185, 129)',
+                    'rgb(239, 68, 68)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            },
+            cutout: '70%',
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        }
+    });
+}
+</script>
+
+<!-- Modal para crear/editar cliente -->
+<!-- Modal para crear/editar cliente -->
+<!-- Modal para crear/editar cliente -->
+<div id="cliente-modal" class="fixed inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
+                <button type="button" class="text-gray-400 bg-white rounded-md hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 modal-close">
+                    <span class="sr-only">Cerrar</span>
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="w-full mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="mb-6 text-3xl font-bold leading-6 text-gray-900" id="modal-title">
+                            Crear Nuevo Cliente
+                        </h3>
+                        <div class="px-6 mt-2">
+                            <form id="cliente-form" class="space-y-8">
+                                <!-- Indicador de progreso -->
+                                <div class="mb-10">
+                                    <div class="relative pt-1">
+                                        <div class="flex h-2 mb-4 overflow-hidden text-xs bg-indigo-200 rounded">
+                                            <div id="progress-bar" class="flex flex-col justify-center text-center text-white bg-indigo-500 shadow-none transition-all duration-500 ease-in-out" style="width: 0%"></div>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span id="step-1-indicator" class="inline-block px-2 py-1 text-xs font-semibold uppercase rounded-full text-green-700 bg-green-200">
+                                                Información Básica
+                                            </span>
+                                            <span id="step-2-indicator" class="inline-block px-2 py-1 text-xs font-semibold uppercase rounded-full text-gray-600 bg-gray-200">
+                                                Contacto
+                                            </span>
+                                            <span id="step-3-indicator" class="inline-block px-2 py-1 text-xs font-semibold uppercase rounded-full text-gray-600 bg-gray-200">
+                                                Información de Venta
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contenedor de pasos -->
+                                <div class="overflow-hidden">
+                                    <div class="steps-container transition-all duration-500 ease-in-out" style="width: 300%; display: flex;">
+                                        <!-- Paso 1: Información Básica -->
+                                        <div class="w-full step" id="step-1">
+                                            <h4 class="mb-4 text-lg font-semibold text-indigo-700">Información Básica</h4>
+                                            <div class="px-6">
+                                                <label for="documento" class="block mb-1 text-xs font-medium text-gray-700">Documento</label>
+                                                <div class="relative mt-1 rounded-md shadow-sm">
+                                                    <div class="absolute inset-y-0 left-0 flex items-center">
+                                                        <select id="tipo-documento" name="tipo-documento" class="h-full py-0 pl-3 pr-7 border-transparent bg-transparent text-gray-500 sm:text-sm rounded-l-md focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                            <option value="cedula">Cédula</option>
+                                                            <option value="rnc">RNC</option>
+                                                            <option value="pasaporte">Pasaporte</option>
+                                                        </select>
+                                                    </div>
+                                                    <input type="text" id="documento" name="documento" class="block w-64 pl-24 pr-10 sm:text-sm border-2 border-green-700 rounded-md focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="Ingrese el número de documento">
+                                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                                        <button type="button" class="text-gray-400 hover:text-gray-500">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="px-6 mt-4">
+                                                <label for="nombre" class="block mb-1 text-xs font-medium text-gray-700">Nombre</label>
+                                                <input type="text" id="nombre" name="nombre" class="block w-72 px-3 py-2 mt-1 text-sm border-2 border-green-700 rounded-md shadow-sm focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="Nombre completo">
+                                            </div>
+                                            <div class="px-6 mt-4">
+                                                <label for="comprobante-fiscal" class="block mb-1 text-xs font-medium text-gray-700">Comprobante Fiscal</label>
+                                                <select id="comprobante-fiscal" name="comprobante-fiscal" class="block w-72 px-3 py-2 mt-1 text-sm bg-white border-2 border-green-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                    <option value="">Seleccione...</option>
+                                                    <option value="factura-consumo">Factura de Consumo</option>
+                                                    <option value="comprobantes-gubernamentales">Comprobantes gubernamentales</option>
+                                                    <option value="comprobante-exportaciones">Comprobante para exportaciones</option>
+                                                    <option value="factura-credito-fiscal">Factura crédito fiscal</option>
+                                                    <option value="registro-regimenes">Registro regímenes especiales de tributación</option>
+                                                    <option value="registro-unico">Registro único Ingreso</option>
+                                                </select>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-6 mt-4">
+                                                <div class="px-6">
+                                                    <label for="estatus" class="block mb-1 text-xs font-medium text-gray-700">Estatus</label>
+                                                    <select id="estatus" name="estatus" class="block w-72 px-3 py-2 mt-1 text-sm bg-white border-2 border-green-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                        <option value="activo">Activo</option>
+                                                    </select>
+                                                </div>
+                                                <div class="px-6">
+                                                    <label for="tipo" class="block mb-1 text-xs font-medium text-gray-700">Tipo</label>
+                                                    <select id="tipo" name="tipo" class="block w-72 px-3 py-2 mt-1 text-sm bg-white border-2 border-green-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                        <option value="">Seleccione...</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Paso 2: Información de Contacto -->
+                                        <div class="w-full step" id="step-2">
+                                            <h4 class="mb-4 text-lg font-semibold text-indigo-700">Información de Contacto</h4>
+                                            <div class="px-6">
+                                                <label for="direccion" class="block mb-1 text-xs font-medium text-gray-700">Dirección</label>
+                                                <input type="text" id="direccion" name="direccion" class="block w-72 px-3 py-2 mt-1 text-sm border-2 border-green-700 rounded-md shadow-sm focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="Dirección completa">
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-6 mt-4">
+                                                <div class="px-6">
+                                                    <label for="provincia" class="block mb-1 text-xs font-medium text-gray-700">Provincia</label>
+                                                    <select id="provincia" name="provincia" class="block w-72 px-3 py-2 mt-1 text-sm bg-white border-2 border-green-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                        <option value="">Seleccione...</option>
+                                                        <option value="azua">Azua</option>
+                                                        <option value="baoruco">Baoruco</option>
+                                                        <option value="barahona">Barahona</option>
+                                                        <option value="dajabon">Dajabón</option>
+                                                        <option value="distrito-nacional">Distrito Nacional</option>
+                                                        <option value="duarte">Duarte</option>
+                                                        <option value="elias-pina">Elías Piña</option>
+                                                        <option value="el-seibo">El Seibo</option>
+                                                        <option value="espaillat">Espaillat</option>
+                                                        <option value="hato-mayor">Hato Mayor</option>
+                                                        <option value="hermanas-mirabal">Hermanas Mirabal</option>
+                                                        <option value="independencia">Independencia</option>
+                                                        <option value="la-altagracia">La Altagracia</option>
+                                                        <option value="la-romana">La Romana</option>
+                                                        <option value="la-vega">La Vega</option>
+                                                        <option value="maria-trinidad-sanchez">María Trinidad Sánchez</option>
+                                                        <option value="monsenor-nouel">Monseñor Nouel</option>
+                                                        <option value="monte-cristi">Monte Cristi</option>
+                                                        <option value="monte-plata">Monte Plata</option>
+                                                        <option value="pedernales">Pedernales</option>
+                                                        <option value="peravia">Peravia</option>
+                                                        <option value="puerto-plata">Puerto Plata</option>
+                                                        <option value="samana">Samaná</option>
+                                                        <option value="san-cristobal">San Cristóbal</option>
+                                                        <option value="san-jose-de-ocoa">San José de Ocoa</option>
+                                                        <option value="san-juan">San Juan</option>
+                                                        <option value="san-pedro-de-macoris">San Pedro de Macorís</option>
+                                                        <option value="sanchez-ramirez">Sánchez Ramírez</option>
+                                                        <option value="santiago">Santiago</option>
+                                                        <option value="santiago-rodriguez">Santiago Rodríguez</option>
+                                                        <option value="santo-domingo">Santo Domingo</option>
+                                                        <option value="valverde">Valverde</option>
+                                                    </select>
+                                                </div>
+                                                <div class="px-6">
+                                                    <label for="municipio" class="block mb-1 text-xs font-medium text-gray-700">Municipio</label>
+                                                    <select id="municipio" name="municipio" class="block w-72 px-3 py-2 mt-1 text-sm bg-white border-2 border-green-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                        <option value="">Seleccione...</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="px-6 mt-4">
+                                                <label for="contacto" class="block mb-1 text-xs font-medium text-gray-700">Contacto</label>
+                                                <input type="text" id="contacto" name="contacto" class="block w-72 px-3 py-2 mt-1 text-sm border-2 border-green-700 rounded-md shadow-sm focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="Nombre del contacto">
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-6 mt-4">
+                                                <div class="px-6">
+                                                    <label for="telefono-principal" class="block mb-1 text-xs font-medium text-gray-700">Teléfono principal</label>
+                                                    <input type="tel" id="telefono-principal" name="telefono-principal" class="block w-72 px-3 py-2 mt-1 text-sm border-2 border-green-700 rounded-md shadow-sm focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="(000) 000-0000">
+                                                </div>
+                                                <div class="px-6">
+                                                    <label for="telefono-secundario" class="block mb-1 text-xs font-medium text-gray-700">Teléfono secundario</label>
+                                                    <div class="flex mt-1 rounded-md shadow-sm">
+                                                        <input type="tel" id="telefono-secundario" name="telefono-secundario" class="flex-1 block w-72 px-3 py-2 text-sm border-2 border-green-700 rounded-l-md focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="(000) 000-0000">
+                                                        <span class="inline-flex items-center px-3 text-xs text-gray-500 border-2 border-l-0 border-green-700 rounded-r-md bg-gray-50">
+                                                            Ext.
+                                                            <input type="text" class="w-12 ml-1 text-xs border-2 border-green-700 rounded focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="000">
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-6 mt-4">
+                                                <div class="px-6">
+                                                    <label for="email" class="block mb-1 text-xs font-medium text-gray-700">Email</label>
+                                                    <input type="email" id="email" name="email" class="block w-72 px-3 py-2 mt-1 text-sm border-2 border-green-700 rounded-md shadow-sm focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="ejemplo@dominio.com">
+                                                </div>
+                                                <div class="px-6">
+                                                    <label for="fax" class="block mb-1 text-xs font-medium text-gray-700">Fax</label>
+                                                    <input type="text" id="fax" name="fax" class="block w-72 px-3 py-2 mt-1 text-sm border-2 border-green-700 rounded-md shadow-sm focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="(000) 000-0000">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Paso 3: Información de Venta -->
+                                        <div class="w-full step" id="step-3">
+                                            <h4 class="mb-4 text-lg font-semibold text-indigo-700">Información de Venta</h4>
+                                            <div class="grid grid-cols-1 gap-6">
+                                                <div class="px-6">
+                                                    <label for="tienda" class="block mb-1 text-xs font-medium text-gray-700">Tienda</label>
+                                                    <select id="tienda" name="tienda" class="block w-72 px-3 py-2 mt-1 text-sm bg-white border-2 border-green-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                        <option value="">Seleccione la tienda...</option>
+                                                        <option value="tienda1">Tienda 1</option>
+                                                        <option value="tienda2">Tienda 2</option>
+                                                        <option value="tienda3">Tienda 3</option>
+                                                    </select>
+                                                </div>
+                                                <div class="px-6">
+                                                    <label for="tipo-factura" class="block mb-1 text-xs font-medium text-gray-700">Tipo de Factura</label>
+                                                    <select id="tipo-factura" name="tipo-factura" class="block w-72 px-3 py-2 mt-1 text-sm bg-white border-2 border-green-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                        <option value="">Seleccione...</option>
+                                                        <option value="credito">Crédito</option>
+                                                        <option value="contado">Contado</option>
+                                                    </select>
+                                                </div>
+                                                <div class="px-6">
+                                                    <label for="vendedor" class="block mb-1 text-xs font-medium text-gray-700">Vendedor</label>
+                                                    <select id="vendedor" name="vendedor" class="block w-72 px-3 py-2 mt-1 text-sm bg-white border-2 border-green-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                        <option value="">Seleccione el vendedor...</option>
+                                                        <option value="vendedor1">Vendedor 1</option>
+                                                        <option value="vendedor2">Vendedor 2</option>
+                                                        <option value="vendedor3">Vendedor 3</option>
+                                                    </select>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-6">
+                                                    <div class="px-6">
+                                                        <label for="descuento" class="block mb-1 text-xs font-medium text-gray-700">Descuento (%)</label>
+                                                        <input type="number" id="descuento" name="descuento" class="block w-72 px-3 py-2 mt-1 text-sm border-2 border-green-700 rounded-md shadow-sm focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="0.00">
+                                                    </div>
+                                                    <div class="px-6">
+                                                        <label for="limite-credito" class="block mb-1 text-xs font-medium text-gray-700">Límite Crédito</label>
+                                                        <input type="number" id="limite-credito" name="limite-credito" class="block w-72 px-3 py-2 mt-1 text-sm border-2 border-green-700 rounded-md shadow-sm focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="0.00">
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-6">
+                                                    <div class="px-6">
+                                                        <label for="dias-atraso" class="block mb-1 text-xs font-medium text-gray-700">Días de Atraso Permitidos</label>
+                                                        <input type="number" id="dias-atraso" name="dias-atraso" class="block w-72 px-3 py-2 mt-1 text-sm border-2 border-green-700 rounded-md shadow-sm focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="0">
+                                                    </div>
+                                                    <div class="px-6">
+                                                        <label for="reg-mercantil" class="block mb-1 text-xs font-medium text-gray-700">Reg. Mercantil</label>
+                                                        <input type="text" id="reg-mercantil" name="reg-mercantil" class="block w-72 px-3 py-2 mt-1 text-sm border-2 border-green-700 rounded-md shadow-sm focus:ring-2 focus:ring-green-700 focus:border-green-700" placeholder="Número de registro">
+                                                    </div>
+                                                </div>
+                                                <div class="px-6">
+                                                    <label for="retencion-itbis" class="block mb-1 text-xs font-medium text-gray-700">Retención ITBIS</label>
+                                                    <select id="retencion-itbis" name="retencion-itbis" class="block w-72 px-3 py-2 mt-1 text-sm bg-white border-2 border-green-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                        <option value="">Seleccione...</option>
+                                                        <option value="no">No</option>
+                                                        <option value="30">30%</option>
+                                                        <option value="75">75%</option>
+                                                        <option value="100">100%</option>
+                                                    </select>
+                                                </div>
+                                                <div class="px-6">
+                                                    <label for="retencion-isr" class="block mb-1 text-xs font-medium text-gray-700">Retención ISR</label>
+                                                    <select id="retencion-isr" name="retencion-isr" class="block w-72 px-3 py-2 mt-1 text-sm bg-white border-2 border-green-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700">
+                                                        <option value="">Seleccione...</option>
+                                                        <option value="no">No</option>
+                                                        <option value="2">2%</option>
+                                                        <option value="5">5%</option>
+                                                        <option value="10">10%</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:justify-between">
+                <button id="prev-step" type="button" class="w-full sm:w-auto px-6 py-2 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-700 sm:w-auto sm:text-sm transition-transform duration-200 ease-in-out transform hover:-translate-x-1">
+                    Anterior
+                </button>
+                <button type="button" class="w-full sm:w-auto px-6 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-700 sm:mt-0 sm:w-auto sm:text-sm modal-close transition-all duration-200 ease-in-out hover:bg-red-100 hover:text-red-700">
+                    Cancelar
+                </button>
+                <button id="next-step" type="button" class="w-full sm:w-auto px-6 py-2 text-base font-medium text-white bg-green-700 border border-transparent rounded-md shadow-sm hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-700 sm:w-auto sm:text-sm transition-transform duration-200 ease-in-out transform hover:translate-x-1">
+                    Siguiente
+                </button>
+                <button id="submit-form" type="button" class="hidden w-full sm:w-auto px-6 py-2 text-base font-medium text-white bg-green-700 border border-transparent rounded-md shadow-sm hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-700 sm:w-auto sm:text-sm transition-all duration-200 ease-in-out">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notificaciones tipo toast -->
+<div id="notificacion" class="fixed bottom-5 right-5 p-4 rounded-lg shadow-lg transform transition-all duration-300 opacity-0 translate-y-2 bg-green-500 text-white" style="z-index: 9999;">
+    <p id="notificacion-mensaje" class="font-semibold"></p>
+</div>
+
+<script>
+    // JavaScript para manejar la funcionalidad del formulario por pasos
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    function updateProgressBar() {
+        const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+    }
+
+    function updateStepIndicators() {
+        for (let i = 1; i <= totalSteps; i++) {
+            const indicator = document.getElementById(`step-${i}-indicator`);
+            if (i === currentStep) {
+                indicator.classList.remove('text-gray-600', 'bg-gray-200');
+                indicator.classList.add('text-green-700', 'bg-green-200');
+            } else {
+                indicator.classList.remove('text-green-700', 'bg-green-200');
+                indicator.classList.add('text-gray-600', 'bg-gray-200');
+            }
+        }
+    }
+
+    function showStep(step) {
+        document.querySelectorAll('.step').forEach(s => s.style.display = 'none');
+        document.getElementById(`step-${step}`).style.display = 'block';
+        currentStep = step;
+        updateProgressBar();
+        updateStepIndicators();
+
+        // Actualizar visibilidad de botones
+        document.getElementById('prev-step').style.display = step > 1 ? 'inline-flex' : 'none';
+        document.getElementById('next-step').style.display = step < totalSteps ? 'inline-flex' : 'none';
+        
+        // Manejar el botón "Guardar"
+        const submitButton = document.getElementById('submit-form');
+        if (step === totalSteps) {
+            submitButton.style.display = 'inline-flex';
+            document.getElementById('next-step').style.display = 'none';
+        } else {
+            submitButton.style.display = 'none';
+        }
+    }
+
+    // Inicializar el formulario
+    showStep(1);
+
+    // Event Listeners
+    document.getElementById('next-step').addEventListener('click', () => {
+        if (currentStep < totalSteps) {
+            showStep(currentStep + 1);
+        }
+    });
+
+    document.getElementById('prev-step').addEventListener('click', () => {
+        if (currentStep > 1) {
+            showStep(currentStep - 1);
+        }
+    });
+
+    document.getElementById('submit-form').addEventListener('click', () => {
+        // Aquí iría la lógica para enviar el formulario
+        console.log('Formulario enviado');
+        showNotification('Cliente guardado exitosamente');
+    });
+
+    function showNotification(message) {
+        const notification = document.getElementById('notificacion');
+        const notificationMessage = document.getElementById('notificacion-mensaje');
+        notificationMessage.textContent = message;
+        notification.classList.remove('opacity-0', 'translate-y-2');
+        notification.classList.add('opacity-100', 'translate-y-0');
+        setTimeout(() => {
+            notification.classList.remove('opacity-100', 'translate-y-0');
+            notification.classList.add('opacity-0', 'translate-y-2');
+        }, 3000);
+    }
+
+    // Modal controls
+    document.querySelectorAll('.modal-close').forEach(button => {
+        button.addEventListener('click', () => {
+            document.getElementById('cliente-modal').classList.add('hidden');
+        });
+    });
+
+    // Ejemplo de apertura del modal
+    document.getElementById('crear-cliente-btn')?.addEventListener('click', () => {
+        document.getElementById('cliente-modal').classList.remove('hidden');
+    });
+
+    document.getElementById('tipo-documento').addEventListener('change', function() {
+        const tipoDocumento = this.value;
+        const inputDocumento = document.getElementById('documento');
+        
+        switch(tipoDocumento) {
+            case 'cedula':
+                inputDocumento.placeholder = 'Ingrese el número de cédula (11 dígitos)';
+                inputDocumento.pattern = '\\d{11}';
+                break;
+            case 'rnc':
+                inputDocumento.placeholder = 'Ingrese el número de RNC (9 dígitos)';
+                inputDocumento.pattern = '\\d{9}';
+                break;
+            case 'pasaporte':
+                inputDocumento.placeholder = 'Ingrese el número de pasaporte';
+                inputDocumento.pattern = '[A-Za-z0-9]{6,}';
+                break;
+        }
+    });
+</script>
+<style>
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    #submit-form {
+        animation: pulse 2s infinite;
+    }
+</style>
+
+
+
+
+
+
 
 {% endblock %}
 
@@ -138,75 +774,406 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeClientesModule() {
+    // Obtener referencias a elementos del DOM
     const buscarBtn = document.getElementById('buscar-btn');
     const crearClienteBtn = document.getElementById('crear-cliente-btn');
+    const generarReporteBtn = document.getElementById('generar-reporte-btn');
     const clienteForm = document.getElementById('cliente-form');
-    const modal = document.querySelector('.modal');
-    const modalOverlay = document.querySelector('.modal-overlay');
+    const modal = document.getElementById('cliente-modal');
     const modalCloseButtons = document.querySelectorAll('.modal-close');
+    const prevStepBtn = document.getElementById('prev-step');
+    const nextStepBtn = document.getElementById('next-step');
+    const submitFormBtn = document.getElementById('submit-form');
 
-    buscarBtn.addEventListener('click', buscarClientes);
-    crearClienteBtn.addEventListener('click', mostrarFormularioCrearCliente);
-    clienteForm.addEventListener('submit', guardarCliente);
+    // Verificar que los elementos existen
+    if (!clienteForm) {
+        console.error('Error: No se encontró el formulario de cliente');
+        return;
+    }
 
-    modalOverlay.addEventListener('click', toggleModal);
-    modalCloseButtons.forEach(btn => btn.addEventListener('click', toggleModal));
+    // Event Listeners para los botones principales
+    if (buscarBtn) {
+        buscarBtn.addEventListener('click', buscarClientes);
+    }
 
-    document.getElementById('clientes-tbody').addEventListener('click', manejarAccionesCliente);
+    if (crearClienteBtn) {
+        crearClienteBtn.addEventListener('click', () => {
+            mostrarFormularioCrearCliente();
+            modal.classList.remove('hidden');
+        });
+    }
 
+    if (generarReporteBtn) {
+        generarReporteBtn.addEventListener('click', mostrarAnalisisClientes);
+    }
+
+    // Event Listener para el formulario
+    clienteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        guardarCliente(e);
+    });
+
+    // Event Listeners para los botones del modal
+    modalCloseButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            clienteForm.reset();
+        });
+    });
+
+    // Event Listener para la navegación del formulario por pasos
+    if (prevStepBtn) {
+        prevStepBtn.addEventListener('click', () => cambiarPaso(-1));
+    }
+
+    if (nextStepBtn) {
+        nextStepBtn.addEventListener('click', () => cambiarPaso(1));
+    }
+
+    // Event Listener para botón submit
+    if (submitFormBtn) {
+        submitFormBtn.addEventListener('click', function() {
+            clienteForm.dispatchEvent(new Event('submit'));
+        });
+    }
+
+    // Event Listener para acciones en la tabla de clientes
+    const clientesTableBody = document.getElementById('clientes-tbody');
+    if (clientesTableBody) {
+        clientesTableBody.addEventListener('click', manejarAccionesCliente);
+    }
+
+    // Event Listener para cerrar modal con Escape
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal) {
+            modal.classList.add('hidden');
+            clienteForm.reset();
+        }
+    });
+
+    // Cargar clientes iniciales
     buscarClientes();
+
+    // Inicializar el paso actual del formulario
+    showStep(1);
+}
+
+// Función auxiliar para mostrar notificaciones
+function mostrarNotificacion(mensaje, tipo = 'success') {
+    Swal.fire({
+        text: mensaje,
+        icon: tipo,
+        toast: true,
+        position: 'bottom-end',
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false
+    });
+}
+
+// Función para obtener el token CSRF si es necesario
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+}
+
+// Inicializar el módulo cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    initializeClientesModule();
+});
+
+let pasoActual = 1;
+const totalPasos = 3;
+
+function cambiarPaso(direccion) {
+    const stepsContainer = document.querySelector('.steps-container');
+    pasoActual += direccion;
+
+    if (pasoActual < 1 || pasoActual > totalPasos) {
+        pasoActual -= direccion;
+        return;
+    }
+
+    stepsContainer.style.transform = `translateX(-${(pasoActual - 1) * 33.333}%)`;
+
+    actualizarIndicadoresPaso();
+    actualizarBotonesPaso();
+}
+
+function actualizarIndicadoresPaso() {
+    for (let i = 1; i <= totalPasos; i++) {
+        const indicador = document.getElementById(`step-indicator-${i}`);
+        if (i <= pasoActual) {
+            indicador.classList.remove('bg-gray-200');
+            indicador.classList.add('bg-blue-500');
+        } else {
+            indicador.classList.remove('bg-blue-500');
+            indicador.classList.add('bg-gray-200');
+        }
+    }
+}
+
+function actualizarBotonesPaso() {
+    const prevStepBtn = document.getElementById('prev-step');
+    const nextStepBtn = document.getElementById('next-step');
+    const submitFormBtn = document.getElementById('submit-form');
+
+    prevStepBtn.classList.toggle('hidden', pasoActual === 1);
+    nextStepBtn.classList.toggle('hidden', pasoActual === totalPasos);
+    submitFormBtn.classList.toggle('hidden', pasoActual !== totalPasos);
 }
 
 function toggleModal() {
     const modal = document.querySelector('.modal');
+    const modalContainer = modal.querySelector('.modal-container');
     modal.classList.toggle('opacity-0');
     modal.classList.toggle('pointer-events-none');
+    modalContainer.classList.toggle('scale-95');
+    modalContainer.classList.toggle('opacity-0');
     document.body.classList.toggle('modal-active');
 }
 
 function buscarClientes() {
-    const idCliente = document.getElementById('id-cliente').value;
-    const nombreCliente = document.getElementById('nombre-cliente').value;
-    const rfcCliente = document.getElementById('rfc-cliente').value;
-    const estatusCliente = document.getElementById('estatus-cliente').value;
+    const tbody = document.getElementById('clientes-tbody');
+    
+    // Obtener valores de filtro
+    const filtros = {
+        id: document.getElementById('id-cliente')?.value || '',
+        nombre: document.getElementById('nombre-cliente')?.value || '',
+        documento: document.getElementById('rfc-cliente')?.value || '',
+        estado: document.getElementById('estatus-cliente')?.value || ''
+    };
+    
+    // Mostrar loader
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="7" class="px-6 py-4 text-center">
+                <div class="flex justify-center items-center space-x-2">
+                    <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                    <span>Cargando clientes...</span>
+                </div>
+            </td>
+        </tr>
+    `;
 
-    // Aquí deberías hacer una llamada a tu API para buscar los clientes
-    // Por ahora, usaremos datos simulados
-    const clientes = [
-        { id: 1, nombre: 'Cliente A', rfc: 'AAAA010101AAA', email: 'clientea@example.com', telefono: '1234567890', estatus: 'activo' },
-        { id: 2, nombre: 'Cliente B', rfc: 'BBBB020202BBB', email: 'clienteb@example.com', telefono: '0987654321', estatus: 'inactivo' },
-    ];
+    // Realizar petición AJAX
+    fetch('/cxc/clientes?' + new URLSearchParams(filtros), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (!data.clientes || !Array.isArray(data.clientes)) {
+            throw new Error('Formato de datos inválido');
+        }
 
-    actualizarTablaClientes(clientes);
+        if (data.clientes.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                        <div class="flex flex-col items-center space-y-2">
+                            <i class="fas fa-users-slash text-2xl"></i>
+                            <p>No hay clientes que coincidan con los criterios de búsqueda</p>
+                            <button onclick="document.getElementById('crear-cliente-btn').click()" 
+                                    class="mt-2 px-4 py-2 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200">
+                                Crear Nuevo Cliente
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Renderizar datos en la tabla
+        tbody.innerHTML = '';
+        data.clientes.forEach((cliente, index) => {
+            const tr = document.createElement('tr');
+            tr.className = `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors duration-150`;
+            
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${cliente.id || ''}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.nombre || ''}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.documento || ''}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.email || ''}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.telefono || ''}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        cliente.estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }">
+                        ${cliente.estado || 'activo'}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="flex space-x-2">
+                        <button class="editar-cliente text-blue-600 hover:text-blue-900 transition-colors duration-200" 
+                                data-id="${cliente.id}" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="eliminar-cliente text-red-600 hover:text-red-900 transition-colors duration-200" 
+                                data-id="${cliente.id}" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="historial-cliente text-purple-600 hover:text-purple-900 transition-colors duration-200" 
+                                data-id="${cliente.id}" title="Historial">
+                            <i class="fas fa-history"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tbody.appendChild(tr);
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-4 text-center text-red-500">
+                    <div class="flex flex-col items-center space-y-2">
+                        <i class="fas fa-exclamation-circle text-2xl"></i>
+                        <p>Error al cargar los clientes: ${error.message}</p>
+                        <button onclick="buscarClientes()" 
+                                class="mt-2 px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200">
+                            Reintentar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
 }
 
-function actualizarTablaClientes(clientes) {
+// Agregar event listeners para la búsqueda
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar clientes iniciales
+    buscarClientes();
+    
+    // Configurar event listeners para búsqueda en tiempo real
+    const searchInputs = ['id-cliente', 'nombre-cliente', 'rfc-cliente', 'estatus-cliente'];
+    searchInputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', debounce(buscarClientes, 300));
+        }
+    });
+    
+    // Event listener para el botón de búsqueda
+    const buscarBtn = document.getElementById('buscar-btn');
+    if (buscarBtn) {
+        buscarBtn.addEventListener('click', buscarClientes);
+    }
+});
+
+// Función de debounce para evitar múltiples llamadas
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function renderizarTablaClientes(clientes) {
     const tbody = document.getElementById('clientes-tbody');
     tbody.innerHTML = '';
-    clientes.forEach(cliente => {
+    
+    clientes.forEach((cliente, index) => {
         const tr = document.createElement('tr');
+        tr.className = index % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 hover:bg-gray-100';
         tr.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.nombre}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.rfc}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.email}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.telefono}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstatusClass(cliente.estatus)}">
-                    ${cliente.estatus}
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.documento || 'N/A'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.email || 'N/A'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.telefono || 'N/A'}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    cliente.estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }">
+                    ${cliente.estado || 'activo'}
                 </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button class="editar-cliente text-blue-600 hover:text-blue-900 mr-2" data-id="${cliente.id}">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="eliminar-cliente text-red-600 hover:text-red-900" data-id="${cliente.id}">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div class="flex space-x-2">
+                    <button class="editar-cliente text-blue-600 hover:text-blue-900" data-id="${cliente.id}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="eliminar-cliente text-red-600 hover:text-red-900" data-id="${cliente.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="historial-cliente text-purple-600 hover:text-purple-900" data-id="${cliente.id}">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+function actualizarTablaClientes(clientes) {
+   const tbody = document.getElementById('clientes-tbody');
+   tbody.innerHTML = '';
+
+   clientes.forEach((cliente, index) => {
+       const tr = document.createElement('tr');
+       tr.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+       tr.innerHTML = `
+           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+               ${cliente.id}
+           </td>
+           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+               ${cliente.nombre}
+           </td>
+           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+               ${cliente.documento || ''}
+           </td>
+           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+               ${cliente.email || ''}
+           </td>
+           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+               ${cliente.telefono || ''}
+           </td>
+           <td class="px-6 py-4 whitespace-nowrap">
+               <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                   ${cliente.estado === 'activo' ? 
+                   'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                   ${cliente.estado || 'activo'}
+               </span>
+           </td>
+           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+               <div class="flex items-center space-x-3">
+                   <button class="editar-cliente text-blue-600 hover:text-blue-900 transition duration-300" 
+                           data-id="${cliente.id}" title="Editar">
+                       <i class="fas fa-edit"></i>
+                   </button>
+                   <button class="eliminar-cliente text-red-600 hover:text-red-900 transition duration-300" 
+                           data-id="${cliente.id}" title="Eliminar">
+                       <i class="fas fa-trash"></i>
+                   </button>
+                   <button class="historial-cliente text-purple-600 hover:text-purple-900 transition duration-300" 
+                           data-id="${cliente.id}" title="Historial">
+                       <i class="fas fa-history"></i>
+                   </button>
+               </div>
+           </td>
+       `;
+
+       // Agregar efectos hover
+       tr.classList.add('hover:bg-gray-100', 'transition', 'duration-150');
+       tbody.appendChild(tr);
+   });
 }
 
 function getEstatusClass(estatus) {
@@ -217,25 +1184,267 @@ function mostrarFormularioCrearCliente() {
     document.getElementById('modal-title').textContent = 'Crear Nuevo Cliente';
     document.getElementById('cliente-form').reset();
     document.getElementById('cliente-id').value = '';
+    pasoActual = 1;
+    actualizarIndicadoresPaso();
+    actualizarBotonesPaso();
+    document.querySelector('.steps-container').style.transform = 'translateX(0)';
     toggleModal();
 }
 
 function guardarCliente(event) {
     event.preventDefault();
+    if (!validarFormulario()) {
+        return;
+    }
+
+    // Obtener todos los datos del formulario
     const formData = new FormData(event.target);
-    const clienteData = Object.fromEntries(formData);
+    const clienteData = {
+        tipo_documento: formData.get('tipo-documento'),
+        documento: formData.get('documento'),
+        nombre: formData.get('nombre'),
+        direccion: formData.get('direccion'),
+        provincia: formData.get('provincia'),
+        municipio: formData.get('municipio'),
+        telefono: formData.get('telefono-principal'),
+        email: formData.get('email'),
+        tienda: formData.get('tienda'),
+        tipo_factura: formData.get('tipo-factura'),
+        limite_credito: parseFloat(formData.get('limite-credito')) || 0,
+        dias_gracia: parseInt(formData.get('dias-atraso')) || 0,
+        retencion_itbis: parseFloat(formData.get('retencion-itbis')) || 0,
+        retencion_isr: parseFloat(formData.get('retencion-isr')) || 0,
+        estado: 'activo',
+        tipo_cliente_id: formData.get('tipo')
+    };
 
-    // Aquí deberías hacer una llamada a tu API para guardar el cliente
-    console.log('Datos del cliente:', clienteData);
-
+    // Mostrar loading
     Swal.fire({
-        title: 'Éxito',
-        text: 'Cliente guardado correctamente',
-        icon: 'success',
-        confirmButtonText: 'Aceptar'
-    }).then(() => {
-        toggleModal();
-        buscarClientes();
+        title: 'Guardando cliente...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Enviar datos al servidor
+    fetch('/cxc/crear-cliente', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(clienteData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error al crear el cliente');
+        }
+        return response.json();
+    })
+    .then(data => {
+        Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: 'Cliente guardado correctamente',
+            confirmButtonText: 'Aceptar'
+        }).then(() => {
+            document.getElementById('cliente-modal').classList.add('hidden');
+            document.getElementById('cliente-form').reset();
+            buscarClientes(); // Actualizar la tabla de clientes
+        });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Hubo un problema al guardar el cliente'
+        });
+    });
+}
+
+function buscarClientes() {
+    const tbody = document.getElementById('clientes-tbody');
+    
+    // Mostrar loader mientras se cargan los datos
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="7" class="px-6 py-4 text-center">
+                <div class="flex justify-center items-center space-x-2">
+                    <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+                    <span>Cargando clientes...</span>
+                </div>
+            </td>
+        </tr>
+    `;
+
+    // Obtener valores de búsqueda
+    const filtros = {
+        id: document.getElementById('id-cliente')?.value || '',
+        nombre: document.getElementById('nombre-cliente')?.value || '',
+        documento: document.getElementById('rfc-cliente')?.value || '',
+        estado: document.getElementById('estatus-cliente')?.value || ''
+    };
+
+    fetch('/cxc/clientes?' + new URLSearchParams(filtros), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            actualizarTablaClientes(data.clientes);
+        } else {
+            throw new Error(data.message || 'Error al cargar los clientes');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-4 text-center text-red-500">
+                    <div class="flex flex-col items-center space-y-2">
+                        <i class="fas fa-exclamation-circle text-2xl"></i>
+                        <p>Error al cargar los clientes</p>
+                        <button onclick="buscarClientes()" 
+                                class="mt-2 px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">
+                            Reintentar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al cargar los clientes'
+        });
+    });
+}
+
+function actualizarTablaClientes(clientes) {
+    const tbody = document.getElementById('clientes-tbody');
+    
+    if (!clientes || clientes.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                    <div class="flex flex-col items-center space-y-2">
+                        <i class="fas fa-users-slash text-2xl"></i>
+                        <p>No hay clientes que coincidan con los criterios de búsqueda</p>
+                        <button onclick="document.getElementById('crear-cliente-btn').click()" 
+                                class="mt-2 px-4 py-2 text-sm bg-green-500 text-white rounded-md hover:bg-green-600">
+                            Crear Nuevo Cliente
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = '';
+    clientes.forEach((cliente, index) => {
+        const tr = document.createElement('tr');
+        tr.className = `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors duration-150`;
+        
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.id || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.nombre || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.documento || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.email || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.telefono || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    cliente.estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }">
+                    ${cliente.estado || 'activo'}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex space-x-2">
+                    <button class="editar-cliente text-blue-600 hover:text-blue-900" 
+                            onclick="editarCliente(${cliente.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="eliminar-cliente text-red-600 hover:text-red-900" 
+                            onclick="eliminarCliente(${cliente.id})" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="historial-cliente text-purple-600 hover:text-purple-900" 
+                            onclick="mostrarHistorialTransacciones(${cliente.id})" title="Historial">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+    });
+}
+
+// Agregar event listeners cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    buscarClientes();
+    
+    // Agregar event listeners para búsqueda en tiempo real
+    ['id-cliente', 'nombre-cliente', 'rfc-cliente', 'estatus-cliente'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', debounce(buscarClientes, 300));
+        }
+    });
+});
+
+// Función debounce para evitar múltiples llamadas
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+function actualizarTablaClientes(clientes) {
+    const tbody = document.getElementById('clientes-tbody');
+    tbody.innerHTML = '';
+    
+    clientes.forEach(cliente => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${cliente.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.nombre}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.documento || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.email || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cliente.telefono || ''}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    cliente.estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }">
+                    ${cliente.estado || 'activo'}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button class="editar-cliente text-blue-600 hover:text-blue-900 mr-2 transition duration-300" data-id="${cliente.id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-cliente text-red-600 hover:text-red-900 mr-2 transition duration-300" data-id="${cliente.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="historial-cliente text-purple-600 hover:text-purple-900 transition duration-300" data-id="${cliente.id}">
+                    <i class="fas fa-history"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
     });
 }
 
@@ -249,6 +1458,8 @@ function manejarAccionesCliente(event) {
         editarCliente(clienteId);
     } else if (target.classList.contains('eliminar-cliente')) {
         eliminarCliente(clienteId);
+    } else if (target.classList.contains('historial-cliente')) {
+        mostrarHistorialTransacciones(clienteId);
     }
 }
 
@@ -267,10 +1478,14 @@ function editarCliente(id) {
     document.getElementById('modal-title').textContent = 'Editar Cliente';
     document.getElementById('cliente-id').value = cliente.id;
     document.getElementById('nombre').value = cliente.nombre;
-    document.getElementById('rfc').value = cliente.rfc;
+    document.getElementById('documento').value = cliente.rfc;
     document.getElementById('email').value = cliente.email;
     document.getElementById('telefono').value = cliente.telefono;
-    document.getElementById('estatus').value = cliente.estatus;
+
+    pasoActual = 1;
+    actualizarIndicadoresPaso();
+    actualizarBotonesPaso();
+    document.querySelector('.steps-container').style.transform = 'translateX(0)';
 
     toggleModal();
 }
@@ -302,27 +1517,28 @@ function eliminarCliente(id) {
 }
 
 function validarFormulario() {
-    const nombre = document.getElementById('nombre').value.trim();
-    const rfc = document.getElementById('rfc').value.trim();
+    const camposRequeridos = [
+        'tipo-documento', 'documento', 'nombre', 'apellido',
+        'direccion', 'telefono', 'email',
+        'tienda', 'tipo-factura'
+    ];
+
+    for (const campo of camposRequeridos) {
+        const elemento = document.getElementById(campo);
+        if (!elemento.value.trim()) {
+            Swal.fire('Error', `El campo ${elemento.previousElementSibling.textContent.replace('*', '')} es obligatorio`, 'error');
+            return false;
+        }
+    }
+
     const email = document.getElementById('email').value.trim();
-    const telefono = document.getElementById('telefono').value.trim();
-
-    if (!nombre) {
-        Swal.fire('Error', 'El nombre del cliente es obligatorio', 'error');
-        return false;
-    }
-
-    if (!rfc) {
-        Swal.fire('Error', 'El RFC del cliente es obligatorio', 'error');
-        return false;
-    }
-
-    if (!email || !isValidEmail(email)) {
+    if (!isValidEmail(email)) {
         Swal.fire('Error', 'Por favor, ingrese un email válido', 'error');
         return false;
     }
 
-    if (!telefono || !isValidPhone(telefono)) {
+    const telefono = document.getElementById('telefono').value.trim();
+    if (!isValidPhone(telefono)) {
         Swal.fire('Error', 'Por favor, ingrese un número de teléfono válido', 'error');
         return false;
     }
@@ -340,42 +1556,233 @@ function isValidPhone(phone) {
     return re.test(phone);
 }
 
-// Agregar validación al formulario antes de enviar
-document.getElementById('cliente-form').addEventListener('submit', function(e) {
-    if (!validarFormulario()) {
-        e.preventDefault();
-    }
-});
-
-// Función para generar reporte de clientes
-function generarReporteClientes() {
-    const estatusCliente = document.getElementById('estatus-cliente').value;
-
-    // Aquí deberías hacer una llamada a tu API para generar el reporte
-    console.log('Generando reporte de clientes con estatus:', estatusCliente);
-
+function mostrarAnalisisClientes() {
+    // Mostrar loading
     Swal.fire({
-        title: 'Reporte Generado',
-        text: 'El reporte de clientes ha sido generado exitosamente.',
-        icon: 'success',
-        confirmButtonText: 'Descargar Reporte'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Aquí deberías proporcionar un enlace para descargar el reporte
-            console.log('Descargando reporte de clientes...');
+        title: 'Cargando análisis...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch('/cxc/analisis-clientes')
+        .then(response => response.json())
+        .then(data => {
+            Swal.close();
+
+            // Verificar si hay error en la respuesta
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            const analisisModal = document.getElementById('analisis-modal');
+            const modalContainer = analisisModal.querySelector('.modal-container');
+            
+            // Resetear el estado del modal antes de mostrarlo
+            modalContainer.style.transform = '';
+            modalContainer.style.opacity = '';
+            
+            // Mostrar el modal
+            analisisModal.classList.remove('opacity-0', 'pointer-events-none');
+            modalContainer.classList.remove('scale-95', 'opacity-0');
+            document.body.classList.add('modal-active');
+
+            // Actualizar KPIs
+            if (data.metricas_basicas) {
+                document.getElementById('total-clientes-kpi').textContent = 
+                    data.metricas_basicas.total_clientes.toLocaleString();
+                document.getElementById('ventas-totales-kpi').textContent = 
+                    `$${data.metricas_basicas.ventas_totales.toLocaleString()}`;
+                document.getElementById('promedio-venta-kpi').textContent = 
+                    `$${data.metricas_basicas.promedio_venta.toLocaleString()}`;
+            }
+
+            // Generar gráfico de estado de cuentas
+            if (data.estado_cuentas) {
+                generarGraficoEstadoCuentas(data.estado_cuentas);
+            }
+
+            // Generar gráfico de ventas mensuales
+            if (data.ventas_mensuales && data.ventas_mensuales.length > 0) {
+                generarGraficoVentas(data.ventas_mensuales);
+            }
+
+            // Generar tabla de top clientes
+            if (data.top_clientes && data.top_clientes.length > 0) {
+                actualizarTablaTopClientes(data.top_clientes);
+            }
+        })
+        .catch(error => {
+            Swal.close();
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un problema al cargar el análisis de clientes'
+            });
+        });
+}
+
+function generarGraficoEstadoCuentas(estadoCuentas) {
+    const canvas = document.getElementById('grafico-estado-cuentas');
+    if (!canvas) return;
+
+    // Destruir gráfico existente si hay uno
+    if (window.graficoEstadoCuentas instanceof Chart) {
+        window.graficoEstadoCuentas.destroy();
+    }
+
+    window.graficoEstadoCuentas = new Chart(canvas.getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: ['Al día', 'Vencidas'],
+            datasets: [{
+                data: [estadoCuentas.al_dia, estadoCuentas.vencidas],
+                backgroundColor: ['#10B981', '#EF4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: 'Estado de Cuentas'
+                }
+            }
         }
     });
 }
 
-// Agregar botón para generar reporte
-const busquedaForm = document.getElementById('busqueda-form');
-const generarReporteBtn = document.createElement('button');
-generarReporteBtn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i>Generar Reporte';
-generarReporteBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500';
-generarReporteBtn.addEventListener('click', generarReporteClientes);
-busquedaForm.querySelector('.flex.justify-between').appendChild(generarReporteBtn);
+function generarGraficoVentas(datosVentas) {
+    const canvas = document.getElementById('grafico-ventas');
+    if (!canvas) return;
 
-// Función para mostrar el historial de transacciones de un cliente
+    // Destruir gráfico existente si hay uno
+    if (window.graficoVentas instanceof Chart) {
+        window.graficoVentas.destroy();
+    }
+
+    window.graficoVentas = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: datosVentas.map(d => d.mes),
+            datasets: [{
+                label: 'Ventas Mensuales',
+                data: datosVentas.map(d => d.total),
+                borderColor: '#6366F1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function actualizarTablaTopClientes(topClientes) {
+    const tbody = document.querySelector('#tabla-top-clientes tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = topClientes.map((cliente, index) => `
+        <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ${index + 1}. ${cliente.nombre}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                $${cliente.total_ventas.toLocaleString()}
+            </td>
+        </tr>
+    `).join('');
+}
+
+function mostrarNotificacion(mensaje, tipo = 'success') {
+    const notificacion = document.getElementById('notificacion');
+    const mensajeElement = document.getElementById('notificacion-mensaje');
+    
+    mensajeElement.textContent = mensaje;
+    notificacion.className = `fixed bottom-5 right-5 p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+        tipo === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white`;
+    
+    notificacion.classList.remove('opacity-0', 'translate-y-2');
+    notificacion.classList.add('opacity-100', 'translate-y-0');
+    
+    setTimeout(() => {
+        notificacion.classList.add('opacity-0', 'translate-y-2');
+    }, 3000);
+}
+
+function generarGraficoClientes() {
+    const ctx = document.getElementById('clientesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Activos', 'Inactivos'],
+            datasets: [{
+                data: [70, 30],
+                backgroundColor: ['#4CAF50', '#F44336']
+            }]
+        },
+        options: {
+            responsive: true,
+            title: {
+                display: true,
+                text: 'Distribución de Clientes por Estatus'
+            }
+        }
+    });
+}
+
+function generarGraficoVentas() {
+    const ctx = document.getElementById('ventasChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Ventas Mensuales',
+                data: [12, 19, 3, 5, 2, 3],
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            title: {
+                display: true,
+                text: 'Ventas Mensuales'
+            }
+        }
+    });
+}
+
 function mostrarHistorialTransacciones(clienteId) {
     // Aquí deberías hacer una llamada a tu API para obtener el historial de transacciones
     // Por ahora, simularemos algunos datos
@@ -420,24 +1827,6 @@ function mostrarHistorialTransacciones(clienteId) {
         confirmButtonText: 'Cerrar'
     });
 }
-
-// Agregar botón para mostrar historial de transacciones en la tabla de clientes
-function agregarBotonHistorial() {
-    const filas = document.querySelectorAll('#clientes-tbody tr');
-    filas.forEach(fila => {
-        const accionesCelda = fila.querySelector('td:last-child');
-        const clienteId = fila.querySelector('button').dataset.id;
-        const historialBtn = document.createElement('button');
-        historialBtn.innerHTML = '<i class="fas fa-history"></i>';
-        historialBtn.className = 'text-purple-600 hover:text-purple-900 ml-2';
-        historialBtn.addEventListener('click', () => mostrarHistorialTransacciones(clienteId));
-        accionesCelda.appendChild(historialBtn);
-    });
-}
-
-// Llamar a la función para agregar el botón de historial después de cargar los clientes
-buscarClientes();
-setTimeout(agregarBotonHistorial, 500);  // Añadimos un pequeño retraso para asegurar que la tabla se haya cargado
 
 </script>
 {% endblock %}

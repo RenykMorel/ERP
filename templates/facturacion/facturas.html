@@ -202,6 +202,66 @@
     transition: opacity 0.3s ease-in-out;
 }
 </style>
+<style>
+/* Animación de carga */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Transiciones suaves */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+}
+
+/* Estilos para las tarjetas de métricas */
+.metric-card {
+    @apply bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all;
+}
+
+/* Estilos para las alertas */
+.alert-card {
+    @apply p-4 rounded-lg border-l-4;
+}
+
+.alert-card.warning {
+    @apply border-yellow-500 bg-yellow-50;
+}
+
+.alert-card.danger {
+    @apply border-red-500 bg-red-50;
+}
+
+.alert-card.info {
+    @apply border-blue-500 bg-blue-50;
+}
+
+/* Estilos para el gráfico */
+.chart-container {
+    @apply h-64 bg-white p-4 rounded-lg shadow-sm;
+}
+
+/* Animación para las tarjetas */
+.card-enter {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -244,6 +304,14 @@
                     </button>
                     <button class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 transition-colors duration-200 text-base font-medium flex items-center" id="sellers-btn">
                         <i class="fas fa-user-tie mr-2"></i>Vendedores
+                    </button>
+                    <button class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:scale-105 transition-all duration-300 text-base font-medium flex items-center gap-2 border border-white shadow-lg relative group" 
+                            id="template-btn" 
+                            onclick="handleAnalysisClick()">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-chart-line text-xl"></i>
+                            <span>Análisis Inteligente</span>
+                        </div>
                     </button>
                 </div>
                 <button class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors duration-200 text-base font-medium flex items-center" id="new-invoice-btn">
@@ -296,6 +364,106 @@
             </div>
         </div>
     </div>
+
+    <!-- Agregar el modal para la plantilla -->
+    <div id="analysis-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="fixed inset-0 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Análisis de Facturación</h2>
+                    <button class="text-gray-500 hover:text-gray-700" id="close-analysis-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-6">
+                    <!-- Filtros -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-4">Filtros de Análisis</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
+                                <input type="date" id="date-start" class="w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
+                                <input type="date" id="date-end" class="w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Análisis</label>
+                                <select id="analysis-type" class="w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="all">Análisis Completo</option>
+                                    <option value="trends">Tendencias</option>
+                                    <option value="fraud">Detección de Fraudes</option>
+                                    <option value="costs">Análisis de Costos</option>
+                                    <option value="audit">Auditoría</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <button id="run-analysis" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                <i class="fas fa-play"></i>
+                                Ejecutar Análisis
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Resultados -->
+                    <div id="analysis-results" class="hidden space-y-6">
+                        <!-- Indicadores Principales -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <h4 class="text-sm font-medium text-blue-600">Total Facturas</h4>
+                                <p id="total-invoices" class="text-2xl font-bold text-blue-800">0</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <h4 class="text-sm font-medium text-green-600">Total Ingresos</h4>
+                                <p id="total-income" class="text-2xl font-bold text-green-800">RD$0.00</p>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg">
+                                <h4 class="text-sm font-medium text-yellow-600">Ticket Promedio</h4>
+                                <p id="avg-ticket" class="text-2xl font-bold text-yellow-800">RD$0.00</p>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg">
+                                <h4 class="text-sm font-medium text-purple-600">Tasa de Crecimiento</h4>
+                                <p id="growth-rate" class="text-2xl font-bold text-purple-800">0%</p>
+                            </div>
+                        </div>
+
+                        <!-- Gráficos y Análisis Detallado -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Tendencias -->
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h3 class="text-lg font-semibold mb-4">Tendencias de Ventas</h3>
+                                <div id="sales-trend-chart" class="h-64"></div>
+                            </div>
+
+                            <!-- Top Clientes -->
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h3 class="text-lg font-semibold mb-4">Top Clientes</h3>
+                                <div id="top-clients-list" class="space-y-2"></div>
+                            </div>
+                        </div>
+
+                        <!-- Alertas y Recomendaciones -->
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4">Alertas y Recomendaciones</h3>
+                            <div id="alerts-container" class="space-y-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="analysis-loading" class="hidden">
+                        <div class="flex flex-col items-center justify-center p-8">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                            <p class="text-gray-600">Analizando datos...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- Modal para Crear/Editar Vendedor -->
     <div id="seller-form-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
@@ -1511,6 +1679,401 @@
             });
         });
 
+        document.getElementById('run-analysis').addEventListener('click', async function() {
+            try {
+                document.getElementById('analysis-loading').classList.remove('hidden');
+                document.getElementById('analysis-results').classList.add('hidden');
+
+                const response = await fetch('/facturacion/api/facturas/analisis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fecha_inicio: document.getElementById('date-start').value,
+                        fecha_fin: document.getElementById('date-end').value,
+                        tipo_analisis: document.getElementById('analysis-type').value
+                    })
+                });
+
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                const data = await response.json();
+
+                // Update UI with results
+                document.getElementById('total-invoices').textContent = data.metadata.total_facturas;
+                document.getElementById('total-income').textContent = formatMoney(data.metricas.total_ingresos);
+                document.getElementById('avg-ticket').textContent = formatMoney(data.metricas.ticket_promedio);
+                
+                document.getElementById('analysis-loading').classList.add('hidden');
+                document.getElementById('analysis-results').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al realizar el análisis: ' + error.message
+                });
+            }
+        });
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('es-DO', {
+                style: 'currency',
+                currency: 'DOP',
+                minimumFractionDigits: 2
+            }).format(amount);
+        }
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('es-DO', {
+                style: 'currency',
+                currency: 'DOP'
+            }).format(amount);
+        }
+
+        // Cargar tiendas al abrir el modal
+        // Actualizar el event listener del botón
+        document.getElementById('template-btn').addEventListener('click', async function() {
+            try {
+                Swal.fire({
+                    title: 'Analizando facturas...',
+                    text: 'Este proceso puede tomar unos momentos',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const today = new Date().toISOString().split('T')[0];
+                const response = await fetch('/facturacion/api/facturas/analisis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fecha_inicio: today,
+                        fecha_fin: today
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                Swal.close();
+                showAnalysisResults(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Error al realizar el análisis'
+                });
+            }
+        });
+
+        function handleAnalysisClick() {
+            console.log('Button clicked'); // Debug log
+            
+            const analysisModal = document.getElementById('analysis-modal');
+            if (analysisModal) {
+                console.log('Modal found, showing...'); // Debug log
+                analysisModal.classList.remove('hidden');
+            } else {
+                console.error('Analysis modal not found!');
+            }
+            
+            // También podríamos mostrar un mensaje temporal mientras implementamos la funcionalidad completa
+            Swal.fire({
+                title: 'Análisis de Facturas',
+                text: 'Ejecutando análisis...',
+                icon: 'info',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+
+        // Función para cerrar el modal
+        function closeAnalysisModal() {
+            const modal = document.getElementById('analysis-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Agregar event listener para el botón de cerrar modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const closeBtn = document.getElementById('close-analysis-modal');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeAnalysisModal);
+            }
+        });
+
+        // Helper function
+        function createTopList(items = [], limit = 5) {
+            if (!Array.isArray(items)) return 'No hay datos disponibles';
+            
+            return `
+                <ul class="space-y-2">
+                    ${items.slice(0, limit).map((item, index) => `
+                        <li class="flex justify-between items-center">
+                            <span>${index + 1}. ${item.cliente || item.producto || 'N/A'}</span>
+                            <span class="font-semibold">${formatMoney(item.total || 0)}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        // Event listener update
+        document.getElementById('template-btn').addEventListener('click', function() {
+            handleAnalysisClick();
+        });
+
+        function handleAnalysisClick() {
+            console.log('Button clicked');
+            const analysisModal = document.getElementById('analysis-modal');
+            if (analysisModal) {
+                analysisModal.classList.remove('hidden');
+            }
+        }
+
+        // Frontend
+        function showAnalysisResults(data) {
+            if (!data) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'No se recibieron datos del análisis',
+                    icon: 'error'
+                });
+                return;
+            }
+
+            // Validation helper
+            const safeData = {
+                tendencias: data.tendencias || {},
+                patrones_sospechosos: data.patrones_sospechosos || [],
+                analisis_costos: data.analisis_costos || { oportunidades_ahorro: [] }
+            };
+
+            const content = `
+                <div class="analysis-results space-y-6">
+                    <div class="section">
+                        <h3 class="text-lg font-bold mb-4">Tendencias de Ingresos</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-semibold mb-2">Top Clientes</h4>
+                                ${createTopList(safeData.tendencias.ingresos_por_cliente || [], 5)}
+                            </div>
+                            <div class="border rounded-lg p-4">
+                                <h4 class="font-semibold mb-2">Top Productos</h4>
+                                ${createTopList(safeData.tendencias.ingresos_por_producto || [], 5)}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section">
+                        <h3 class="text-lg font-bold mb-4">Alertas de Seguridad</h3>
+                        ${createAlertsList(safeData.patrones_sospechosos)}
+                    </div>
+                    <div class="section">
+                        <h3 class="text-lg font-bold mb-4">Oportunidades de Optimización</h3>
+                        ${createSavingsList(safeData.analisis_costos.oportunidades_ahorro)}
+                    </div>
+                </div>
+            `;
+
+            Swal.fire({
+                title: 'Análisis de Facturas',
+                html: content,
+                width: '80%',
+                showConfirmButton: true,
+                confirmButtonText: 'Cerrar',
+                showCloseButton: true
+            });
+        }
+
+        function createTopList(items = [], limit = 5) {
+            if (!Array.isArray(items)) return 'No hay datos disponibles';
+            
+            return `
+                <ul class="space-y-2">
+                    ${items.slice(0, limit).map((item, index) => `
+                        <li class="flex justify-between items-center">
+                            <span>${index + 1}. ${item.cliente || item.producto || 'N/A'}</span>
+                            <span class="font-semibold">RD$${formatMoney(item.total || 0)}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+
+        function createAlertsList(alerts) {
+            const items = [];
+            if (alerts.precios_anomalos.length) {
+                items.push(`<div class="alert-item text-yellow-700 bg-yellow-50 p-3 rounded">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    ${alerts.precios_anomalos.length} precios anómalos detectados
+                </div>`);
+            }
+            return items.join('') || '<p class="text-green-600">No se detectaron anomalías</p>';
+        }
+
+        function createSavingsList(opportunities) {
+            return `
+                <div class="space-y-3">
+                    ${opportunities.map(opp => `
+                        <div class="opportunity-item border-l-4 border-green-500 pl-3">
+                            <h4 class="font-semibold">Ahorro Potencial: RD$${formatMoney(opp.ahorro_potencial)}</h4>
+                            <p class="text-sm text-gray-600">${getOpportunityDescription(opp)}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function getOpportunityDescription(opp) {
+            switch (opp.tipo) {
+                case 'descuento_volumen':
+                    return `Factura #${opp.factura_id}: Posible descuento por volumen no aplicado`;
+                default:
+                    return 'Oportunidad de ahorro identificada';
+            }
+        }
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('es-DO', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Generar diseño
+        document.getElementById('generate-template').addEventListener('click', async function() {
+            try {
+                const storeSelect = document.getElementById('template-store-select');
+                const tiendaId = storeSelect.value;
+                
+                if (!tiendaId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Atención',
+                        text: 'Debe seleccionar una tienda'
+                    });
+                    return;
+                }
+
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+                
+                const response = await fetch('/facturacion/api/templates/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({ tienda_id: parseInt(tiendaId) })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error generando diseño');
+                }
+                
+                // Mostrar preview
+                const preview = document.getElementById('preview');
+                const previewImage = document.getElementById('preview-image');
+                previewImage.src = data.template_preview;
+                preview.classList.remove('hidden');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: 'Nuevo diseño de factura generado'
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-magic"></i> Generar Nuevo Diseño';
+            }
+        });
+
+        // Cerrar modal
+        document.getElementById('close-template-modal').addEventListener('click', () => {
+            document.getElementById('template-modal').classList.add('hidden');
+        });
+
+        document.getElementById('cancel-template').addEventListener('click', () => {
+            document.getElementById('template-modal').classList.add('hidden');
+        });
+
+        document.getElementById('generate-template').addEventListener('click', async function() {
+            try {
+                // Get store ID from the template button
+                const templateBtn = document.getElementById('template-btn');
+                const tiendaId = templateBtn.dataset.tiendaId;
+                
+                console.log('Store ID:', tiendaId); // Debug log
+
+                if (!tiendaId) {
+                    // Find active store selection if no tienda_id in button
+                    const activeStore = document.querySelector('.store-option.ring-2');
+                    if (activeStore && activeStore.dataset.storeId) {
+                        tiendaId = activeStore.dataset.storeId;
+                        console.log('Found store ID from selection:', tiendaId);
+                    } else {
+                        throw new Error('No se encontró el ID de la tienda');
+                    }
+                }
+
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+                
+                const response = await fetch('/facturacion/api/templates/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({ tienda_id: parseInt(tiendaId) })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error generando diseño');
+                }
+                
+                // Show preview
+                const preview = document.getElementById('preview');
+                const previewImage = document.getElementById('preview-image');
+                previewImage.src = data.template_preview;
+                preview.classList.remove('hidden');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: 'Nuevo diseño de factura generado'
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-magic"></i> Generar Nuevo Diseño';
+            }
+        });
+
         // Función para manejar el envío del formulario de tienda
         // En tu código JavaScript que maneja el formulario de tienda
         document.getElementById('store-form').addEventListener('submit', async function(e) {
@@ -1568,6 +2131,188 @@
             }
         });
 
+        // Cargar plantillas disponibles
+        // Función para cargar plantillas
+        async function loadTemplates() {
+            try {
+                const response = await fetch('/facturacion/api/templates');
+                const templates = await response.json();
+                
+                const selector = document.getElementById('template-selector');
+                selector.innerHTML = '<option value="">Seleccionar plantilla...</option>';
+                
+                templates.forEach(template => {
+                    selector.innerHTML += `
+                        <option value="${template.id}">${template.nombre}</option>
+                    `;
+                });
+                
+                // Habilitar el botón de activar si hay plantillas
+                const activateBtn = document.getElementById('activate-template');
+                activateBtn.disabled = templates.length === 0;
+            } catch (error) {
+                console.error('Error cargando plantillas:', error);
+            }
+        }
+
+        // Cargar tiendas cuando se abre el modal
+        document.getElementById('template-btn').addEventListener('click', async function() {
+            try {
+                const response = await fetch('/facturacion/api/tiendas');
+                const tiendas = await response.json();
+                
+                const storeSelect = document.getElementById('template-store-select');
+                storeSelect.innerHTML = '<option value="">Seleccione una tienda...</option>';
+                tiendas.forEach(tienda => {
+                    storeSelect.innerHTML += `
+                        <option value="${tienda.id}">${tienda.nombre}</option>
+                    `;
+                });
+                
+                // Si solo hay una tienda, seleccionarla automáticamente
+                if (tiendas.length === 1) {
+                    storeSelect.value = tiendas[0].id;
+                }
+                
+                document.getElementById('template-modal').classList.remove('hidden');
+                await loadTemplates();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        // Manejar activación de plantilla
+        document.getElementById('activate-template').addEventListener('click', async function() {
+            try {
+                const templateId = document.getElementById('template-selector').value;
+                if (!templateId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Atención',
+                        text: 'Por favor seleccione una plantilla'
+                    });
+                    return;
+                }
+
+                this.disabled = true;
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activando...';
+
+                const response = await fetch(`/facturacion/api/templates/${templateId}/activate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al activar la plantilla');
+                }
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: 'Plantilla activada correctamente'
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+            } finally {
+                this.disabled = false;
+                this.innerHTML = originalText;
+            }
+        });
+
+        // Generar nueva plantilla
+        document.getElementById('generate-template').addEventListener('click', async function() {
+            try {
+                const storeSelect = document.getElementById('template-store-select');
+                const tiendaId = storeSelect.value;
+
+                if (!tiendaId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Atención',
+                        text: 'Por favor seleccione una tienda'
+                    });
+                    return;
+                }
+
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+                
+                const response = await fetch('/facturacion/api/templates/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({ tienda_id: parseInt(tiendaId) })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error generando diseño');
+                }
+                
+                // Mostrar preview
+                const preview = document.getElementById('preview');
+                const previewImage = document.getElementById('preview-image');
+                previewImage.src = data.template_preview;
+                preview.classList.remove('hidden');
+
+                // Recargar lista de plantillas
+                await loadTemplates();
+
+                // Seleccionar la nueva plantilla
+                document.getElementById('template-selector').value = data.template_id;
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: 'Nuevo diseño de factura generado'
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-magic"></i> Generar Nuevo Diseño';
+            }
+        });
+
+        // Ver preview cuando se selecciona una plantilla
+        document.getElementById('template-selector').addEventListener('change', function() {
+            const templateId = this.value;
+            const previewContainer = document.getElementById('selected-template-preview');
+            const previewImage = document.getElementById('selected-preview-image');
+            const activateBtn = document.getElementById('activate-template');
+            
+            if (templateId) {
+                previewImage.src = `/facturacion/api/templates/${templateId}/preview`;
+                previewContainer.classList.remove('hidden');
+                activateBtn.disabled = false;
+            } else {
+                previewContainer.classList.add('hidden');
+                activateBtn.disabled = true;
+            }
+        });
+
+        // Cargar plantillas al iniciar
+        document.addEventListener('DOMContentLoaded', loadTemplates);
+
         async function crearFactura(data) {
             try {
                 const response = await fetch('/api/facturas', {
@@ -1621,6 +2366,247 @@
                     icon: 'error'
                 });
                 return false;
+            }
+        }
+
+        // Ver detalle de factura
+        async function verFactura(id) {
+            try {
+                const response = await fetch(`/facturacion/api/facturas/${id}`);
+                const factura = await response.json();
+                
+                if (!response.ok) throw new Error('Error al obtener la factura');
+                
+                const detalleHTML = `
+                    <div id="detalle-factura-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                        <div class="relative top-20 mx-auto p-8 border w-4/5 max-w-4xl shadow-lg rounded-md bg-white">
+                            <div class="flex justify-between mb-8">
+                                <div>
+                                    <h1 class="text-2xl font-bold mb-2">Factura #${factura.numero}</h1>
+                                    <p>Fecha: ${formatDate(factura.fecha)}</p>
+                                </div>
+                                <button class="close-modal absolute top-4 right-4 text-gray-600 hover:text-gray-800">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div>
+                                    <h3 class="font-bold mb-2">Cliente</h3>
+                                    <p>Nombre: ${factura.cliente_nombre || 'N/A'}</p>
+                                    <p>RNC/Cédula: ${factura.cliente_documento || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold mb-2">Detalles</h3>
+                                    <p>Tipo: ${factura.tipo}</p>
+                                    <p>Estado: ${factura.estatus}</p>
+                                    <p>Vendedor: ${factura.vendedor_nombre || 'N/A'}</p>
+                                </div>
+                            </div>
+                            <table class="min-w-full divide-y divide-gray-200 mb-6">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Cantidad</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Precio</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ITBIS</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${factura.items.map(item => `
+                                        <tr>
+                                            <td class="px-6 py-4">${item.producto_nombre}</td>
+                                            <td class="px-6 py-4 text-right">${item.cantidad}</td>
+                                            <td class="px-6 py-4 text-right">RD$${formatMoney(item.precio_unitario)}</td>
+                                            <td class="px-6 py-4 text-right">${item.itbis}%</td>
+                                            <td class="px-6 py-4 text-right">RD$${formatMoney(item.subtotal)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                            <div class="flex justify-end">
+                                <div class="w-64">
+                                    <div class="flex justify-between py-2">
+                                        <span>Subtotal:</span>
+                                        <span>RD$${formatMoney(factura.monto)}</span>
+                                    </div>
+                                    <div class="flex justify-between py-2">
+                                        <span>ITBIS:</span>
+                                        <span>RD$${formatMoney(factura.impuesto)}</span>
+                                    </div>
+                                    <div class="flex justify-between py-2">
+                                        <span>Descuento:</span>
+                                        <span>RD$${formatMoney(factura.descuento)}</span>
+                                    </div>
+                                    <div class="flex justify-between py-2 font-bold border-t">
+                                        <span>Total:</span>
+                                        <span>RD$${formatMoney(factura.total)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', detalleHTML);
+                
+                const modal = document.getElementById('detalle-factura-modal');
+                modal.querySelector('.close-modal').addEventListener('click', () => {
+                    modal.remove();
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cargar el detalle de la factura'
+                });
+            }
+        }
+
+        // Imprimir factura
+        async function imprimirFactura(id) {
+            try {
+                // Mostrar indicador de carga
+                Swal.fire({
+                    title: 'Generando PDF...',
+                    text: 'Por favor espere...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await fetch(`/facturacion/api/facturas/${id}/print`);
+                
+                if (!response.ok) {
+                    throw new Error('Error al generar la factura');
+                }
+                
+                // Obtener el PDF y mostrarlo
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                
+                // Cerrar el indicador de carga
+                Swal.close();
+                
+                // Abrir el PDF en una nueva ventana
+                window.open(url);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al imprimir la factura'
+                });
+            }
+        }
+
+        // Reimprimir factura (puede usar la misma lógica que imprimir)
+        function reimprimirFactura(id) {
+            imprimirFactura(id);
+        }
+
+        // Enviar por email
+        async function enviarEmail(id) {
+            try {
+                const response = await fetch(`/facturacion/api/facturas/${id}`);
+                const factura = await response.json();
+                
+                if (!response.ok) throw new Error('Error al obtener la factura');
+                
+                const { value: email } = await Swal.fire({
+                    title: 'Enviar Factura por Email',
+                    input: 'email',
+                    inputLabel: 'Email del destinatario',
+                    inputPlaceholder: 'Ingrese el email',
+                    showCancelButton: true,
+                    confirmButtonText: 'Enviar',
+                    cancelButtonText: 'Cancelar',
+                    inputValue: factura.cliente_email || '',
+                    validationMessage: 'El email debe ser válido'
+                });
+
+                if (email) {
+                    Swal.fire({
+                        title: 'Enviando...',
+                        text: 'Por favor espere',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const sendResponse = await fetch(`/facturacion/api/facturas/${id}/email`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrf-token]').content
+                        },
+                        body: JSON.stringify({ email })
+                    });
+
+                    if (!sendResponse.ok) throw new Error('Error al enviar el email');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Enviado!',
+                        text: 'La factura ha sido enviada por email'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al enviar la factura por email'
+                });
+            }
+        }
+
+        // Cancelar factura
+        async function handleInvoiceCancellation(id) {
+            try {
+                const result = await Swal.fire({
+                    title: '¿Está seguro?',
+                    text: "Esta acción no se puede revertir",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, cancelar factura',
+                    cancelButtonText: 'No, mantener factura'
+                });
+
+                if (result.isConfirmed) {
+                    const response = await fetch(`/facturacion/api/facturas/${id}/cancel`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrf-token]').content
+                        }
+                    });
+
+                    if (!response.ok) throw new Error('Error al cancelar la factura');
+
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Cancelada',
+                        text: 'La factura ha sido cancelada'
+                    });
+
+                    // Recargar la lista de facturas
+                    loadInvoices();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cancelar la factura'
+                });
             }
         }
 
@@ -1991,6 +2977,319 @@
             sellerSearch.value = '';
         };
     });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Referencias a elementos del DOM
+            const analysisBtn = document.getElementById('analysis-btn');
+            const analysisModal = document.getElementById('analysis-modal');
+            const closeAnalysisModal = document.getElementById('close-analysis-modal');
+            const runAnalysisBtn = document.getElementById('run-analysis');
+            const dateStart = document.getElementById('date-start');
+            const dateEnd = document.getElementById('date-end');
+
+            // Configurar fechas por defecto (último mes)
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            dateStart.value = lastMonth.toISOString().split('T')[0];
+            dateEnd.value = today.toISOString().split('T')[0];
+
+            // Abrir modal
+            analysisBtn.addEventListener('click', () => {
+                analysisModal.classList.remove('hidden');
+            });
+
+            // Cerrar modal
+            closeAnalysisModal.addEventListener('click', () => {
+                analysisModal.classList.add('hidden');
+            });
+
+            // Ejecutar análisis
+            runAnalysisBtn.addEventListener('click', async function() {
+                try {
+                    // Mostrar estado de carga
+                    document.getElementById('analysis-loading').classList.remove('hidden');
+                    document.getElementById('analysis-results').classList.add('hidden');
+
+                    const response = await fetch('/facturacion/api/facturas/analisis', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        },
+                        body: JSON.stringify({
+                            fecha_inicio: dateStart.value,
+                            fecha_fin: dateEnd.value,
+                            tipo_analisis: document.getElementById('analysis-type').value
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error);
+
+                    // Actualizar resultados
+                    updateAnalysisResults(data);
+
+                    // Ocultar carga y mostrar resultados
+                    document.getElementById('analysis-loading').classList.add('hidden');
+                    document.getElementById('analysis-results').classList.remove('hidden');
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message
+                    });
+                }
+            });
+
+            // Función para actualizar los resultados
+            function updateAnalysisResults(data) {
+                // Actualizar KPIs principales
+                document.getElementById('total-invoices').textContent = data.metadata.total_facturas;
+                document.getElementById('total-income').textContent = formatMoney(data.tendencias.total_ingresos);
+                document.getElementById('avg-ticket').textContent = formatMoney(data.tendencias.ticket_promedio);
+                document.getElementById('growth-rate').textContent = `${data.tendencias.tasa_crecimiento.toFixed(1)}%`;
+
+                // Actualizar gráfico de tendencias
+                updateSalesTrendChart(data.tendencias.ingresos_por_mes);
+
+                // Actualizar lista de top clientes
+                const topClientsList = document.getElementById('top-clients-list');
+                topClientsList.innerHTML = data.tendencias.ingresos_por_cliente
+                    .slice(0, 5)
+                    .map(client => `
+                        <div class="flex justify-between items-center p-2 hover:bg-gray-50">
+                            <span>${client.cliente}</span>
+                            <span class="font-semibold">${formatMoney(client.total)}</span>
+                        </div>
+                    `).join('');
+
+                // Actualizar alertas
+                const alertsContainer = document.getElementById('alerts-container');
+                alertsContainer.innerHTML = data.patrones_sospechosos.map(alert => `
+                    <div class="border-l-4 ${getAlertClass(alert.tipo)} p-3">
+                        <h4 class="font-semibold">${alert.titulo}</h4>
+                        <p class="text-sm text-gray-600">${alert.descripcion}</p>
+                    </div>
+                `).join('');
+            }
+
+            // Función para actualizar el gráfico de tendencias
+            function updateSalesTrendChart(data) {
+                // Aquí puedes usar una librería de gráficos como Chart.js o Recharts
+                const chart = document.getElementById('sales-trend-chart');
+                // Implementar la lógica del gráfico
+            }
+
+            // Función para formatear moneda
+            function formatMoney(amount) {
+                return new Intl.NumberFormat('es-DO', {
+                    style: 'currency',
+                    currency: 'DOP'
+                }).format(amount);
+            }
+
+            // Función para obtener clase CSS según tipo de alerta
+            function getAlertClass(tipo) {
+                const classes = {
+                    'fraude': 'border-red-500 bg-red-50',
+                    'advertencia': 'border-yellow-500 bg-yellow-50',
+                    'info': 'border-blue-500 bg-blue-50'
+                };
+                return classes[tipo] || classes.info;
+            }
+
+            // Función para obtener el token CSRF
+            function getCsrfToken() {
+                return document.querySelector('meta[name="csrf-token"]')?.content;
+            }
+        });
+
+        // Funciones globales para manejo de facturas
+        window.imprimirFactura = async function(facturaId) {
+            try {
+                Swal.fire({
+                    title: 'Generando PDF...',
+                    text: 'Por favor espere...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const templateId = localStorage.getItem('currentTemplateId');
+                console.log('Template ID para impresión:', templateId);
+
+                let url = `/facturacion/api/facturas/${facturaId}/print`;
+                if (templateId) {
+                    url += `?template_id=${templateId}`;
+                }
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Error al generar la factura');
+                }
+                
+                const blob = await response.blob();
+                const pdfUrl = window.URL.createObjectURL(blob);
+                
+                Swal.close();
+                window.open(pdfUrl);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al imprimir la factura'
+                });
+            }
+        };
+
+        window.verFactura = async function(facturaId) {
+            try {
+                const response = await fetch(`/facturacion/api/facturas/${facturaId}`);
+                const factura = await response.json();
+                
+                if (!response.ok) throw new Error('Error al obtener la factura');
+                
+                const detalleHTML = `
+                    <div id="detalle-factura-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                        <div class="relative top-20 mx-auto p-8 border w-4/5 max-w-4xl shadow-lg rounded-md bg-white">
+                            <!-- Aquí va el contenido del modal -->
+                            <div class="flex justify-between mb-8">
+                                <div>
+                                    <h1 class="text-2xl font-bold mb-2">Factura #${factura.numero}</h1>
+                                    <p>Fecha: ${factura.fecha}</p>
+                                </div>
+                                <button class="close-modal absolute top-4 right-4 text-gray-600 hover:text-gray-800">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <!-- ... resto del contenido ... -->
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', detalleHTML);
+                
+                const modal = document.getElementById('detalle-factura-modal');
+                modal.querySelector('.close-modal').addEventListener('click', () => {
+                    modal.remove();
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cargar el detalle de la factura'
+                });
+            }
+        };
+
+        window.reimprimirFactura = function(facturaId) {
+            return imprimirFactura(facturaId);
+        };
+
+        window.enviarEmail = async function(facturaId) {
+            try {
+                const response = await fetch(`/facturacion/api/facturas/${facturaId}`);
+                const factura = await response.json();
+                
+                const { value: email } = await Swal.fire({
+                    title: 'Enviar Factura por Email',
+                    input: 'email',
+                    inputLabel: 'Email del destinatario',
+                    inputPlaceholder: 'Ingrese el email',
+                    inputValue: factura.cliente_email || '',
+                    showCancelButton: true,
+                    confirmButtonText: 'Enviar',
+                    cancelButtonText: 'Cancelar',
+                    validationMessage: 'El email debe ser válido'
+                });
+
+                if (email) {
+                    Swal.fire({
+                        title: 'Enviando...',
+                        text: 'Por favor espere',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const sendResponse = await fetch(`/facturacion/api/facturas/${facturaId}/email`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        },
+                        body: JSON.stringify({ email })
+                    });
+
+                    if (!sendResponse.ok) throw new Error('Error al enviar el email');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Enviado!',
+                        text: 'La factura ha sido enviada por email'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al enviar el email'
+                });
+            }
+        };
+
+        window.handleInvoiceCancellation = async function(facturaId) {
+            try {
+                const result = await Swal.fire({
+                    title: '¿Está seguro?',
+                    text: "Esta acción no se puede revertir",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, cancelar factura',
+                    cancelButtonText: 'No, mantener factura'
+                });
+
+                if (result.isConfirmed) {
+                    const response = await fetch(`/facturacion/api/facturas/${facturaId}/cancel`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        }
+                    });
+
+                    if (!response.ok) throw new Error('Error al cancelar la factura');
+
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Cancelada',
+                        text: 'La factura ha sido cancelada'
+                    });
+
+                    // Recargar la lista de facturas
+                    loadInvoices();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al cancelar la factura'
+                });
+            }
+        };
         
         // Funcionalidad para el modal de vendedores
         document.addEventListener('DOMContentLoaded', function() {
@@ -2083,6 +3382,8 @@
                     });
                 }
             });
+
+            
 
             // Función para cargar vendedores
             async function loadSellers() {
@@ -2438,15 +3739,24 @@
             const facturasBody = document.getElementById('facturas-tbody');
             
             facturasBody.addEventListener('click', function(e) {
-                const row = e.target.closest('tr');
-                if (!row) return;
-                
-                const facturaId = row.querySelector('td:first-child').textContent;
-                if (facturaId !== 'N/A') {
-                    mostrarDetalleFactura(facturaId);
+                const actionButton = e.target.closest('.action-btn');
+                if (actionButton) {
+                    e.stopPropagation();
+                    // No retornamos aquí, dejamos que continúe la ejecución
+                } else {
+                    // Si no es un botón de acción, buscar la fila y mostrar el detalle
+                    const row = e.target.closest('.factura-row');
+                    if (row) {
+                        const facturaId = row.dataset.facturaId;
+                        if (facturaId && facturaId !== 'N/A') {
+                            mostrarDetalleFactura(facturaId);
+                        }
+                    }
                 }
             });
         });
+
+        
         
         async function mostrarDetalleFactura(facturaId) {
             try {
@@ -3237,7 +4547,7 @@ async function loadInvoices() {
 
         // Generar el HTML para cada factura
         const facturasHTML = data.map(factura => `
-            <tr class="hover:bg-gray-50">
+            <tr class="hover:bg-gray-50 factura-row" data-factura-id="${factura.id}">
                 <td class="px-4 py-3 whitespace-nowrap">${factura.id || 'N/A'}</td>
                 <td class="px-4 py-3 whitespace-nowrap">${formatDate(factura.fecha)}</td>
                 <td class="px-4 py-3 whitespace-nowrap">${factura.tienda_nombre || 'N/A'}</td>
@@ -3256,27 +4566,33 @@ async function loadInvoices() {
                 <td class="px-4 py-3 whitespace-nowrap">${factura.tipo_pago || 'N/A'}</td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
                     <div class="flex space-x-2">
+                        <button onclick="imprimirFactura(${factura.id})" 
+                                class="text-blue-600 hover:text-blue-900 action-btn" 
+                                title="Imprimir factura">
+                            <i class="fas fa-print"></i>
+                        </button>
+
                         <button onclick="verFactura(${factura.id})" 
-                                class="text-blue-600 hover:text-blue-900" 
+                                class="text-blue-600 hover:text-blue-900 action-btn" 
                                 title="Ver factura">
                             <i class="fas fa-eye"></i>
                         </button>
                         
                         <button onclick="reimprimirFactura(${factura.id})" 
-                                class="text-green-600 hover:text-green-900" 
+                                class="text-green-600 hover:text-green-900 action-btn" 
                                 title="Reimprimir factura">
                             <i class="fas fa-print"></i>
                         </button>
                         
                         <button onclick="enviarEmail(${factura.id})" 
-                                class="text-purple-600 hover:text-purple-900" 
+                                class="text-purple-600 hover:text-purple-900 action-btn" 
                                 title="Enviar por email">
                             <i class="fas fa-envelope"></i>
                         </button>
                         
                         ${factura.estatus !== 'anulada' ? `
                             <button onclick="handleInvoiceCancellation(${factura.id})" 
-                                    class="text-red-600 hover:text-red-900" 
+                                    class="text-red-600 hover:text-red-900 action-btn" 
                                     title="Cancelar factura">
                                 <i class="fas fa-ban"></i>
                             </button>
@@ -3773,96 +5089,476 @@ function obtenerItemsFactura() {
     return items;
 }
 
+    // Función para manejar la respuesta de stock insuficiente
+    async function handleStockInsufficient(error) {
+        // Mostrar modal de confirmación con input para código
+        const { value: overrideCode } = await Swal.fire({
+            title: 'Stock Insuficiente',
+            html: `
+                <div class="text-left">
+                    <p>${error.mensaje}</p>
+                    <p class="mt-4 font-semibold">Ingrese el código de autorización para continuar:</p>
+                </div>
+            `,
+            input: 'password',
+            inputAttributes: {
+                autocapitalize: 'off',
+                autocorrect: 'off'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Autorizar',
+            cancelButtonText: 'Cancelar',
+            showLoaderOnConfirm: true,
+            preConfirm: async (code) => {
+                try {
+                    // Verificar el código
+                    const response = await fetch('/facturacion/api/config/override-code/verify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCsrfToken()
+                        },
+                        body: JSON.stringify({ code })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Código inválido');
+                    }
+
+                    return code;
+                } catch (error) {
+                    Swal.showValidationMessage(`Error: ${error.message}`);
+                }
+            }
+        });
+
+        return overrideCode;
+    }    
+
+
     // Función para manejar el envío de la factura
-    async function submitInvoice() {
-        try {
-            // Validar todos los campos antes de procesar
-            const validationErrors = validateInvoiceFields();
-            if (validationErrors.length > 0) {
-                throw new Error(validationErrors.join('\n'));
-            }
-    
-            // 1. Obtener el tipo de factura seleccionado
-            const invoiceType = document.querySelector('.invoice-type-option.selected').dataset.type;
-            
-            // 2. Obtener el tipo de pago seleccionado
-            const paymentType = document.querySelector('input[name="tipo_pago"]:checked')?.value;
-            
-            // 3. Obtener la tienda seleccionada
-            const selectedStore = document.querySelector('.store-option.ring-2');
-            if (!selectedStore) {
-                throw new Error('Debe seleccionar una tienda');
-            }
-            const storeId = selectedStore.dataset.storeId;
-            
-            // 4. Obtener los items de la factura
-            const items = [];
-            document.querySelectorAll('#product-list tr').forEach(row => {
-                const quantityInput = row.querySelector('.quantity-input');
-                if (!quantityInput) return;
-                
-                items.push({
-                    item_id: row.dataset.itemId,
-                    cantidad: parseInt(quantityInput.value),
-                    precio_unitario: parseFloat(row.querySelector('.precio').textContent.replace('RD$', '')),
-                    itbis: parseFloat(row.querySelector('.itbis').textContent.replace('%', '')),
-                    comentario: row.querySelector('input[type="text"]')?.value || ''
+    // Modificar la función submitInvoice para manejar productos sin stock
+async function submitInvoice() {
+    try {
+        const invoiceData = await prepareInvoiceData();
+        let needsOverrideCode = false;
+        let itemsWithoutStock = [];
+
+        // Verificar stock antes de enviar
+        invoiceData.items.forEach(item => {
+            const row = document.querySelector(`tr[data-item-id="${item.item_id}"]`);
+            const stockActual = parseInt(row.querySelector('.quantity-input').getAttribute('max')) || 0;
+            if (item.cantidad > stockActual) {
+                needsOverrideCode = true;
+                itemsWithoutStock.push({
+                    id: item.item_id,
+                    nombre: row.querySelector('td:first-child').textContent,
+                    stockActual: stockActual,
+                    cantidadSolicitada: item.cantidad
                 });
-            });
-    
-            // 5. Construir el objeto de datos
-            const invoiceData = {
-                tipo: invoiceType,
-                tipo_pago: paymentType,
-                moneda: document.querySelector('input[name="moneda"]').value || 'DOP',
-                vendedor_id: document.getElementById('selectedSeller')?.dataset.sellerId,
-                tienda_id: storeId,
-                items: items,
-                cliente_id: document.getElementById('selectedClient')?.dataset.clientId,
-                ncf: document.getElementById('ncf-input')?.value || '',
-                notas: document.getElementById('notesInput')?.value || '',
-                descuento_monto: parseFloat(document.getElementById('discountAmountInput')?.value || 0),
-                descuento_porcentaje: parseFloat(document.getElementById('discountInput')?.value || 0)
-            };
-    
-            // 7. Enviar la solicitud al servidor
-            const response = await fetch('/facturacion/api/facturas', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken()
-                },
-                body: JSON.stringify(invoiceData)
-            });
-    
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Error al crear la factura');
             }
-    
-            const result = await response.json();
+        });
+
+        // Si hay items sin stock suficiente, solicitar autorización
+        if (needsOverrideCode) {
+            const overrideCode = await requestOverrideCode(itemsWithoutStock);
+            if (!overrideCode) {
+                await Swal.fire({
+                    icon: 'info',
+                    title: 'Operación cancelada',
+                    text: 'No se puede continuar sin autorización'
+                });
+                return;
+            }
             
-            // 8. Mostrar mensaje de éxito
-            await Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: 'Factura creada correctamente',
-                showConfirmButton: true
+            // Agregar el código de override a todos los items que lo necesitan
+            invoiceData.items = invoiceData.items.map(item => {
+                const needsOverride = itemsWithoutStock.some(i => i.id === item.item_id);
+                return needsOverride ? {...item, override_code: overrideCode} : item;
             });
-    
-            // 9. Cerrar el modal y resetear el formulario
-            document.getElementById('invoice-modal').classList.add('hidden');
-            resetForm();
-    
-        } catch (error) {
+        }
+
+        // Enviar la factura al servidor
+        const response = await fetch('/facturacion/api/facturas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(invoiceData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Error al crear la factura');
+        }
+
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: 'Factura creada correctamente'
+        });
+
+        // Cerrar modal y resetear formulario
+        document.getElementById('invoice-modal').classList.add('hidden');
+        resetForm();
+        if (typeof loadInvoices === 'function') {
+            await loadInvoices();
+        }
+
+    } catch (error) {
         console.error('Error:', error);
         Swal.fire({
             icon: 'error',
-            title: 'Error en la Factura',
-            html: error.message.replace(/\n/g, '<br>'),
-            confirmButtonText: 'Entendido'
+            title: 'Error',
+            text: error.message
         });
     }
+}
+
+// Función para preparar los datos de la factura
+async function prepareInvoiceData() {
+    // 1. Obtener el tipo de factura seleccionado
+    const invoiceType = document.querySelector('.invoice-type-option.selected')?.dataset.type;
+    if (!invoiceType) {
+        throw new Error('Debe seleccionar el tipo de factura');
+    }
+    
+    // 2. Obtener el tipo de pago seleccionado
+    const paymentType = document.querySelector('input[name="tipo_pago"]:checked')?.value;
+    if (!paymentType) {
+        throw new Error('Debe seleccionar un tipo de pago');
+    }
+    
+    // 3. Obtener la tienda seleccionada
+    const selectedStore = document.querySelector('.store-option.ring-2');
+    if (!selectedStore) {
+        throw new Error('Debe seleccionar una tienda');
+    }
+    
+    // 4. Obtener los items
+    const items = [];
+    const productRows = document.querySelectorAll('#product-list tr[data-item-id]');
+    if (productRows.length === 0) {
+        throw new Error('Debe agregar al menos un producto');
+    }
+
+    productRows.forEach(row => {
+        const itemId = row.dataset.itemId;
+        const cantidad = parseInt(row.querySelector('.quantity-input').value);
+        const precio = parseFloat(row.querySelector('.precio').textContent.replace(/[^0-9.-]+/g, ''));
+        const itbis = parseFloat(row.querySelector('.itbis').textContent.replace('%', ''));
+        const comentario = row.querySelector('input[type="text"]')?.value || '';
+
+        items.push({
+            item_id: itemId,
+            cantidad: cantidad,
+            precio_unitario: precio,
+            itbis: itbis,
+            comentario: comentario
+        });
+    });
+
+    // 5. Construir el objeto de datos
+    return {
+        tipo: invoiceType,
+        tipo_pago: paymentType,
+        moneda: document.querySelector('input[name="moneda"]')?.value || 'DOP',
+        vendedor_id: document.getElementById('selectedSeller')?.dataset.sellerId,
+        tienda_id: selectedStore.dataset.storeId,
+        items: items,
+        cliente_id: document.getElementById('selectedClient')?.dataset.clientId,
+        notas: document.getElementById('notesInput')?.value || '',
+        descuento_monto: parseFloat(document.getElementById('discountAmountInput')?.value || 0),
+        descuento_porcentaje: parseFloat(document.getElementById('discountInput')?.value || 0)
+    };
+}
+
+// Agregar esta función al script
+async function imprimirFactura(facturaId) {
+    try {
+        Swal.fire({
+            title: 'Generando PDF...',
+            text: 'Por favor espere...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Obtener el ID de la plantilla del localStorage
+        const templateId = localStorage.getItem('currentTemplateId');
+        console.log('Template ID para impresión:', templateId);
+
+        // Construir la URL con el ID de la plantilla
+        let url = `/facturacion/api/facturas/${facturaId}/print`;
+        if (templateId) {
+            url += `?template_id=${templateId}`;
+        }
+
+        console.log('URL de impresión:', url);
+
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error('Error al generar la factura');
+        }
+        
+        const blob = await response.blob();
+        const pdfUrl = window.URL.createObjectURL(blob);
+        
+        Swal.close();
+        
+        // Abrir el PDF en una nueva ventana
+        window.open(pdfUrl);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al imprimir la factura'
+        });
+    }
+}
+
+// Modifica la función de procesamiento para loguear los pasos
+async function processTemplate(image) {
+    try {
+        console.log('Iniciando procesamiento de plantilla...');
+        
+        // Mostrar loading
+        Swal.fire({
+            title: 'Procesando plantilla...',
+            text: 'Esto puede tomar unos momentos...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Obtener los datos de la imagen
+        const imageBase64 = image instanceof File ? 
+            await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(image);
+            }) : image;
+
+        // Enviar la imagen al servidor
+        const response = await fetch('/facturacion/api/analyze-invoice-template', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                image: imageBase64,
+                tienda_id: getCurrentStoreId()
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Error procesando la plantilla');
+        }
+
+        const data = await response.json();
+        console.log('Template ID recibido:', data.template_id);
+
+        // Guardar el ID de la plantilla en localStorage
+        localStorage.setItem('currentTemplateId', data.template_id);
+
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: 'Plantilla procesada y guardada correctamente'
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error:', error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al procesar la plantilla'
+        });
+        return false;
+    }
+}
+
+// Actualizar la función submitInvoice como se mostró anteriormente
+async function submitInvoice() {
+    try {
+        const invoiceData = await prepareInvoiceData();
+        let needsOverrideCode = false;
+        let itemsWithoutStock = [];
+
+        // Verificar stock antes de enviar
+        invoiceData.items.forEach(item => {
+            const row = document.querySelector(`tr[data-item-id="${item.item_id}"]`);
+            const stockActual = parseInt(row.querySelector('.quantity-input').getAttribute('max')) || 0;
+            if (item.cantidad > stockActual) {
+                needsOverrideCode = true;
+                itemsWithoutStock.push({
+                    id: item.item_id,
+                    nombre: row.querySelector('td:first-child').textContent,
+                    stockActual: stockActual,
+                    cantidadSolicitada: item.cantidad
+                });
+            }
+        });
+
+        // Si hay items sin stock suficiente, solicitar autorización
+        if (needsOverrideCode) {
+            const overrideCode = await requestOverrideCode(itemsWithoutStock);
+            if (overrideCode) {
+                // Agregar el código de override a todos los items que lo necesitan
+                invoiceData.items = invoiceData.items.map(item => {
+                    const needsOverride = itemsWithoutStock.some(i => i.id === item.item_id);
+                    return needsOverride ? {...item, override_code: overrideCode} : item;
+                });
+            } else {
+                // Usuario canceló la autorización
+                return;
+            }
+        }
+
+        // Enviar la factura al servidor
+        const response = await fetch('/facturacion/api/facturas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(invoiceData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Error al crear la factura');
+        }
+
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: 'Factura creada correctamente'
+        });
+
+        // Cerrar modal y resetear formulario
+        document.getElementById('invoice-modal').classList.add('hidden');
+        resetForm();
+        if (typeof loadInvoices === 'function') {
+            await loadInvoices();
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message
+        });
+    }
+}
+
+// Asegurarse de que el event listener esté correctamente configurado
+document.addEventListener('DOMContentLoaded', function() {
+    const submitButton = document.getElementById('submit-invoice');
+    if (submitButton) {
+        submitButton.addEventListener('click', submitInvoice);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Loading analysis functionality...'); // Debug log
+
+    const analysisBtn = document.getElementById('analysis-btn');
+    const analysisModal = document.getElementById('analysis-modal');
+    const closeAnalysisModal = document.getElementById('close-analysis-modal');
+
+    // Debug logs
+    console.log('Analysis button:', analysisBtn);
+    console.log('Analysis modal:', analysisModal);
+    console.log('Close modal button:', closeAnalysisModal);
+
+    if (analysisBtn && analysisModal && closeAnalysisModal) {
+        analysisBtn.addEventListener('click', () => {
+            console.log('Analysis button clicked'); // Debug log
+            analysisModal.classList.remove('hidden');
+        });
+
+        closeAnalysisModal.addEventListener('click', () => {
+            console.log('Close button clicked'); // Debug log
+            analysisModal.classList.add('hidden');
+        });
+
+        // Cerrar modal al hacer clic fuera
+        analysisModal.addEventListener('click', (e) => {
+            if (e.target === analysisModal) {
+                analysisModal.classList.add('hidden');
+            }
+        });
+    } else {
+        console.error('Some elements were not found:');
+        console.error('- Analysis button:', !!analysisBtn);
+        console.error('- Analysis modal:', !!analysisModal);
+        console.error('- Close button:', !!closeAnalysisModal);
+    }
+});
+// Nueva función para solicitar código de autorización
+// Agregar esta función junto con las otras
+async function requestOverrideCode(items) {
+    const result = await Swal.fire({
+        title: 'Stock Insuficiente',
+        html: `
+            <div class="text-left">
+                <p class="font-semibold mb-2">Los siguientes productos no tienen stock suficiente:</p>
+                ${items.map(item => `
+                    <div class="mb-2">
+                        <p>• ${item.nombre}</p>
+                        <p class="text-sm text-gray-600">Stock actual: ${item.stockActual}</p>
+                        <p class="text-sm text-gray-600">Cantidad solicitada: ${item.cantidadSolicitada}</p>
+                    </div>
+                `).join('')}
+                <p class="mt-4">¿Desea continuar? Se creará una orden pendiente para cuando haya stock disponible.</p>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'No, cancelar',
+        showLoaderOnConfirm: true,
+        preConfirm: async () => {
+            // Solicitar código hasta que sea válido o cancele
+            let isValidCode = false;
+            while (!isValidCode) {
+                const { value: code, isDismissed } = await Swal.fire({
+                    title: 'Código de Autorización',
+                    input: 'password',
+                    inputLabel: 'Ingrese el código de autorización',
+                    inputPlaceholder: 'Código',
+                    showCancelButton: true,
+                    inputValidator: (value) => {
+                        if (!value) return 'Debe ingresar un código';
+                        if (value !== '0001') return 'Código de autorización inválido';
+                        return null;
+                    }
+                });
+
+                if (isDismissed || !code) {
+                    return null; // Usuario canceló
+                }
+
+                if (code === '0001') {
+                    isValidCode = true;
+                    return code;
+                }
+            }
+        }
+    });
+
+    return result.isConfirmed ? result.value : null;
 }
     
     // Función de validación de campos

@@ -92,6 +92,78 @@
             </div>
         </div>
 
+        <!-- Agregar después del primer grid de estadísticas básicas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- KPIs -->
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-lg font-semibold mb-4">KPIs Generales</h3>
+                <div class="space-y-4">
+                    <div class="border-b pb-2">
+                        <p class="text-sm text-gray-600">Tasa de Crecimiento</p>
+                        <p id="tasa-crecimiento" class="text-xl font-bold">0%</p>
+                    </div>
+                    <div class="border-b pb-2">
+                        <p class="text-sm text-gray-600">Retorno de Clientes</p>
+                        <p id="retorno-clientes" class="text-xl font-bold">0%</p>
+                    </div>
+                    <div class="border-b pb-2">
+                        <p class="text-sm text-gray-600">Tasa de Abandono</p>
+                        <p id="tasa-abandono" class="text-xl font-bold">0%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métricas de Inventario -->
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-lg font-semibold mb-4">Métricas de Inventario</h3>
+                <div class="space-y-4">
+                    <div class="border-b pb-2">
+                        <p class="text-sm text-gray-600">Rotación</p>
+                        <p id="rotacion-inventario" class="text-xl font-bold">0</p>
+                    </div>
+                    <div class="border-b pb-2">
+                        <p class="text-sm text-gray-600">Días de Inventario</p>
+                        <p id="dias-inventario" class="text-xl font-bold">0</p>
+                    </div>
+                    <div class="border-b pb-2">
+                        <p class="text-sm text-gray-600">Productos Agotados</p>
+                        <p id="productos-agotados" class="text-xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métricas Financieras -->
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-lg font-semibold mb-4">Métricas Financieras</h3>
+                <div class="space-y-4">
+                    <div class="border-b pb-2">
+                        <p class="text-sm text-gray-600">Margen Bruto</p>
+                        <p id="margen-bruto" class="text-xl font-bold">0%</p>
+                    </div>
+                    <div class="border-b pb-2">
+                        <p class="text-sm text-gray-600">Margen Operativo</p>
+                        <p id="margen-operativo" class="text-xl font-bold">0%</p>
+                    </div>
+                    <div class="border-b pb-2">
+                        <p class="text-sm text-gray-600">Costo Promedio</p>
+                        <p id="costo-promedio" class="text-xl font-bold">$0.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Análisis Temporal -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-lg font-semibold mb-4">Predicción de Ventas</h3>
+                <canvas id="prediccion-ventas"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-lg font-semibold mb-4">Patrones de Venta</h3>
+                <canvas id="patrones-venta"></canvas>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div class="bg-white rounded-lg shadow-sm p-4">
                 <h3 class="text-lg font-semibold mb-4">Ventas por Día</h3>
@@ -160,10 +232,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initializeReporteVentas() {
     flatpickr("#fecha-inicio", {
-        dateFormat: "Y-m-d"
+        dateFormat: "Y-m-d",
+        defaultDate: new Date().setDate(1)
     });
     flatpickr("#fecha-fin", {
-        dateFormat: "Y-m-d"
+        dateFormat: "Y-m-d",
+        defaultDate: new Date()
     });
 
     const reporteForm = document.getElementById('reporte-form');
@@ -182,27 +256,190 @@ function initializeReporteVentas() {
 }
 
 function cargarOpcionesFiltros() {
-    // Aquí deberías hacer llamadas a tu API para cargar las opciones de clientes, vendedores y categorías de productos
-    // Por ahora, usaremos datos de ejemplo
-    const clientes = ['Cliente A', 'Cliente B', 'Cliente C'];
-    const vendedores = ['Vendedor 1', 'Vendedor 2', 'Vendedor 3'];
-    const categorias = ['Electrónica', 'Ropa', 'Alimentos'];
+    // Cargar clientes
+    fetch('/facturacion/api/clientes')
+        .then(response => response.json())
+        .then(clientes => {
+            cargarOpciones('cliente', clientes.map(c => ({
+                id: c.id,
+                nombre: c.nombre
+            })));
+        });
 
-    cargarOpciones('cliente', clientes);
-    cargarOpciones('vendedor', vendedores);
-    cargarOpciones('categoria-producto', categorias);
+    // Cargar vendedores
+    fetch('/facturacion/api/vendedores')
+        .then(response => response.json())
+        .then(vendedores => {
+            cargarOpciones('vendedor', vendedores.map(v => ({
+                id: v.id,
+                nombre: v.nombre
+            })));
+        });
+
+    // Cargar categorías
+    fetch('/inventario/api/categorias')
+        .then(response => response.json())
+        .then(categorias => {
+            cargarOpciones('categoria-producto', categorias);
+        });
 }
 
 function cargarOpciones(selectId, opciones) {
     const select = document.getElementById(selectId);
+    select.innerHTML = '<option value="">Todos</option>';
     opciones.forEach(opcion => {
         const option = document.createElement('option');
-        option.value = opcion;
-        option.textContent = opcion;
+        option.value = opcion.id || opcion;
+        option.textContent = opcion.nombre || opcion;
         select.appendChild(option);
     });
 }
 
+
+function actualizarResumen(resumen) {
+    document.getElementById('total-ventas').textContent = `$${resumen.total_ventas.toFixed(2)}`;
+    document.getElementById('numero-ventas').textContent = resumen.numero_ventas;
+    document.getElementById('promedio-venta').textContent = `$${resumen.promedio_venta.toFixed(2)}`;
+    document.getElementById('mayor-venta').textContent = `$${resumen.mayor_venta.toFixed(2)}`;
+}
+
+function actualizarKPIs(data) {
+    const metricas = data.metricas_generales;
+    if (metricas) {
+        document.getElementById('tasa-crecimiento').textContent = 
+            `${metricas.tasa_crecimiento?.toFixed(1) || 0}%`;
+        document.getElementById('retorno-clientes').textContent = 
+            `${metricas.retorno_cliente?.toFixed(1) || 0}%`;
+        document.getElementById('tasa-abandono').textContent = 
+            `${metricas.tasa_abandono?.toFixed(1) || 0}%`;
+    }
+
+    const inventario = data.metricas_inventario;
+    if (inventario) {
+        document.getElementById('rotacion-inventario').textContent = 
+            inventario.rotacion?.toFixed(2) || '0';
+        document.getElementById('dias-inventario').textContent = 
+            Math.round(inventario.dias_inventario || 0);
+        document.getElementById('productos-agotados').textContent = 
+            inventario.productos_agotados || '0';
+    }
+
+    const financieras = data.metricas_financieras;
+    if (financieras) {
+        document.getElementById('margen-bruto').textContent = 
+            `${financieras.margen_bruto?.toFixed(1) || 0}%`;
+        document.getElementById('margen-operativo').textContent = 
+            `${financieras.margen_operativo?.toFixed(1) || 0}%`;
+        document.getElementById('costo-promedio').textContent = 
+            `$${financieras.costo_venta_promedio?.toFixed(2) || '0.00'}`;
+    }
+}
+
+function actualizarPrediccion(data) {
+    if (!data.prediccion_ventas) return;
+    
+    const ventas_historicas = data.ventas_por_dia.map(v => ({
+        fecha: v.fecha,
+        total: v.total
+    }));
+    
+    const ctx = document.getElementById('prediccion-ventas').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [...ventas_historicas.map(v => v.fecha), 'Próximo Mes'],
+            datasets: [{
+                label: 'Ventas Históricas',
+                data: ventas_historicas.map(v => v.total),
+                borderColor: 'rgb(75, 192, 192)',
+                fill: false
+            }, {
+                label: 'Predicción',
+                data: [...Array(ventas_historicas.length).fill(null), data.prediccion_ventas.prediccion],
+                borderColor: 'rgb(255, 99, 132)',
+                borderDash: [5, 5],
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Confianza de la predicción: ${data.prediccion_ventas.confianza.toFixed(1)}%`
+                }
+            }
+        }
+    });
+}
+
+function actualizarPatronesVenta(data) {
+    if (!data.patrones_venta?.diarios) return;
+    
+    const ctx = document.getElementById('patrones-venta').getContext('2d');
+    if (window.patronesChart) window.patronesChart.destroy();
+    
+    window.patronesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.patrones_venta.diarios.map(p => p.dia),
+            datasets: [{
+                label: 'Ventas por Día',
+                data: data.patrones_venta.diarios.map(p => p.total),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgb(75, 192, 192)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Ventas'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function actualizarRendimientoVendedores(data) {
+    if (!data.rendimiento_vendedores?.length) return;
+    
+    const ctx = document.getElementById('rendimiento-vendedores').getContext('2d');
+    if (window.rendimientoChart) window.rendimientoChart.destroy();
+    
+    window.rendimientoChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.rendimiento_vendedores.map(v => v.vendedor),
+            datasets: [{
+                label: 'Ventas por Vendedor',
+                data: data.rendimiento_vendedores.map(v => v.total),
+                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                borderColor: 'rgb(153, 102, 255)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Ventas'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Modificar la función generarReporte existente
 function generarReporte() {
     const formData = new FormData(document.getElementById('reporte-form'));
     const params = new URLSearchParams(formData);
@@ -210,10 +447,16 @@ function generarReporte() {
     fetch(`/facturacion/api/reporte-ventas?${params.toString()}`)
         .then(response => response.json())
         .then(data => {
+            console.log('Datos del reporte:', {
+                prediccion: data.prediccion_ventas,
+                patrones: data.patrones_venta,
+                rendimiento: data.rendimiento_vendedores
+            });
             document.getElementById('reporte-contenido').classList.remove('hidden');
             actualizarResumen(data.resumen);
             actualizarGraficos(data);
             actualizarTablaVentas(data.detalle_ventas);
+            actualizarKPIs(data);
         })
         .catch(error => {
             console.error('Error:', error);
@@ -229,11 +472,17 @@ function actualizarResumen(resumen) {
 }
 
 function actualizarGraficos(data) {
-    actualizarGraficoVentasPorDia(data.ventas_por_dia);
-    actualizarGraficoTopClientes(data.top_clientes);
-    actualizarGraficoVentasPorCategoria(data.ventas_por_categoria);
-    actualizarGraficoRendimientoVendedores(data.rendimiento_vendedores);
+    console.log('Datos para gráficos:', data); // Debug
+    console.log('Datos para patrones:', data.patrones_venta);
+    console.log('Datos para rendimiento:', data.rendimiento_vendedores);
+    actualizarGraficoVentasPorDia(data.ventas_por_dia || []);
+    actualizarGraficoTopClientes(data.top_clientes || []);
+    actualizarGraficoVentasPorCategoria(data.ventas_por_categoria || []);
+    actualizarPrediccion(data);
+    actualizarPatronesVenta(data);
+    actualizarRendimientoVendedores(data);
 }
+
 
 function actualizarGraficoVentasPorDia(ventasPorDia) {
     const ctx = document.getElementById('ventas-por-dia').getContext('2d');
